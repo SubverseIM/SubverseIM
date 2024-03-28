@@ -4,7 +4,9 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.kwik)
+    implementation(libs.kwik) {
+        exclude(group = "*", module = "*")
+    }
     implementation(libs.pgpainless)
 }
 

@@ -36,7 +36,6 @@ android {
 }
 
 dependencies {
-
     implementation(project(":JSubverse"))
 
     implementation(libs.androidx.core.ktx)
