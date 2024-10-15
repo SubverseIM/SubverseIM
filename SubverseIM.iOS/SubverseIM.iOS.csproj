@@ -3,10 +3,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0-ios17.5</TargetFramework>
     <SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
-	<RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
-	<CodesignKey>Apple Development: Isabelle Santin (QL6ZJ9H5U9)</CodesignKey>
+	  <RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
+	  <CodesignKey>Apple Development: Isabelle Santin (QL6ZJ9H5U9)</CodesignKey>
     <Nullable>enable</Nullable>
     <ProvisioningType>manual</ProvisioningType>
+    <AvaloniaVersion>11.1.4</AvaloniaVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <MtouchLink>SdkOnly</MtouchLink>
