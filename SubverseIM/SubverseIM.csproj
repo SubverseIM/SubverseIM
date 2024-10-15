@@ -21,6 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="Quiche.NET\Quiche.NET.csproj" />
+    <ProjectReference Include="..\Quiche.NET\Quiche.NET.csproj" />
   </ItemGroup>
 </Project>
