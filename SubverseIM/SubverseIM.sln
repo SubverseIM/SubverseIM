@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.Android", "..\Su
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.iOS", "..\SubverseIM.iOS\SubverseIM.iOS.csproj", "{72CC1781-E261-4DDF-8BE7-6C3D52416A68}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quiche.NET", "Quiche.NET\Quiche.NET.csproj", "{C82D5B18-D10A-4B6F-90A8-47542A13D4D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{72CC1781-E261-4DDF-8BE7-6C3D52416A68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72CC1781-E261-4DDF-8BE7-6C3D52416A68}.Release|Any CPU.Build.0 = Release|Any CPU
 		{72CC1781-E261-4DDF-8BE7-6C3D52416A68}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{C82D5B18-D10A-4B6F-90A8-47542A13D4D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C82D5B18-D10A-4B6F-90A8-47542A13D4D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C82D5B18-D10A-4B6F-90A8-47542A13D4D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C82D5B18-D10A-4B6F-90A8-47542A13D4D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
