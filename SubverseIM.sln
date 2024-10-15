@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35323.107
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM", "SubverseIM.csproj", "{8EF02571-EDDE-40F7-A6BC-77E78A7BAFC1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.Android", "..\SubverseIM.Android\SubverseIM.Android.csproj", "{F8ED93C3-4952-4FC4-8C45-633E06CE76D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.iOS", "..\SubverseIM.iOS\SubverseIM.iOS.csproj", "{72CC1781-E261-4DDF-8BE7-6C3D52416A68}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8EF02571-EDDE-40F7-A6BC-77E78A7BAFC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EF02571-EDDE-40F7-A6BC-77E78A7BAFC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EF02571-EDDE-40F7-A6BC-77E78A7BAFC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EF02571-EDDE-40F7-A6BC-77E78A7BAFC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8ED93C3-4952-4FC4-8C45-633E06CE76D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8ED93C3-4952-4FC4-8C45-633E06CE76D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8ED93C3-4952-4FC4-8C45-633E06CE76D2}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{F8ED93C3-4952-4FC4-8C45-633E06CE76D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8ED93C3-4952-4FC4-8C45-633E06CE76D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8ED93C3-4952-4FC4-8C45-633E06CE76D2}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{72CC1781-E261-4DDF-8BE7-6C3D52416A68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72CC1781-E261-4DDF-8BE7-6C3D52416A68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72CC1781-E261-4DDF-8BE7-6C3D52416A68}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{72CC1781-E261-4DDF-8BE7-6C3D52416A68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72CC1781-E261-4DDF-8BE7-6C3D52416A68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72CC1781-E261-4DDF-8BE7-6C3D52416A68}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ED9AFDBC-58C4-4923-950B-DC7E362C8C9C}
+	EndGlobalSection
+EndGlobal
