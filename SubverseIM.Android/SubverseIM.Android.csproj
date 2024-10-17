@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0-android</TargetFramework>
+    <RuntimeIdentifiers>android-x64;android-arm64</RuntimeIdentifiers>
     <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ApplicationId>com.chosenfewsoftware.SubverseIM</ApplicationId>
@@ -25,5 +26,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SubverseIM\SubverseIM.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidNativeLibrary Include="../Quiche.NET/runtimes/android-arm64/native/libquiche.so">
+        <Abi>arm64-v8a</Abi>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="../Quiche.NET/runtimes/android-x64/native/libquiche.so">
+        <Abi>x86_64</Abi>
+    </AndroidNativeLibrary>
   </ItemGroup>
 </Project>
