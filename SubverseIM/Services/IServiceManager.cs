@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services
 {
-    public interface IServiceManager<TService> where TService : class
+    public interface IServiceManager
     {
-        Task<TService?> GetInstanceAsync(CancellationToken cancellationToken = default);
+        TService? Get<TService>() where TService : class;
     }
 }

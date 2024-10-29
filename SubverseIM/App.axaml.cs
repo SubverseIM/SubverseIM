@@ -9,11 +9,13 @@ namespace SubverseIM;
 
 public partial class App : Application
 {
-    private readonly IServiceManager<IPeerService> peerServiceManager;
+    private readonly IServiceManager? serviceManager;
 
-    public App(IServiceManager<IPeerService> peerServiceManager) 
+    public App() { }
+
+    public App(IServiceManager serviceManager) 
     {
-        this.peerServiceManager = peerServiceManager;
+        this.serviceManager = serviceManager;
     }
 
     public override void Initialize()

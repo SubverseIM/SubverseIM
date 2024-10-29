@@ -1,31 +1,49 @@
 ﻿using Android.Content;
 using Android.OS;
 using SubverseIM.Services;
-using System.Threading;
-using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
 
 namespace SubverseIM.Android.Services
 {
-    internal class ServiceManager<TService> : Java.Lang.Object, IServiceConnection, IServiceManager<TService>
-        where TService : class
+    internal class ServiceManager : Java.Lang.Object, IServiceConnection, IServiceManager
     {
-        private readonly TaskCompletionSource<TService?> serviceTcs;
+        private readonly Dictionary<string, Type> serviceNameMap;
+        private readonly Dictionary<Type, object> serviceMap;
 
         public ServiceManager()
         {
-            serviceTcs = new();
+            serviceNameMap = new();
+            serviceMap = new();
         }
 
-        async Task<TService?> IServiceManager<TService>.GetInstanceAsync(CancellationToken cancellationToken)
+        TService? IServiceManager.Get<TService>() where TService : class
         {
-            return await serviceTcs.Task.WaitAsync(cancellationToken);
+            if (serviceMap.TryGetValue(typeof(TService), out object? instance))
+            {
+                return instance as TService;
+            }
+            else 
+            {
+                return null;
+            }
         }
 
         void IServiceConnection.OnServiceConnected(ComponentName? name, IBinder? service)
         {
-            serviceTcs.SetResult(service as TService);
+            if (name is not null && service is IServiceBinder binder)
+            {
+                serviceNameMap.Add(name.FlattenToString(), binder.ServiceType);
+                serviceMap.Add(binder.ServiceType, binder.ServiceInstance);
+            }
         }
 
-        void IServiceConnection.OnServiceDisconnected(ComponentName? name) { /* STUB */ }
+        void IServiceConnection.OnServiceDisconnected(ComponentName? name)
+        {
+            if (name is not null && serviceNameMap.Remove(name.FlattenToString(), out Type? type))
+            {
+                serviceMap.Remove(type);
+            }
+        }
     }
 }
