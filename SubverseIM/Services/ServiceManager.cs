@@ -30,15 +30,15 @@ namespace SubverseIM.Services
             }
         }
 
-        public TService GetOrRegister<TService>(TService instance) 
+        public TService? GetOrRegister<TService>(TService? instance) 
             where TService : class
         {
             lock (serviceMap)
             {
                 bool keyExists = serviceMap.TryGetValue(typeof(TService), out object? currInstance);
-                TService newInstance = currInstance as TService ?? instance;
+                TService? newInstance = currInstance as TService ?? instance;
 
-                if (!keyExists)
+                if (!keyExists && newInstance is not null)
                 {
                     serviceMap.Add(typeof(TService), newInstance);
                 }

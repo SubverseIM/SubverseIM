@@ -4,6 +4,8 @@ using Avalonia.Markup.Xaml;
 using SubverseIM.Services;
 using SubverseIM.ViewModels;
 using SubverseIM.Views;
+using System;
+using System.Threading.Tasks;
 
 namespace SubverseIM;
 
@@ -11,9 +13,9 @@ public partial class App : Application
 {
     private readonly IServiceManager? serviceManager;
 
-    public App() { }
+    public App() : base() { }
 
-    public App(IServiceManager serviceManager) 
+    public App(IServiceManager serviceManager) : this()
     {
         this.serviceManager = serviceManager;
     }
@@ -29,14 +31,14 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel()
+                DataContext = new MainViewModel(serviceManager!)
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             singleViewPlatform.MainView = new MainView
             {
-                DataContext = new MainViewModel()
+                DataContext = new MainViewModel(serviceManager!)
             };
         }
 
