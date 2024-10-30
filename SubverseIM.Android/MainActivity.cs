@@ -1,7 +1,7 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Content.PM;
-
+using Android.OS;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
@@ -28,21 +28,24 @@ public class MainActivity : AvaloniaMainActivity<App>
         peerServiceConn = new();
     }
 
-    protected override void OnStart()
+    protected override void OnCreate(Bundle? savedInstanceState)
     {
-        base.OnStart();
+        base.OnCreate(savedInstanceState);
+
         BindService(
-            new Intent(this, typeof(WrappedPeerService)), 
+            new Intent(this, typeof(WrappedPeerService)),
             peerServiceConn, Bind.AutoCreate
             );
+
         serviceManager.GetOrRegister(
             peerServiceConn.ConnectAsync().Result
             );
     }
 
-    protected override void OnStop()
+    protected override void OnDestroy()
     {
-        base.OnStop();
+        base.OnDestroy();
+
         UnbindService(peerServiceConn);
     }
 
