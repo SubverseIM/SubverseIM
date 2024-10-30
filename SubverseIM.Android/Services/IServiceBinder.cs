@@ -8,4 +8,10 @@ namespace SubverseIM.Android.Services
 
         object ServiceInstance { get; }
     }
+
+    internal interface IServiceBinder<TService> : IServiceBinder
+        where TService : class 
+    {
+        new TService ServiceInstance { get; }
+    }
 }

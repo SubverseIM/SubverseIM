@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
 using SubverseIM.Android.Services;
+using SubverseIM.Services;
 
 namespace SubverseIM.Android;
 
@@ -19,32 +20,37 @@ public class MainActivity : AvaloniaMainActivity<App>
 {
     private readonly ServiceManager serviceManager;
 
+    private readonly ServiceConnection<IPeerService> peerServiceConn;
+
     public MainActivity() 
     {
         serviceManager = new();
+        peerServiceConn = new();
     }
 
     protected override void OnStart()
     {
         base.OnStart();
         BindService(
-            new Intent(this, typeof(PeerService)), 
-            serviceManager, Bind.AutoCreate
+            new Intent(this, typeof(WrappedPeerService)), 
+            peerServiceConn, Bind.AutoCreate
+            );
+        serviceManager.GetOrRegister(
+            peerServiceConn.ConnectAsync().Result
             );
     }
 
     protected override void OnStop()
     {
         base.OnStop();
-        UnbindService(serviceManager);
+        UnbindService(peerServiceConn);
     }
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
         return AppBuilder.Configure(
             () => new App(serviceManager)
-            )
-            .UseAndroid()
+            ).UseAndroid()
             .WithInterFont()
             .UseReactiveUI();
     }

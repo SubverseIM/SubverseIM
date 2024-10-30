@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace SubverseIM.Services
+﻿namespace SubverseIM.Services
 {
     public interface IServiceManager
     {
-        TService? Get<TService>() where TService : class;
+        TService GetOrRegister<TImplementation, TService>(TImplementation? instance = null) 
+            where TImplementation : class, TService, new()
+            where TService : class;
+
+        TService GetOrRegister<TService>(TService instance)
+            where TService : class;
     }
 }

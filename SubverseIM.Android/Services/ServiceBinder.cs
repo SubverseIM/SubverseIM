@@ -3,18 +3,18 @@ using System;
 
 namespace SubverseIM.Android.Services
 {
-    internal class ServiceBinder<TService> : Binder, IServiceBinder
+    internal class ServiceBinder<TService> : Binder, IServiceBinder<TService>
         where TService : class
     {
-        private readonly TService instance;
-
-        public Type ServiceType => typeof(TService);
-
-        public object ServiceInstance => instance;
+        public TService ServiceInstance { get; }
 
         public ServiceBinder(TService instance) 
         {
-            this.instance = instance;
+            ServiceInstance = instance;
         }
+
+        Type IServiceBinder.ServiceType => typeof(TService);
+
+        object IServiceBinder.ServiceInstance => ServiceInstance;
     }
 }
