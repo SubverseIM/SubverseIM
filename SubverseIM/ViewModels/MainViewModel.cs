@@ -10,7 +10,4 @@ public class MainViewModel : ViewModelBase
     {
         this.serviceManager = serviceManager;
     }
-
-    public string Greeting => serviceManager.GetOrRegister<IPeerService>() is null ? 
-        "IPeerService instance was null!" : "IPeerService was registered!";
 }

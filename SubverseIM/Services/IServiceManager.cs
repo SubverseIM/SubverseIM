@@ -9,9 +9,6 @@ namespace SubverseIM.Services
             where TImplementation : class, TService, new()
             where TService : class;
 
-        TService? GetOrRegister<TService>(TService? instance = null)
-            where TService : class;
-
         Task<TService> GetWithAwaitAsync<TService>(CancellationToken cancellationToken = default)
             where TService : class;
     }
