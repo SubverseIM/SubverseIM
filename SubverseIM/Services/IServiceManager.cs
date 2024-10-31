@@ -1,4 +1,7 @@
-﻿namespace SubverseIM.Services
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace SubverseIM.Services
 {
     public interface IServiceManager
     {
@@ -7,6 +10,9 @@
             where TService : class;
 
         TService? GetOrRegister<TService>(TService? instance = null)
+            where TService : class;
+
+        Task<TService> GetWithAwaitAsync<TService>(CancellationToken cancellationToken = default)
             where TService : class;
     }
 }
