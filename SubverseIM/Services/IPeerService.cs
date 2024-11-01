@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using SubverseIM.Models;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,11 +8,13 @@ namespace SubverseIM.Services
 {
     public interface IPeerService
     {
+        SubversePeerId ThisPeer { get; }
+
         IPEndPoint? LocalEndPoint { get; }
 
         IPEndPoint? RemoteEndPoint { get; }
 
-        IDictionary<SubversePeerId, IPEndPoint?> CachedPeers { get; }
+        IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
         Task BootstrapSelfAsync(CancellationToken cancellationToken = default);
 

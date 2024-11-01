@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SubverseIM.Models;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
@@ -10,16 +11,18 @@ namespace SubverseIM.Services
     {
         private readonly INativeService nativeService;
 
-        public PeerService(INativeService nativeService) 
+        public PeerService(INativeService nativeService) // TODO: use IPgpKeyProvider service
         {
             this.nativeService = nativeService;
         }
+
+        public SubversePeerId ThisPeer => throw new NotImplementedException();
 
         public IPEndPoint? LocalEndPoint => throw new NotImplementedException();
 
         public IPEndPoint? RemoteEndPoint => throw new NotImplementedException();
 
-        public IDictionary<SubversePeerId, IPEndPoint?> CachedPeers => throw new NotImplementedException();
+        public IDictionary<SubversePeerId, SubversePeer> CachedPeers => throw new NotImplementedException();
 
         public Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
         {

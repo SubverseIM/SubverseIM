@@ -21,7 +21,7 @@ namespace SubverseIM.Android
         public override IBinder? OnBind(Intent? intent) => 
             new ServiceBinder<IPeerService>(peerService);
 
-        public Task SendPushNotificationAsync(CancellationToken cancellationToken = default)
+        public Task SendPushNotificationAsync(string title, string content, CancellationToken cancellationToken = default)
         {
             throw new System.NotImplementedException();
         }
