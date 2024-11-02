@@ -12,5 +12,7 @@
     <vm:MainViewModel />
   </Design.DataContext>
 
-  <TextBlock Text="Hello world!" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+	<Grid RowDefinitions="*,Auto" Margin="10">
+		<TransitioningContentControl Content="{Binding CurrentPage}" />
+	</Grid>
 </UserControl>
