@@ -1,9 +1,12 @@
 ﻿using Android.App;
+using Android.Content;
 using Android.Content.PM;
-
+using Android.OS;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
+using SubverseIM.Android.Services;
+using SubverseIM.Services;
 
 namespace SubverseIM.Android;
 
@@ -15,9 +18,42 @@ namespace SubverseIM.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity<App>
 {
+    private readonly ServiceManager serviceManager;
+
+    private readonly ServiceConnection<IPeerService> peerServiceConn;
+
+    public MainActivity() 
+    {
+        serviceManager = new();
+        peerServiceConn = new();
+    }
+
+    protected override async void OnCreate(Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+
+        BindService(
+            new Intent(this, typeof(WrappedPeerService)),
+            peerServiceConn, Bind.AutoCreate
+            );
+
+        serviceManager.GetOrRegister(
+            await peerServiceConn.ConnectAsync()
+            );
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        UnbindService(peerServiceConn);
+    }
+
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
-        return base.CustomizeAppBuilder(builder)
+        return AppBuilder.Configure(
+            () => new App(serviceManager)
+            ).UseAndroid()
             .WithInterFont()
             .UseReactiveUI();
     }

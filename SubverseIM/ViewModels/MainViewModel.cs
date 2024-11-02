@@ -1,6 +1,13 @@
-﻿namespace SubverseIM.ViewModels;
+﻿using SubverseIM.Services;
+
+namespace SubverseIM.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
-    public string Greeting => "Hello world!";
+    private readonly IServiceManager serviceManager;
+
+    public MainViewModel(IServiceManager serviceManager)
+    {
+        this.serviceManager = serviceManager;
+    }
 }
