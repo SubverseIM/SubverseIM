@@ -1,9 +1,10 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Services
 {
-    public interface IServiceManager
+    public interface IServiceManager : IDisposable
     {
         TService GetOrRegister<TImplementation, TService>(TImplementation? instance = null) 
             where TImplementation : class, TService, new()

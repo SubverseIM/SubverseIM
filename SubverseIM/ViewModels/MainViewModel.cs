@@ -1,10 +1,7 @@
-﻿using Avalonia;
-using Avalonia.Media;
-using ReactiveUI;
+﻿using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
-using System;
 using System.Collections.Generic;
 
 namespace SubverseIM.ViewModels;

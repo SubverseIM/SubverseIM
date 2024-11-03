@@ -1,10 +1,11 @@
 ﻿using SubverseIM.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace SubverseIM.Services
 {
-    public interface IDbService
+    public interface IDbService : IDisposable
     {
         Stream GetStream(string path);
 

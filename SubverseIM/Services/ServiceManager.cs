@@ -11,6 +11,8 @@ namespace SubverseIM.Services
 
         private readonly Dictionary<Type, TaskCompletionSource<object>> awaitMap;
 
+        private bool disposedValue;
+
         public ServiceManager()
         {
             serviceMap = new();
@@ -98,6 +100,29 @@ namespace SubverseIM.Services
             }
 
             return (TService)await instanceTcs.Task;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    foreach (var (_, service) in serviceMap) 
+                    {
+                        (service as IDisposable)?.Dispose();
+                    }
+                }
+
+                serviceMap.Clear();
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

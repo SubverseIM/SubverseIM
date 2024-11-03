@@ -7,6 +7,7 @@ using Avalonia.Android;
 using Avalonia.ReactiveUI;
 using SubverseIM.Android.Services;
 using SubverseIM.Services;
+using System.IO;
 
 namespace SubverseIM.Android;
 
@@ -32,6 +33,13 @@ public class MainActivity : AvaloniaMainActivity<App>
     {
         base.OnCreate(savedInstanceState);
 
+        string appDataPath = System.Environment.GetFolderPath(
+            System.Environment.SpecialFolder.ApplicationData
+            );
+
+        string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
+        serviceManager.GetOrRegister<IDbService>(new DbService(dbFilePath));
+
         BindService(
             new Intent(this, typeof(WrappedPeerService)),
             peerServiceConn, Bind.AutoCreate
@@ -47,6 +55,8 @@ public class MainActivity : AvaloniaMainActivity<App>
         base.OnDestroy();
 
         UnbindService(peerServiceConn);
+
+        serviceManager.Dispose();
     }
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
