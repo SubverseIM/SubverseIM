@@ -1,34 +1,39 @@
 ﻿using Avalonia;
 using Avalonia.Media;
+using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.ViewModels.Components;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
     public class ContactPageViewModel : PageViewModelBase
     {
-        public IList<Point> HexagonPoints { get; }
-
-        public Geometry HexagonPath { get; }
-
-        private static IList<Point> GenerateHexagon(double r)
-        {
-            List<Point> points = new();
-            for (int i = 0; i < 6; i++)
-            {
-                double theta = Math.Tau * i / 6.0;
-                (double y, double x) = Math.SinCos(theta);
-                points.Add(new((x + 1.0) * r, (y + 1.0) * r));
-            }
-
-            return points;
-        }
+        public ObservableCollection<ContactViewModel> ContactsList { get; }
 
         public ContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)
         {
-            HexagonPoints = GenerateHexagon(48);
-            HexagonPath = new PolylineGeometry(GenerateHexagon(46), true);
+            ContactsList = new() { new ContactViewModel(serviceManager,
+                new SubverseContact { DisplayName = "IsaMorphic" }) };
+        }
+
+        public async Task LoadContactsAsync(CancellationToken cancellationToken = default) 
+        {
+            IDbService db = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+            foreach (SubverseContact contact in db.GetContacts()) 
+            {
+                ContactViewModel vm = new(ServiceManager, contact);
+                ContactsList.Add(vm);
+            }
+
+            foreach (ContactViewModel vm in ContactsList) 
+            {
+                await vm.LoadPhotoAsync(cancellationToken);
+            }
         }
     }
 }

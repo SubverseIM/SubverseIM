@@ -1,16 +1,43 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using System.Collections.Generic;
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
 
 namespace SubverseIM.ViewModels.Components
 {
     public class ContactViewModel : ViewModelBase
     {
+        private static readonly Geometry hexagonPath;
+
+        private static readonly IList<Point> hexagonPoints;
+
+        private static IList<Point> GenerateHexagon(double r)
+        {
+            List<Point> points = new();
+            for (int i = 0; i < 6; i++)
+            {
+                double theta = Math.Tau * i / 6.0;
+                (double y, double x) = Math.SinCos(theta);
+                points.Add(new((x + 1.0) * r, (y + 1.0) * r));
+            }
+
+            return points;
+        }
+
+        static ContactViewModel()
+        {
+            hexagonPoints = GenerateHexagon(32);
+            hexagonPath = new PolylineGeometry(GenerateHexagon(31), true);
+        }
+
         private readonly IServiceManager serviceManager;
 
         private readonly SubverseContact innerContact;
@@ -26,6 +53,10 @@ namespace SubverseIM.ViewModels.Components
 
         public string? UserNote => innerContact.UserNote;
 
+        public IList<Point> HexagonPoints => hexagonPoints;
+
+        public Geometry HexagonPath => hexagonPath;
+
         public ContactViewModel(IServiceManager serviceManager, SubverseContact innerContact)
         {
             this.serviceManager = serviceManager;
@@ -40,7 +71,7 @@ namespace SubverseIM.ViewModels.Components
             if (innerContact.ImagePath is null)
             {
                 contactPhotoStream = AssetLoader.Open(
-                    new System.Uri("avares://SubverseIM/Assets/izzy.jpg")
+                    new Uri("avares://SubverseIM/Assets/izzy.jpg")
                     );
             }
             else 
@@ -48,7 +79,7 @@ namespace SubverseIM.ViewModels.Components
                 contactPhotoStream = dbService.GetStream(innerContact.ImagePath);
             }
 
-            ContactPhoto = Bitmap.DecodeToWidth(contactPhotoStream, 96);
+            ContactPhoto = Bitmap.DecodeToWidth(contactPhotoStream, 64);
         }
     }
 }
