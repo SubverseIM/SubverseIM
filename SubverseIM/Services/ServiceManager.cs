@@ -45,6 +45,33 @@ namespace SubverseIM.Services
             return newInstance;
         }
 
+        public TService GetOrRegister<TService>(TService instance) 
+            where TService : class
+        {
+            TService newInstance;
+            lock (serviceMap)
+            {
+                bool keyExists = serviceMap.TryGetValue(typeof(TService), out object? currInstance);
+                newInstance = currInstance as TService ?? instance;
+
+                if (!keyExists)
+                {
+                    serviceMap.Add(typeof(TService), newInstance);
+                }
+            }
+
+            lock (awaitMap)
+            {
+                if (awaitMap.TryGetValue(typeof(TService), out TaskCompletionSource<object>? instanceTcs))
+                {
+                    instanceTcs.SetResult(newInstance);
+                    awaitMap.Remove(typeof(TService));
+                }
+            }
+
+            return newInstance;
+        }
+
         public async Task<TService> GetWithAwaitAsync<TService>(CancellationToken cancellationToken = default) where TService : class
         {
             lock (serviceMap)
