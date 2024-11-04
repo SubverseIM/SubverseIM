@@ -38,7 +38,9 @@ public class MainActivity : AvaloniaMainActivity<App>
             );
 
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
-        serviceManager.GetOrRegister<IDbService>(new DbService(dbFilePath));
+        serviceManager.GetOrRegister<IDbService>(
+            new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
+            );
 
         BindService(
             new Intent(this, typeof(WrappedPeerService)),

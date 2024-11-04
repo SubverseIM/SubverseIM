@@ -15,12 +15,21 @@ namespace SubverseIM.Services
 
         public DbService(string dbConnectionString)
         {
-            db = new(dbConnectionString);
+            BsonMapper mapper = new(); 
+            mapper.RegisterType<SubversePeerId>(
+                serialize: (peerId) => peerId.ToString(),
+                deserialize: (bson) => SubversePeerId.FromString(bson.AsString)
+            );
+
+            db = new(dbConnectionString, mapper);
         }
 
         public IEnumerable<SubverseContact> GetContacts()
         {
-            return db.GetCollection<SubverseContact>().FindAll()
+            var contacts = db.GetCollection<SubverseContact>();
+            contacts.EnsureIndex(x => x.OtherPeer, unique: true);
+            return contacts
+                .FindAll()
                 .OrderBy(x => x.DisplayName);
         }
 
@@ -34,6 +43,18 @@ namespace SubverseIM.Services
         public Stream GetStream(string path)
         {
             return db.GetStorage<string>().OpenRead(path);
+        }
+
+        public bool InsertOrUpdateItem<T>(T item)
+        {
+            var contacts = db.GetCollection<T>();
+            return contacts.Upsert(item);
+        }
+
+        public bool DeleteItemById<T>(BsonValue id)
+        {
+            var contacts = db.GetCollection<T>();
+            return contacts.Delete(id);
         }
 
         protected virtual void Dispose(bool disposing)

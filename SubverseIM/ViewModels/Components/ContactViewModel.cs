@@ -15,6 +15,8 @@ namespace SubverseIM.ViewModels.Components
 {
     public class ContactViewModel : ViewModelBase
     {
+        private const double HEX_ANGLE = Math.Tau / 6.0;
+
         private static readonly Geometry hexagonPath;
 
         private static readonly IList<Point> hexagonPoints;
@@ -24,7 +26,7 @@ namespace SubverseIM.ViewModels.Components
             List<Point> points = new();
             for (int i = 0; i < 6; i++)
             {
-                double theta = Math.Tau * i / 6.0;
+                double theta = HEX_ANGLE * i;
                 (double y, double x) = Math.SinCos(theta);
                 points.Add(new((x + 1.0) * r, (y + 1.0) * r));
             }
