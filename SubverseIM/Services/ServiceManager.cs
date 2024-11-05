@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -43,7 +44,8 @@ namespace SubverseIM.Services
                     awaitMap.Remove(typeof(TService));
                 }
             }
-
+            
+            _ = (newInstance as IInjectableService)?.InjectAsync(this);
             return newInstance;
         }
 
@@ -71,6 +73,7 @@ namespace SubverseIM.Services
                 }
             }
 
+            _ = (newInstance as IInjectableService)?.InjectAsync(this);
             return newInstance;
         }
 
@@ -98,7 +101,7 @@ namespace SubverseIM.Services
                     awaitMap.Remove(typeof(TService));
                 }
             }
-
+            
             return (TService)await instanceTcs.Task;
         }
 

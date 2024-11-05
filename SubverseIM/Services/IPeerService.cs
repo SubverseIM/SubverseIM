@@ -8,7 +8,7 @@ namespace SubverseIM.Services
 {
     public interface IPeerService
     {
-        SubversePeerId ThisPeer { get; }
+        SubversePeerId? ThisPeer { get; }
 
         IPEndPoint? LocalEndPoint { get; }
 

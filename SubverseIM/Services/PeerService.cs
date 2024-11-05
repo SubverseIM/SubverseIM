@@ -11,17 +11,15 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services
 {
-    public class PeerService : IPeerService
+    public class PeerService : IPeerService, IInjectableService
     {
         private readonly INativeService nativeService;
-
-        private readonly IDbService dbService;
 
         private readonly HttpClient http;
 
         private readonly Dictionary<SubversePeerId, EncryptionKeys> peerKeysMap;
 
-        public SubversePeerId ThisPeer { get; }
+        public SubversePeerId? ThisPeer { get; private set; }
 
         public IPEndPoint? LocalEndPoint { get; private set; }
 
@@ -29,23 +27,18 @@ namespace SubverseIM.Services
 
         public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
-        public PeerService(IDbService dbService, INativeService nativeService)
+        public PeerService(INativeService nativeService)
         {
-            this.dbService = dbService;
             this.nativeService = nativeService;
 
             http = new() { BaseAddress = new Uri("https://subverse.network") };
 
-            (Stream publicKeyStream, Stream privateKeyStream) = GenerateKeysIfNone();
-            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
-
-            ThisPeer = new(myKeys.PublicKey.GetFingerprint());
-            peerKeysMap = new() { { ThisPeer, myKeys } };
+            peerKeysMap = new();
 
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
         }
 
-        private (Stream, Stream) GenerateKeysIfNone()
+        private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
         {
             Stream? publicKeyStream = dbService.GetStream("$/pkx/public.key"),
                 privateKeyStream = dbService.GetStream("$/pkx/private.key");
@@ -73,24 +66,35 @@ namespace SubverseIM.Services
             }
         }
 
+        public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
+        {
+            (Stream publicKeyStream, Stream privateKeyStream) = GenerateKeysIfNone(
+                await serviceManager.GetWithAwaitAsync<IDbService>());
+
+            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
+
+            ThisPeer = new(myKeys.PublicKey.GetFingerprint());
+            peerKeysMap.Add(ThisPeer.Value, myKeys);
+        }
+
         public Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            // TODO: call Bootstrapper API and populate DHT routing table
         }
 
         public Task ListenAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            // TODO: listen loop for SIP messages
         }
 
         public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            // TODO: wait for message and return from TaskCompletionSource
         }
 
         public Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            // TODO: Send outbound message over SIP transport
         }
 
         public async Task SendInviteAsync(CancellationToken cancellationToken = default)
