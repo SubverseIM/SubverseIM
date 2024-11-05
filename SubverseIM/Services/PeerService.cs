@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services
 {
-    public class PeerService : IPeerService, IInjectableService
+    public class PeerService : IPeerService, IInjectable
     {
         private readonly INativeService nativeService;
 

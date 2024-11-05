@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services;
 
-public interface IInjectableService
+public interface IInjectable
 {
     Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken = default);
 }

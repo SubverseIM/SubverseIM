@@ -45,7 +45,7 @@ namespace SubverseIM.Services
                 }
             }
             
-            _ = (newInstance as IInjectableService)?.InjectAsync(this);
+            _ = (newInstance as IInjectable)?.InjectAsync(this);
             return newInstance;
         }
 
@@ -73,7 +73,7 @@ namespace SubverseIM.Services
                 }
             }
 
-            _ = (newInstance as IInjectableService)?.InjectAsync(this);
+            _ = (newInstance as IInjectable)?.InjectAsync(this);
             return newInstance;
         }
 
