@@ -8,7 +8,9 @@ namespace SubverseIM.Services
 {
     public interface IDbService : IDisposable
     {
-        Stream GetStream(string path);
+        Stream? GetStream(string path);
+
+        Stream CreateStream(string path);
 
         IEnumerable<SubverseContact> GetContacts();
 

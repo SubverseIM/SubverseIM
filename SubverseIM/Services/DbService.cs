@@ -40,9 +40,21 @@ namespace SubverseIM.Services
                 .OrderByDescending(x => x.DateSignedOn);
         }
 
-        public Stream GetStream(string path)
+        public Stream? GetStream(string path)
         {
-            return db.GetStorage<string>().OpenRead(path);
+            if (db.GetStorage<string>().Exists(path))
+            {
+                return db.GetStorage<string>().OpenRead(path);
+            }
+            else 
+            {
+                return null;
+            }
+        }
+
+        public Stream CreateStream(string path) 
+        {
+            return db.GetStorage<string>().OpenWrite(path, Path.GetFileName(path));
         }
 
         public bool InsertOrUpdateItem<T>(T item)

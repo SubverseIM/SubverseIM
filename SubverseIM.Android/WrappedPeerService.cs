@@ -21,9 +21,22 @@ namespace SubverseIM.Android
         public override IBinder? OnBind(Intent? intent) => 
             new ServiceBinder<IPeerService>(peerService);
 
-        public Task SendPushNotificationAsync(string title, string content, CancellationToken cancellationToken = default)
+        Task INativeService.SendPushNotificationAsync(string title, string content, CancellationToken cancellationToken)
         {
             throw new System.NotImplementedException();
+        }
+
+        Task INativeService.ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken)
+        {
+            Intent sendIntent = new ();
+            sendIntent.SetAction(Intent.ActionSend);
+            sendIntent.PutExtra(Intent.ExtraText, content);
+            sendIntent.SetType("text/plain");
+
+            Intent? shareIntent = Intent.CreateChooser(sendIntent, title);
+            StartActivity(shareIntent);
+
+            return Task.CompletedTask;
         }
     }
 }
