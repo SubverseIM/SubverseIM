@@ -1,4 +1,8 @@
-﻿using PgpCore;
+﻿using MonoTorrent.Connections.Dht;
+using MonoTorrent.Dht;
+using MonoTorrent.PortForwarding;
+using PgpCore;
+using SIPSorcery.SIP;
 using SubverseIM.Models;
 using System;
 using System.Collections.Generic;
@@ -13,11 +17,23 @@ namespace SubverseIM.Services.Implementation
 {
     public class PeerService : IPeerService, IInjectable
     {
+        private readonly IDhtEngine dhtEngine;
+
+        private readonly IDhtListener dhtListener;
+
+        private readonly IPortForwarder portForwarder;
+
         private readonly INativeService nativeService;
 
         private readonly HttpClient http;
 
+        private readonly SIPUDPChannel sipChannel;
+
+        private readonly SIPTransport sipTransport;
+
         private readonly Dictionary<SubversePeerId, EncryptionKeys> peerKeysMap;
+
+        private readonly PeriodicTimer timer;
 
         public SubversePeerId? ThisPeer { get; private set; }
 
@@ -29,11 +45,21 @@ namespace SubverseIM.Services.Implementation
 
         public PeerService(INativeService nativeService)
         {
+            dhtEngine = new DhtEngine();
+            dhtListener = new DhtListener(new IPEndPoint(IPAddress.Any, 0));
+
+            portForwarder = new MonoNatPortForwarder();
+
+            sipChannel = new SIPUDPChannel(IPAddress.Any, 0);
+            sipTransport = new SIPTransport(stateless: true);
+
             this.nativeService = nativeService;
 
-            http = new() { BaseAddress = new Uri("https://subverse.network") };
+            http = new() { BaseAddress = new Uri("https://subverse.network/") };
 
             peerKeysMap = new();
+
+            timer = new(TimeSpan.FromSeconds(15));
 
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
         }
@@ -76,6 +102,53 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
+        private async Task<bool> SynchronizePeersAsync(CancellationToken cancellationToken = default)
+        {
+            if (ThisPeer is null) return false;
+
+            try
+            {
+                ReadOnlyMemory<byte> nodesBytes = await dhtEngine.SaveNodesAsync();
+
+                byte[] requestBytes;
+                using (PGP pgp = new(peerKeysMap[ThisPeer.Value]))
+                using (MemoryStream inputStream = new(nodesBytes.ToArray()))
+                using (MemoryStream outputStream = new())
+                {
+                    await pgp.SignAsync(inputStream, outputStream);
+                    requestBytes = outputStream.ToArray();
+                }
+
+                using (ByteArrayContent requestContent = new(requestBytes)
+                { Headers = { ContentType = new("application/octet-stream") } })
+                {
+                    HttpResponseMessage response = await http.PostAsync($"nodes?p={ThisPeer}", requestContent);
+                    return await response.Content.ReadFromJsonAsync<bool>();
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private async Task SynchronizePeersAsync(SubversePeerId peerId, CancellationToken cancellationToken = default)
+        {
+            HttpResponseMessage response = await http.GetAsync($"nodes?p={peerId}", cancellationToken);
+            byte[] responseBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+            dhtEngine.Add([responseBytes]);
+        }
+
+        private Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
+        {
+            throw new NotImplementedException();
+        }
+
+        private Task SIPTransportResponseReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPResponse sipResponse)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
         {
             (Stream publicKeyStream, Stream privateKeyStream) = 
@@ -90,29 +163,53 @@ namespace SubverseIM.Services.Implementation
             peerKeysMap.Add(ThisPeer.Value, myKeys);
         }
 
-        public Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
+        public async Task BootstrapSelfAsync(IServiceManager serviceManager, CancellationToken cancellationToken = default)
         {
-            // TODO: call Bootstrapper API and populate DHT routing table
+            LocalEndPoint = sipChannel.ListeningEndPoint;
+
+            sipTransport.SIPTransportRequestReceived += SIPTransportRequestReceived;
+            sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
+
+            await portForwarder.StartAsync(cancellationToken);
+            await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, 0));
+
+            await dhtEngine.SetListenerAsync(dhtListener);
+            await dhtEngine.StartAsync();
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (ThisPeer is not null && portForwarder.Mappings.Created.Count > 0)
+                {
+                    dhtEngine.Announce(new(ThisPeer.Value.GetBytes()), 
+                        portForwarder.Mappings.Created[0].PublicPort);
+                }
+
+                await SynchronizePeersAsync(cancellationToken);
+                await timer.WaitForNextTickAsync(cancellationToken);
+
+                foreach (SubversePeerId peer in CachedPeers.Keys)
+                {
+                    await SynchronizePeersAsync(peer, cancellationToken);
+                    await timer.WaitForNextTickAsync(cancellationToken);
+                }
+            }
+
+            await dhtEngine.StopAsync();
         }
 
-        public Task ListenAsync(CancellationToken cancellationToken = default)
-        {
-            // TODO: listen loop for SIP messages
-        }
-
-        public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
+        public Task<SubverseMessage> ReceiveMessageAsync(IServiceManager serviceManager, CancellationToken cancellationToken = default)
         {
             // TODO: wait for message and return from TaskCompletionSource
         }
 
-        public Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
+        public Task SendMessageAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default)
         {
             // TODO: Send outbound message over SIP transport
         }
 
-        public async Task SendInviteAsync(CancellationToken cancellationToken = default)
+        public async Task SendInviteAsync(IServiceManager serviceManager, CancellationToken cancellationToken = default)
         {
-            string inviteUri = await http.GetFromJsonAsync<string>($"/invite?p={ThisPeer}") ?? 
+            string inviteUri = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ?? 
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
             await nativeService.ShareStringToAppAsync("Send Invite Via App", inviteUri);
         }

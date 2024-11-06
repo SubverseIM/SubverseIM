@@ -3,6 +3,7 @@ using Android.Content;
 using Android.OS;
 using SubverseIM.Android.Services;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using System.Threading;
 using System.Threading.Tasks;
 
