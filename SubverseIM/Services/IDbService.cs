@@ -2,16 +2,13 @@
 using SubverseIM.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace SubverseIM.Services
 {
     public interface IDbService : IDisposable
     {
-        Stream? GetStream(string path);
-
-        Stream CreateStream(string path);
-
         IEnumerable<SubverseContact> GetContacts();
 
         IEnumerable<SubverseMessage> GetMessagesFromPeer(SubversePeerId otherPeer);
@@ -19,5 +16,9 @@ namespace SubverseIM.Services
         bool InsertOrUpdateItem<T>(T item);
 
         bool DeleteItemById<T>(BsonValue id);
+
+        bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream);
+
+        Stream CreateWriteStream(string path);
     }
 }

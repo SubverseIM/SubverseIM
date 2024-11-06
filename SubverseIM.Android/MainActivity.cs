@@ -7,6 +7,7 @@ using Avalonia.Android;
 using Avalonia.ReactiveUI;
 using SubverseIM.Android.Services;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using System.IO;
 
 namespace SubverseIM.Android;

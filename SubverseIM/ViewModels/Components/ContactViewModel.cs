@@ -78,7 +78,7 @@ namespace SubverseIM.ViewModels.Components
             }
             else 
             {
-                contactPhotoStream = dbService.GetStream(innerContact.ImagePath);
+                contactPhotoStream = dbService.TryGetReadStream(innerContact.ImagePath);
             }
 
             ContactPhoto = Bitmap.DecodeToWidth(contactPhotoStream, 64);

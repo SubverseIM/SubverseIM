@@ -2,10 +2,11 @@
 using SubverseIM.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
-namespace SubverseIM.Services
+namespace SubverseIM.Services.Implementation
 {
     public class DbService : IDbService
     {
@@ -15,8 +16,8 @@ namespace SubverseIM.Services
 
         public DbService(string dbConnectionString)
         {
-            BsonMapper mapper = new(); 
-            mapper.RegisterType<SubversePeerId>(
+            BsonMapper mapper = new();
+            mapper.RegisterType(
                 serialize: (peerId) => peerId.ToString(),
                 deserialize: (bson) => SubversePeerId.FromString(bson.AsString)
             );
@@ -40,23 +41,6 @@ namespace SubverseIM.Services
                 .OrderByDescending(x => x.DateSignedOn);
         }
 
-        public Stream? GetStream(string path)
-        {
-            if (db.GetStorage<string>().Exists(path))
-            {
-                return db.GetStorage<string>().OpenRead(path);
-            }
-            else 
-            {
-                return null;
-            }
-        }
-
-        public Stream CreateStream(string path) 
-        {
-            return db.GetStorage<string>().OpenWrite(path, Path.GetFileName(path));
-        }
-
         public bool InsertOrUpdateItem<T>(T item)
         {
             var contacts = db.GetCollection<T>();
@@ -67,6 +51,25 @@ namespace SubverseIM.Services
         {
             var contacts = db.GetCollection<T>();
             return contacts.Delete(id);
+        }
+
+        public bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream)
+        {
+            if (db.GetStorage<string>().Exists(path))
+            {
+                stream = db.GetStorage<string>().OpenRead(path);
+                return true;
+            }
+            else
+            {
+                stream = null;
+                return false;
+            }
+        }
+
+        public Stream CreateWriteStream(string path)
+        {
+            return db.GetStorage<string>().OpenWrite(path, Path.GetFileName(path));
         }
 
         protected virtual void Dispose(bool disposing)
