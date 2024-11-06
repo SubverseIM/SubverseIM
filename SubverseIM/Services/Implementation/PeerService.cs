@@ -204,8 +204,10 @@ namespace SubverseIM.Services.Implementation
 
         public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
         {
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             (Stream publicKeyStream, Stream privateKeyStream) = 
-                GenerateKeysIfNone(await serviceManager.GetWithAwaitAsync<IDbService>());
+                GenerateKeysIfNone(dbService);
+            dbServiceTcs.SetResult(dbService);
 
             EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
 
@@ -216,7 +218,7 @@ namespace SubverseIM.Services.Implementation
             peerKeysMap.Add(ThisPeer.Value, myKeys);
         }
 
-        public async Task BootstrapSelfAsync(IServiceManager serviceManager, CancellationToken cancellationToken = default)
+        public async Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
         {
             LocalEndPoint = sipChannel.ListeningEndPoint;
 
@@ -250,7 +252,7 @@ namespace SubverseIM.Services.Implementation
             await dhtEngine.StopAsync();
         }
 
-        public Task<SubverseMessage> ReceiveMessageAsync(IServiceManager serviceManager, CancellationToken cancellationToken = default)
+        public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
             if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
             {
@@ -260,12 +262,12 @@ namespace SubverseIM.Services.Implementation
             return tcs.Task;
         }
 
-        public Task SendMessageAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default)
+        public Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
             // TODO: Send outbound message over SIP transport
         }
 
-        public async Task SendInviteAsync(IServiceManager serviceManager, CancellationToken cancellationToken = default)
+        public async Task SendInviteAsync(CancellationToken cancellationToken = default)
         {
             string inviteUri = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ?? 
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
