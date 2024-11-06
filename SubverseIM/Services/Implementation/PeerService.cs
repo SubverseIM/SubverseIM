@@ -5,11 +5,13 @@ using PgpCore;
 using SIPSorcery.SIP;
 using SubverseIM.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,7 +35,11 @@ namespace SubverseIM.Services.Implementation
 
         private readonly Dictionary<SubversePeerId, EncryptionKeys> peerKeysMap;
 
+        private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messagesBag;
+
         private readonly PeriodicTimer timer;
+
+        private readonly TaskCompletionSource<IDbService> dbServiceTcs;
 
         public SubversePeerId? ThisPeer { get; private set; }
 
@@ -53,11 +59,15 @@ namespace SubverseIM.Services.Implementation
             sipChannel = new SIPUDPChannel(IPAddress.Any, 0);
             sipTransport = new SIPTransport(stateless: true);
 
+            dbServiceTcs = new();
+
             this.nativeService = nativeService;
 
             http = new() { BaseAddress = new Uri("https://subverse.network/") };
 
             peerKeysMap = new();
+
+            messagesBag = new();
 
             timer = new(TimeSpan.FromSeconds(15));
 
@@ -139,14 +149,57 @@ namespace SubverseIM.Services.Implementation
             dhtEngine.Add([responseBytes]);
         }
 
-        private Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
+        private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
         {
-            throw new NotImplementedException();
+            SubversePeerId fromPeer = SubversePeerId.FromString(sipRequest.Header.From.FromURI.User);
+            SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
+
+            if (toPeer == ThisPeer)
+            {
+                EncryptionKeys? peerKeys;
+                if (!peerKeysMap.TryGetValue(fromPeer, out peerKeys))
+                {
+                    Stream publicKeyStream = await http.GetStreamAsync($"pk?p={fromPeer}");
+                    if ((await dbServiceTcs.Task).TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
+                    {
+                        peerKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
+
+                        publicKeyStream.Dispose();
+                        privateKeyStream.Dispose();
+                    }
+                    else 
+                    {
+                        throw new InvalidOperationException("Could not find private key file in application database!");
+                    }
+                }
+
+                string messageContent;
+                using (PGP pgp = new PGP(peerKeys))
+                using (MemoryStream encryptedMessageStream = new(sipRequest.BodyBuffer))
+                using (MemoryStream decryptedMessageStream = new())
+                {
+                    await pgp.DecryptAndVerifyAsync(encryptedMessageStream, decryptedMessageStream);
+                    messageContent = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
+                }
+
+                if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs)) 
+                {
+                    messagesBag.Add(tcs = new());
+                }
+
+                tcs.SetResult(new SubverseMessage
+                {
+                    Content = messageContent,
+                    Sender = fromPeer,
+                    Recipient = toPeer,
+                    DateSignedOn = DateTime.Parse(sipRequest.Header.Date)
+                });
+            }
         }
 
         private Task SIPTransportResponseReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPResponse sipResponse)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
@@ -199,7 +252,12 @@ namespace SubverseIM.Services.Implementation
 
         public Task<SubverseMessage> ReceiveMessageAsync(IServiceManager serviceManager, CancellationToken cancellationToken = default)
         {
-            // TODO: wait for message and return from TaskCompletionSource
+            if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
+            {
+                messagesBag.Add(tcs = new());
+            }
+
+            return tcs.Task;
         }
 
         public Task SendMessageAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default)
