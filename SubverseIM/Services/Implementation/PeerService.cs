@@ -170,11 +170,11 @@ namespace SubverseIM.Services.Implementation
             sipTransport.SIPTransportRequestReceived += SIPTransportRequestReceived;
             sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
 
-            await portForwarder.StartAsync(cancellationToken);
-            await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, 0));
-
             await dhtEngine.SetListenerAsync(dhtListener);
             await dhtEngine.StartAsync();
+
+            await portForwarder.StartAsync(cancellationToken);
+            await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, 0));
 
             while (!cancellationToken.IsCancellationRequested)
             {
