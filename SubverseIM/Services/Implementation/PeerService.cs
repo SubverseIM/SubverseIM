@@ -202,6 +202,11 @@ namespace SubverseIM.Services.Implementation
             return Task.CompletedTask;
         }
 
+        private void DhtPeersFound(object? sender, PeersFoundEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
@@ -224,6 +229,8 @@ namespace SubverseIM.Services.Implementation
 
             sipTransport.SIPTransportRequestReceived += SIPTransportRequestReceived;
             sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
+
+            dhtEngine.PeersFound += DhtPeersFound;
 
             await dhtEngine.SetListenerAsync(dhtListener);
             await dhtEngine.StartAsync();
@@ -262,14 +269,24 @@ namespace SubverseIM.Services.Implementation
             return tcs.Task;
         }
 
-        public Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
+        public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
-            // TODO: Send outbound message over SIP transport
+            SIPURI requestFromUri = SIPURI.ParseSIPURI($"im:{message.Sender}@subverse.network");
+            SIPURI requestToUri = SIPURI.ParseSIPURI($"im:{message.Recipient}@subverse.network");
+
+            SIPRequest sipRequest = SIPRequest.GetRequest(
+                SIPMethodsEnum.MESSAGE, requestToUri,
+                new SIPToHeader(string.Empty, requestToUri, string.Empty),
+                new SIPFromHeader(string.Empty, requestFromUri, string.Empty)
+                );
+            sipRequest.Header.SetDateHeader();
+
+            await sipTransport.SendRequestAsync(, sipRequest);
         }
 
         public async Task SendInviteAsync(CancellationToken cancellationToken = default)
         {
-            string inviteUri = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ?? 
+            string inviteUri = (ThisPeer is null ? null : await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}")) ?? 
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
             await nativeService.ShareStringToAppAsync("Send Invite Via App", inviteUri);
         }
