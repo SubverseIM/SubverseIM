@@ -36,7 +36,7 @@ namespace SubverseIM.Services.Implementation
         private readonly SIPTransport sipTransport;
 
         private readonly Dictionary<string, SubversePeerId> callIdMap;
-        
+
         private readonly Dictionary<SubversePeerId, TaskCompletionSource<IList<PeerInfo>>> peerInfoMap;
 
         private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messagesBag;
@@ -80,10 +80,10 @@ namespace SubverseIM.Services.Implementation
             this.nativeService = nativeService;
         }
 
-        private (Stream, Stream) GenerateKeysIfNone()
+        private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
         {
-            if (DbService.TryGetReadStream("$/pkx/public.key", out Stream? publicKeyStream) &&
-                DbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
+            if (dbService.TryGetReadStream("$/pkx/public.key", out Stream? publicKeyStream) &&
+                dbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
             {
                 return (publicKeyStream, privateKeyStream);
             }
@@ -101,8 +101,8 @@ namespace SubverseIM.Services.Implementation
                         );
                 }
 
-                using (Stream publicKeyStoreStream = DbService.CreateWriteStream("$/pkx/public.key"))
-                using (Stream privateKeyStoreStream = DbService.CreateWriteStream("$/pkx/private.key"))
+                using (Stream publicKeyStoreStream = dbService.CreateWriteStream("$/pkx/public.key"))
+                using (Stream privateKeyStoreStream = dbService.CreateWriteStream("$/pkx/private.key"))
                 {
                     publicKeyStream.Position = 0;
                     publicKeyStream.CopyTo(publicKeyStoreStream);
@@ -118,7 +118,7 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
-        private async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer) 
+        private async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer)
         {
             EncryptionKeys? peerKeys;
             if (CachedPeers.TryGetValue(otherPeer, out SubversePeer? peer) && peer.KeyContainer is null)
@@ -141,7 +141,7 @@ namespace SubverseIM.Services.Implementation
             {
                 peerKeys = peer.KeyContainer;
             }
-            else 
+            else
             {
                 throw new InvalidOperationException($"Could not find public key for Peer ID: {otherPeer}");
             }
@@ -213,6 +213,15 @@ namespace SubverseIM.Services.Implementation
             }
             else
             {
+                SubversePeer? peer;
+                lock (CachedPeers)
+                {
+                    if (!CachedPeers.TryGetValue(fromPeer, out peer))
+                    {
+                        CachedPeers.Add(fromPeer, peer = new() { OtherPeer = fromPeer });
+                    }
+                }
+                peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
 
                 string messageContent;
                 using (PGP pgp = new PGP(await GetPeerKeysAsync(fromPeer)))
@@ -271,13 +280,13 @@ namespace SubverseIM.Services.Implementation
         private async Task SendSIPRequestAsync(SIPRequest sipRequest, CancellationToken cancellationToken = default)
         {
             SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
-            lock (callIdMap) 
+            lock (callIdMap)
             {
                 if (!callIdMap.ContainsKey(sipRequest.Header.CallId))
                 {
                     callIdMap.Add(sipRequest.Header.CallId, toPeer);
                 }
-                else 
+                else
                 {
                     callIdMap[sipRequest.Header.CallId] = toPeer;
                 }
@@ -293,13 +302,13 @@ namespace SubverseIM.Services.Implementation
             }
 
             IPEndPoint? cachedEndPoint;
-            lock (CachedPeers) 
+            lock (CachedPeers)
             {
                 CachedPeers.TryGetValue(toPeer, out SubversePeer? peer);
                 cachedEndPoint = peer?.RemoteEndPoint;
             }
 
-            if (cachedEndPoint is not null) 
+            if (cachedEndPoint is not null)
             {
                 await sipTransport.SendRequestAsync(new(cachedEndPoint), sipRequest);
             }
@@ -320,10 +329,9 @@ namespace SubverseIM.Services.Implementation
         public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            dbServiceTcs.SetResult(dbService);
-
             (Stream publicKeyStream, Stream privateKeyStream) =
-                GenerateKeysIfNone();
+                GenerateKeysIfNone(dbService);
+            dbServiceTcs.SetResult(dbService);
 
             EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
 
@@ -334,9 +342,9 @@ namespace SubverseIM.Services.Implementation
 
             lock (CachedPeers)
             {
-                CachedPeers.Add(ThisPeer, new SubversePeer 
-                { 
-                    OtherPeer = ThisPeer, 
+                CachedPeers.Add(ThisPeer, new SubversePeer
+                {
+                    OtherPeer = ThisPeer,
                     KeyContainer = myKeys
                 });
             }
@@ -356,6 +364,16 @@ namespace SubverseIM.Services.Implementation
 
             await portForwarder.StartAsync(cancellationToken);
             await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, 0));
+
+            if (DbService.TryGetReadStream("$/pkx/public.key", out Stream? pkStream)) 
+            {
+                using (pkStream)
+                using (StreamContent pkStreamContent = new(pkStream)
+                { Headers = { ContentType = new("application/pgp-keys") } })
+                {
+                    await http.PostAsync("pk", pkStreamContent);
+                }
+            }
 
             while (!cancellationToken.IsCancellationRequested)
             {
