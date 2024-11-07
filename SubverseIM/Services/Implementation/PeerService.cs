@@ -271,6 +271,17 @@ namespace SubverseIM.Services.Implementation
         private async Task SendSIPRequestAsync(SIPRequest sipRequest, CancellationToken cancellationToken = default)
         {
             SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
+            lock (callIdMap) 
+            {
+                if (!callIdMap.ContainsKey(sipRequest.Header.CallId))
+                {
+                    callIdMap.Add(sipRequest.Header.CallId, toPeer);
+                }
+                else 
+                {
+                    callIdMap[sipRequest.Header.CallId] = toPeer;
+                }
+            }
 
             TaskCompletionSource<IList<PeerInfo>>? peerInfoTcs;
             lock (peerInfoMap)
