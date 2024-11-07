@@ -7,6 +7,7 @@
 		<CodesignKey>Apple Development: Isabelle Santin (QL6ZJ9H5U9)</CodesignKey>
 		<Nullable>enable</Nullable>
 		<ProvisioningType>manual</ProvisioningType>
+		<AvaloniaVersion>11.*</AvaloniaVersion>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<MtouchLink>SdkOnly</MtouchLink>

@@ -47,6 +47,8 @@ namespace SubverseIM.Services.Implementation
 
         private readonly TaskCompletionSource<IDbService> dbServiceTcs;
 
+        private IDbService DbService => dbServiceTcs.Task.Result;
+
         public IPEndPoint? LocalEndPoint { get; private set; }
 
         public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
@@ -76,6 +78,20 @@ namespace SubverseIM.Services.Implementation
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
 
             this.nativeService = nativeService;
+        }
+
+        private void DhtPeersFound(object? sender, PeersFoundEventArgs e)
+        {
+            TaskCompletionSource<IList<PeerInfo>>? tcs;
+            lock (peerInfoMap)
+            {
+                SubversePeerId otherPeer = new(e.InfoHash.Span);
+                if (!peerInfoMap.Remove(otherPeer, out tcs))
+                {
+                    peerInfoMap.Add(otherPeer, tcs = new());
+                }
+            }
+            tcs.SetResult(e.Peers);
         }
 
         private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
@@ -156,13 +172,21 @@ namespace SubverseIM.Services.Implementation
             SubversePeerId fromPeer = SubversePeerId.FromString(sipRequest.Header.From.FromURI.User);
             SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
 
-            if (toPeer == ThisPeer)
+            if (toPeer != ThisPeer)
+            {
+                await SendSIPRequestAsync(sipRequest);
+                SIPResponse sipResponse = SIPResponse.GetResponse(
+                    sipRequest, SIPResponseStatusCodesEnum.Accepted, "Message was forwarded."
+                    );
+                await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
+            }
+            else
             {
                 EncryptionKeys? peerKeys;
                 if (!peerKeysMap.TryGetValue(fromPeer, out peerKeys))
                 {
                     Stream publicKeyStream = await http.GetStreamAsync($"pk?p={fromPeer}");
-                    if ((await dbServiceTcs.Task).TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
+                    if (DbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
                     {
                         peerKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
 
@@ -196,6 +220,11 @@ namespace SubverseIM.Services.Implementation
                     Recipient = toPeer,
                     DateSignedOn = DateTime.Parse(sipRequest.Header.Date)
                 });
+
+                SIPResponse sipResponse = SIPResponse.GetResponse(
+                    sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
+                    );
+                await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
             }
         }
 
@@ -204,18 +233,29 @@ namespace SubverseIM.Services.Implementation
             return Task.CompletedTask;
         }
 
-        private void DhtPeersFound(object? sender, PeersFoundEventArgs e)
+        private async Task SendSIPRequestAsync(SIPRequest sipRequest, CancellationToken cancellationToken = default)
         {
-            TaskCompletionSource<IList<PeerInfo>>? tcs;
+            SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
+            TaskCompletionSource<IList<PeerInfo>>? peerInfoTcs;
             lock (peerInfoMap)
             {
-                SubversePeerId otherPeer = new(e.InfoHash.Span);
-                if (!peerInfoMap.Remove(otherPeer, out tcs))
+                if (!peerInfoMap.Remove(toPeer, out peerInfoTcs))
                 {
-                    peerInfoMap.Add(otherPeer, tcs = new());
+                    peerInfoMap.Add(toPeer, peerInfoTcs = new());
                 }
             }
-            tcs.SetResult(e.Peers);
+
+            IList<PeerInfo> peerInfo = await peerInfoTcs.Task;
+            foreach (Uri peerUri in peerInfo.Select(x => x.ConnectionUri))
+            {
+                if (!IPAddress.TryParse(peerUri.DnsSafeHost, out IPAddress? ipAddress))
+                {
+                    continue;
+                }
+
+                IPEndPoint ipEndPoint = new(ipAddress, peerUri.Port);
+                await sipTransport.SendRequestAsync(new(ipEndPoint), sipRequest);
+            }
         }
 
         public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
@@ -303,20 +343,9 @@ namespace SubverseIM.Services.Implementation
                 );
             sipRequest.Header.SetDateHeader();
 
-            TaskCompletionSource<IList<PeerInfo>>? peerInfoTcs;
-            lock (peerInfoMap)
-            {
-                if (!peerInfoMap.Remove(message.Recipient, out peerInfoTcs))
-                {
-                    peerInfoMap.Add(message.Recipient, peerInfoTcs = new());
-                }
-            }
+            // TODO: Sign/encrypt message body
 
-            IList<PeerInfo> peerInfo = await peerInfoTcs.Task;
-            foreach (PeerInfo peer in peerInfo) 
-            {
-                await sipTransport.SendRequestAsync(, sipRequest);
-            }
+            await SendSIPRequestAsync(sipRequest, cancellationToken);
         }
 
         public async Task SendInviteAsync(CancellationToken cancellationToken = default)
