@@ -401,6 +401,7 @@ namespace SubverseIM.Services.Implementation
             }
 
             await dhtEngine.StopAsync();
+            sipTransport.Shutdown();
         }
 
         public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
