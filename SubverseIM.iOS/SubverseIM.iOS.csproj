@@ -18,6 +18,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
+		<PackageReference Include="System.Private.Uri" Version="4.3.2" />
 	</ItemGroup>
 
 	<ItemGroup>

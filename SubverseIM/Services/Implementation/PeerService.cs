@@ -35,8 +35,8 @@ namespace SubverseIM.Services.Implementation
 
         private readonly SIPTransport sipTransport;
 
-        private readonly Dictionary<SubversePeerId, EncryptionKeys> peerKeysMap;
-
+        private readonly Dictionary<string, SubversePeerId> callIdMap;
+        
         private readonly Dictionary<SubversePeerId, TaskCompletionSource<IList<PeerInfo>>> peerInfoMap;
 
         private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messagesBag;
@@ -69,7 +69,7 @@ namespace SubverseIM.Services.Implementation
             thisPeerTcs = new();
             dbServiceTcs = new();
 
-            peerKeysMap = new();
+            callIdMap = new();
             peerInfoMap = new();
             messagesBag = new();
 
@@ -78,20 +78,6 @@ namespace SubverseIM.Services.Implementation
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
 
             this.nativeService = nativeService;
-        }
-
-        private void DhtPeersFound(object? sender, PeersFoundEventArgs e)
-        {
-            TaskCompletionSource<IList<PeerInfo>>? tcs;
-            lock (peerInfoMap)
-            {
-                SubversePeerId otherPeer = new(e.InfoHash.Span);
-                if (!peerInfoMap.Remove(otherPeer, out tcs))
-                {
-                    peerInfoMap.Add(otherPeer, tcs = new());
-                }
-            }
-            tcs.SetResult(e.Peers);
         }
 
         private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
@@ -132,6 +118,37 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
+        private async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer) 
+        {
+            EncryptionKeys? peerKeys;
+            if (CachedPeers.TryGetValue(otherPeer, out SubversePeer? peer) && peer.KeyContainer is null)
+            {
+                Stream publicKeyStream = await http.GetStreamAsync($"pk?p={otherPeer}");
+                if (DbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
+                {
+                    peerKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
+                    peer.KeyContainer = peerKeys;
+
+                    publicKeyStream.Dispose();
+                    privateKeyStream.Dispose();
+                }
+                else
+                {
+                    throw new InvalidOperationException("Could not find private key file in application database!");
+                }
+            }
+            else if (peer?.KeyContainer is not null)
+            {
+                peerKeys = peer.KeyContainer;
+            }
+            else 
+            {
+                throw new InvalidOperationException($"Could not find public key for Peer ID: {otherPeer}");
+            }
+
+            return peerKeys;
+        }
+
         private async Task<bool> SynchronizePeersAsync(CancellationToken cancellationToken = default)
         {
             try
@@ -139,7 +156,7 @@ namespace SubverseIM.Services.Implementation
                 ReadOnlyMemory<byte> nodesBytes = await dhtEngine.SaveNodesAsync();
 
                 byte[] requestBytes;
-                using (PGP pgp = new(peerKeysMap[ThisPeer]))
+                using (PGP pgp = new(CachedPeers[ThisPeer].KeyContainer))
                 using (MemoryStream inputStream = new(nodesBytes.ToArray()))
                 using (MemoryStream outputStream = new())
                 {
@@ -167,6 +184,20 @@ namespace SubverseIM.Services.Implementation
             dhtEngine.Add([responseBytes]);
         }
 
+        private void DhtPeersFound(object? sender, PeersFoundEventArgs e)
+        {
+            TaskCompletionSource<IList<PeerInfo>>? tcs;
+            lock (peerInfoMap)
+            {
+                SubversePeerId otherPeer = new(e.InfoHash.Span);
+                if (!peerInfoMap.Remove(otherPeer, out tcs))
+                {
+                    peerInfoMap.Add(otherPeer, tcs = new());
+                }
+            }
+            tcs.SetResult(e.Peers);
+        }
+
         private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
         {
             SubversePeerId fromPeer = SubversePeerId.FromString(sipRequest.Header.From.FromURI.User);
@@ -182,25 +213,9 @@ namespace SubverseIM.Services.Implementation
             }
             else
             {
-                EncryptionKeys? peerKeys;
-                if (!peerKeysMap.TryGetValue(fromPeer, out peerKeys))
-                {
-                    Stream publicKeyStream = await http.GetStreamAsync($"pk?p={fromPeer}");
-                    if (DbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
-                    {
-                        peerKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
-
-                        publicKeyStream.Dispose();
-                        privateKeyStream.Dispose();
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Could not find private key file in application database!");
-                    }
-                }
 
                 string messageContent;
-                using (PGP pgp = new PGP(peerKeys))
+                using (PGP pgp = new PGP(await GetPeerKeysAsync(fromPeer)))
                 using (MemoryStream encryptedMessageStream = new(sipRequest.BodyBuffer))
                 using (MemoryStream decryptedMessageStream = new())
                 {
@@ -230,12 +245,33 @@ namespace SubverseIM.Services.Implementation
 
         private Task SIPTransportResponseReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPResponse sipResponse)
         {
+            if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
+            {
+                SubversePeerId peerId;
+                lock (callIdMap)
+                {
+                    if (!callIdMap.TryGetValue(sipResponse.Header.CallId, out peerId))
+                    {
+                        throw new InvalidOperationException("Received response for invalid Call ID!");
+                    }
+                }
+
+                lock (CachedPeers)
+                {
+                    if (CachedPeers.TryGetValue(peerId, out SubversePeer? peer))
+                    {
+                        peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
+                    }
+                }
+            }
+
             return Task.CompletedTask;
         }
 
         private async Task SendSIPRequestAsync(SIPRequest sipRequest, CancellationToken cancellationToken = default)
         {
             SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
+
             TaskCompletionSource<IList<PeerInfo>>? peerInfoTcs;
             lock (peerInfoMap)
             {
@@ -243,6 +279,18 @@ namespace SubverseIM.Services.Implementation
                 {
                     peerInfoMap.Add(toPeer, peerInfoTcs = new());
                 }
+            }
+
+            IPEndPoint? cachedEndPoint;
+            lock (CachedPeers) 
+            {
+                CachedPeers.TryGetValue(toPeer, out SubversePeer? peer);
+                cachedEndPoint = peer?.RemoteEndPoint;
+            }
+
+            if (cachedEndPoint is not null) 
+            {
+                await sipTransport.SendRequestAsync(new(cachedEndPoint), sipRequest);
             }
 
             IList<PeerInfo> peerInfo = await peerInfoTcs.Task;
@@ -272,9 +320,13 @@ namespace SubverseIM.Services.Implementation
 
             thisPeerTcs.SetResult(new(myKeys.PublicKey.GetFingerprint()));
 
-            lock (peerKeysMap)
+            lock (CachedPeers)
             {
-                peerKeysMap.Add(ThisPeer, myKeys);
+                CachedPeers.Add(ThisPeer, new SubversePeer 
+                { 
+                    OtherPeer = ThisPeer, 
+                    KeyContainer = myKeys
+                });
             }
         }
 
@@ -341,9 +393,13 @@ namespace SubverseIM.Services.Implementation
                 new SIPToHeader(string.Empty, requestToUri, string.Empty),
                 new SIPFromHeader(string.Empty, requestFromUri, string.Empty)
                 );
+
             sipRequest.Header.SetDateHeader();
 
-            // TODO: Sign/encrypt message body
+            using (PGP pgp = new(await GetPeerKeysAsync(message.Recipient)))
+            {
+                sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
+            }
 
             await SendSIPRequestAsync(sipRequest, cancellationToken);
         }
