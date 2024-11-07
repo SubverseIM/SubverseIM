@@ -80,10 +80,10 @@ namespace SubverseIM.Services.Implementation
             this.nativeService = nativeService;
         }
 
-        private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
+        private (Stream, Stream) GenerateKeysIfNone()
         {
-            if (dbService.TryGetReadStream("$/pkx/public.key", out Stream? publicKeyStream) &&
-                dbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
+            if (DbService.TryGetReadStream("$/pkx/public.key", out Stream? publicKeyStream) &&
+                DbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
             {
                 return (publicKeyStream, privateKeyStream);
             }
@@ -101,8 +101,8 @@ namespace SubverseIM.Services.Implementation
                         );
                 }
 
-                using (Stream publicKeyStoreStream = dbService.CreateWriteStream("$/pkx/public.key"))
-                using (Stream privateKeyStoreStream = dbService.CreateWriteStream("$/pkx/private.key"))
+                using (Stream publicKeyStoreStream = DbService.CreateWriteStream("$/pkx/public.key"))
+                using (Stream privateKeyStoreStream = DbService.CreateWriteStream("$/pkx/private.key"))
                 {
                     publicKeyStream.Position = 0;
                     publicKeyStream.CopyTo(publicKeyStoreStream);
@@ -309,9 +309,10 @@ namespace SubverseIM.Services.Implementation
         public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            (Stream publicKeyStream, Stream privateKeyStream) =
-                GenerateKeysIfNone(dbService);
             dbServiceTcs.SetResult(dbService);
+
+            (Stream publicKeyStream, Stream privateKeyStream) =
+                GenerateKeysIfNone();
 
             EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
 
