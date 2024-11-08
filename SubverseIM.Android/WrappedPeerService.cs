@@ -3,6 +3,7 @@ using Android.Content;
 using Android.OS;
 using SubverseIM.Android.Services;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,8 +19,10 @@ namespace SubverseIM.Android
             peerService = new PeerService(this);
         }
 
-        public override IBinder? OnBind(Intent? intent) => 
-            new ServiceBinder<IPeerService>(peerService);
+        public override IBinder? OnBind(Intent? intent)
+        {
+            return new ServiceBinder<IPeerService>(peerService);
+        }
 
         public Task SendPushNotificationAsync(string title, string content, CancellationToken cancellationToken = default)
         {

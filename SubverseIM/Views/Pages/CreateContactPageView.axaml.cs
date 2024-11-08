@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace SubverseIM.Views.Pages;
 
-public partial class MessagePageView : UserControl
+public partial class CreateContactPageView : UserControl
 {
-    public MessagePageView()
+    public CreateContactPageView()
     {
         InitializeComponent();
     }

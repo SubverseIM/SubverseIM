@@ -9,4 +9,26 @@
 	<Design.DataContext>
 		<vm:ContactPageViewModel />
 	</Design.DataContext>
+
+	<DockPanel>
+		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}">
+			<TextBlock HorizontalAlignment="Center">Invite a friend</TextBlock>
+		</Button>
+		<ListBox ItemsSource="{Binding ContactsList}">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<DockPanel Height="64">
+						<Panel DockPanel.Dock="Left" Width="64">
+							<Polygon Points="{Binding HexagonPoints}" Fill="White" />
+							<Image Source="{Binding ContactPhoto}"
+								   Width="62" Height="62" Clip="{Binding HexagonPath}">
+							</Image>
+						</Panel>
+						<TextBlock VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
+					</DockPanel>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+	</DockPanel>
+
 </UserControl>

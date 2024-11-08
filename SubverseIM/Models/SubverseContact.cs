@@ -1,7 +1,11 @@
-﻿namespace SubverseIM.Models
+﻿using LiteDB;
+
+namespace SubverseIM.Models
 {
     public class SubverseContact
     {
+        public ObjectId? Id { get; set; }
+
         public SubversePeerId OtherPeer { get; set; }
 
         public string? ImagePath { get; set; }

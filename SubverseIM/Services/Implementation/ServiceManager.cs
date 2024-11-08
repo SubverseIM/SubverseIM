@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SubverseIM.Services
+namespace SubverseIM.Services.Implementation
 {
     public class ServiceManager : IServiceManager
     {
         private readonly Dictionary<Type, object> serviceMap;
 
         private readonly Dictionary<Type, TaskCompletionSource<object>> awaitMap;
+
+        private bool disposedValue;
 
         public ServiceManager()
         {
@@ -33,7 +35,7 @@ namespace SubverseIM.Services
                 }
             }
 
-            lock (awaitMap) 
+            lock (awaitMap)
             {
                 if (awaitMap.TryGetValue(typeof(TService), out TaskCompletionSource<object>? instanceTcs))
                 {
@@ -42,10 +44,11 @@ namespace SubverseIM.Services
                 }
             }
 
+            _ = (newInstance as IInjectable)?.InjectAsync(this);
             return newInstance;
         }
 
-        public TService GetOrRegister<TService>(TService instance) 
+        public TService GetOrRegister<TService>(TService instance)
             where TService : class
         {
             TService newInstance;
@@ -69,6 +72,7 @@ namespace SubverseIM.Services
                 }
             }
 
+            _ = (newInstance as IInjectable)?.InjectAsync(this);
             return newInstance;
         }
 
@@ -91,13 +95,36 @@ namespace SubverseIM.Services
                     instanceTcs = new();
                     awaitMap.Add(typeof(TService), instanceTcs);
                 }
-                else 
+                else
                 {
                     awaitMap.Remove(typeof(TService));
                 }
             }
 
             return (TService)await instanceTcs.Task;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    foreach (var (_, service) in serviceMap)
+                    {
+                        (service as IDisposable)?.Dispose();
+                    }
+                }
+
+                serviceMap.Clear();
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

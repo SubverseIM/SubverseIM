@@ -5,7 +5,6 @@ using SubverseIM.Services;
 using SubverseIM.ViewModels;
 using SubverseIM.Views;
 using System;
-using System.Threading.Tasks;
 
 namespace SubverseIM;
 

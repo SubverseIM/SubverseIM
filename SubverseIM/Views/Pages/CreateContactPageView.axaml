@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:SubverseIM.ViewModels.Pages"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="SubverseIM.Views.Pages.CreateContactPageView"
+			 x:DataType="vm:CreateContactPageViewModel">
+	<Design.DataContext>
+		<vm:CreateContactPageViewModel />
+	</Design.DataContext>
+	<DockPanel>
+		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Bottom" Command="{Binding Contact.SaveChangesCommandAsync}">Save changes</Button>
+		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Change photo</Button>
+		<Label HorizontalAlignment="Stretch" DockPanel.Dock="Top">Contact Name:</Label>
+		<TextBox HorizontalAlignment="Stretch" DockPanel.Dock="Top"
+				 Watermark="Display Name" Text="{Binding Contact.DisplayName}" />
+		<Label HorizontalAlignment="Stretch" DockPanel.Dock="Top">Notes:</Label>
+		<TextBox HorizontalAlignment="Stretch" DockPanel.Dock="Top" Text="{Binding Contact.UserNote}" />
+		<Image Source="{Binding Contact.ContactPhoto}" />
+	</DockPanel>
+</UserControl>

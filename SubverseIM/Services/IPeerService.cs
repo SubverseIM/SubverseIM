@@ -12,16 +12,14 @@ namespace SubverseIM.Services
 
         IPEndPoint? LocalEndPoint { get; }
 
-        IPEndPoint? RemoteEndPoint { get; }
-
         IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
         Task BootstrapSelfAsync(CancellationToken cancellationToken = default);
 
-        Task ListenAsync(CancellationToken cancellationToken = default);
-
         Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default);
 
         Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default);
+
+        Task SendInviteAsync(CancellationToken cancellationToken = default);
     }
 }
