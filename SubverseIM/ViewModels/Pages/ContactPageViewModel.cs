@@ -9,6 +9,8 @@ namespace SubverseIM.ViewModels.Pages
 {
     public class ContactPageViewModel : PageViewModelBase
     {
+        public override string Title => "Contacts View";
+
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
         public ContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)

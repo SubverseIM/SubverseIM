@@ -9,6 +9,8 @@ namespace SubverseIM.ViewModels.Pages
 {
     public class CreateContactPageViewModel : PageViewModelBase
     {
+        public override string Title => "Edit Contact";
+
         public ContactViewModel? Contact { get; private set; }
 
         public CreateContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)
