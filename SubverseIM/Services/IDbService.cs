@@ -11,7 +11,7 @@ namespace SubverseIM.Services
     {
         IEnumerable<SubverseContact> GetContacts();
 
-        SubverseContact GetContact(SubversePeerId otherPeer);
+        SubverseContact? GetContact(SubversePeerId otherPeer);
 
         IEnumerable<SubverseMessage> GetMessagesFromPeer(SubversePeerId otherPeer);
 

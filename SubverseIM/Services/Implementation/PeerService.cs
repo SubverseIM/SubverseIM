@@ -22,6 +22,8 @@ namespace SubverseIM.Services.Implementation
 {
     public class PeerService : IPeerService, IInjectable
     {
+        private readonly INativeService nativeService;
+
         private readonly IDhtEngine dhtEngine;
 
         private readonly IDhtListener dhtListener;
@@ -47,8 +49,8 @@ namespace SubverseIM.Services.Implementation
         private readonly TaskCompletionSource<IDbService> dbServiceTcs;
         private IDbService DbService => dbServiceTcs.Task.Result;
 
-        private readonly TaskCompletionSource<INativeService> nativeServiceTcs;
-        private INativeService NativeService => nativeServiceTcs.Task.Result;
+        private readonly TaskCompletionSource<ILauncherService> launcherServiceTcs;
+        private ILauncherService LauncherService => launcherServiceTcs.Task.Result;
 
         public IPEndPoint? LocalEndPoint { get; private set; }
 
@@ -56,8 +58,10 @@ namespace SubverseIM.Services.Implementation
 
         public SubversePeerId ThisPeer => thisPeerTcs.Task.Result;
 
-        public PeerService()
+        public PeerService(INativeService nativeService)
         {
+            this.nativeService = nativeService;
+
             dhtEngine = new DhtEngine();
             dhtListener = new DhtListener(new IPEndPoint(IPAddress.Any, 0));
 
@@ -70,7 +74,7 @@ namespace SubverseIM.Services.Implementation
             thisPeerTcs = new();
 
             dbServiceTcs = new();
-            nativeServiceTcs = new();
+            launcherServiceTcs = new();
 
             callIdMap = new();
             peerInfoMap = new();
@@ -334,8 +338,8 @@ namespace SubverseIM.Services.Implementation
                 GenerateKeysIfNone(dbService);
             dbServiceTcs.SetResult(dbService);
 
-            INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>();
-            nativeServiceTcs.SetResult(nativeService);
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+            launcherServiceTcs.SetResult(launcherService);
 
             EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
 
@@ -444,7 +448,7 @@ namespace SubverseIM.Services.Implementation
         {
             string inviteId = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
-            await NativeService.ShareStringToAppAsync("Send Invite Via App", $"https://subverse.network/invite/{inviteId}");
+            await LauncherService.ShareStringToAppAsync("Send Invite Via App", $"https://subverse.network/invite/{inviteId}");
         }
     }
 }

@@ -9,5 +9,14 @@
 	<Design.DataContext>
 		<vm:CreateContactPageViewModel />
 	</Design.DataContext>
-	
+	<DockPanel>
+		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Bottom" Command="{Binding Contact.SaveChangesCommandAsync}">Save changes</Button>
+		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Change photo</Button>
+		<Label HorizontalAlignment="Stretch" DockPanel.Dock="Top">Contact Name:</Label>
+		<TextBox HorizontalAlignment="Stretch" DockPanel.Dock="Top"
+				 Watermark="Display Name" Text="{Binding Contact.DisplayName}" />
+		<Label HorizontalAlignment="Stretch" DockPanel.Dock="Top">Notes:</Label>
+		<TextBox HorizontalAlignment="Stretch" DockPanel.Dock="Top" Text="{Binding Contact.UserNote}" />
+		<Image Source="{Binding Contact.ContactPhoto}" />
+	</DockPanel>
 </UserControl>

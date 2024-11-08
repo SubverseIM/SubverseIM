@@ -34,7 +34,7 @@ namespace SubverseIM.Services.Implementation
                 .OrderBy(x => x.DisplayName);
         }
 
-        public SubverseContact GetContact(SubversePeerId otherPeer)
+        public SubverseContact? GetContact(SubversePeerId otherPeer)
         {
             var contacts = db.GetCollection<SubverseContact>();
             contacts.EnsureIndex(x => x.OtherPeer, unique: true);

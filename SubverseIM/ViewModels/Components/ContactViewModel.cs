@@ -51,9 +51,35 @@ namespace SubverseIM.ViewModels.Components
             private set => this.RaiseAndSetIfChanged(ref contactPhoto, value); 
         }
 
-        public string? DisplayName => innerContact.DisplayName;
+        public string? DisplayName 
+        {
+            get => innerContact.DisplayName;
+            set
+            {
+                innerContact.DisplayName = value;
+                this.RaisePropertyChanged();
+            }
+        }
 
-        public string? UserNote => innerContact.UserNote;
+        public string? UserNote
+        {
+            get => innerContact.UserNote;
+            set
+            {
+                innerContact.UserNote = value;
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public string? ImagePath
+        {
+            get => innerContact.ImagePath;
+            set
+            {
+                innerContact.ImagePath = value;
+                this.RaisePropertyChanged();
+            }
+        }
 
         public IList<Point> HexagonPoints => hexagonPoints;
 
@@ -78,6 +104,15 @@ namespace SubverseIM.ViewModels.Components
             ContactPhoto = Bitmap.DecodeToWidth(contactPhotoStream ?? 
                 AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")), 
                 64);
+        }
+
+        public async Task SaveChangesCommandAsync() 
+        {
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            dbService.InsertOrUpdateItem(innerContact);
+
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigateMain();
         }
     }
 }

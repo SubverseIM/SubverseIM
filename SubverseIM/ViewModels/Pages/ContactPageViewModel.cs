@@ -18,6 +18,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task LoadContactsAsync(CancellationToken cancellationToken = default) 
         {
+            ContactsList.Clear();
+
             IDbService db = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             foreach (SubverseContact contact in db.GetContacts()) 
             {

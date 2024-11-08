@@ -9,7 +9,7 @@ namespace SubverseIM.ViewModels.Pages
 {
     public class CreateContactPageViewModel : PageViewModelBase
     {
-        public ContactViewModel? ContactViewModel { get; private set; }
+        public ContactViewModel? Contact { get; private set; }
 
         public CreateContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)
         {
@@ -20,9 +20,10 @@ namespace SubverseIM.ViewModels.Pages
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
 
             SubversePeerId otherPeer = SubversePeerId.FromString(contactUri.DnsSafeHost);
-            ContactViewModel = new(ServiceManager, dbService.GetContact(otherPeer));
+            Contact = new(ServiceManager, dbService.GetContact(otherPeer) ?? 
+                new SubverseContact() { OtherPeer = otherPeer });
 
-            await ContactViewModel.LoadPhotoAsync(cancellationToken);
+            await Contact.LoadPhotoAsync(cancellationToken);
         }
     }
 }

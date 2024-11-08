@@ -11,8 +11,8 @@
 	</Design.DataContext>
 
 	<DockPanel>
-		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Bottom" Command="{Binding InviteCommandAsync}">
-			Invite A Friend
+		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}">
+			<TextBlock HorizontalAlignment="Center">Invite a friend</TextBlock>
 		</Button>
 		<ListBox ItemsSource="{Binding ContactsList}">
 			<ListBox.ItemTemplate>
@@ -24,7 +24,7 @@
 								   Width="62" Height="62" Clip="{Binding HexagonPath}">
 							</Image>
 						</Panel>
-						<TextBlock Text="{Binding DisplayName}" />
+						<TextBlock VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
 					</DockPanel>
 				</DataTemplate>
 			</ListBox.ItemTemplate>

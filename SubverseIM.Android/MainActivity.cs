@@ -2,6 +2,7 @@
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Util;
 using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
@@ -30,7 +31,7 @@ namespace SubverseIM.Android;
         Intent.CategoryBrowsable
         ],
     DataScheme = "sv")]
-public class MainActivity : AvaloniaMainActivity<App>, INativeService
+public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 {
     private readonly ServiceManager serviceManager;
 
@@ -46,7 +47,7 @@ public class MainActivity : AvaloniaMainActivity<App>, INativeService
     {
         base.OnCreate(savedInstanceState);
 
-        serviceManager.GetOrRegister<INativeService>(this);
+        serviceManager.GetOrRegister<ILauncherService>(this);
 
         string appDataPath = System.Environment.GetFolderPath(
             System.Environment.SpecialFolder.ApplicationData
@@ -65,28 +66,11 @@ public class MainActivity : AvaloniaMainActivity<App>, INativeService
             );
     }
 
-    protected override async void OnStart()
-    {
-        base.OnStart();
-
-        IFrontendService frontendService = await serviceManager
-            .GetWithAwaitAsync<IFrontendService>();
-        switch (Intent?.Action)
-        {
-            case Intent.ActionView:
-                await frontendService.ViewCreateContactAsync(new(Intent?.Data?.ToString()
-                    ?? throw new InvalidOperationException("Intent did not provide a valid URI!")
-                    ));
-                break;
-        }
-    }
-
     protected override void OnDestroy()
     {
         base.OnDestroy();
 
         UnbindService(peerServiceConn);
-
         serviceManager.Dispose();
     }
 
@@ -99,7 +83,13 @@ public class MainActivity : AvaloniaMainActivity<App>, INativeService
             .UseReactiveUI();
     }
 
-    Task INativeService.ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken)
+    public Uri? GetLaunchedUri()
+    {
+        return Intent?.DataString is null ?
+            null : new Uri(Intent.DataString);
+    }
+
+    public Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken)
     {
         new ShareCompat.IntentBuilder(this)
             .SetType("text/plain")
@@ -108,10 +98,5 @@ public class MainActivity : AvaloniaMainActivity<App>, INativeService
             .StartChooser();
 
         return Task.CompletedTask;
-    }
-
-    Task INativeService.SendPushNotificationAsync(string title, string content, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
     }
 }

@@ -76,10 +76,20 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         }
     }
 
-    public async Task ViewCreateContactAsync(Uri contactUri, CancellationToken cancellationToken)
+    public async Task InvokeFromLauncherAsync() 
     {
-        await createContactPage.InitializeAsync(contactUri, cancellationToken);
-        CurrentPage = createContactPage;
+        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+        Uri? launchedUri = launcherService.GetLaunchedUri();
+        if (launchedUri is not null)
+        {
+            await createContactPage.InitializeAsync(launchedUri);
+            CurrentPage = createContactPage;
+        }
+    }
+
+    public void NavigateMain()
+    {
+        CurrentPage = contactPage;
     }
 
     protected virtual void Dispose(bool disposing)
