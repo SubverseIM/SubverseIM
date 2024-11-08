@@ -10,20 +10,25 @@
 		<vm:ContactPageViewModel />
 	</Design.DataContext>
 
-	<ListBox ItemsSource="{Binding ContactsList}">
-		<ListBox.ItemTemplate>
-			<DataTemplate>
-				<StackPanel Orientation="Horizontal">
-					<Panel Width="64" Height="64">
-						<Polygon Points="{Binding HexagonPoints}" Fill="White" />
-						<Image Source="{Binding ContactPhoto}"
-							   Width="62" Height="62" Clip="{Binding HexagonPath}">
-						</Image>
-					</Panel>
-					<TextBlock Text="{Binding DisplayName}" />
-				</StackPanel>
-			</DataTemplate>
-		</ListBox.ItemTemplate>
-	</ListBox>
-	
+	<DockPanel>
+		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Bottom" Command="{Binding InviteCommandAsync}">
+			Invite A Friend
+		</Button>
+		<ListBox ItemsSource="{Binding ContactsList}">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<DockPanel Height="64">
+						<Panel DockPanel.Dock="Left" Width="64">
+							<Polygon Points="{Binding HexagonPoints}" Fill="White" />
+							<Image Source="{Binding ContactPhoto}"
+								   Width="62" Height="62" Clip="{Binding HexagonPath}">
+							</Image>
+						</Panel>
+						<TextBlock Text="{Binding DisplayName}" />
+					</DockPanel>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+	</DockPanel>
+
 </UserControl>

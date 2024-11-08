@@ -26,5 +26,11 @@ namespace SubverseIM.ViewModels.Pages
                 ContactsList.Add(vm);
             }
         }
+
+        public async Task InviteCommandAsync() 
+        {
+            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
+            await peerService.SendInviteAsync();
+        }
     }
 }

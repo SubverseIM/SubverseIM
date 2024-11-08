@@ -34,6 +34,13 @@ namespace SubverseIM.Services.Implementation
                 .OrderBy(x => x.DisplayName);
         }
 
+        public SubverseContact GetContact(SubversePeerId otherPeer)
+        {
+            var contacts = db.GetCollection<SubverseContact>();
+            contacts.EnsureIndex(x => x.OtherPeer, unique: true);
+            return contacts.FindOne(x => x.OtherPeer == otherPeer);
+        }
+
         public IEnumerable<SubverseMessage> GetMessagesFromPeer(SubversePeerId otherPeer)
         {
             return db.GetCollection<SubverseMessage>()

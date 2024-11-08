@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,8 +27,6 @@ namespace SubverseIM.Services.Implementation
         private readonly IDhtListener dhtListener;
 
         private readonly IPortForwarder portForwarder;
-
-        private readonly INativeService nativeService;
 
         private readonly HttpClient http;
 
@@ -46,8 +45,10 @@ namespace SubverseIM.Services.Implementation
         private readonly TaskCompletionSource<SubversePeerId> thisPeerTcs;
 
         private readonly TaskCompletionSource<IDbService> dbServiceTcs;
-
         private IDbService DbService => dbServiceTcs.Task.Result;
+
+        private readonly TaskCompletionSource<INativeService> nativeServiceTcs;
+        private INativeService NativeService => nativeServiceTcs.Task.Result;
 
         public IPEndPoint? LocalEndPoint { get; private set; }
 
@@ -55,7 +56,7 @@ namespace SubverseIM.Services.Implementation
 
         public SubversePeerId ThisPeer => thisPeerTcs.Task.Result;
 
-        public PeerService(INativeService nativeService)
+        public PeerService()
         {
             dhtEngine = new DhtEngine();
             dhtListener = new DhtListener(new IPEndPoint(IPAddress.Any, 0));
@@ -67,7 +68,9 @@ namespace SubverseIM.Services.Implementation
             sipTransport = new SIPTransport(stateless: true);
 
             thisPeerTcs = new();
+
             dbServiceTcs = new();
+            nativeServiceTcs = new();
 
             callIdMap = new();
             peerInfoMap = new();
@@ -76,8 +79,6 @@ namespace SubverseIM.Services.Implementation
             timer = new(TimeSpan.FromSeconds(15));
 
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
-
-            this.nativeService = nativeService;
         }
 
         private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
@@ -118,12 +119,12 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
-        private async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer)
+        private async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer, CancellationToken cancellationToken = default)
         {
             EncryptionKeys? peerKeys;
             if (CachedPeers.TryGetValue(otherPeer, out SubversePeer? peer) && peer.KeyContainer is null)
             {
-                Stream publicKeyStream = await http.GetStreamAsync($"pk?p={otherPeer}");
+                Stream publicKeyStream = await http.GetStreamAsync($"pk?p={otherPeer}", cancellationToken);
                 if (DbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
                 {
                     peerKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
@@ -167,8 +168,8 @@ namespace SubverseIM.Services.Implementation
                 using (ByteArrayContent requestContent = new(requestBytes)
                 { Headers = { ContentType = new("application/octet-stream") } })
                 {
-                    HttpResponseMessage response = await http.PostAsync($"nodes?p={ThisPeer}", requestContent);
-                    return await response.Content.ReadFromJsonAsync<bool>();
+                    HttpResponseMessage response = await http.PostAsync($"nodes?p={ThisPeer}", requestContent, cancellationToken);
+                    return await response.Content.ReadFromJsonAsync<bool>(cancellationToken);
                 }
             }
             catch (Exception)
@@ -333,6 +334,9 @@ namespace SubverseIM.Services.Implementation
                 GenerateKeysIfNone(dbService);
             dbServiceTcs.SetResult(dbService);
 
+            INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>();
+            nativeServiceTcs.SetResult(nativeService);
+
             EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
 
             publicKeyStream.Dispose();
@@ -363,7 +367,8 @@ namespace SubverseIM.Services.Implementation
             await dhtEngine.StartAsync();
 
             await portForwarder.StartAsync(cancellationToken);
-            await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, 0));
+            await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, 
+                RandomNumberGenerator.GetInt32(1024, ushort.MaxValue)));
 
             if (DbService.TryGetReadStream("$/pkx/public.key", out Stream? pkStream)) 
             {
@@ -371,7 +376,7 @@ namespace SubverseIM.Services.Implementation
                 using (StreamContent pkStreamContent = new(pkStream)
                 { Headers = { ContentType = new("application/pgp-keys") } })
                 {
-                    await http.PostAsync("pk", pkStreamContent);
+                    await http.PostAsync("pk", pkStreamContent, cancellationToken);
                 }
             }
 
@@ -427,7 +432,7 @@ namespace SubverseIM.Services.Implementation
 
             sipRequest.Header.SetDateHeader();
 
-            using (PGP pgp = new(await GetPeerKeysAsync(message.Recipient)))
+            using (PGP pgp = new(await GetPeerKeysAsync(message.Recipient, cancellationToken)))
             {
                 sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
             }
@@ -437,9 +442,9 @@ namespace SubverseIM.Services.Implementation
 
         public async Task SendInviteAsync(CancellationToken cancellationToken = default)
         {
-            string inviteUri = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ??
+            string inviteId = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
-            await nativeService.ShareStringToAppAsync("Send Invite Via App", inviteUri);
+            await NativeService.ShareStringToAppAsync("Send Invite Via App", $"https://subverse.network/invite/{inviteId}");
         }
     }
 }

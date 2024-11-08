@@ -69,19 +69,15 @@ namespace SubverseIM.ViewModels.Components
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
 
-            Stream contactPhotoStream;
-            if (innerContact.ImagePath is null)
+            Stream? contactPhotoStream = null;
+            if (innerContact.ImagePath is not null)
             {
-                contactPhotoStream = AssetLoader.Open(
-                    new Uri("avares://SubverseIM/Assets/izzy.jpg")
-                    );
+                dbService.TryGetReadStream(innerContact.ImagePath, out contactPhotoStream);
             }
-            else 
-            {
-                contactPhotoStream = dbService.TryGetReadStream(innerContact.ImagePath);
-            }
-
-            ContactPhoto = Bitmap.DecodeToWidth(contactPhotoStream, 64);
+            
+            ContactPhoto = Bitmap.DecodeToWidth(contactPhotoStream ?? 
+                AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")), 
+                64);
         }
     }
 }

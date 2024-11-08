@@ -1,9 +1,12 @@
-﻿using System;
+﻿using LiteDB;
+using System;
 
 namespace SubverseIM.Models
 {
     public class SubverseMessage
     {
+        public ObjectId? Id { get; set; }
+
         public SubversePeerId Sender { get; set; }
 
         public SubversePeerId Recipient { get; set; }
