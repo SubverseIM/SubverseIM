@@ -10,6 +10,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using SubverseIM.Services.Implementation;
 
 namespace SubverseIM.ViewModels.Components
 {
@@ -106,13 +107,22 @@ namespace SubverseIM.ViewModels.Components
                 64);
         }
 
+        public async Task OpenMessageViewCommandAsync()
+        {
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+
+            SubverseContact? contact = dbService.GetContact(innerContact.OtherPeer);
+            frontendService.NavigateMessageView(innerContact);
+        }
+
         public async Task SaveChangesCommandAsync() 
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             dbService.InsertOrUpdateItem(innerContact);
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateMain();
+            frontendService.NavigateContactView();
         }
     }
 }

@@ -22,8 +22,8 @@ namespace SubverseIM.ViewModels.Pages
         {
             ContactsList.Clear();
 
-            IDbService db = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
-            foreach (SubverseContact contact in db.GetContacts()) 
+            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+            foreach (SubverseContact contact in dbService.GetContacts()) 
             {
                 ContactViewModel vm = new(ServiceManager, contact);
                 await vm.LoadPhotoAsync();

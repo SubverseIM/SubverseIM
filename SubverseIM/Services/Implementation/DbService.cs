@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 
 namespace SubverseIM.Services.Implementation
 {
@@ -29,9 +28,9 @@ namespace SubverseIM.Services.Implementation
         {
             var contacts = db.GetCollection<SubverseContact>();
             contacts.EnsureIndex(x => x.OtherPeer, unique: true);
-            return contacts
-                .FindAll()
-                .OrderBy(x => x.DisplayName);
+            return contacts.Query()
+                .OrderBy(x => x.DisplayName)
+                .ToEnumerable();
         }
 
         public SubverseContact? GetContact(SubversePeerId otherPeer)
@@ -41,11 +40,17 @@ namespace SubverseIM.Services.Implementation
             return contacts.FindOne(x => x.OtherPeer == otherPeer);
         }
 
-        public IEnumerable<SubverseMessage> GetMessagesFromPeer(SubversePeerId otherPeer)
+        public IEnumerable<SubverseMessage> GetMessagesWithPeer(SubversePeerId otherPeer)
         {
-            return db.GetCollection<SubverseMessage>()
-                .Find(x => x.Sender == otherPeer)
-                .OrderByDescending(x => x.DateSignedOn);
+            var messages = db.GetCollection<SubverseMessage>();
+
+            messages.EnsureIndex(x => x.Sender);
+            messages.EnsureIndex(x => x.Recipient);
+
+            return messages.Query()
+                .Where(x => x.Sender == otherPeer || x.Recipient == otherPeer)
+                .OrderByDescending(x => x.DateSignedOn)
+                .ToEnumerable();
         }
 
         public bool InsertOrUpdateItem<T>(T item)
