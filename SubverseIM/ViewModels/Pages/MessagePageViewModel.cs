@@ -24,7 +24,7 @@ namespace SubverseIM.ViewModels.Pages
             get => sendMessageText;
             set 
             {
-                this.RaiseAndSetIfChanged(ref sendMessageText, value);
+                this.RaiseAndSetIfChanged(ref sendMessageText, value?.Trim());
             }
         }
 
@@ -69,6 +69,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task SendCommandAsync() 
         {
+            if (string.IsNullOrEmpty(SendMessageText)) return;
+
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
 
@@ -82,11 +84,10 @@ namespace SubverseIM.ViewModels.Pages
             };
 
             SendMessageText = null;
+            await peerService.SendMessageAsync(message);
 
             MessageList.Insert(0, new(null, message));
             dbService.InsertOrUpdateItem(message);
-
-            await peerService.SendMessageAsync(message);
         }
     }
 }

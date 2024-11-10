@@ -1,4 +1,6 @@
-﻿using ReactiveUI;
+﻿using LiteDB;
+using Mono.Nat;
+using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
@@ -51,6 +53,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         IPeerService peerService = await serviceManager.GetWithAwaitAsync<IPeerService>();
+        INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>();
 
         _ = peerService.BootstrapSelfAsync(cancellationToken);
 
@@ -72,12 +75,31 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
             cancellationToken.ThrowIfCancellationRequested();
 
             SubverseMessage message = await peerService.ReceiveMessageAsync(cancellationToken);
-            SubverseContact? contact = dbService.GetContact(message.Sender);
-            if (contact is not null && messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm)) 
+            SubverseContact contact = dbService.GetContact(message.Sender) ?? 
+                new SubverseContact() 
+                { 
+                    OtherPeer = message.Sender, 
+                    DisplayName = message.Sender.ToString(), 
+                    UserNote = "Anonymous User" 
+                };
+
+            dbService.InsertOrUpdateItem(contact);
+            await contactPage.LoadContactsAsync(cancellationToken);
+
+            try
             {
-                vm.MessageList.Insert(0, new(contact, message));
                 dbService.InsertOrUpdateItem(message);
+                await nativeService.SendPushNotificationAsync(
+                        message.Sender.GetHashCode(), contact?.DisplayName ?? "Anonymous",
+                        message.Content ?? "Message did not contain text."
+                        );
+
+                if (contact is not null && messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
+                {
+                    vm.MessageList.Insert(0, new(contact, message));
+                }
             }
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
         }
     }
 
@@ -105,7 +127,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
     public void NavigateMessageView(SubverseContact contact)
     {
-        if(!messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
+        if (!messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
         {
             messagePageMap.Add(contact.OtherPeer, vm = new(serviceManager, contact));
         }

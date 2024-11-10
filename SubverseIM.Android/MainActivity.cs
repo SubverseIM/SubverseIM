@@ -1,4 +1,5 @@
-﻿using Android.App;
+﻿using Android;
+using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
@@ -12,6 +13,7 @@ using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,6 +39,8 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     private readonly ServiceConnection<IPeerService> peerServiceConn;
 
+    public bool NotificationsAllowed { get; private set; }
+
     public MainActivity()
     {
         serviceManager = new();
@@ -46,6 +50,12 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     protected override async void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+
+        if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
+            CheckSelfPermission(Manifest.Permission.PostNotifications) == Permission.Denied)
+        {
+            RequestPermissions([Manifest.Permission.PostNotifications], 1001);
+        }
 
         serviceManager.GetOrRegister<ILauncherService>(this);
 
@@ -64,6 +74,16 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         serviceManager.GetOrRegister(
             await peerServiceConn.ConnectAsync()
             );
+    }
+
+    public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
+    {
+        switch (requestCode) 
+        {
+            case 1001:
+                NotificationsAllowed = grantResults.All(x => x == Permission.Granted);
+                break;
+        }
     }
 
     protected override void OnDestroy()

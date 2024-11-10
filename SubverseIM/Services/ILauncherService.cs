@@ -6,6 +6,8 @@ namespace SubverseIM.Services
 {
     public interface ILauncherService
     {
+        bool NotificationsAllowed { get; }
+
         Uri? GetLaunchedUri();
 
         Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken = default);

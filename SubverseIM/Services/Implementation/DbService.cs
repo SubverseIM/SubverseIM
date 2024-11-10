@@ -47,6 +47,8 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.Sender);
             messages.EnsureIndex(x => x.Recipient);
 
+            messages.EnsureIndex(x => x.CallId, unique: true);
+
             return messages.Query()
                 .Where(x => x.Sender == otherPeer || x.Recipient == otherPeer)
                 .OrderByDescending(x => x.DateSignedOn)

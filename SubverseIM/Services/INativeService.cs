@@ -5,6 +5,6 @@ namespace SubverseIM.Services
 {
     public interface INativeService
     {
-        Task SendPushNotificationAsync(string title, string content, CancellationToken cancellationToken = default);
+        Task SendPushNotificationAsync(int id, string title, string content, CancellationToken cancellationToken = default);
     }
 }

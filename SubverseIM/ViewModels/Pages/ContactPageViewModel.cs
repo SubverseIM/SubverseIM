@@ -2,6 +2,7 @@
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
