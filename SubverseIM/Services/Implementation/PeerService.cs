@@ -68,7 +68,7 @@ namespace SubverseIM.Services.Implementation
             http = new() { BaseAddress = new Uri("https://subverse.network/") };
             portForwarder = new MonoNatPortForwarder();
 
-            sipChannel = new SIPUDPChannel(IPAddress.Any, 0);
+            sipChannel = new SIPUDPChannel(IPAddress.Any, 6_03_03);
             sipTransport = new SIPTransport(stateless: true);
 
             thisPeerTcs = new();
@@ -125,8 +125,14 @@ namespace SubverseIM.Services.Implementation
 
         private async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer, CancellationToken cancellationToken = default)
         {
+            SubversePeer? peer;
+            lock (CachedPeers) 
+            {
+                CachedPeers.TryGetValue(otherPeer, out peer);
+            }
+
             EncryptionKeys? peerKeys;
-            if (CachedPeers.TryGetValue(otherPeer, out SubversePeer? peer) && peer.KeyContainer is null)
+            if (peer is not null && peer.KeyContainer is null)
             {
                 MemoryStream publicKeyStream = new MemoryStream();
                 using (Stream responseStream = await http.GetStreamAsync($"pk?p={otherPeer}", cancellationToken))
@@ -164,10 +170,16 @@ namespace SubverseIM.Services.Implementation
         {
             try
             {
+                SubversePeer peer;
+                lock (CachedPeers) 
+                {
+                    peer = CachedPeers[ThisPeer];
+                }
+
                 ReadOnlyMemory<byte> nodesBytes = await dhtEngine.SaveNodesAsync();
 
                 byte[] requestBytes;
-                using (PGP pgp = new(CachedPeers[ThisPeer].KeyContainer))
+                using (PGP pgp = new(peer.KeyContainer))
                 using (MemoryStream inputStream = new(nodesBytes.ToArray()))
                 using (MemoryStream outputStream = new())
                 {
@@ -262,17 +274,17 @@ namespace SubverseIM.Services.Implementation
 
         private Task SIPTransportResponseReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPResponse sipResponse)
         {
+            SubversePeerId peerId;
+            lock (callIdMap)
+            {
+                if (!callIdMap.Remove(sipResponse.Header.CallId, out peerId))
+                {
+                    throw new InvalidOperationException("Received response for invalid Call ID!");
+                }
+            }
+
             if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
             {
-                SubversePeerId peerId;
-                lock (callIdMap)
-                {
-                    if (!callIdMap.TryGetValue(sipResponse.Header.CallId, out peerId))
-                    {
-                        throw new InvalidOperationException("Received response for invalid Call ID!");
-                    }
-                }
-
                 lock (CachedPeers)
                 {
                     if (CachedPeers.TryGetValue(peerId, out SubversePeer? peer))
@@ -312,6 +324,7 @@ namespace SubverseIM.Services.Implementation
                 await sipTransport.SendRequestAsync(new(cachedEndPoint), sipRequest);
             }
 
+            dhtEngine.GetPeers(new (toPeer.GetBytes()));
             TaskCompletionSource<IList<PeerInfo>>? peerInfoTcs;
             if (!peerInfoBag.TryTake(out peerInfoTcs))
             {
@@ -364,6 +377,7 @@ namespace SubverseIM.Services.Implementation
 
             sipTransport.SIPTransportRequestReceived += SIPTransportRequestReceived;
             sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
+            sipTransport.AddSIPChannel(sipChannel);
 
             dhtEngine.PeersFound += DhtPeersFound;
 
@@ -371,8 +385,13 @@ namespace SubverseIM.Services.Implementation
             await dhtEngine.StartAsync();
 
             await portForwarder.StartAsync(cancellationToken);
-            await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port,
-                RandomNumberGenerator.GetInt32(1024, ushort.MaxValue)));
+
+            int portNum = 6_03_03;
+            while (portForwarder.Mappings.Created.Count == 0) 
+            {
+                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, portNum++));
+                await timer.WaitForNextTickAsync();
+            }
 
             if (DbService.TryGetReadStream("$/pkx/public.key", out Stream? pkStream))
             {
@@ -386,10 +405,9 @@ namespace SubverseIM.Services.Implementation
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (portForwarder.Mappings.Created.Count > 0)
-                {
-                    dhtEngine.Announce(new(ThisPeer.GetBytes()),
-                        portForwarder.Mappings.Created[0].PublicPort);
+                foreach(var mapping in portForwarder.Mappings.Created)
+                { 
+                    dhtEngine.Announce(new(ThisPeer.GetBytes()), mapping.PublicPort);
                 }
 
                 await SynchronizePeersAsync(cancellationToken);
