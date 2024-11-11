@@ -1,4 +1,6 @@
-﻿using ReactiveUI;
+﻿using Avalonia.Platform.Storage;
+using LiteDB;
+using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
@@ -47,14 +49,16 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         _ = RunAsync(mainTaskCts.Token);
     }
 
-    public async Task RunAsync(CancellationToken cancellationToken = default) 
+    public async Task RunAsync(CancellationToken cancellationToken = default)
     {
-        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        IPeerService peerService = await serviceManager.GetWithAwaitAsync<IPeerService>();
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+        IPeerService peerService = await serviceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
+        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
+        INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>(cancellationToken);
 
         _ = peerService.BootstrapSelfAsync(cancellationToken);
 
-        lock (peerService.CachedPeers) 
+        lock (peerService.CachedPeers)
         {
             foreach (SubverseContact contact in dbService.GetContacts())
             {
@@ -67,17 +71,54 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
             }
         }
 
-        while (!cancellationToken.IsCancellationRequested) 
+        while (!cancellationToken.IsCancellationRequested)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             SubverseMessage message = await peerService.ReceiveMessageAsync(cancellationToken);
-            dbService.InsertOrUpdateItem(message);
+            SubverseContact contact = dbService.GetContact(message.Sender) ?? 
+                new SubverseContact() 
+                { 
+                    OtherPeer = message.Sender, 
+                    DisplayName = "Anonymous", 
+                    UserNote = "Anonymous User via the Subverse Network" 
+                };
+
+            dbService.InsertOrUpdateItem(contact);
+            await contactPage.LoadContactsAsync(cancellationToken);
+
+            try
+            {
+                dbService.InsertOrUpdateItem(message);
+
+                bool isCurrentPeer;
+                if (contact is not null && messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
+                {
+                    isCurrentPeer = vm == currentPage;
+                    vm.MessageList.Insert(0, new(vm, contact, message));
+                }
+                else 
+                {
+                    isCurrentPeer = false;
+                }
+
+                if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
+                {
+                    await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);
+                }
+                else 
+                {
+                    nativeService.ClearNotificationForPeer(message.Sender);
+                }
+            }
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
         }
     }
 
-    public async Task InvokeFromLauncherAsync() 
+    public async Task InvokeFromLauncherAsync(IStorageProvider storageProvider)
     {
+        serviceManager.GetOrRegister(storageProvider);
+
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         Uri? launchedUri = launcherService.GetLaunchedUri();
         if (launchedUri is not null)
@@ -87,9 +128,24 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         }
     }
 
-    public void NavigateMain()
+    public void NavigateContactView()
     {
         CurrentPage = contactPage;
+    }
+
+    public async void NavigateContactView(SubverseContact contact)
+    {
+        await createContactPage.InitializeAsync(new Uri($"sv://{contact.OtherPeer}"));
+        CurrentPage = createContactPage;
+    }
+
+    public void NavigateMessageView(SubverseContact contact)
+    {
+        if (!messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
+        {
+            messagePageMap.Add(contact.OtherPeer, vm = new(serviceManager, contact));
+        }
+        CurrentPage = vm;
     }
 
     protected virtual void Dispose(bool disposing)

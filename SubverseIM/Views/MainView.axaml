@@ -6,13 +6,17 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SubverseIM.Views.MainView"
              x:DataType="vm:MainViewModel">
-  <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
-  </Design.DataContext>
-
-	<Grid RowDefinitions="*,Auto">
-		<TransitioningContentControl Content="{Binding CurrentPage}" />
-	</Grid>
+		<vm:MainViewModel />
+	</Design.DataContext>
+	<DockPanel>
+		<Border Background="Black" BorderThickness="0" DockPanel.Dock="Top" HorizontalAlignment="Stretch">
+			<TextBlock Margin="10" Text="{Binding CurrentPage.Title}" FontSize="18" FontWeight="Bold" />
+		</Border>
+		<Grid RowDefinitions="*,Auto">
+			<TransitioningContentControl Content="{Binding CurrentPage}" />
+		</Grid>
+	</DockPanel>
 </UserControl>

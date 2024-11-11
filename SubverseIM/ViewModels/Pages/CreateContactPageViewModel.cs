@@ -1,7 +1,11 @@
-﻿using SubverseIM.Models;
+﻿using Avalonia.Platform.Storage;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,6 +13,8 @@ namespace SubverseIM.ViewModels.Pages
 {
     public class CreateContactPageViewModel : PageViewModelBase
     {
+        public override string Title => "Edit Contact";
+
         public ContactViewModel? Contact { get; private set; }
 
         public CreateContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)

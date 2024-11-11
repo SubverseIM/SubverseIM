@@ -13,7 +13,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +21,18 @@ namespace SubverseIM.Services.Implementation
 {
     public class PeerService : IPeerService, IInjectable
     {
+        private const int MAGIC_PORT_NUM = 6_03_03;
+
+        private const string MAGIC_SECRET_PASSWORD = "#FreeTheInternet";
+
+        private const string DEFAULT_BOOTSTRAPPER_ROOT = "https://subverse.network";
+
+        private const string PUBLIC_KEY_PATH = "$/pkx/public.key";
+
+        private const string PRIVATE_KEY_PATH = "$/pkx/private.key";
+
+        private const string NODES_LIST_PATH = "$/pkx/nodes.list";
+
         private readonly INativeService nativeService;
 
         private readonly IDhtEngine dhtEngine;
@@ -36,9 +47,9 @@ namespace SubverseIM.Services.Implementation
 
         private readonly SIPTransport sipTransport;
 
-        private readonly Dictionary<string, SubversePeerId> callIdMap;
+        private readonly Dictionary<string, SIPRequest> callIdMap;
 
-        private readonly Dictionary<SubversePeerId, TaskCompletionSource<IList<PeerInfo>>> peerInfoMap;
+        private readonly ConcurrentBag<TaskCompletionSource<IList<PeerInfo>>> peerInfoBag;
 
         private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messagesBag;
 
@@ -65,10 +76,10 @@ namespace SubverseIM.Services.Implementation
             dhtEngine = new DhtEngine();
             dhtListener = new DhtListener(new IPEndPoint(IPAddress.Any, 0));
 
-            http = new() { BaseAddress = new Uri("https://subverse.network/") };
+            http = new() { BaseAddress = new Uri(DEFAULT_BOOTSTRAPPER_ROOT) };
             portForwarder = new MonoNatPortForwarder();
 
-            sipChannel = new SIPUDPChannel(IPAddress.Any, 0);
+            sipChannel = new SIPUDPChannel(IPAddress.Any, MAGIC_PORT_NUM);
             sipTransport = new SIPTransport(stateless: true);
 
             thisPeerTcs = new();
@@ -77,7 +88,7 @@ namespace SubverseIM.Services.Implementation
             launcherServiceTcs = new();
 
             callIdMap = new();
-            peerInfoMap = new();
+            peerInfoBag = new();
             messagesBag = new();
 
             timer = new(TimeSpan.FromSeconds(15));
@@ -87,8 +98,8 @@ namespace SubverseIM.Services.Implementation
 
         private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
         {
-            if (dbService.TryGetReadStream("$/pkx/public.key", out Stream? publicKeyStream) &&
-                dbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
+            if (dbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? publicKeyStream) &&
+                dbService.TryGetReadStream(PRIVATE_KEY_PATH, out Stream? privateKeyStream))
             {
                 return (publicKeyStream, privateKeyStream);
             }
@@ -106,8 +117,8 @@ namespace SubverseIM.Services.Implementation
                         );
                 }
 
-                using (Stream publicKeyStoreStream = dbService.CreateWriteStream("$/pkx/public.key"))
-                using (Stream privateKeyStoreStream = dbService.CreateWriteStream("$/pkx/private.key"))
+                using (Stream publicKeyStoreStream = dbService.CreateWriteStream(PUBLIC_KEY_PATH))
+                using (Stream privateKeyStoreStream = dbService.CreateWriteStream(PRIVATE_KEY_PATH))
                 {
                     publicKeyStream.Position = 0;
                     publicKeyStream.CopyTo(publicKeyStoreStream);
@@ -125,13 +136,25 @@ namespace SubverseIM.Services.Implementation
 
         private async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer, CancellationToken cancellationToken = default)
         {
-            EncryptionKeys? peerKeys;
-            if (CachedPeers.TryGetValue(otherPeer, out SubversePeer? peer) && peer.KeyContainer is null)
+            SubversePeer? peer;
+            lock (CachedPeers)
             {
-                Stream publicKeyStream = await http.GetStreamAsync($"pk?p={otherPeer}", cancellationToken);
-                if (DbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
+                CachedPeers.TryGetValue(otherPeer, out peer);
+            }
+
+            EncryptionKeys? peerKeys;
+            if (peer is not null && peer.KeyContainer is null)
+            {
+                MemoryStream publicKeyStream = new MemoryStream();
+                using (Stream responseStream = await http.GetStreamAsync($"pk?p={otherPeer}", cancellationToken))
                 {
-                    peerKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
+                    await responseStream.CopyToAsync(publicKeyStream);
+                    publicKeyStream.Position = 0;
+                }
+
+                if (DbService.TryGetReadStream(PRIVATE_KEY_PATH, out Stream? privateKeyStream))
+                {
+                    peerKeys = new(publicKeyStream, privateKeyStream, MAGIC_SECRET_PASSWORD);
                     peer.KeyContainer = peerKeys;
 
                     publicKeyStream.Dispose();
@@ -158,10 +181,20 @@ namespace SubverseIM.Services.Implementation
         {
             try
             {
+                SubversePeer peer;
+                lock (CachedPeers)
+                {
+                    peer = CachedPeers[ThisPeer];
+                }
+
                 ReadOnlyMemory<byte> nodesBytes = await dhtEngine.SaveNodesAsync();
+                using (Stream cacheStream = DbService.CreateWriteStream(NODES_LIST_PATH))
+                {
+                    cacheStream.Write(nodesBytes.Span);
+                }
 
                 byte[] requestBytes;
-                using (PGP pgp = new(CachedPeers[ThisPeer].KeyContainer))
+                using (PGP pgp = new(peer.KeyContainer))
                 using (MemoryStream inputStream = new(nodesBytes.ToArray()))
                 using (MemoryStream outputStream = new())
                 {
@@ -192,15 +225,12 @@ namespace SubverseIM.Services.Implementation
         private void DhtPeersFound(object? sender, PeersFoundEventArgs e)
         {
             TaskCompletionSource<IList<PeerInfo>>? tcs;
-            lock (peerInfoMap)
+            if (!peerInfoBag.TryTake(out tcs))
             {
-                SubversePeerId otherPeer = new(e.InfoHash.Span);
-                if (!peerInfoMap.Remove(otherPeer, out tcs))
-                {
-                    peerInfoMap.Add(otherPeer, tcs = new());
-                }
+                peerInfoBag.Add(tcs = new());
             }
-            tcs.SetResult(e.Peers);
+
+            tcs.TrySetResult(e.Peers);
         }
 
         private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
@@ -244,6 +274,7 @@ namespace SubverseIM.Services.Implementation
 
                 tcs.SetResult(new SubverseMessage
                 {
+                    CallId = sipRequest.Header.CallId,
                     Content = messageContent,
                     Sender = fromPeer,
                     Recipient = toPeer,
@@ -259,17 +290,21 @@ namespace SubverseIM.Services.Implementation
 
         private Task SIPTransportResponseReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPResponse sipResponse)
         {
+            SubversePeerId peerId;
+            lock (callIdMap)
+            {
+                if (!callIdMap.Remove(sipResponse.Header.CallId, out SIPRequest? sipRequest))
+                {
+                    throw new InvalidOperationException("Received response for invalid Call ID!");
+                }
+                else
+                {
+                    peerId = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
+                }
+            }
+
             if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
             {
-                SubversePeerId peerId;
-                lock (callIdMap)
-                {
-                    if (!callIdMap.TryGetValue(sipResponse.Header.CallId, out peerId))
-                    {
-                        throw new InvalidOperationException("Received response for invalid Call ID!");
-                    }
-                }
-
                 lock (CachedPeers)
                 {
                     if (CachedPeers.TryGetValue(peerId, out SubversePeer? peer))
@@ -285,27 +320,6 @@ namespace SubverseIM.Services.Implementation
         private async Task SendSIPRequestAsync(SIPRequest sipRequest, CancellationToken cancellationToken = default)
         {
             SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
-            lock (callIdMap)
-            {
-                if (!callIdMap.ContainsKey(sipRequest.Header.CallId))
-                {
-                    callIdMap.Add(sipRequest.Header.CallId, toPeer);
-                }
-                else
-                {
-                    callIdMap[sipRequest.Header.CallId] = toPeer;
-                }
-            }
-
-            TaskCompletionSource<IList<PeerInfo>>? peerInfoTcs;
-            lock (peerInfoMap)
-            {
-                if (!peerInfoMap.Remove(toPeer, out peerInfoTcs))
-                {
-                    peerInfoMap.Add(toPeer, peerInfoTcs = new());
-                }
-            }
-
             IPEndPoint? cachedEndPoint;
             lock (CachedPeers)
             {
@@ -316,6 +330,14 @@ namespace SubverseIM.Services.Implementation
             if (cachedEndPoint is not null)
             {
                 await sipTransport.SendRequestAsync(new(cachedEndPoint), sipRequest);
+            }
+
+            dhtEngine.GetPeers(new(toPeer.GetBytes()));
+
+            TaskCompletionSource<IList<PeerInfo>>? peerInfoTcs;
+            if (!peerInfoBag.TryTake(out peerInfoTcs))
+            {
+                peerInfoBag.Add(peerInfoTcs = new());
             }
 
             IList<PeerInfo> peerInfo = await peerInfoTcs.Task;
@@ -333,6 +355,8 @@ namespace SubverseIM.Services.Implementation
 
         public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
         {
+            serviceManager.GetOrRegister(nativeService);
+
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             (Stream publicKeyStream, Stream privateKeyStream) =
                 GenerateKeysIfNone(dbService);
@@ -341,7 +365,7 @@ namespace SubverseIM.Services.Implementation
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             launcherServiceTcs.SetResult(launcherService);
 
-            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
+            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, MAGIC_SECRET_PASSWORD);
 
             publicKeyStream.Dispose();
             privateKeyStream.Dispose();
@@ -364,17 +388,36 @@ namespace SubverseIM.Services.Implementation
 
             sipTransport.SIPTransportRequestReceived += SIPTransportRequestReceived;
             sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
+            sipTransport.AddSIPChannel(sipChannel);
 
             dhtEngine.PeersFound += DhtPeersFound;
-
             await dhtEngine.SetListenerAsync(dhtListener);
-            await dhtEngine.StartAsync();
+            using (MemoryStream bufferStream = new())
+            {
+                if (DbService.TryGetReadStream(NODES_LIST_PATH, out Stream? cacheStream))
+                {
+                    await cacheStream.CopyToAsync(bufferStream);
+                    await dhtEngine.StartAsync(bufferStream.ToArray());
+                }
+                else
+                {
+                    await dhtEngine.StartAsync();
+                }
+
+                cacheStream?.Dispose();
+            }
 
             await portForwarder.StartAsync(cancellationToken);
-            await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, 
-                RandomNumberGenerator.GetInt32(1024, ushort.MaxValue)));
 
-            if (DbService.TryGetReadStream("$/pkx/public.key", out Stream? pkStream)) 
+            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
+            for (int i = MAGIC_PORT_NUM; mapping is null; i++)
+            {
+                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, i));
+                await timer.WaitForNextTickAsync();
+                mapping = portForwarder.Mappings.Created.SingleOrDefault();
+            }
+
+            if (DbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? pkStream))
             {
                 using (pkStream)
                 using (StreamContent pkStreamContent = new(pkStream)
@@ -386,24 +429,19 @@ namespace SubverseIM.Services.Implementation
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (portForwarder.Mappings.Created.Count > 0)
-                {
-                    dhtEngine.Announce(new(ThisPeer.GetBytes()),
-                        portForwarder.Mappings.Created[0].PublicPort);
-                }
-
-                await SynchronizePeersAsync(cancellationToken);
-                await timer.WaitForNextTickAsync(cancellationToken);
-
                 SubversePeerId[] peers;
                 lock (CachedPeers)
                 {
                     peers = CachedPeers.Keys.ToArray();
                 }
 
-                foreach (SubversePeerId peer in peers)
+                await SynchronizePeersAsync(cancellationToken);
+                await timer.WaitForNextTickAsync(cancellationToken);
+
+                foreach (SubversePeerId otherPeer in peers)
                 {
-                    await SynchronizePeersAsync(peer, cancellationToken);
+                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()), mapping.PublicPort);
+                    await SynchronizePeersAsync(otherPeer, cancellationToken);
                     await timer.WaitForNextTickAsync(cancellationToken);
                 }
 
@@ -425,30 +463,54 @@ namespace SubverseIM.Services.Implementation
 
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
-            SIPURI requestFromUri = SIPURI.ParseSIPURI($"im:{message.Sender}@subverse.network");
-            SIPURI requestToUri = SIPURI.ParseSIPURI($"im:{message.Recipient}@subverse.network");
+            SIPURI requestFromUri = SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network");
+            SIPURI requestToUri = SIPURI.ParseSIPURI($"sip:{message.Recipient}@subverse.network");
 
             SIPRequest sipRequest = SIPRequest.GetRequest(
                 SIPMethodsEnum.MESSAGE, requestToUri,
                 new SIPToHeader(string.Empty, requestToUri, string.Empty),
                 new SIPFromHeader(string.Empty, requestFromUri, string.Empty)
                 );
-
             sipRequest.Header.SetDateHeader();
-
             using (PGP pgp = new(await GetPeerKeysAsync(message.Recipient, cancellationToken)))
             {
                 sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
             }
 
-            await SendSIPRequestAsync(sipRequest, cancellationToken);
+            message.CallId = sipRequest.Header.CallId;
+            lock (callIdMap)
+            {
+                if (!callIdMap.ContainsKey(sipRequest.Header.CallId))
+                {
+                    callIdMap.Add(sipRequest.Header.CallId, sipRequest);
+                }
+                else
+                {
+                    callIdMap[sipRequest.Header.CallId] = sipRequest;
+                }
+            }
+
+            _ = Task.Run(async Task? () =>
+            {
+                bool flag;
+                do
+                {
+                    await SendSIPRequestAsync(sipRequest, cancellationToken);
+                    await Task.Delay(150);
+
+                    lock (callIdMap)
+                    {
+                        flag = callIdMap.ContainsKey(sipRequest.Header.CallId);
+                    }
+                } while (flag);
+            });
         }
 
         public async Task SendInviteAsync(CancellationToken cancellationToken = default)
         {
             string inviteId = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
-            await LauncherService.ShareStringToAppAsync("Send Invite Via App", $"https://subverse.network/invite/{inviteId}");
+            await LauncherService.ShareStringToAppAsync("Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
         }
     }
 }

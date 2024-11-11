@@ -12,18 +12,26 @@
 
 	<DockPanel>
 		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}">
-			<TextBlock HorizontalAlignment="Center">Invite a friend</TextBlock>
+			<TextBlock HorizontalAlignment="Center">Invite a Friend</TextBlock>
 		</Button>
-		<ListBox ItemsSource="{Binding ContactsList}">
+		<ListBox x:Name="contacts" ItemsSource="{Binding ContactsList}" >
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<DockPanel Height="64">
 						<Panel DockPanel.Dock="Left" Width="64">
 							<Polygon Points="{Binding HexagonPoints}" Fill="White" />
 							<Image Source="{Binding ContactPhoto}"
+								   Stretch="UniformToFill"
 								   Width="62" Height="62" Clip="{Binding HexagonPath}">
 							</Image>
 						</Panel>
+						<Button 
+							DockPanel.Dock="Right" 
+							VerticalAlignment="Stretch" 
+							Command="{Binding OpenMessageViewCommandAsync}"
+							IsVisible="{Binding IsSelected}">
+							<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Message</TextBlock>
+						</Button>
 						<TextBlock VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
 					</DockPanel>
 				</DataTemplate>

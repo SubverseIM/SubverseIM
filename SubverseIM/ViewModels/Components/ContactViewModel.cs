@@ -10,6 +10,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using SubverseIM.Services.Implementation;
+using Avalonia.Platform.Storage;
+using System.Linq;
 
 namespace SubverseIM.ViewModels.Components
 {
@@ -44,14 +47,24 @@ namespace SubverseIM.ViewModels.Components
 
         private readonly SubverseContact innerContact;
 
-        private Bitmap? contactPhoto;
-        public Bitmap? ContactPhoto 
-        { 
-            get => contactPhoto;
-            private set => this.RaiseAndSetIfChanged(ref contactPhoto, value); 
+        private bool isSelected;
+        public bool IsSelected
+        {
+            get => isSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref isSelected, value);
+            }
         }
 
-        public string? DisplayName 
+        private Bitmap? contactPhoto;
+        public Bitmap? ContactPhoto
+        {
+            get => contactPhoto;
+            private set => this.RaiseAndSetIfChanged(ref contactPhoto, value);
+        }
+
+        public string? DisplayName
         {
             get => innerContact.DisplayName;
             set
@@ -91,7 +104,7 @@ namespace SubverseIM.ViewModels.Components
             this.innerContact = innerContact;
         }
 
-        public async Task LoadPhotoAsync(CancellationToken cancellationToken = default) 
+        public async Task LoadPhotoAsync(CancellationToken cancellationToken = default)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
 
@@ -100,19 +113,64 @@ namespace SubverseIM.ViewModels.Components
             {
                 dbService.TryGetReadStream(innerContact.ImagePath, out contactPhotoStream);
             }
-            
-            ContactPhoto = Bitmap.DecodeToWidth(contactPhotoStream ?? 
-                AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")), 
+
+            ContactPhoto = Bitmap.DecodeToHeight(contactPhotoStream ??
+                AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")),
                 64);
         }
 
-        public async Task SaveChangesCommandAsync() 
+        public async Task OpenMessageViewCommandAsync()
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+
+            SubverseContact? contact = dbService.GetContact(innerContact.OtherPeer);
+            if (contact is not null)
+            {
+                frontendService.NavigateMessageView(contact);
+            }
+        }
+
+        public async Task ChangePhotoCommandAsync()
+        {
+            IStorageProvider storageProvider = await serviceManager.GetWithAwaitAsync<IStorageProvider>();
+            IReadOnlyList<IStorageFile> files = await storageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions
+                {
+                    AllowMultiple = false,
+                    FileTypeFilter = [FilePickerFileTypes.ImageJpg],
+                    Title = "Choose Avatar for Contact"
+                });
+
+            if (files.Count == 0) return;
+
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            using (Stream imageFileStream = await files.Single().OpenReadAsync())
+            {
+                ContactPhoto = Bitmap.DecodeToHeight(imageFileStream, 64);
+            }
+        }
+
+        public async Task SaveChangesCommandAsync()
+        {
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            if (ContactPhoto is not null)
+            {
+                using Stream dbFileStream = dbService.CreateWriteStream(
+                    innerContact.ImagePath = $"$/img/{innerContact.OtherPeer}.jpg"
+                    );
+                ContactPhoto.Save(dbFileStream);
+            }
             dbService.InsertOrUpdateItem(innerContact);
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateMain();
+            frontendService.NavigateContactView();
+        }
+
+        public async Task CancelCommandAsync() 
+        {
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigateContactView();
         }
     }
 }
