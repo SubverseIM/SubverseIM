@@ -47,6 +47,16 @@ namespace SubverseIM.ViewModels.Components
 
         private readonly SubverseContact innerContact;
 
+        private bool isSelected;
+        public bool IsSelected 
+        {
+            get => isSelected;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref isSelected, value);
+            }
+        }
+
         private Bitmap? contactPhoto;
         public Bitmap? ContactPhoto
         {

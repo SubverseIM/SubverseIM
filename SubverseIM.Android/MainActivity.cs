@@ -41,6 +41,8 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     public bool NotificationsAllowed { get; private set; }
 
+    public bool IsInForeground { get; private set; }
+
     public MainActivity()
     {
         serviceManager = new();
@@ -55,6 +57,10 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             CheckSelfPermission(Manifest.Permission.PostNotifications) == Permission.Denied)
         {
             RequestPermissions([Manifest.Permission.PostNotifications], 1001);
+        }
+        else 
+        {
+            NotificationsAllowed = true;
         }
 
         serviceManager.GetOrRegister<ILauncherService>(this);
@@ -76,22 +82,34 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             );
     }
 
-    public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
-    {
-        switch (requestCode) 
-        {
-            case 1001:
-                NotificationsAllowed = grantResults.All(x => x == Permission.Granted);
-                break;
-        }
-    }
-
     protected override void OnDestroy()
     {
         base.OnDestroy();
 
         UnbindService(peerServiceConn);
         serviceManager.Dispose();
+    }
+
+    protected override void OnStart()
+    {
+        base.OnStart();
+        IsInForeground = true;
+    }
+
+    protected override void OnStop()
+    {
+        base.OnStop();
+        IsInForeground = false;
+    }
+
+    public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
+    {
+        switch (requestCode)
+        {
+            case 1001:
+                NotificationsAllowed = grantResults.All(x => x == Permission.Granted);
+                break;
+        }
     }
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)

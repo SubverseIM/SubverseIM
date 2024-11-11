@@ -52,9 +52,10 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
     public async Task RunAsync(CancellationToken cancellationToken = default)
     {
-        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        IPeerService peerService = await serviceManager.GetWithAwaitAsync<IPeerService>();
-        INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>();
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+        IPeerService peerService = await serviceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
+        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
+        INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>(cancellationToken);
 
         _ = peerService.BootstrapSelfAsync(cancellationToken);
 
@@ -89,12 +90,25 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
             try
             {
-                dbService.InsertOrUpdateItem(message);
-                await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);
-
+                bool isCurrentPeer;
                 if (contact is not null && messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
                 {
+                    isCurrentPeer = vm == currentPage;
                     vm.MessageList.Insert(0, new(contact, message));
+                }
+                else 
+                {
+                    isCurrentPeer = false;
+                }
+
+                dbService.InsertOrUpdateItem(message);
+                if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
+                {
+                    await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);
+                }
+                else 
+                {
+                    nativeService.ClearNotificationForPeer(message.Sender);
                 }
             }
             catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }

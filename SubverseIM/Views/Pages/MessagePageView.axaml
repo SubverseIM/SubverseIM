@@ -15,16 +15,6 @@
 					Command="{Binding BackCommandAsync}">
 			<TextBlock HorizontalAlignment="Center" >Back to Contacts</TextBlock>
 		</Button>
-		<Button DockPanel.Dock="Top"
-					HorizontalAlignment="Stretch"
-					Command="{Binding EditCommandAsync}">
-			<TextBlock HorizontalAlignment="Center" >Edit this Contact</TextBlock>
-		</Button>
-		<Button DockPanel.Dock="Top"
-					HorizontalAlignment="Stretch"
-					Command="{Binding DeleteCommandAsync}">
-			<TextBlock HorizontalAlignment="Center" >Delete Full Conversation</TextBlock>
-		</Button>
 		<DockPanel DockPanel.Dock="Top" Height="64">
 			<Button DockPanel.Dock="Right"
 					VerticalAlignment="Stretch"
@@ -37,7 +27,18 @@
 					 Watermark="Write a message..." 
 					 Text="{Binding SendMessageText}" />
 		</DockPanel>
-		<ListBox ItemsSource="{Binding MessageList}">
+		<Button DockPanel.Dock="Bottom"
+					HorizontalAlignment="Stretch"
+					Command="{Binding DeleteCommandAsync}"
+				Background="DarkRed">
+			<TextBlock HorizontalAlignment="Center" >Delete this Contact</TextBlock>
+		</Button>
+		<Button DockPanel.Dock="Bottom"
+					HorizontalAlignment="Stretch"
+					Command="{Binding EditCommandAsync}">
+			<TextBlock HorizontalAlignment="Center" >Edit this Contact</TextBlock>
+		</Button>
+		<ListBox SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<DockPanel>
