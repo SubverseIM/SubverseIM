@@ -4,7 +4,7 @@ namespace SubverseIM.ViewModels.Pages
 {
     public abstract class PageViewModelBase : ViewModelBase
     {
-        protected IServiceManager ServiceManager { get; }
+        public IServiceManager ServiceManager { get; }
 
         public abstract string Title { get; }
 

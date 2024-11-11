@@ -46,7 +46,7 @@ namespace SubverseIM.ViewModels.Pages
             MessageList.Clear();
             foreach (SubverseMessage message in dbService.GetMessagesWithPeer(contact.OtherPeer).Take(250))
             {
-                MessageList.Add(new(peerService.ThisPeer == message.Sender ? null : contact, message));
+                MessageList.Add(new(this, peerService.ThisPeer == message.Sender ? null : contact, message));
             }
         }
 
@@ -90,7 +90,7 @@ namespace SubverseIM.ViewModels.Pages
             SendMessageText = null;
             await peerService.SendMessageAsync(message);
 
-            MessageList.Insert(0, new(null, message));
+            MessageList.Insert(0, new(this, null, message));
             dbService.InsertOrUpdateItem(message);
         }
     }

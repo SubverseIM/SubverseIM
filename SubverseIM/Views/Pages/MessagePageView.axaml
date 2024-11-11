@@ -29,16 +29,16 @@
 		</DockPanel>
 		<Button DockPanel.Dock="Bottom"
 					HorizontalAlignment="Stretch"
+					Command="{Binding EditCommandAsync}">
+			<TextBlock HorizontalAlignment="Center" >Edit this Contact</TextBlock>
+		</Button>
+		<Button DockPanel.Dock="Bottom"
+					HorizontalAlignment="Stretch"
 					Command="{Binding DeleteCommandAsync}"
 				Background="DarkRed">
 			<TextBlock HorizontalAlignment="Center" >Delete this Contact</TextBlock>
 		</Button>
-		<Button DockPanel.Dock="Bottom"
-					HorizontalAlignment="Stretch"
-					Command="{Binding EditCommandAsync}">
-			<TextBlock HorizontalAlignment="Center" >Edit this Contact</TextBlock>
-		</Button>
-		<ListBox SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
+		<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<DockPanel>
@@ -47,6 +47,18 @@
 							VerticalAlignment="Top" 
 							Text="{Binding DateString}" 
 							Margin="2" />
+						<Button Background="DarkRed"
+								DockPanel.Dock="Right"
+								VerticalAlignment="Stretch"
+								Margin="2"
+								IsVisible="{Binding IsSelected}"
+								Command="{Binding DeleteCommandAsync}">
+							<TextBlock 
+								VerticalAlignment="Center" 
+								HorizontalAlignment="Center">
+								Delete
+							</TextBlock>
+						</Button>
 						<DockPanel>
 							<TextBlock DockPanel.Dock="Top" 
 									   Text="{Binding FromName}" 

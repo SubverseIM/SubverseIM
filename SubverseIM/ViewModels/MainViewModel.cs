@@ -1,6 +1,5 @@
 ﻿using Avalonia.Platform.Storage;
 using LiteDB;
-using Mono.Nat;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -90,18 +89,19 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
             try
             {
+                dbService.InsertOrUpdateItem(message);
+
                 bool isCurrentPeer;
                 if (contact is not null && messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
                 {
                     isCurrentPeer = vm == currentPage;
-                    vm.MessageList.Insert(0, new(contact, message));
+                    vm.MessageList.Insert(0, new(vm, contact, message));
                 }
                 else 
                 {
                     isCurrentPeer = false;
                 }
 
-                dbService.InsertOrUpdateItem(message);
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
                 {
                     await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);

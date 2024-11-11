@@ -13,7 +13,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +21,18 @@ namespace SubverseIM.Services.Implementation
 {
     public class PeerService : IPeerService, IInjectable
     {
+        private const int MAGIC_PORT_NUM = 6_03_03;
+
+        private const string MAGIC_SECRET_PASSWORD = "#FreeTheInternet";
+
+        private const string DEFAULT_BOOTSTRAPPER_ROOT = "https://subverse.network";
+
+        private const string PUBLIC_KEY_PATH = "$/pkx/public.key";
+
+        private const string PRIVATE_KEY_PATH = "$/pkx/private.key";
+
+        private const string NODES_LIST_PATH = "$/pkx/nodes.list";
+
         private readonly INativeService nativeService;
 
         private readonly IDhtEngine dhtEngine;
@@ -65,10 +76,10 @@ namespace SubverseIM.Services.Implementation
             dhtEngine = new DhtEngine();
             dhtListener = new DhtListener(new IPEndPoint(IPAddress.Any, 0));
 
-            http = new() { BaseAddress = new Uri("https://subverse.network/") };
+            http = new() { BaseAddress = new Uri(DEFAULT_BOOTSTRAPPER_ROOT) };
             portForwarder = new MonoNatPortForwarder();
 
-            sipChannel = new SIPUDPChannel(IPAddress.Any, 6_03_03);
+            sipChannel = new SIPUDPChannel(IPAddress.Any, MAGIC_PORT_NUM);
             sipTransport = new SIPTransport(stateless: true);
 
             thisPeerTcs = new();
@@ -87,8 +98,8 @@ namespace SubverseIM.Services.Implementation
 
         private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
         {
-            if (dbService.TryGetReadStream("$/pkx/public.key", out Stream? publicKeyStream) &&
-                dbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
+            if (dbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? publicKeyStream) &&
+                dbService.TryGetReadStream(PRIVATE_KEY_PATH, out Stream? privateKeyStream))
             {
                 return (publicKeyStream, privateKeyStream);
             }
@@ -106,8 +117,8 @@ namespace SubverseIM.Services.Implementation
                         );
                 }
 
-                using (Stream publicKeyStoreStream = dbService.CreateWriteStream("$/pkx/public.key"))
-                using (Stream privateKeyStoreStream = dbService.CreateWriteStream("$/pkx/private.key"))
+                using (Stream publicKeyStoreStream = dbService.CreateWriteStream(PUBLIC_KEY_PATH))
+                using (Stream privateKeyStoreStream = dbService.CreateWriteStream(PRIVATE_KEY_PATH))
                 {
                     publicKeyStream.Position = 0;
                     publicKeyStream.CopyTo(publicKeyStoreStream);
@@ -141,9 +152,9 @@ namespace SubverseIM.Services.Implementation
                     publicKeyStream.Position = 0;
                 }
 
-                if (DbService.TryGetReadStream("$/pkx/private.key", out Stream? privateKeyStream))
+                if (DbService.TryGetReadStream(PRIVATE_KEY_PATH, out Stream? privateKeyStream))
                 {
-                    peerKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
+                    peerKeys = new(publicKeyStream, privateKeyStream, MAGIC_SECRET_PASSWORD);
                     peer.KeyContainer = peerKeys;
 
                     publicKeyStream.Dispose();
@@ -177,6 +188,10 @@ namespace SubverseIM.Services.Implementation
                 }
 
                 ReadOnlyMemory<byte> nodesBytes = await dhtEngine.SaveNodesAsync();
+                using (Stream cacheStream = DbService.CreateWriteStream(NODES_LIST_PATH))
+                {
+                    cacheStream.Write(nodesBytes.Span);
+                }
 
                 byte[] requestBytes;
                 using (PGP pgp = new(peer.KeyContainer))
@@ -318,6 +333,7 @@ namespace SubverseIM.Services.Implementation
             }
 
             dhtEngine.GetPeers(new(toPeer.GetBytes()));
+
             TaskCompletionSource<IList<PeerInfo>>? peerInfoTcs;
             if (!peerInfoBag.TryTake(out peerInfoTcs))
             {
@@ -349,7 +365,7 @@ namespace SubverseIM.Services.Implementation
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             launcherServiceTcs.SetResult(launcherService);
 
-            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, "#FreeTheInternet");
+            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, MAGIC_SECRET_PASSWORD);
 
             publicKeyStream.Dispose();
             privateKeyStream.Dispose();
@@ -375,20 +391,33 @@ namespace SubverseIM.Services.Implementation
             sipTransport.AddSIPChannel(sipChannel);
 
             dhtEngine.PeersFound += DhtPeersFound;
-
             await dhtEngine.SetListenerAsync(dhtListener);
-            await dhtEngine.StartAsync();
+            using (MemoryStream bufferStream = new())
+            {
+                if (DbService.TryGetReadStream(NODES_LIST_PATH, out Stream? cacheStream))
+                {
+                    await cacheStream.CopyToAsync(bufferStream);
+                    await dhtEngine.StartAsync(bufferStream.ToArray());
+                }
+                else
+                {
+                    await dhtEngine.StartAsync();
+                }
+
+                cacheStream?.Dispose();
+            }
 
             await portForwarder.StartAsync(cancellationToken);
 
-            int portNum = 6_03_03;
-            while (portForwarder.Mappings.Created.Count == 0)
+            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
+            for (int i = MAGIC_PORT_NUM; mapping is null; i++)
             {
-                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, portNum++));
+                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, i));
                 await timer.WaitForNextTickAsync();
+                mapping = portForwarder.Mappings.Created.SingleOrDefault();
             }
 
-            if (DbService.TryGetReadStream("$/pkx/public.key", out Stream? pkStream))
+            if (DbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? pkStream))
             {
                 using (pkStream)
                 using (StreamContent pkStreamContent = new(pkStream)
@@ -400,23 +429,19 @@ namespace SubverseIM.Services.Implementation
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                foreach (var mapping in portForwarder.Mappings.Created)
-                {
-                    dhtEngine.Announce(new(ThisPeer.GetBytes()), mapping.PublicPort);
-                }
-
-                await SynchronizePeersAsync(cancellationToken);
-                await timer.WaitForNextTickAsync(cancellationToken);
-
                 SubversePeerId[] peers;
                 lock (CachedPeers)
                 {
                     peers = CachedPeers.Keys.ToArray();
                 }
 
-                foreach (SubversePeerId peer in peers)
+                await SynchronizePeersAsync(cancellationToken);
+                await timer.WaitForNextTickAsync(cancellationToken);
+
+                foreach (SubversePeerId otherPeer in peers)
                 {
-                    await SynchronizePeersAsync(peer, cancellationToken);
+                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()), mapping.PublicPort);
+                    await SynchronizePeersAsync(otherPeer, cancellationToken);
                     await timer.WaitForNextTickAsync(cancellationToken);
                 }
 
@@ -485,7 +510,7 @@ namespace SubverseIM.Services.Implementation
         {
             string inviteId = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
-            await LauncherService.ShareStringToAppAsync("Send Invite Via App", $"https://subverse.network/invite/{inviteId}");
+            await LauncherService.ShareStringToAppAsync("Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
         }
     }
 }

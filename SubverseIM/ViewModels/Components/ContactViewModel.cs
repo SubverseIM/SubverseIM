@@ -48,10 +48,10 @@ namespace SubverseIM.ViewModels.Components
         private readonly SubverseContact innerContact;
 
         private bool isSelected;
-        public bool IsSelected 
+        public bool IsSelected
         {
             get => isSelected;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref isSelected, value);
             }
@@ -143,18 +143,29 @@ namespace SubverseIM.ViewModels.Components
 
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             using (Stream imageFileStream = await files.Single().OpenReadAsync())
-            using (Stream dbFileStream = dbService.CreateWriteStream(innerContact.ImagePath = $"$/img/{innerContact.OtherPeer}.jpg"))
             {
                 ContactPhoto = Bitmap.DecodeToHeight(imageFileStream, 64);
-                ContactPhoto.Save(dbFileStream);
             }
         }
 
         public async Task SaveChangesCommandAsync()
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            if (ContactPhoto is not null)
+            {
+                using Stream dbFileStream = dbService.CreateWriteStream(
+                    innerContact.ImagePath = $"$/img/{innerContact.OtherPeer}.jpg"
+                    );
+                ContactPhoto.Save(dbFileStream);
+            }
             dbService.InsertOrUpdateItem(innerContact);
 
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigateContactView();
+        }
+
+        public async Task CancelCommandAsync() 
+        {
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateContactView();
         }

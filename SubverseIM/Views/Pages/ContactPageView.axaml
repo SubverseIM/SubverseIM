@@ -12,7 +12,7 @@
 
 	<DockPanel>
 		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}">
-			<TextBlock HorizontalAlignment="Center">Invite a friend</TextBlock>
+			<TextBlock HorizontalAlignment="Center">Invite a Friend</TextBlock>
 		</Button>
 		<ListBox x:Name="contacts" ItemsSource="{Binding ContactsList}" >
 			<ListBox.ItemTemplate>
