@@ -1,4 +1,5 @@
-﻿using LiteDB;
+﻿using Avalonia.Platform.Storage;
+using LiteDB;
 using Mono.Nat;
 using ReactiveUI;
 using SubverseIM.Models;
@@ -79,8 +80,8 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
                 new SubverseContact() 
                 { 
                     OtherPeer = message.Sender, 
-                    DisplayName = message.Sender.ToString(), 
-                    UserNote = "Anonymous User" 
+                    DisplayName = "Anonymous", 
+                    UserNote = "Anonymous User via the Subverse Network" 
                 };
 
             dbService.InsertOrUpdateItem(contact);
@@ -89,10 +90,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
             try
             {
                 dbService.InsertOrUpdateItem(message);
-                await nativeService.SendPushNotificationAsync(
-                        message.Sender.GetHashCode(), contact?.DisplayName ?? "Anonymous",
-                        message.Content ?? "Message did not contain text."
-                        );
+                await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);
 
                 if (contact is not null && messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
                 {
@@ -103,8 +101,10 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         }
     }
 
-    public async Task InvokeFromLauncherAsync()
+    public async Task InvokeFromLauncherAsync(IStorageProvider storageProvider)
     {
+        serviceManager.GetOrRegister(storageProvider);
+
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         Uri? launchedUri = launcherService.GetLaunchedUri();
         if (launchedUri is not null)

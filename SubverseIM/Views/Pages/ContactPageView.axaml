@@ -21,6 +21,7 @@
 						<Panel DockPanel.Dock="Left" Width="64">
 							<Polygon Points="{Binding HexagonPoints}" Fill="White" />
 							<Image Source="{Binding ContactPhoto}"
+								   Stretch="UniformToFill"
 								   Width="62" Height="62" Clip="{Binding HexagonPath}">
 							</Image>
 						</Panel>

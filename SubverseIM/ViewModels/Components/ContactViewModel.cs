@@ -11,6 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using SubverseIM.Services.Implementation;
+using Avalonia.Platform.Storage;
+using System.Linq;
 
 namespace SubverseIM.ViewModels.Components
 {
@@ -46,13 +48,13 @@ namespace SubverseIM.ViewModels.Components
         private readonly SubverseContact innerContact;
 
         private Bitmap? contactPhoto;
-        public Bitmap? ContactPhoto 
-        { 
+        public Bitmap? ContactPhoto
+        {
             get => contactPhoto;
-            private set => this.RaiseAndSetIfChanged(ref contactPhoto, value); 
+            private set => this.RaiseAndSetIfChanged(ref contactPhoto, value);
         }
 
-        public string? DisplayName 
+        public string? DisplayName
         {
             get => innerContact.DisplayName;
             set
@@ -92,7 +94,7 @@ namespace SubverseIM.ViewModels.Components
             this.innerContact = innerContact;
         }
 
-        public async Task LoadPhotoAsync(CancellationToken cancellationToken = default) 
+        public async Task LoadPhotoAsync(CancellationToken cancellationToken = default)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
 
@@ -101,9 +103,9 @@ namespace SubverseIM.ViewModels.Components
             {
                 dbService.TryGetReadStream(innerContact.ImagePath, out contactPhotoStream);
             }
-            
-            ContactPhoto = Bitmap.DecodeToWidth(contactPhotoStream ?? 
-                AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")), 
+
+            ContactPhoto = Bitmap.DecodeToHeight(contactPhotoStream ??
+                AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")),
                 64);
         }
 
@@ -116,7 +118,29 @@ namespace SubverseIM.ViewModels.Components
             frontendService.NavigateMessageView(innerContact);
         }
 
-        public async Task SaveChangesCommandAsync() 
+        public async Task ChangePhotoCommandAsync()
+        {
+            IStorageProvider storageProvider = await serviceManager.GetWithAwaitAsync<IStorageProvider>();
+            IReadOnlyList<IStorageFile> files = await storageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions
+                {
+                    AllowMultiple = false,
+                    FileTypeFilter = [FilePickerFileTypes.ImageJpg],
+                    Title = "Choose Avatar for Contact"
+                });
+
+            if (files.Count == 0) return;
+
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            using (Stream imageFileStream = await files.Single().OpenReadAsync())
+            using (Stream dbFileStream = dbService.CreateWriteStream(innerContact.ImagePath = $"$/img/{innerContact.OtherPeer}.jpg"))
+            {
+                ContactPhoto = Bitmap.DecodeToHeight(imageFileStream, 64);
+                ContactPhoto.Save(dbFileStream);
+            }
+        }
+
+        public async Task SaveChangesCommandAsync()
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             dbService.InsertOrUpdateItem(innerContact);
