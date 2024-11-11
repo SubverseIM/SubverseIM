@@ -125,7 +125,10 @@ namespace SubverseIM.ViewModels.Components
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
 
             SubverseContact? contact = dbService.GetContact(innerContact.OtherPeer);
-            frontendService.NavigateMessageView(innerContact);
+            if (contact is not null)
+            {
+                frontendService.NavigateMessageView(contact);
+            }
         }
 
         public async Task ChangePhotoCommandAsync()
