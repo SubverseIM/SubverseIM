@@ -380,6 +380,8 @@ namespace SubverseIM.Services.Implementation
                     KeyContainer = myKeys
                 });
             }
+
+            dbService.GetMessagesWithPeer(ThisPeer);
         }
 
         public async Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
