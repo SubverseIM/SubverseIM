@@ -167,9 +167,13 @@ namespace SubverseIM.ViewModels.Components
 
         public async Task DeleteCommandAsync() 
         {
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            dbService.DeleteItemById<SubverseContact>(innerContact.Id);
-            contactPageView?.ContactsList.Remove(this);
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+            if (await launcherService.ShowConfirmationDialogAsync("Delete this Contact?", "Are you sure you want to delete this contact?"))
+            {
+                IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+                dbService.DeleteItemById<SubverseContact>(innerContact.Id);
+                contactPageView?.ContactsList.Remove(this);
+            }
         }
 
         public async Task CancelCommandAsync() 

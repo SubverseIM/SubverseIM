@@ -127,6 +127,20 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             null : new Uri(Intent.DataString);
     }
 
+    public Task<bool> ShowConfirmationDialogAsync(string title, string message) 
+    {
+        TaskCompletionSource<bool> tcs = new();
+
+        AlertDialog? alertDialog = new AlertDialog.Builder(this)
+            ?.SetTitle(title)
+            ?.SetMessage(message)
+            ?.SetPositiveButton("Yes", (s, ev) => tcs.SetResult(true))
+            ?.SetNegativeButton("No", (s, ev) => tcs.SetResult(false))
+            ?.Show();
+
+        return tcs.Task;
+    }
+
     public Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken)
     {
         new ShareCompat.IntentBuilder(this)

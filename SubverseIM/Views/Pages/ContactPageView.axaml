@@ -31,8 +31,9 @@
 						<Button DockPanel.Dock="Right"
 								VerticalAlignment="Stretch"
 								IsVisible="{Binding IsSelected}"
-								Command="{Binding DeleteCommandAsync}">
-							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16" Background="DarkRed">
+								Command="{Binding DeleteCommandAsync}"
+								Background="DarkRed">
+							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">
 								Delete
 							</TextBlock>
 						</Button>
