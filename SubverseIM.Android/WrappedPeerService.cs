@@ -1,5 +1,7 @@
-﻿using Android.App;
+﻿using Android;
+using Android.App;
 using Android.Content;
+using Android.Content.PM;
 using Android.Graphics;
 using Android.OS;
 using AndroidX.Core.App;
@@ -15,10 +17,12 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Android
 {
-    [Service()]
+    [Service(ForegroundServiceType = ForegroundService.TypeSpecialUse)]
     public class WrappedPeerService : Service, INativeService
     {
         private const string MSG_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.UserMessage";
+
+        private const string SRV_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.ForegroundService";
 
         private readonly IPeerService peerService;
 
@@ -32,25 +36,46 @@ namespace SubverseIM.Android
 
         public override IBinder? OnBind(Intent? intent)
         {
-            CreateNotificationChannel();
+            CreateNotificationChannels();
+            Notification notif = new NotificationCompat.Builder(this, SRV_CHANNEL_ID)
+                .SetSmallIcon(Resource.Drawable.Icon)
+                .SetPriority(NotificationCompat.PriorityDefault)
+                .SetContentTitle("SubverseIM Peer Services")
+                .SetContentText("Participating in ongoing network activities...")
+                .SetOngoing(true)
+                .Build();
+            StartForeground(1001, notif);
             return new ServiceBinder<IPeerService>(peerService);
         }
 
-        private void CreateNotificationChannel()
+        public override bool OnUnbind(Intent? intent)
         {
-            NotificationChannel channel = new NotificationChannel(
+            StopForeground(StopForegroundFlags.Remove);
+            return base.OnUnbind(intent);
+        }
+
+        private void CreateNotificationChannels()
+        {
+            NotificationChannel messageChannel = new NotificationChannel(
                 MSG_CHANNEL_ID, new Java.Lang.String("User Messages"),
                 NotificationImportance.High);
-            channel.Description = "Inbound messages from your contacts";
+            messageChannel.Description = "Inbound messages from your contacts";
+
+            NotificationChannel serviceChannel = new NotificationChannel(
+                SRV_CHANNEL_ID, new Java.Lang.String("Application Services"),
+                NotificationImportance.Default);
+            serviceChannel.Description = "Ongoing background tasks from SubverseIM";
+
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this.
             NotificationManager? manager = NotificationManager.FromContext(this);
-            manager?.CreateNotificationChannel(channel);
+            manager?.CreateNotificationChannel(messageChannel);
+            manager?.CreateNotificationChannel(serviceChannel);
         }
 
         public void ClearNotificationForPeer(SubversePeerId otherPeer)
         {
-            lock (notificationMap) 
+            lock (notificationMap)
             {
                 notificationMap.Remove(otherPeer.GetHashCode());
             }
