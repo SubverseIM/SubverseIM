@@ -28,6 +28,22 @@
 								   Width="62" Height="62" Clip="{Binding HexagonPath}">
 							</Image>
 						</Panel>
+						<Button DockPanel.Dock="Right"
+								VerticalAlignment="Stretch"
+								IsVisible="{Binding IsSelected}"
+								Command="{Binding DeleteCommandAsync}">
+							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16" Background="DarkRed">
+								Delete
+							</TextBlock>
+						</Button>
+						<Button DockPanel.Dock="Right" 
+								VerticalAlignment="Stretch" 
+								IsVisible="{Binding IsSelected}"
+								Command="{Binding EditCommandAsync}">
+							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">
+								Edit
+							</TextBlock>
+						</Button>
 						<TextBlock VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
 					</DockPanel>
 				</DataTemplate>

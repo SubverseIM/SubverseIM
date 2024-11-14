@@ -13,6 +13,7 @@ using Avalonia;
 using SubverseIM.Services.Implementation;
 using Avalonia.Platform.Storage;
 using System.Linq;
+using SubverseIM.ViewModels.Pages;
 
 namespace SubverseIM.ViewModels.Components
 {
@@ -44,6 +45,8 @@ namespace SubverseIM.ViewModels.Components
         }
 
         internal readonly IServiceManager serviceManager;
+
+        internal readonly ContactPageViewModel contactPageView;
 
         internal readonly SubverseContact innerContact;
 
@@ -98,9 +101,10 @@ namespace SubverseIM.ViewModels.Components
 
         public Geometry HexagonPath => hexagonPath;
 
-        public ContactViewModel(IServiceManager serviceManager, SubverseContact innerContact)
+        public ContactViewModel(IServiceManager serviceManager, ContactPageViewModel contactPageView, SubverseContact innerContact)
         {
             this.serviceManager = serviceManager;
+            this.contactPageView = contactPageView;
             this.innerContact = innerContact;
         }
 
@@ -153,6 +157,19 @@ namespace SubverseIM.ViewModels.Components
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateContactView();
+        }
+
+        public async Task EditCommandAsync()
+        {
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigateContactView(innerContact);
+        }
+
+        public async Task DeleteCommandAsync() 
+        {
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            dbService.DeleteItemById<SubverseContact>(innerContact.Id);
+            contactPageView.ContactsList.Remove(this);
         }
 
         public async Task CancelCommandAsync() 
