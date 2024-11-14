@@ -46,7 +46,7 @@ namespace SubverseIM.ViewModels.Components
 
         internal readonly IServiceManager serviceManager;
 
-        internal readonly ContactPageViewModel contactPageView;
+        internal readonly ContactPageViewModel? contactPageView;
 
         internal readonly SubverseContact innerContact;
 
@@ -101,7 +101,7 @@ namespace SubverseIM.ViewModels.Components
 
         public Geometry HexagonPath => hexagonPath;
 
-        public ContactViewModel(IServiceManager serviceManager, ContactPageViewModel contactPageView, SubverseContact innerContact)
+        public ContactViewModel(IServiceManager serviceManager, ContactPageViewModel? contactPageView, SubverseContact innerContact)
         {
             this.serviceManager = serviceManager;
             this.contactPageView = contactPageView;
@@ -169,7 +169,7 @@ namespace SubverseIM.ViewModels.Components
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             dbService.DeleteItemById<SubverseContact>(innerContact.Id);
-            contactPageView.ContactsList.Remove(this);
+            contactPageView?.ContactsList.Remove(this);
         }
 
         public async Task CancelCommandAsync() 

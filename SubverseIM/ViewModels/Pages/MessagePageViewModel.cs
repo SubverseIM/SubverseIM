@@ -47,7 +47,7 @@ namespace SubverseIM.ViewModels.Pages
         {
             this.contacts = contacts;
 
-            ContactsList = new(contacts.Select(x => new ContactViewModel(serviceManager, x)));
+            ContactsList = new(contacts.Select(x => new ContactViewModel(serviceManager, null, x)));
             MessageList = new();
             TopicsList = new();
         }

@@ -26,7 +26,7 @@ namespace SubverseIM.ViewModels.Pages
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
 
             SubversePeerId otherPeer = SubversePeerId.FromString(contactUri.DnsSafeHost);
-            Contact = new(ServiceManager, dbService.GetContact(otherPeer) ?? 
+            Contact = new(ServiceManager, null, dbService.GetContact(otherPeer) ?? 
                 new SubverseContact() { OtherPeer = otherPeer });
 
             await Contact.LoadPhotoAsync(cancellationToken);
