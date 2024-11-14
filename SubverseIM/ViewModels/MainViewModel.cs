@@ -84,6 +84,16 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
             dbService.InsertOrUpdateItem(contact);
             await contactPage.LoadContactsAsync(cancellationToken);
 
+            lock (peerService.CachedPeers)
+            {
+                peerService.CachedPeers.TryAdd(
+                    contact.OtherPeer,
+                    new SubversePeer
+                    {
+                        OtherPeer = contact.OtherPeer
+                    });
+            }
+
             try
             {
                 dbService.InsertOrUpdateItem(message);

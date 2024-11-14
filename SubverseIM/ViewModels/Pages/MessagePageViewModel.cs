@@ -68,7 +68,7 @@ namespace SubverseIM.ViewModels.Pages
             {
                 if (message.TopicName is not null && !TopicsList.Contains(message.TopicName)) 
                 {
-                    TopicsList.Add(message.TopicName);
+                    TopicsList.Insert(0, message.TopicName);
                 }
 
                 if (string.IsNullOrEmpty(SendMessageTopicName) || message.TopicName == SendMessageTopicName)
@@ -88,6 +88,11 @@ namespace SubverseIM.ViewModels.Pages
         public async Task SendCommandAsync() 
         {
             if (string.IsNullOrEmpty(SendMessageText)) return;
+
+            if (SendMessageTopicName is not null && !TopicsList.Contains(SendMessageTopicName))
+            {
+                TopicsList.Insert(0, SendMessageTopicName);
+            }
 
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();

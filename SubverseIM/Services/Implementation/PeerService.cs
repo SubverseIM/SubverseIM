@@ -480,6 +480,11 @@ namespace SubverseIM.Services.Implementation
                 new SIPFromHeader(string.Empty, requestFromUri, string.Empty)
                 );
 
+            if (message.CallId is not null)
+            {
+                sipRequest.Header.CallId = message.CallId;
+            }
+
             sipRequest.Header.SetDateHeader();
 
             using (PGP pgp = new(await GetPeerKeysAsync(message.Recipient, cancellationToken)))
