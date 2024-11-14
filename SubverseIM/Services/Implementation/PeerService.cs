@@ -278,7 +278,8 @@ namespace SubverseIM.Services.Implementation
                     Content = messageContent,
                     Sender = fromPeer,
                     Recipient = toPeer,
-                    DateSignedOn = DateTime.Parse(sipRequest.Header.Date)
+                    DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
+                    TopicName = sipRequest.Header.To.ToParameters.Get("topic"),
                 });
 
                 SIPResponse sipResponse = SIPResponse.GetResponse(
@@ -381,7 +382,7 @@ namespace SubverseIM.Services.Implementation
                 });
             }
 
-            dbService.GetMessagesWithPeer(ThisPeer);
+            dbService.GetMessagesWithPeersOnTopic([ThisPeer], null);
         }
 
         public async Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
@@ -465,21 +466,27 @@ namespace SubverseIM.Services.Implementation
 
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
-            SIPURI requestFromUri = SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network");
             SIPURI requestToUri = SIPURI.ParseSIPURI($"sip:{message.Recipient}@subverse.network");
+            if (message.TopicName is not null) 
+            {
+                requestToUri.Parameters.Set("topic", message.TopicName);
+            }
+
+            SIPURI requestFromUri = SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network");
 
             SIPRequest sipRequest = SIPRequest.GetRequest(
                 SIPMethodsEnum.MESSAGE, requestToUri,
                 new SIPToHeader(string.Empty, requestToUri, string.Empty),
                 new SIPFromHeader(string.Empty, requestFromUri, string.Empty)
                 );
+
             sipRequest.Header.SetDateHeader();
+
             using (PGP pgp = new(await GetPeerKeysAsync(message.Recipient, cancellationToken)))
             {
                 sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
             }
 
-            message.CallId = sipRequest.Header.CallId;
             lock (callIdMap)
             {
                 if (!callIdMap.ContainsKey(sipRequest.Header.CallId))

@@ -6,6 +6,7 @@ using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,8 +19,6 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
     private readonly ContactPageViewModel contactPage;
 
     private readonly CreateContactPageViewModel createContactPage;
-
-    private readonly Dictionary<SubversePeerId, MessagePageViewModel> messagePageMap;
 
     private readonly CancellationTokenSource mainTaskCts;
 
@@ -40,8 +39,6 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
         contactPage = new(serviceManager);
         createContactPage = new(serviceManager);
-
-        messagePageMap = new();
 
         currentPage = contactPage;
 
@@ -92,9 +89,9 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
                 dbService.InsertOrUpdateItem(message);
 
                 bool isCurrentPeer;
-                if (contact is not null && messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
+                if (contact is not null && currentPage is MessagePageViewModel vm)
                 {
-                    isCurrentPeer = vm == currentPage;
+                    isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer);
                     vm.MessageList.Insert(0, new(vm, contact, message));
                 }
                 else 
@@ -139,13 +136,9 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         CurrentPage = createContactPage;
     }
 
-    public void NavigateMessageView(SubverseContact contact)
+    public void NavigateMessageView(IEnumerable<SubverseContact> contacts)
     {
-        if (!messagePageMap.TryGetValue(contact.OtherPeer, out MessagePageViewModel? vm))
-        {
-            messagePageMap.Add(contact.OtherPeer, vm = new(serviceManager, contact));
-        }
-        CurrentPage = vm;
+        CurrentPage = new MessagePageViewModel(serviceManager, contacts.ToArray());
     }
 
     protected virtual void Dispose(bool disposing)

@@ -9,6 +9,8 @@ namespace SubverseIM.Models
 
         public string? CallId { get; set; }
 
+        public string? TopicName { get; set; }
+
         public SubversePeerId Sender { get; set; }
 
         public SubversePeerId Recipient { get; set; }

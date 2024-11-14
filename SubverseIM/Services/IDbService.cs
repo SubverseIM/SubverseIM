@@ -13,7 +13,7 @@ namespace SubverseIM.Services
 
         SubverseContact? GetContact(SubversePeerId otherPeer);
 
-        IEnumerable<SubverseMessage> GetMessagesWithPeer(SubversePeerId otherPeer);
+        IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(IEnumerable<SubversePeerId> otherPeers, string? topicName);
 
         bool InsertOrUpdateItem<T>(T item);
 

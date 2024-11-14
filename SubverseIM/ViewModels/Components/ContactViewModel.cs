@@ -43,9 +43,9 @@ namespace SubverseIM.ViewModels.Components
             hexagonPath = new PolylineGeometry(GenerateHexagon(31), true);
         }
 
-        private readonly IServiceManager serviceManager;
+        internal readonly IServiceManager serviceManager;
 
-        private readonly SubverseContact innerContact;
+        internal readonly SubverseContact innerContact;
 
         private bool isSelected;
         public bool IsSelected
@@ -117,18 +117,6 @@ namespace SubverseIM.ViewModels.Components
             ContactPhoto = Bitmap.DecodeToHeight(contactPhotoStream ??
                 AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")),
                 64);
-        }
-
-        public async Task OpenMessageViewCommandAsync()
-        {
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-
-            SubverseContact? contact = dbService.GetContact(innerContact.OtherPeer);
-            if (contact is not null)
-            {
-                frontendService.NavigateMessageView(contact);
-            }
         }
 
         public async Task ChangePhotoCommandAsync()

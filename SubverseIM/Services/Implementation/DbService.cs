@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 
 namespace SubverseIM.Services.Implementation
 {
@@ -40,7 +41,7 @@ namespace SubverseIM.Services.Implementation
             return contacts.FindOne(x => x.OtherPeer == otherPeer);
         }
 
-        public IEnumerable<SubverseMessage> GetMessagesWithPeer(SubversePeerId otherPeer)
+        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(IEnumerable<SubversePeerId> otherPeers, string? topicName)
         {
             var messages = db.GetCollection<SubverseMessage>();
 
@@ -50,7 +51,8 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.CallId, unique: true);
 
             return messages.Query()
-                .Where(x => x.Sender == otherPeer || x.Recipient == otherPeer)
+                .Where(x => otherPeers.Contains(x.Sender) || otherPeers.Contains(x.Recipient))
+                .Where(x => topicName == null || x.TopicName == topicName)
                 .OrderByDescending(x => x.DateSignedOn)
                 .ToEnumerable();
         }

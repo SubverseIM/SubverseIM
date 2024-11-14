@@ -1,4 +1,5 @@
 ﻿using SubverseIM.Models;
+using System.Collections.Generic;
 
 namespace SubverseIM.Services
 {
@@ -8,6 +9,6 @@ namespace SubverseIM.Services
 
         void NavigateContactView(SubverseContact contact);
 
-        void NavigateMessageView(SubverseContact contact);
+        void NavigateMessageView(IEnumerable<SubverseContact> contacts);
     }
 }

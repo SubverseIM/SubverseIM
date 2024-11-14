@@ -37,5 +37,13 @@ namespace SubverseIM.ViewModels.Pages
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
             await peerService.SendInviteAsync();
         }
+
+        public async Task MessageCommandAsync() 
+        {
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigateMessageView(ContactsList
+                .Where(x => x.IsSelected)
+                .Select(x => x.innerContact));
+        }
     }
 }

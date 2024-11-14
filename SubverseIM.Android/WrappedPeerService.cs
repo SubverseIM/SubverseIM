@@ -110,7 +110,10 @@ namespace SubverseIM.Android
 
             long timestamp = ((DateTimeOffset)message.DateSignedOn)
                 .ToUnixTimeMilliseconds();
-            messagingStyle.AddMessage(new(message.Content, timestamp, contact?.DisplayName));
+            messagingStyle.AddMessage(new(
+                message.Content, timestamp, contact?.DisplayName ?? "Anonymous" + 
+                (message.TopicName is null ? string.Empty : $" ({message.TopicName})")
+                ));
 
             Notification notif = new NotificationCompat.Builder(this, MSG_CHANNEL_ID)
                 .SetSmallIcon(Resource.Drawable.Icon)

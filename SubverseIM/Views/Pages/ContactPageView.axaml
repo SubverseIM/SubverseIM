@@ -12,9 +12,12 @@
 
 	<DockPanel>
 		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}">
-			<TextBlock HorizontalAlignment="Center">Invite a Friend</TextBlock>
+			<TextBlock FontSize="16" HorizontalAlignment="Center">Invite a Friend</TextBlock>
 		</Button>
-		<ListBox x:Name="contacts" ItemsSource="{Binding ContactsList}" >
+		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding MessageCommandAsync}">
+			<TextBlock FontSize="16" HorizontalAlignment="Center">Send Message to Contacts</TextBlock>
+		</Button>
+		<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<DockPanel Height="64">
@@ -25,13 +28,6 @@
 								   Width="62" Height="62" Clip="{Binding HexagonPath}">
 							</Image>
 						</Panel>
-						<Button 
-							DockPanel.Dock="Right" 
-							VerticalAlignment="Stretch" 
-							Command="{Binding OpenMessageViewCommandAsync}"
-							IsVisible="{Binding IsSelected}">
-							<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Message</TextBlock>
-						</Button>
 						<TextBlock VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
 					</DockPanel>
 				</DataTemplate>
