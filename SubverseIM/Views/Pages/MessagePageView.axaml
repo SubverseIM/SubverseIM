@@ -15,7 +15,7 @@
 					Command="{Binding BackCommandAsync}">
 			<TextBlock FontSize="16" HorizontalAlignment="Center" >Back to Contacts</TextBlock>
 		</Button>
-		<AutoCompleteBox DockPanel.Dock="Top" 
+		<AutoCompleteBox x:Name="topicBox" DockPanel.Dock="Top" 
 						 ItemsSource="{Binding TopicsList}" 
 						 Watermark="#topic"
 						 Text="{Binding SendMessageTopicName}" />

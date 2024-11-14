@@ -30,7 +30,9 @@ namespace SubverseIM.ViewModels.Components
             .DateSignedOn.ToLocalTime()
             .ToString("dd/MM/yy\nHH:mm:ss");
 
-        public string FromName => fromContact?.DisplayName ?? "You";
+        public string FromName => (fromContact?.DisplayName ?? "You") + 
+            (innerMessage.TopicName is null ? string.Empty : 
+            $" ({innerMessage.TopicName})");
 
         public MessageViewModel(MessagePageViewModel messagePageView, SubverseContact? fromContact, SubverseMessage innerMessage)
         {

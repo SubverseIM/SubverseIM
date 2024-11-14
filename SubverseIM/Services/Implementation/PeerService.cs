@@ -279,7 +279,7 @@ namespace SubverseIM.Services.Implementation
                     Sender = fromPeer,
                     Recipient = toPeer,
                     DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
-                    TopicName = sipRequest.Header.To.ToParameters.Get("topic"),
+                    TopicName = sipRequest.Header.To.ToURI.Parameters.Get("topic"),
                 });
 
                 SIPResponse sipResponse = SIPResponse.GetResponse(
