@@ -109,6 +109,8 @@ namespace SubverseIM.ViewModels.Pages
                 DateSignedOn = DateTime.UtcNow,
             };
 
+            MessageList.Insert(0, new(this, null, message));
+
             foreach (SubverseContact contact in contacts) 
             {
                 contact.DateLastChattedWith = message.DateSignedOn;
