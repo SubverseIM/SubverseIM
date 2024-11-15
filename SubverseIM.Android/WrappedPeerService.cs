@@ -83,7 +83,7 @@ namespace SubverseIM.Android
 
         public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default)
         {
-            int notificationId = message.Sender.GetHashCode();
+            int notificationId = message.TopicName?.GetHashCode() ?? message.Sender.GetHashCode();
 
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             SubverseContact? contact = dbService.GetContact(message.Sender);
@@ -102,7 +102,7 @@ namespace SubverseIM.Android
             NotificationCompat.MessagingStyle? messagingStyle;
             lock (notificationMap)
             {
-                if (!notificationMap.TryGetValue(message.TopicName?.GetHashCode() ?? message.Sender.GetHashCode(), out messagingStyle))
+                if (!notificationMap.TryGetValue(notificationId, out messagingStyle))
                 {
                     notificationMap.Add(notificationId, messagingStyle = new(message.TopicName ?? contact?.DisplayName ?? "Anonymous"));
                 }
