@@ -102,17 +102,16 @@ namespace SubverseIM.Android
             NotificationCompat.MessagingStyle? messagingStyle;
             lock (notificationMap)
             {
-                if (!notificationMap.TryGetValue(message.Sender.GetHashCode(), out messagingStyle))
+                if (!notificationMap.TryGetValue(message.TopicName?.GetHashCode() ?? message.Sender.GetHashCode(), out messagingStyle))
                 {
-                    notificationMap.Add(notificationId, messagingStyle = new(contact?.DisplayName ?? "Anonymous"));
+                    notificationMap.Add(notificationId, messagingStyle = new(message.TopicName ?? contact?.DisplayName ?? "Anonymous"));
                 }
             }
 
             long timestamp = ((DateTimeOffset)message.DateSignedOn)
                 .ToUnixTimeMilliseconds();
             messagingStyle.AddMessage(new(
-                message.Content, timestamp, contact?.DisplayName ?? "Anonymous" + 
-                (message.TopicName is null ? string.Empty : $" ({message.TopicName})")
+                message.Content, timestamp, contact?.DisplayName ?? "Anonymous"
                 ));
 
             Notification notif = new NotificationCompat.Builder(this, MSG_CHANNEL_ID)

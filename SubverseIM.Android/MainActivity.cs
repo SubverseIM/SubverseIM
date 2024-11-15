@@ -24,7 +24,8 @@ namespace SubverseIM.Android;
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,
-    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
+    ScreenOrientation = ScreenOrientation.Portrait,
+    ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 [IntentFilter(
     [Intent.ActionView],
     Label = "Add Contact (SubverseIM)",

@@ -31,7 +31,7 @@ namespace SubverseIM.ViewModels.Components
             .ToString("dd/MM/yy\nHH:mm:ss");
 
         public string FromName => (fromContact?.DisplayName ?? "You") + 
-            (innerMessage.TopicName is null ? string.Empty : 
+            (string.IsNullOrEmpty(innerMessage.TopicName) ? string.Empty : 
             $" ({innerMessage.TopicName})");
 
         public MessageViewModel(MessagePageViewModel messagePageView, SubverseContact? fromContact, SubverseMessage innerMessage)
