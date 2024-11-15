@@ -43,10 +43,16 @@ namespace SubverseIM.ViewModels.Components
 
         public async Task DeleteCommandAsync() 
         {
-            IDbService dbService = await messagePageView.ServiceManager.GetWithAwaitAsync<IDbService>();
-            dbService.DeleteItemById<SubverseMessage>(innerMessage.Id);
+            ILauncherService launcherService = await messagePageView.ServiceManager
+                .GetWithAwaitAsync<ILauncherService>();
 
-            messagePageView.MessageList.Remove(this);
+            if (await launcherService.ShowConfirmationDialogAsync("Delete Message?", "Are you sure you want to delete this message?"))
+            {
+                IDbService dbService = await messagePageView.ServiceManager
+                    .GetWithAwaitAsync<IDbService>();
+                dbService.DeleteItemById<SubverseMessage>(innerMessage.Id);
+                messagePageView.MessageList.Remove(this);
+            }
         }
     }
 }

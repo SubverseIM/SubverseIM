@@ -52,7 +52,7 @@ namespace SubverseIM.Services.Implementation
 
             return messages.Query()
                 .Where(x => otherPeers.Contains(x.Sender) || otherPeers.Contains(x.Recipient))
-                .Where(x => topicName == null || x.TopicName == topicName)
+                .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
                 .OrderByDescending(x => x.DateSignedOn)
                 .ToEnumerable();
         }

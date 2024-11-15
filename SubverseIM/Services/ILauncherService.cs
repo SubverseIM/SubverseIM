@@ -12,7 +12,9 @@ namespace SubverseIM.Services
 
         Uri? GetLaunchedUri();
 
-        Task<bool> ShowConfirmationDialogAsync(string title, string messageText);
+        Task<bool> ShowConfirmationDialogAsync(string title, string message);
+
+        Task ShowAlertDialogAsync(string title, string message);
 
         Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken = default);
     }

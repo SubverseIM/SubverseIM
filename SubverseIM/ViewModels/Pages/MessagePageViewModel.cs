@@ -66,7 +66,7 @@ namespace SubverseIM.ViewModels.Pages
             MessageList.Clear();
             foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(contacts.Select(x => x.OtherPeer), null).Take(250))
             {
-                if (message.TopicName is not null && !TopicsList.Contains(message.TopicName)) 
+                if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName)) 
                 {
                     TopicsList.Insert(0, message.TopicName);
                 }
@@ -89,7 +89,7 @@ namespace SubverseIM.ViewModels.Pages
         {
             if (string.IsNullOrEmpty(SendMessageText)) return;
 
-            if (SendMessageTopicName is not null && !TopicsList.Contains(SendMessageTopicName))
+            if (!string.IsNullOrEmpty(SendMessageTopicName) && !TopicsList.Contains(SendMessageTopicName))
             {
                 TopicsList.Insert(0, SendMessageTopicName);
             }

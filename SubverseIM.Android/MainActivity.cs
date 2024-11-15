@@ -39,6 +39,8 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     private readonly ServiceConnection<IPeerService> peerServiceConn;
 
+    private bool isSharingUri;
+
     public bool NotificationsAllowed { get; private set; }
 
     public bool IsInForeground { get; private set; }
@@ -100,6 +102,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     {
         base.OnStop();
         IsInForeground = false;
+        if (isSharingUri) { Finish(); }
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
@@ -141,8 +144,23 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         return tcs.Task;
     }
 
+    public Task ShowAlertDialogAsync(string title, string message) 
+    {
+        TaskCompletionSource tcs = new();
+
+        AlertDialog? alertDialog = new AlertDialog.Builder(this)
+            ?.SetTitle(title)
+            ?.SetMessage(message)
+            ?.SetNeutralButton("Ok", (s, ev) => tcs.SetResult())
+            ?.Show();
+
+        return tcs.Task;
+    }
+
     public Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken)
     {
+        isSharingUri = true;
+
         new ShareCompat.IntentBuilder(this)
             .SetType("text/plain")
             .SetChooserTitle(title)

@@ -13,10 +13,10 @@ public partial class MessagePageView : UserControl
     {
         InitializeComponent();
         messages.SelectionChanged += Messages_SelectionChanged;
-        topicBox.SelectionChanged += TopicBox_SelectionChanged;
+        topicBox.TextChanged += TopicBox_TextChanged;
     }
 
-    private async void TopicBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private async void TopicBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
         await ((DataContext as MessagePageViewModel)?.InitializeAsync() ?? Task.CompletedTask);
     }

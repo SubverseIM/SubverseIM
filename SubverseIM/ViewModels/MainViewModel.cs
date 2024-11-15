@@ -1,4 +1,5 @@
-﻿using Avalonia.Platform.Storage;
+﻿using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using LiteDB;
 using ReactiveUI;
 using SubverseIM.Models;
@@ -73,11 +74,11 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
             cancellationToken.ThrowIfCancellationRequested();
 
             SubverseMessage message = await peerService.ReceiveMessageAsync(cancellationToken);
-            SubverseContact contact = dbService.GetContact(message.Sender) ?? 
-                new SubverseContact() 
-                { 
-                    OtherPeer = message.Sender, 
-                    DisplayName = "Anonymous", 
+            SubverseContact contact = dbService.GetContact(message.Sender) ??
+                new SubverseContact()
+                {
+                    OtherPeer = message.Sender,
+                    DisplayName = "Anonymous",
                     UserNote = "Anonymous User via the Subverse Network"
                 };
 
@@ -101,9 +102,14 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
                 dbService.InsertOrUpdateItem(message);
 
                 bool isCurrentPeer = false;
-                if (contact is not null && currentPage is MessagePageViewModel vm && 
+                if (contact is not null && currentPage is MessagePageViewModel vm &&
                     (isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer)))
                 {
+                    if (!string.IsNullOrEmpty(message.TopicName) &&
+                        !vm.TopicsList.Contains(message.TopicName))
+                    {
+                        vm.TopicsList.Insert(0, message.TopicName);
+                    }
                     vm.MessageList.Insert(0, new(vm, contact, message));
                 }
 
@@ -111,7 +117,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
                 {
                     await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);
                 }
-                else 
+                else
                 {
                     nativeService.ClearNotificationForPeer(message.Sender);
                 }
@@ -146,10 +152,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
     public void NavigateMessageView(IEnumerable<SubverseContact> contacts)
     {
-        if (contacts.Any())
-        {
-            CurrentPage = new MessagePageViewModel(serviceManager, contacts.ToArray());
-        }
+        CurrentPage = new MessagePageViewModel(serviceManager, contacts.ToArray());
     }
 
     protected virtual void Dispose(bool disposing)
