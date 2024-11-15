@@ -1,4 +1,5 @@
 ﻿using LiteDB;
+using System;
 
 namespace SubverseIM.Models
 {
@@ -13,5 +14,7 @@ namespace SubverseIM.Models
         public string? DisplayName { get; set; }
 
         public string? UserNote { get; set; }
+
+        public DateTime DateLastChattedWith { get; set; }
     }
 }

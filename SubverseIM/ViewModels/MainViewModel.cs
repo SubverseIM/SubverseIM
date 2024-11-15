@@ -78,10 +78,12 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
                 { 
                     OtherPeer = message.Sender, 
                     DisplayName = "Anonymous", 
-                    UserNote = "Anonymous User via the Subverse Network" 
+                    UserNote = "Anonymous User via the Subverse Network"
                 };
 
+            contact.DateLastChattedWith = DateTime.UtcNow;
             dbService.InsertOrUpdateItem(contact);
+
             await contactPage.LoadContactsAsync(cancellationToken);
 
             lock (peerService.CachedPeers)
@@ -98,15 +100,11 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
             {
                 dbService.InsertOrUpdateItem(message);
 
-                bool isCurrentPeer;
-                if (contact is not null && currentPage is MessagePageViewModel vm)
+                bool isCurrentPeer = false;
+                if (contact is not null && currentPage is MessagePageViewModel vm && 
+                    (isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer)))
                 {
-                    isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer);
                     vm.MessageList.Insert(0, new(vm, contact, message));
-                }
-                else 
-                {
-                    isCurrentPeer = false;
                 }
 
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
@@ -148,7 +146,10 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
     public void NavigateMessageView(IEnumerable<SubverseContact> contacts)
     {
-        CurrentPage = new MessagePageViewModel(serviceManager, contacts.ToArray());
+        if (contacts.Any())
+        {
+            CurrentPage = new MessagePageViewModel(serviceManager, contacts.ToArray());
+        }
     }
 
     protected virtual void Dispose(bool disposing)
