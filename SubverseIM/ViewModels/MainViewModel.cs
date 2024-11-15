@@ -110,7 +110,13 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
                     {
                         vm.TopicsList.Insert(0, message.TopicName);
                     }
-                    vm.MessageList.Insert(0, new(vm, contact, message));
+
+                    if (message.TopicName == vm.SendMessageTopicName || 
+                        (string.IsNullOrEmpty(message.TopicName) && 
+                        string.IsNullOrEmpty(vm.SendMessageTopicName)))
+                    {
+                        vm.MessageList.Insert(0, new(vm, contact, message));
+                    }
                 }
 
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
