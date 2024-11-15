@@ -54,12 +54,6 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default) 
         {
-            INativeService nativeService = await ServiceManager.GetWithAwaitAsync<INativeService>();
-            foreach (SubverseContact contact in contacts)
-            {
-                nativeService.ClearNotificationForPeer(contact.OtherPeer);
-            }
-
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
 
