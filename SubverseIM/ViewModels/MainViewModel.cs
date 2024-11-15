@@ -103,7 +103,9 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
                 bool isCurrentPeer = false;
                 if (contact is not null && currentPage is MessagePageViewModel vm &&
-                    (isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer)))
+                    (isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer) && 
+                    (message.TopicName == vm.SendMessageTopicName ||
+                    string.IsNullOrEmpty(vm.SendMessageTopicName))))
                 {
                     if (!string.IsNullOrEmpty(message.TopicName) &&
                         !vm.TopicsList.Contains(message.TopicName))
@@ -111,12 +113,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
                         vm.TopicsList.Insert(0, message.TopicName);
                     }
 
-                    if (message.TopicName == vm.SendMessageTopicName || 
-                        (string.IsNullOrEmpty(message.TopicName) && 
-                        string.IsNullOrEmpty(vm.SendMessageTopicName)))
-                    {
-                        vm.MessageList.Insert(0, new(vm, contact, message));
-                    }
+                    vm.MessageList.Insert(0, new(vm, contact, message));
                 }
 
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
