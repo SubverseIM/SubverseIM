@@ -412,8 +412,9 @@ namespace SubverseIM.Services.Implementation
 
             await portForwarder.StartAsync(cancellationToken);
 
+            int retryCount = 0;
             Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
-            for (int i = MAGIC_PORT_NUM; mapping is null; i++)
+            for (int i = MAGIC_PORT_NUM; retryCount++ < 4 && mapping is null; i++)
             {
                 await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, i));
                 await timer.WaitForNextTickAsync();
@@ -443,7 +444,10 @@ namespace SubverseIM.Services.Implementation
 
                 foreach (SubversePeerId otherPeer in peers)
                 {
-                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()), mapping.PublicPort);
+                    if (mapping is not null)
+                    {
+                        dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()), mapping.PublicPort);
+                    }
                     await SynchronizePeersAsync(otherPeer, cancellationToken);
                     await timer.WaitForNextTickAsync(cancellationToken);
                 }
