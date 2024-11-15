@@ -73,11 +73,14 @@ namespace SubverseIM.Android
             manager?.CreateNotificationChannel(serviceChannel);
         }
 
-        public void ClearNotificationForPeer(SubversePeerId otherPeer)
+        public void ClearNotification(SubverseMessage message)
         {
             lock (notificationMap)
             {
-                notificationMap.Remove(otherPeer.GetHashCode());
+                notificationMap.Remove(
+                    message.TopicName?.GetHashCode() ?? 
+                    message.Sender.GetHashCode()
+                    );
             }
         }
 

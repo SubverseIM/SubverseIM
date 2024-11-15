@@ -122,7 +122,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
                 }
                 else
                 {
-                    nativeService.ClearNotificationForPeer(message.Sender);
+                    nativeService.ClearNotification(message);
                 }
             }
             catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
