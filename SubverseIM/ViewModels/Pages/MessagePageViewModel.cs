@@ -97,23 +97,24 @@ namespace SubverseIM.ViewModels.Pages
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
 
-            string callId = CallProperties.CreateNewCallId();
+            SubverseMessage message = new SubverseMessage()
+            {
+                CallId = CallProperties.CreateNewCallId(),
+
+                TopicName = SendMessageTopicName,
+
+                Sender = peerService.ThisPeer,
+
+                Content = SendMessageText,
+                DateSignedOn = DateTime.UtcNow,
+            };
+
             foreach (SubverseContact contact in contacts) 
             {
-                SubverseMessage message = new SubverseMessage()
-                {
-                    CallId = callId,
+                contact.DateLastChattedWith = message.DateSignedOn;
+                dbService.InsertOrUpdateItem(contact);
 
-                    TopicName = SendMessageTopicName,
-
-                    Sender = peerService.ThisPeer,
-                    Recipient = contact.OtherPeer,
-
-                    Content = SendMessageText,
-                    DateSignedOn = DateTime.UtcNow,
-                };
-
-                MessageList.Insert(0, new(this, null, message));
+                message.Recipient = contact.OtherPeer;
                 dbService.InsertOrUpdateItem(message);
 
                 SendMessageText = null;

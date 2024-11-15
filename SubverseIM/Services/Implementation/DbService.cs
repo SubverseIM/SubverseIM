@@ -30,7 +30,7 @@ namespace SubverseIM.Services.Implementation
             var contacts = db.GetCollection<SubverseContact>();
             contacts.EnsureIndex(x => x.OtherPeer, unique: true);
             return contacts.Query()
-                .OrderBy(x => x.DateLastChattedWith)
+                .OrderByDescending(x => x.DateLastChattedWith)
                 .ToEnumerable();
         }
 

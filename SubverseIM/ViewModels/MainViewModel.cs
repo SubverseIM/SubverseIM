@@ -81,7 +81,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
                     UserNote = "Anonymous User via the Subverse Network"
                 };
 
-            contact.DateLastChattedWith = DateTime.UtcNow;
+            contact.DateLastChattedWith = message.DateSignedOn;
             dbService.InsertOrUpdateItem(contact);
 
             await contactPage.LoadContactsAsync(cancellationToken);
