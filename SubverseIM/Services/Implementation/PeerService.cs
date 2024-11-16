@@ -91,7 +91,7 @@ namespace SubverseIM.Services.Implementation
             peerInfoBag = new();
             messagesBag = new();
 
-            timer = new(TimeSpan.FromSeconds(15));
+            timer = new(TimeSpan.FromSeconds(5));
 
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
         }
@@ -410,17 +410,6 @@ namespace SubverseIM.Services.Implementation
                 cacheStream?.Dispose();
             }
 
-            await portForwarder.StartAsync(cancellationToken);
-
-            int retryCount = 0;
-            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
-            for (int i = MAGIC_PORT_NUM; retryCount++ < 4 && mapping is null; i++)
-            {
-                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, i));
-                await timer.WaitForNextTickAsync();
-                mapping = portForwarder.Mappings.Created.SingleOrDefault();
-            }
-
             if (DbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? pkStream))
             {
                 using (pkStream)
@@ -429,6 +418,20 @@ namespace SubverseIM.Services.Implementation
                 {
                     await http.PostAsync("pk", pkStreamContent, cancellationToken);
                 }
+            }
+
+            await portForwarder.StartAsync(cancellationToken);
+
+            int portNum, retryCount = 0;
+            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
+            for (portNum = MAGIC_PORT_NUM; retryCount++ < 3 && mapping is null; portNum++)
+            {
+                if (!portForwarder.Active) break;
+
+                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, portNum));
+                await timer.WaitForNextTickAsync();
+
+                mapping = portForwarder.Mappings.Created.SingleOrDefault();
             }
 
             while (!cancellationToken.IsCancellationRequested)
@@ -444,10 +447,8 @@ namespace SubverseIM.Services.Implementation
 
                 foreach (SubversePeerId otherPeer in peers)
                 {
-                    if (mapping is not null)
-                    {
-                        dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()), mapping.PublicPort);
-                    }
+                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()), 
+                        mapping?.PublicPort ?? portNum);
                     await SynchronizePeersAsync(otherPeer, cancellationToken);
                     await timer.WaitForNextTickAsync(cancellationToken);
                 }
@@ -471,7 +472,7 @@ namespace SubverseIM.Services.Implementation
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
             SIPURI requestToUri = SIPURI.ParseSIPURI($"sip:{message.Recipient}@subverse.network");
-            if (message.TopicName is not null) 
+            if (message.TopicName is not null)
             {
                 requestToUri.Parameters.Set("topic", message.TopicName);
             }
