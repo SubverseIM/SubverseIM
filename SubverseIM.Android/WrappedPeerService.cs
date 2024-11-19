@@ -1,15 +1,14 @@
-﻿using Android;
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
+using Android.Net;
 using Android.OS;
 using AndroidX.Core.App;
 using SubverseIM.Android.Services;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -39,7 +38,7 @@ namespace SubverseIM.Android
             CreateNotificationChannels();
             Notification notif = new NotificationCompat.Builder(this, SRV_CHANNEL_ID)
                 .SetSmallIcon(Resource.Drawable.Icon)
-                .SetPriority(NotificationCompat.PriorityDefault)
+                .SetPriority(NotificationCompat.PriorityLow)
                 .SetContentTitle("SubverseIM Peer Services")
                 .SetContentText("Participating in ongoing network activities...")
                 .SetOngoing(true)
@@ -63,7 +62,7 @@ namespace SubverseIM.Android
 
             NotificationChannel serviceChannel = new NotificationChannel(
                 SRV_CHANNEL_ID, new Java.Lang.String("Application Services"),
-                NotificationImportance.Default);
+                NotificationImportance.Low);
             serviceChannel.Description = "Ongoing background tasks from SubverseIM";
 
             // Register the channel with the system; you can't change the importance
@@ -111,17 +110,19 @@ namespace SubverseIM.Android
                 }
             }
 
-            long timestamp = ((DateTimeOffset)message.DateSignedOn)
+            long timestamp = ((System.DateTimeOffset)message.DateSignedOn)
                 .ToUnixTimeMilliseconds();
             messagingStyle.AddMessage(new(
                 message.Content, timestamp, contact?.DisplayName ?? "Anonymous"
                 ));
 
+            Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);
             Notification notif = new NotificationCompat.Builder(this, MSG_CHANNEL_ID)
                 .SetSmallIcon(Resource.Drawable.Icon)
                 .SetLargeIcon(avatarBitmap)
                 .SetStyle(messagingStyle)
                 .SetPriority(NotificationCompat.PriorityHigh)
+                .SetSound(soundUri)
                 .Build();
 
             NotificationManager? manager = NotificationManager.FromContext(this);
