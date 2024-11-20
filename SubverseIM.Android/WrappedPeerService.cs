@@ -113,7 +113,7 @@ namespace SubverseIM.Android
             long timestamp = ((System.DateTimeOffset)message.DateSignedOn)
                 .ToUnixTimeMilliseconds();
             messagingStyle.AddMessage(new(
-                message.Content, timestamp, contact?.DisplayName ?? "Anonymous"
+                message.Content, timestamp, message.TopicName ?? contact?.DisplayName ?? "Anonymous"
                 ));
 
             Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);
