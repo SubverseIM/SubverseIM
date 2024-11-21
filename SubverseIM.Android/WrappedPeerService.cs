@@ -37,12 +37,23 @@ namespace SubverseIM.Android
         public override IBinder? OnBind(Intent? intent)
         {
             CreateNotificationChannels();
+
+            Intent notifyIntent = new Intent(this, typeof(MainActivity));
+            notifyIntent.SetAction(Intent.ActionMain);
+            notifyIntent.AddCategory(Intent.CategoryLauncher);
+            notifyIntent.AddFlags(ActivityFlags.NewTask);
+
+            PendingIntent? pendingIntent = PendingIntent.GetActivity(
+                this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
+                PendingIntentFlags.Immutable);
+
             Notification notif = new NotificationCompat.Builder(this, SRV_CHANNEL_ID)
                 .SetSmallIcon(Resource.Drawable.Icon)
                 .SetPriority(NotificationCompat.PriorityLow)
                 .SetContentTitle("SubverseIM Peer Services")
                 .SetContentText("Participating in ongoing network activities...")
                 .SetOngoing(true)
+                .SetContentIntent(pendingIntent)
                 .Build();
             StartForeground(1001, notif);
             return new ServiceBinder<IPeerService>(peerService);
