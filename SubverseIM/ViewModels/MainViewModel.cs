@@ -103,7 +103,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
                 bool isCurrentPeer = false;
                 if (contact is not null && currentPage is MessagePageViewModel vm &&
-                    (isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer) && 
+                    (isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer) &&
                     (message.TopicName == vm.SendMessageTopicName ||
                     string.IsNullOrEmpty(vm.SendMessageTopicName))))
                 {
@@ -129,17 +129,9 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         }
     }
 
-    public async Task InvokeFromLauncherAsync(IStorageProvider storageProvider)
+    public void RegisterStorageProvider(IStorageProvider storageProvider)
     {
         serviceManager.GetOrRegister(storageProvider);
-
-        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
-        Uri? launchedUri = launcherService.GetLaunchedUri();
-        if (launchedUri is not null)
-        {
-            await createContactPage.InitializeAsync(launchedUri);
-            CurrentPage = createContactPage;
-        }
     }
 
     public void NavigateContactView()
@@ -156,6 +148,18 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
     public void NavigateMessageView(IEnumerable<SubverseContact> contacts)
     {
         CurrentPage = new MessagePageViewModel(serviceManager, contacts.ToArray());
+    }
+
+    public async void NavigateLaunchedUri()
+    {
+        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+        Uri? launchedUri = launcherService.GetLaunchedUri();
+
+        if (launchedUri is not null)
+        {
+            await createContactPage.InitializeAsync(launchedUri);
+            CurrentPage = createContactPage;
+        }
     }
 
     protected virtual void Dispose(bool disposing)

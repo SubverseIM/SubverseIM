@@ -5,6 +5,7 @@ using Android.Graphics;
 using Android.Net;
 using Android.OS;
 using AndroidX.Core.App;
+using AndroidX.Core.Content;
 using SubverseIM.Android.Services;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -117,12 +118,24 @@ namespace SubverseIM.Android
                 ));
 
             Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);
+            
+            Intent notifyIntent = new Intent(this, typeof(MainActivity));
+            notifyIntent.SetAction(Intent.ActionMain);
+            notifyIntent.AddCategory(Intent.CategoryLauncher);
+            notifyIntent.AddFlags(ActivityFlags.NewTask);
+
+            PendingIntent? pendingIntent = PendingIntent.GetActivity(
+                this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
+                PendingIntentFlags.Immutable);
+
             Notification notif = new NotificationCompat.Builder(this, MSG_CHANNEL_ID)
+                .SetPriority(NotificationCompat.PriorityHigh)
+                .SetAutoCancel(true)
+                .SetContentIntent(pendingIntent)
                 .SetSmallIcon(Resource.Drawable.Icon)
                 .SetLargeIcon(avatarBitmap)
-                .SetStyle(messagingStyle)
-                .SetPriority(NotificationCompat.PriorityHigh)
                 .SetSound(soundUri)
+                .SetStyle(messagingStyle)
                 .Build();
 
             NotificationManager? manager = NotificationManager.FromContext(this);

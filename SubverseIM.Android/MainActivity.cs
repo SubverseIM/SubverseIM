@@ -25,7 +25,8 @@ namespace SubverseIM.Android;
     Icon = "@drawable/icon",
     MainLauncher = true,
     ScreenOrientation = ScreenOrientation.Portrait,
-    ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
+    ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.UiMode,
+    LaunchMode = LaunchMode.SingleInstance)]
 [IntentFilter(
     [Intent.ActionView],
     Label = "Add Contact (SubverseIM)",
@@ -39,8 +40,6 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     private readonly ServiceManager serviceManager;
 
     private readonly ServiceConnection<IPeerService> peerServiceConn;
-
-    private bool isSharingUri;
 
     public bool NotificationsAllowed { get; private set; }
 
@@ -61,7 +60,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         {
             RequestPermissions([Manifest.Permission.PostNotifications], 1001);
         }
-        else 
+        else
         {
             NotificationsAllowed = true;
         }
@@ -76,20 +75,25 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
             );
 
-        BindService(
-            new Intent(this, typeof(WrappedPeerService)),
-            peerServiceConn, Bind.AutoCreate
-            );
-        serviceManager.GetOrRegister(
-            await peerServiceConn.ConnectAsync()
-            );
+        if (!peerServiceConn.IsConnected)
+        {
+            BindService(
+                new Intent(this, typeof(WrappedPeerService)),
+                peerServiceConn, Bind.AutoCreate
+                );
+            serviceManager.GetOrRegister(
+                await peerServiceConn.ConnectAsync()
+                );
+        }
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
-
-        UnbindService(peerServiceConn);
+        if (peerServiceConn.IsConnected)
+        {
+            UnbindService(peerServiceConn);
+        }
         serviceManager.Dispose();
     }
 
@@ -103,7 +107,6 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     {
         base.OnStop();
         IsInForeground = false;
-        if (isSharingUri) { Finish(); }
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
@@ -125,13 +128,22 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             .UseReactiveUI();
     }
 
+    protected override async void OnNewIntent(Intent? intent)
+    {
+        base.OnNewIntent(intent);
+        Intent = intent;
+
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        frontendService.NavigateLaunchedUri();
+    }
+
     public Uri? GetLaunchedUri()
     {
         return Intent?.DataString is null ?
             null : new Uri(Intent.DataString);
     }
 
-    public Task<bool> ShowConfirmationDialogAsync(string title, string message) 
+    public Task<bool> ShowConfirmationDialogAsync(string title, string message)
     {
         TaskCompletionSource<bool> tcs = new();
 
@@ -145,7 +157,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         return tcs.Task;
     }
 
-    public Task ShowAlertDialogAsync(string title, string message) 
+    public Task ShowAlertDialogAsync(string title, string message)
     {
         TaskCompletionSource tcs = new();
 
@@ -160,8 +172,6 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     public Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken)
     {
-        isSharingUri = true;
-
         new ShareCompat.IntentBuilder(this)
             .SetType("text/plain")
             .SetChooserTitle(title)
