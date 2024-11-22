@@ -93,6 +93,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         if (peerServiceConn.IsConnected)
         {
             UnbindService(peerServiceConn);
+            StopService(new Intent(this, typeof(WrappedPeerService)));
         }
     }
 

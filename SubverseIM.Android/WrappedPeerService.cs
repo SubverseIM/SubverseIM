@@ -4,6 +4,7 @@ using Android.Content.PM;
 using Android.Graphics;
 using Android.Net;
 using Android.OS;
+using Android.Runtime;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using SubverseIM.Android.Services;
@@ -36,6 +37,14 @@ namespace SubverseIM.Android
 
         public override IBinder? OnBind(Intent? intent)
         {
+            return new ServiceBinder<IPeerService>(peerService);
+        }
+
+        [return: GeneratedEnum]
+        public override StartCommandResult OnStartCommand(Intent? intent, [GeneratedEnum] StartCommandFlags flags, int startId)
+        {
+            base.OnStartCommand(intent, flags, startId);
+
             CreateNotificationChannels();
 
             Intent notifyIntent = new Intent(this, typeof(MainActivity));
@@ -55,8 +64,10 @@ namespace SubverseIM.Android
                 .SetOngoing(true)
                 .SetContentIntent(pendingIntent)
                 .Build();
+
             StartForeground(1001, notif);
-            return new ServiceBinder<IPeerService>(peerService);
+
+            return StartCommandResult.Sticky;
         }
 
         private void CreateNotificationChannels()
