@@ -90,7 +90,10 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     protected override void OnDestroy()
     {
         base.OnDestroy();
-        UnbindService(peerServiceConn);
+        if (peerServiceConn.IsConnected)
+        {
+            UnbindService(peerServiceConn);
+        }
     }
 
     protected override void OnStart()
