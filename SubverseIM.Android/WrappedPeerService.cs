@@ -59,12 +59,6 @@ namespace SubverseIM.Android
             return new ServiceBinder<IPeerService>(peerService);
         }
 
-        public override bool OnUnbind(Intent? intent)
-        {
-            StopForeground(StopForegroundFlags.Remove);
-            return base.OnUnbind(intent);
-        }
-
         private void CreateNotificationChannels()
         {
             NotificationChannel messageChannel = new NotificationChannel(

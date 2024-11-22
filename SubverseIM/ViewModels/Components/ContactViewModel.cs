@@ -51,12 +51,22 @@ namespace SubverseIM.ViewModels.Components
         internal readonly SubverseContact innerContact;
 
         private bool isSelected;
-        public bool IsSelected
+        public bool IsSelected 
         {
             get => isSelected;
-            set
+            set 
             {
                 this.RaiseAndSetIfChanged(ref isSelected, value);
+            }
+        }
+
+        private bool isDoubleSelected;
+        public bool IsDoubleSelected
+        {
+            get => isDoubleSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref isDoubleSelected, value);
             }
         }
 

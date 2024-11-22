@@ -30,7 +30,7 @@
 						</Panel>
 						<Button DockPanel.Dock="Right"
 								VerticalAlignment="Stretch"
-								IsVisible="{Binding IsSelected}"
+								IsVisible="{Binding IsDoubleSelected}"
 								Command="{Binding DeleteCommandAsync}"
 								Background="DarkRed">
 							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">
@@ -39,7 +39,7 @@
 						</Button>
 						<Button DockPanel.Dock="Right" 
 								VerticalAlignment="Stretch" 
-								IsVisible="{Binding IsSelected}"
+								IsVisible="{Binding IsDoubleSelected}"
 								Command="{Binding EditCommandAsync}">
 							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">
 								Edit

@@ -90,11 +90,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     protected override void OnDestroy()
     {
         base.OnDestroy();
-        if (peerServiceConn.IsConnected)
-        {
-            UnbindService(peerServiceConn);
-        }
-        serviceManager.Dispose();
+        UnbindService(peerServiceConn);
     }
 
     protected override void OnStart()
@@ -179,5 +175,14 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             .StartChooser();
 
         return Task.CompletedTask;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        if (disposing) 
+        {
+            serviceManager.Dispose();
+        }
     }
 }

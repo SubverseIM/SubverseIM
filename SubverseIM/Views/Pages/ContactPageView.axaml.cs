@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,6 +21,30 @@ public partial class ContactPageView : UserControl
 
     private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
+        try
+        {
+            ContactViewModel? item = e.RemovedItems
+                .Cast<ContactViewModel>()
+                .SingleOrDefault();
+            if (item?.IsDoubleSelected == false)
+            {
+                foreach (var other in contacts.Items.Cast<ContactViewModel>())
+                {
+                    contacts.SelectedItems?.Remove(other);
+                    other.IsDoubleSelected = false;
+                }
+                item.IsDoubleSelected = true;
+            }
+            else if (e.AddedItems.Count > 0)
+            {
+                foreach (var other in contacts.Items.Cast<ContactViewModel>())
+                {
+                    other.IsDoubleSelected = false;
+                }
+            }
+        }
+        catch (InvalidOperationException) { }
+
         foreach (var item in e.AddedItems.Cast<ContactViewModel>()) 
         {
             item.IsSelected = true;
