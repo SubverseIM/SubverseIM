@@ -33,6 +33,10 @@ public partial class ContactPageView : UserControl
     private void PressTimerElapsed(object? state) 
     {
         timerElapsed = true;
+        Dispatcher.UIThread.Post(
+            () => contacts.SelectedItems?.Clear(), 
+            DispatcherPriority.Input
+            );
     }
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)

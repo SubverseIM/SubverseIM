@@ -15,7 +15,7 @@
 			<TextBlock FontSize="16" HorizontalAlignment="Center">Invite a Friend</TextBlock>
 		</Button>
 		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding MessageCommandAsync}">
-			<TextBlock FontSize="16" HorizontalAlignment="Center">View Conversation</TextBlock>
+			<TextBlock FontSize="16" HorizontalAlignment="Center">Start Group Chat</TextBlock>
 		</Button>
 		<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
 			<ListBox.ItemTemplate>
