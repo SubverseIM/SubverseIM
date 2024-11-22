@@ -21,6 +21,7 @@ public partial class ContactPageView : UserControl
 
     private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
+        bool suppressFlag = false;
         try
         {
             ContactViewModel? item = e.RemovedItems
@@ -35,7 +36,19 @@ public partial class ContactPageView : UserControl
                 }
                 item.IsDoubleSelected = true;
             }
-            else if (e.AddedItems.Count > 0)
+            else if (e.AddedItems.Count == 1)
+            {
+                item = e.AddedItems
+                    .Cast<ContactViewModel>()
+                    .Single();
+                if (item.IsDoubleSelected)
+                {
+                    contacts.SelectedItems?.Remove(item);
+                    item.IsDoubleSelected = false;
+                    suppressFlag = true;
+                }
+            }
+            else if (e.AddedItems.Count > 0) 
             {
                 foreach (var other in contacts.Items.Cast<ContactViewModel>())
                 {
@@ -45,14 +58,17 @@ public partial class ContactPageView : UserControl
         }
         catch (InvalidOperationException) { }
 
-        foreach (var item in e.AddedItems.Cast<ContactViewModel>()) 
+        if (!suppressFlag)
         {
-            item.IsSelected = true;
-        }
+            foreach (var item in e.AddedItems.Cast<ContactViewModel>())
+            {
+                item.IsSelected = true;
+            }
 
-        foreach (var item in e.RemovedItems.Cast<ContactViewModel>())
-        {
-            item.IsSelected = false;
+            foreach (var item in e.RemovedItems.Cast<ContactViewModel>())
+            {
+                item.IsSelected = false;
+            }
         }
     }
 
