@@ -58,7 +58,7 @@ namespace SubverseIM.ViewModels.Pages
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
 
             MessageList.Clear();
-            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(contacts.Select(x => x.OtherPeer), null).Take(250))
+            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(contacts.Select(x => x.OtherPeer).ToHashSet(), null).Take(250))
             {
                 if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName)) 
                 {
@@ -99,19 +99,19 @@ namespace SubverseIM.ViewModels.Pages
 
                 Sender = peerService.ThisPeer,
 
+                Recipients = contacts.Select(x => x.OtherPeer).ToArray(),
+
                 Content = SendMessageText,
                 DateSignedOn = DateTime.UtcNow,
             };
 
             MessageList.Insert(0, new(this, null, message));
+            dbService.InsertOrUpdateItem(message);
 
             foreach (SubverseContact contact in contacts) 
             {
                 contact.DateLastChattedWith = message.DateSignedOn;
                 dbService.InsertOrUpdateItem(contact);
-
-                message.Recipient = contact.OtherPeer;
-                dbService.InsertOrUpdateItem(message);
 
                 SendMessageText = null;
                 _ = peerService.SendMessageAsync(message);

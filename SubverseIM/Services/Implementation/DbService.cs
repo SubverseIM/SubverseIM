@@ -41,20 +41,47 @@ namespace SubverseIM.Services.Implementation
             return contacts.FindOne(x => x.OtherPeer == otherPeer);
         }
 
-        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(IEnumerable<SubversePeerId> otherPeers, string? topicName)
+        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName)
         {
             var messages = db.GetCollection<SubverseMessage>();
 
             messages.EnsureIndex(x => x.Sender);
-            messages.EnsureIndex(x => x.Recipient);
+            messages.EnsureIndex(x => x.Recipients);
+
+            messages.EnsureIndex(x => x.CallId, unique: true);
+
+            return otherPeers.SelectMany(otherPeer => messages.Query()
+                .Where(x => otherPeers.Contains(x.Sender) || x.Recipients.Contains(otherPeer))
+                .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
+                .ToEnumerable())
+                .OrderByDescending(x => x.DateSignedOn);
+        }
+
+        public IEnumerable<SubverseMessage> GetAllUndeliveredMessages() 
+        {
+            var messages = db.GetCollection<SubverseMessage>();
+
+            messages.EnsureIndex(x => x.Sender);
+            messages.EnsureIndex(x => x.Recipients);
 
             messages.EnsureIndex(x => x.CallId, unique: true);
 
             return messages.Query()
-                .Where(x => otherPeers.Contains(x.Sender) || otherPeers.Contains(x.Recipient))
-                .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
-                .OrderByDescending(x => x.DateSignedOn)
+                .Where(x => !x.WasDelivered)
+                .OrderBy(x => x.DateSignedOn)
                 .ToEnumerable();
+        }
+
+        public SubverseMessage GetMessageByCallId(string callId) 
+        {
+            var messages = db.GetCollection<SubverseMessage>();
+
+            messages.EnsureIndex(x => x.Sender);
+            messages.EnsureIndex(x => x.Recipients);
+
+            messages.EnsureIndex(x => x.CallId, unique: true);
+
+            return messages.FindOne(x => x.CallId == callId);
         }
 
         public bool InsertOrUpdateItem<T>(T item)

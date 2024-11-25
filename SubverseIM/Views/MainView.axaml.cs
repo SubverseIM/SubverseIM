@@ -3,7 +3,6 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using SubverseIM.ViewModels;
 using System;
-using System.Threading.Tasks;
 
 namespace SubverseIM.Views;
 

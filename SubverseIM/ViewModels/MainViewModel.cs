@@ -56,6 +56,14 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
         _ = peerService.BootstrapSelfAsync(cancellationToken);
 
+        _ = Task.Run(async Task? () =>
+        {
+            foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
+            {
+                await peerService.SendMessageAsync(message);
+            }
+        });
+
         lock (peerService.CachedPeers)
         {
             foreach (SubverseContact contact in dbService.GetContacts())

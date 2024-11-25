@@ -40,7 +40,13 @@ namespace SubverseIM.Android
             return new ServiceBinder<IPeerService>(peerService);
         }
 
-        [return: GeneratedEnum]
+        public override bool OnUnbind(Intent? intent)
+        {
+            base.OnUnbind(intent);
+            StopForeground(StopForegroundFlags.Remove);
+            return false;
+        }
+
         public override StartCommandResult OnStartCommand(Intent? intent, [GeneratedEnum] StartCommandFlags flags, int startId)
         {
             base.OnStartCommand(intent, flags, startId);
@@ -65,7 +71,7 @@ namespace SubverseIM.Android
                 .SetContentIntent(pendingIntent)
                 .Build();
 
-            StartForeground(1001, notif);
+            StartForeground(1000, notif);
 
             return StartCommandResult.Sticky;
         }
@@ -130,7 +136,9 @@ namespace SubverseIM.Android
             long timestamp = ((System.DateTimeOffset)message.DateSignedOn)
                 .ToUnixTimeMilliseconds();
             messagingStyle.AddMessage(new(
-                message.Content, timestamp, message.TopicName ?? contact?.DisplayName ?? "Anonymous"
+                message.Content, timestamp,
+                message.TopicName is null ? contact?.DisplayName ?? "Anonymous" :
+                    $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})"
                 ));
 
             Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);

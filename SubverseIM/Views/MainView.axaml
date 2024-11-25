@@ -12,7 +12,7 @@
 		<vm:MainViewModel />
 	</Design.DataContext>
 	<DockPanel>
-		<Border Background="Black" BorderThickness="0" DockPanel.Dock="Top" HorizontalAlignment="Stretch">
+		<Border Background="{StaticResource AltHigh}" BorderThickness="0" DockPanel.Dock="Top" HorizontalAlignment="Stretch">
 			<TextBlock Margin="10" Text="{Binding CurrentPage.Title}" FontSize="18" FontWeight="Bold" />
 		</Border>
 		<Grid RowDefinitions="*,Auto">

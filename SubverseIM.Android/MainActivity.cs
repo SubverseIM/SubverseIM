@@ -77,10 +77,11 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
         if (!peerServiceConn.IsConnected)
         {
-            BindService(
-                new Intent(this, typeof(WrappedPeerService)),
-                peerServiceConn, Bind.AutoCreate
-                );
+            Intent serviceIntent = new Intent(this, typeof(WrappedPeerService));
+
+            BindService(serviceIntent, peerServiceConn, Bind.AutoCreate);
+            StartService(serviceIntent);
+
             serviceManager.GetOrRegister(
                 await peerServiceConn.ConnectAsync()
                 );
@@ -90,11 +91,14 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     protected override void OnDestroy()
     {
         base.OnDestroy();
+
         if (peerServiceConn.IsConnected)
         {
             UnbindService(peerServiceConn);
             StopService(new Intent(this, typeof(WrappedPeerService)));
         }
+
+        System.Environment.Exit(0);
     }
 
     protected override void OnStart()
