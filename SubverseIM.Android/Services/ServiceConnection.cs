@@ -13,6 +13,8 @@ namespace SubverseIM.Android.Services
 
         private bool isConnected;
 
+        public bool IsConnected => isConnected;
+
         public ServiceConnection()
         {
             instanceTcs = new();

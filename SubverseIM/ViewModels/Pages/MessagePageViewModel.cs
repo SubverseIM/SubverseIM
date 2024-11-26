@@ -1,4 +1,5 @@
 ﻿using ReactiveUI;
+using SIPSorcery.SIP;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
@@ -12,11 +13,15 @@ namespace SubverseIM.ViewModels.Pages
 {
     public class MessagePageViewModel : PageViewModelBase
     {
-        private readonly SubverseContact contact;
+        internal readonly SubverseContact[] contacts;
 
-        public override string Title => $"Conversation View ({contact.DisplayName})";
-
+        public override string Title => $"Conversation View";
+        
+        public ObservableCollection<ContactViewModel> ContactsList { get; }
+        
         public ObservableCollection<MessageViewModel> MessageList { get; }
+
+        public ObservableCollection<string> TopicsList { get; }
 
         private string? sendMessageText;
         public string? SendMessageText 
@@ -28,25 +33,43 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public MessagePageViewModel(IServiceManager serviceManager, SubverseContact contact) : base(serviceManager)
+        private string? sendMessageTopicName;
+        public string? SendMessageTopicName
         {
-            this.contact = contact;
+            get => sendMessageTopicName;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref sendMessageTopicName, value?.Trim());
+            }
+        }
 
+        public MessagePageViewModel(IServiceManager serviceManager, SubverseContact[] contacts) : base(serviceManager)
+        {
+            this.contacts = contacts;
+
+            ContactsList = new(contacts.Select(x => new ContactViewModel(serviceManager, null, x)));
             MessageList = new();
+            TopicsList = new();
         }
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default) 
         {
-            INativeService nativeService = await ServiceManager.GetWithAwaitAsync<INativeService>();
-            nativeService.ClearNotificationForPeer(contact.OtherPeer);
-
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
 
             MessageList.Clear();
-            foreach (SubverseMessage message in dbService.GetMessagesWithPeer(contact.OtherPeer).Take(250))
+            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(contacts.Select(x => x.OtherPeer).ToHashSet(), null).Take(250))
             {
-                MessageList.Add(new(this, peerService.ThisPeer == message.Sender ? null : contact, message));
+                if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName)) 
+                {
+                    TopicsList.Insert(0, message.TopicName);
+                }
+
+                if (string.IsNullOrEmpty(SendMessageTopicName) || message.TopicName == SendMessageTopicName)
+                {
+                    MessageList.Add(new(this, peerService.ThisPeer == message.Sender ? null :
+                        contacts.Single(x => x.OtherPeer == message.Sender), message));
+                }
             }
         }
 
@@ -56,42 +79,43 @@ namespace SubverseIM.ViewModels.Pages
             frontendService.NavigateContactView();
         }
 
-        public async Task EditCommandAsync() 
-        {
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateContactView(contact);
-        }
-
-        public async Task DeleteCommandAsync()
-        {
-            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-
-            dbService.DeleteItemById<SubverseContact>(contact.Id);
-            frontendService.NavigateContactView();
-        }
-
         public async Task SendCommandAsync() 
         {
             if (string.IsNullOrEmpty(SendMessageText)) return;
+
+            if (!string.IsNullOrEmpty(SendMessageTopicName) && !TopicsList.Contains(SendMessageTopicName))
+            {
+                TopicsList.Insert(0, SendMessageTopicName);
+            }
 
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
 
             SubverseMessage message = new SubverseMessage()
             {
+                CallId = CallProperties.CreateNewCallId(),
+
+                TopicName = SendMessageTopicName,
+
                 Sender = peerService.ThisPeer,
-                Recipient = contact.OtherPeer,
+
+                Recipients = contacts.Select(x => x.OtherPeer).ToArray(),
 
                 Content = SendMessageText,
                 DateSignedOn = DateTime.UtcNow,
             };
 
-            SendMessageText = null;
-            await peerService.SendMessageAsync(message);
-
             MessageList.Insert(0, new(this, null, message));
             dbService.InsertOrUpdateItem(message);
+
+            foreach (SubverseContact contact in contacts) 
+            {
+                contact.DateLastChattedWith = message.DateSignedOn;
+                dbService.InsertOrUpdateItem(contact);
+
+                SendMessageText = null;
+                _ = peerService.SendMessageAsync(message);
+            }
         }
     }
 }

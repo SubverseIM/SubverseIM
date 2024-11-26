@@ -1,15 +1,16 @@
-﻿using Android;
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
+using Android.Net;
 using Android.OS;
+using Android.Runtime;
 using AndroidX.Core.App;
+using AndroidX.Core.Content;
 using SubverseIM.Android.Services;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -36,22 +37,43 @@ namespace SubverseIM.Android
 
         public override IBinder? OnBind(Intent? intent)
         {
-            CreateNotificationChannels();
-            Notification notif = new NotificationCompat.Builder(this, SRV_CHANNEL_ID)
-                .SetSmallIcon(Resource.Drawable.Icon)
-                .SetPriority(NotificationCompat.PriorityDefault)
-                .SetContentTitle("SubverseIM Peer Services")
-                .SetContentText("Participating in ongoing network activities...")
-                .SetOngoing(true)
-                .Build();
-            StartForeground(1001, notif);
             return new ServiceBinder<IPeerService>(peerService);
         }
 
         public override bool OnUnbind(Intent? intent)
         {
+            base.OnUnbind(intent);
             StopForeground(StopForegroundFlags.Remove);
-            return base.OnUnbind(intent);
+            return false;
+        }
+
+        public override StartCommandResult OnStartCommand(Intent? intent, [GeneratedEnum] StartCommandFlags flags, int startId)
+        {
+            base.OnStartCommand(intent, flags, startId);
+
+            CreateNotificationChannels();
+
+            Intent notifyIntent = new Intent(this, typeof(MainActivity));
+            notifyIntent.SetAction(Intent.ActionMain);
+            notifyIntent.AddCategory(Intent.CategoryLauncher);
+            notifyIntent.AddFlags(ActivityFlags.NewTask);
+
+            PendingIntent? pendingIntent = PendingIntent.GetActivity(
+                this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
+                PendingIntentFlags.Immutable);
+
+            Notification notif = new NotificationCompat.Builder(this, SRV_CHANNEL_ID)
+                .SetSmallIcon(Resource.Drawable.Icon)
+                .SetPriority(NotificationCompat.PriorityLow)
+                .SetContentTitle("SubverseIM Peer Services")
+                .SetContentText("Participating in ongoing network activities...")
+                .SetOngoing(true)
+                .SetContentIntent(pendingIntent)
+                .Build();
+
+            StartForeground(1000, notif);
+
+            return StartCommandResult.Sticky;
         }
 
         private void CreateNotificationChannels()
@@ -63,7 +85,7 @@ namespace SubverseIM.Android
 
             NotificationChannel serviceChannel = new NotificationChannel(
                 SRV_CHANNEL_ID, new Java.Lang.String("Application Services"),
-                NotificationImportance.Default);
+                NotificationImportance.Low);
             serviceChannel.Description = "Ongoing background tasks from SubverseIM";
 
             // Register the channel with the system; you can't change the importance
@@ -73,17 +95,20 @@ namespace SubverseIM.Android
             manager?.CreateNotificationChannel(serviceChannel);
         }
 
-        public void ClearNotificationForPeer(SubversePeerId otherPeer)
+        public void ClearNotification(SubverseMessage message)
         {
             lock (notificationMap)
             {
-                notificationMap.Remove(otherPeer.GetHashCode());
+                notificationMap.Remove(
+                    message.TopicName?.GetHashCode() ?? 
+                    message.Sender.GetHashCode()
+                    );
             }
         }
 
         public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default)
         {
-            int notificationId = message.Sender.GetHashCode();
+            int notificationId = message.TopicName?.GetHashCode() ?? message.Sender.GetHashCode();
 
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             SubverseContact? contact = dbService.GetContact(message.Sender);
@@ -102,21 +127,39 @@ namespace SubverseIM.Android
             NotificationCompat.MessagingStyle? messagingStyle;
             lock (notificationMap)
             {
-                if (!notificationMap.TryGetValue(message.Sender.GetHashCode(), out messagingStyle))
+                if (!notificationMap.TryGetValue(notificationId, out messagingStyle))
                 {
-                    notificationMap.Add(notificationId, messagingStyle = new(contact?.DisplayName ?? "Anonymous"));
+                    notificationMap.Add(notificationId, messagingStyle = new(message.TopicName ?? contact?.DisplayName ?? "Anonymous"));
                 }
             }
 
-            long timestamp = ((DateTimeOffset)message.DateSignedOn)
+            long timestamp = ((System.DateTimeOffset)message.DateSignedOn)
                 .ToUnixTimeMilliseconds();
-            messagingStyle.AddMessage(new(message.Content, timestamp, contact?.DisplayName));
+            messagingStyle.AddMessage(new(
+                message.Content, timestamp,
+                message.TopicName is null ? contact?.DisplayName ?? "Anonymous" :
+                    $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})"
+                ));
+
+            Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);
+            
+            Intent notifyIntent = new Intent(this, typeof(MainActivity));
+            notifyIntent.SetAction(Intent.ActionMain);
+            notifyIntent.AddCategory(Intent.CategoryLauncher);
+            notifyIntent.AddFlags(ActivityFlags.NewTask);
+
+            PendingIntent? pendingIntent = PendingIntent.GetActivity(
+                this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
+                PendingIntentFlags.Immutable);
 
             Notification notif = new NotificationCompat.Builder(this, MSG_CHANNEL_ID)
+                .SetPriority(NotificationCompat.PriorityHigh)
+                .SetAutoCancel(true)
+                .SetContentIntent(pendingIntent)
                 .SetSmallIcon(Resource.Drawable.Icon)
                 .SetLargeIcon(avatarBitmap)
+                .SetSound(soundUri)
                 .SetStyle(messagingStyle)
-                .SetPriority(NotificationCompat.PriorityHigh)
                 .Build();
 
             NotificationManager? manager = NotificationManager.FromContext(this);

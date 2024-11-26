@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 
 namespace SubverseIM.Services.Implementation
 {
@@ -29,7 +30,7 @@ namespace SubverseIM.Services.Implementation
             var contacts = db.GetCollection<SubverseContact>();
             contacts.EnsureIndex(x => x.OtherPeer, unique: true);
             return contacts.Query()
-                .OrderBy(x => x.DisplayName)
+                .OrderByDescending(x => x.DateLastChattedWith)
                 .ToEnumerable();
         }
 
@@ -40,19 +41,47 @@ namespace SubverseIM.Services.Implementation
             return contacts.FindOne(x => x.OtherPeer == otherPeer);
         }
 
-        public IEnumerable<SubverseMessage> GetMessagesWithPeer(SubversePeerId otherPeer)
+        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName)
         {
             var messages = db.GetCollection<SubverseMessage>();
 
             messages.EnsureIndex(x => x.Sender);
-            messages.EnsureIndex(x => x.Recipient);
+            messages.EnsureIndex(x => x.Recipients);
+
+            messages.EnsureIndex(x => x.CallId, unique: true);
+
+            return otherPeers.SelectMany(otherPeer => messages.Query()
+                .Where(x => otherPeers.Contains(x.Sender) || x.Recipients.Contains(otherPeer))
+                .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
+                .ToEnumerable())
+                .OrderByDescending(x => x.DateSignedOn);
+        }
+
+        public IEnumerable<SubverseMessage> GetAllUndeliveredMessages() 
+        {
+            var messages = db.GetCollection<SubverseMessage>();
+
+            messages.EnsureIndex(x => x.Sender);
+            messages.EnsureIndex(x => x.Recipients);
 
             messages.EnsureIndex(x => x.CallId, unique: true);
 
             return messages.Query()
-                .Where(x => x.Sender == otherPeer || x.Recipient == otherPeer)
-                .OrderByDescending(x => x.DateSignedOn)
+                .Where(x => !x.WasDelivered)
+                .OrderBy(x => x.DateSignedOn)
                 .ToEnumerable();
+        }
+
+        public SubverseMessage GetMessageByCallId(string callId) 
+        {
+            var messages = db.GetCollection<SubverseMessage>();
+
+            messages.EnsureIndex(x => x.Sender);
+            messages.EnsureIndex(x => x.Recipients);
+
+            messages.EnsureIndex(x => x.CallId, unique: true);
+
+            return messages.FindOne(x => x.CallId == callId);
         }
 
         public bool InsertOrUpdateItem<T>(T item)

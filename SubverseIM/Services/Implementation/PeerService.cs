@@ -91,7 +91,7 @@ namespace SubverseIM.Services.Implementation
             peerInfoBag = new();
             messagesBag = new();
 
-            timer = new(TimeSpan.FromSeconds(15));
+            timer = new(TimeSpan.FromSeconds(5));
 
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
         }
@@ -277,8 +277,10 @@ namespace SubverseIM.Services.Implementation
                     CallId = sipRequest.Header.CallId,
                     Content = messageContent,
                     Sender = fromPeer,
-                    Recipient = toPeer,
-                    DateSignedOn = DateTime.Parse(sipRequest.Header.Date)
+                    Recipients = [toPeer],
+                    DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
+                    TopicName = sipRequest.Header.To.ToURI.Parameters.Get("topic"),
+                    WasDelivered = true,
                 });
 
                 SIPResponse sipResponse = SIPResponse.GetResponse(
@@ -313,6 +315,11 @@ namespace SubverseIM.Services.Implementation
                     }
                 }
             }
+
+            SubverseMessage message = DbService.GetMessageByCallId(sipResponse.Header.CallId);
+            message.WasDelivered = true;
+
+            DbService.InsertOrUpdateItem(message);
 
             return Task.CompletedTask;
         }
@@ -381,7 +388,7 @@ namespace SubverseIM.Services.Implementation
                 });
             }
 
-            dbService.GetMessagesWithPeer(ThisPeer);
+            dbService.GetMessagesWithPeersOnTopic([ThisPeer], null);
         }
 
         public async Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
@@ -409,16 +416,6 @@ namespace SubverseIM.Services.Implementation
                 cacheStream?.Dispose();
             }
 
-            await portForwarder.StartAsync(cancellationToken);
-
-            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
-            for (int i = MAGIC_PORT_NUM; mapping is null; i++)
-            {
-                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, i));
-                await timer.WaitForNextTickAsync();
-                mapping = portForwarder.Mappings.Created.SingleOrDefault();
-            }
-
             if (DbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? pkStream))
             {
                 using (pkStream)
@@ -427,6 +424,20 @@ namespace SubverseIM.Services.Implementation
                 {
                     await http.PostAsync("pk", pkStreamContent, cancellationToken);
                 }
+            }
+
+            await portForwarder.StartAsync(cancellationToken);
+
+            int portNum, retryCount = 0;
+            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
+            for (portNum = MAGIC_PORT_NUM; retryCount++ < 3 && mapping is null; portNum++)
+            {
+                if (!portForwarder.Active) break;
+
+                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, portNum));
+                await timer.WaitForNextTickAsync();
+
+                mapping = portForwarder.Mappings.Created.SingleOrDefault();
             }
 
             while (!cancellationToken.IsCancellationRequested)
@@ -442,7 +453,8 @@ namespace SubverseIM.Services.Implementation
 
                 foreach (SubversePeerId otherPeer in peers)
                 {
-                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()), mapping.PublicPort);
+                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()),
+                        mapping?.PublicPort ?? portNum);
                     await SynchronizePeersAsync(otherPeer, cancellationToken);
                     await timer.WaitForNextTickAsync(cancellationToken);
                 }
@@ -465,47 +477,61 @@ namespace SubverseIM.Services.Implementation
 
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
-            SIPURI requestFromUri = SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network");
-            SIPURI requestToUri = SIPURI.ParseSIPURI($"sip:{message.Recipient}@subverse.network");
-
-            SIPRequest sipRequest = SIPRequest.GetRequest(
-                SIPMethodsEnum.MESSAGE, requestToUri,
-                new SIPToHeader(string.Empty, requestToUri, string.Empty),
-                new SIPFromHeader(string.Empty, requestFromUri, string.Empty)
-                );
-            sipRequest.Header.SetDateHeader();
-            using (PGP pgp = new(await GetPeerKeysAsync(message.Recipient, cancellationToken)))
+            foreach (SubversePeerId recipient in message.Recipients)
             {
-                sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
-            }
-
-            message.CallId = sipRequest.Header.CallId;
-            lock (callIdMap)
-            {
-                if (!callIdMap.ContainsKey(sipRequest.Header.CallId))
+                SIPURI requestToUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
+                if (message.TopicName is not null)
                 {
-                    callIdMap.Add(sipRequest.Header.CallId, sipRequest);
+                    requestToUri.Parameters.Set("topic", message.TopicName);
                 }
-                else
+
+                SIPURI requestFromUri = SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network");
+
+                SIPRequest sipRequest = SIPRequest.GetRequest(
+                    SIPMethodsEnum.MESSAGE, requestToUri,
+                    new SIPToHeader(string.Empty, requestToUri, string.Empty),
+                    new SIPFromHeader(string.Empty, requestFromUri, string.Empty)
+                    );
+
+                if (message.CallId is not null)
                 {
-                    callIdMap[sipRequest.Header.CallId] = sipRequest;
+                    sipRequest.Header.CallId = message.CallId;
                 }
-            }
 
-            _ = Task.Run(async Task? () =>
-            {
-                bool flag;
-                do
+                sipRequest.Header.SetDateHeader();
+
+                using (PGP pgp = new(await GetPeerKeysAsync(recipient, cancellationToken)))
                 {
-                    await SendSIPRequestAsync(sipRequest, cancellationToken);
-                    await Task.Delay(150);
+                    sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
+                }
 
-                    lock (callIdMap)
+                lock (callIdMap)
+                {
+                    if (!callIdMap.ContainsKey(sipRequest.Header.CallId))
                     {
-                        flag = callIdMap.ContainsKey(sipRequest.Header.CallId);
+                        callIdMap.Add(sipRequest.Header.CallId, sipRequest);
                     }
-                } while (flag);
-            });
+                    else
+                    {
+                        callIdMap[sipRequest.Header.CallId] = sipRequest;
+                    }
+                }
+
+                _ = Task.Run(async Task? () =>
+                {
+                    bool flag;
+                    do
+                    {
+                        await SendSIPRequestAsync(sipRequest, cancellationToken);
+                        await Task.Delay(150);
+
+                        lock (callIdMap)
+                        {
+                            flag = callIdMap.ContainsKey(sipRequest.Header.CallId);
+                        }
+                    } while (flag);
+                });
+            }
         }
 
         public async Task SendInviteAsync(CancellationToken cancellationToken = default)

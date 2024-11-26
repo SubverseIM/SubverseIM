@@ -13,31 +13,23 @@
 		<Button DockPanel.Dock="Top"
 					HorizontalAlignment="Stretch"
 					Command="{Binding BackCommandAsync}">
-			<TextBlock HorizontalAlignment="Center" >Back to Contacts</TextBlock>
+			<TextBlock FontSize="16" HorizontalAlignment="Center" >Back to Contacts</TextBlock>
 		</Button>
-		<DockPanel DockPanel.Dock="Top" Height="64">
+		<AutoCompleteBox x:Name="topicBox" DockPanel.Dock="Top" 
+						 ItemsSource="{Binding TopicsList}" 
+						 Watermark="#topic"
+						 Text="{Binding SendMessageTopicName}" />
+		<DockPanel DockPanel.Dock="Top">
 			<Button DockPanel.Dock="Right"
 					VerticalAlignment="Stretch"
 					Command="{Binding SendCommandAsync}">
-				<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">Send</TextBlock>
+				<TextBlock FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center">Send</TextBlock>
 			</Button>
 			<TextBox HorizontalAlignment="Stretch" 
 					 VerticalAlignment="Stretch" 
-					 AcceptsReturn="True" 
 					 Watermark="Write a message..." 
 					 Text="{Binding SendMessageText}" />
 		</DockPanel>
-		<Button DockPanel.Dock="Bottom"
-					HorizontalAlignment="Stretch"
-					Command="{Binding EditCommandAsync}">
-			<TextBlock HorizontalAlignment="Center" >Edit this Contact</TextBlock>
-		</Button>
-		<Button DockPanel.Dock="Bottom"
-					HorizontalAlignment="Stretch"
-					Command="{Binding DeleteCommandAsync}"
-				Background="DarkRed">
-			<TextBlock HorizontalAlignment="Center" >Delete this Contact</TextBlock>
-		</Button>
 		<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
 			<ListBox.ItemTemplate>
 				<DataTemplate>

@@ -13,6 +13,7 @@ using Avalonia;
 using SubverseIM.Services.Implementation;
 using Avalonia.Platform.Storage;
 using System.Linq;
+using SubverseIM.ViewModels.Pages;
 
 namespace SubverseIM.ViewModels.Components
 {
@@ -43,17 +44,29 @@ namespace SubverseIM.ViewModels.Components
             hexagonPath = new PolylineGeometry(GenerateHexagon(31), true);
         }
 
-        private readonly IServiceManager serviceManager;
+        internal readonly IServiceManager serviceManager;
 
-        private readonly SubverseContact innerContact;
+        internal readonly ContactPageViewModel? contactPageView;
+
+        internal readonly SubverseContact innerContact;
 
         private bool isSelected;
-        public bool IsSelected
+        public bool IsSelected 
         {
             get => isSelected;
-            set
+            set 
             {
                 this.RaiseAndSetIfChanged(ref isSelected, value);
+            }
+        }
+
+        private bool isDoubleSelected;
+        public bool IsDoubleSelected
+        {
+            get => isDoubleSelected;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref isDoubleSelected, value);
             }
         }
 
@@ -98,9 +111,10 @@ namespace SubverseIM.ViewModels.Components
 
         public Geometry HexagonPath => hexagonPath;
 
-        public ContactViewModel(IServiceManager serviceManager, SubverseContact innerContact)
+        public ContactViewModel(IServiceManager serviceManager, ContactPageViewModel? contactPageView, SubverseContact innerContact)
         {
             this.serviceManager = serviceManager;
+            this.contactPageView = contactPageView;
             this.innerContact = innerContact;
         }
 
@@ -117,18 +131,6 @@ namespace SubverseIM.ViewModels.Components
             ContactPhoto = Bitmap.DecodeToHeight(contactPhotoStream ??
                 AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")),
                 64);
-        }
-
-        public async Task OpenMessageViewCommandAsync()
-        {
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-
-            SubverseContact? contact = dbService.GetContact(innerContact.OtherPeer);
-            if (contact is not null)
-            {
-                frontendService.NavigateMessageView(contact);
-            }
         }
 
         public async Task ChangePhotoCommandAsync()
@@ -165,6 +167,23 @@ namespace SubverseIM.ViewModels.Components
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateContactView();
+        }
+
+        public async Task EditCommandAsync()
+        {
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigateContactView(innerContact);
+        }
+
+        public async Task DeleteCommandAsync() 
+        {
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+            if (await launcherService.ShowConfirmationDialogAsync("Delete this Contact?", "Are you sure you want to delete this contact?"))
+            {
+                IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+                dbService.DeleteItemById<SubverseContact>(innerContact.Id);
+                contactPageView?.ContactsList.Remove(this);
+            }
         }
 
         public async Task CancelCommandAsync() 

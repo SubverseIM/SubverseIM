@@ -6,7 +6,7 @@ namespace SubverseIM.Services
 {
     public interface INativeService
     {
-        void ClearNotificationForPeer(SubversePeerId otherPeer);
+        void ClearNotification(SubverseMessage message);
 
         Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default);
     }
