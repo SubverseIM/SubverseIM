@@ -1,9 +1,11 @@
 ﻿using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.iOS;
 using Avalonia.ReactiveUI;
-
+using BackgroundTasks;
 using Foundation;
 using SubverseIM.Services.Implementation;
+using UIKit;
 
 namespace SubverseIM.iOS;
 
@@ -15,9 +17,22 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
 {
     private readonly ServiceManager serviceManager;
 
-    public AppDelegate() 
+    public AppDelegate()
     {
         serviceManager = new();
+    }
+
+    [Export("application:willFinishLaunchingWithOptions:")]
+    public bool WillFinishLaunchingWithOptions(UIApplication application, NSDictionary launchOptions)
+    {
+        BGTaskScheduler.Shared.Register("com.chosenfewsoftware.SubverseIM.bootstrap", null, HandleAppRefresh);
+        return true;
+    }
+
+    public void HandleAppRefresh(BGTask task) 
+    {
+        BGAppRefreshTask refreshTask = (task as BGAppRefreshTask)!;
+        refreshTask.ExpirationHandler += 
     }
 
     protected override AppBuilder CreateAppBuilder()
