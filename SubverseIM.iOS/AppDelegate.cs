@@ -1,9 +1,13 @@
-﻿using Avalonia;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.iOS;
 using Avalonia.ReactiveUI;
 using BackgroundTasks;
 using Foundation;
+using SubverseIM.Models;
+using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using UIKit;
 
@@ -17,6 +21,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
 {
     private readonly ServiceManager serviceManager;
 
+    private WrappedPeerService? wrappedPeerService;
+
     public AppDelegate()
     {
         serviceManager = new();
@@ -26,13 +32,24 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
     public bool WillFinishLaunchingWithOptions(UIApplication application, NSDictionary launchOptions)
     {
         BGTaskScheduler.Shared.Register("com.chosenfewsoftware.SubverseIM.bootstrap", null, HandleAppRefresh);
+        
+        wrappedPeerService = new(application);
+        serviceManager.GetOrRegister<IPeerService>(
+            (PeerService)wrappedPeerService
+            );
+
         return true;
     }
 
-    public void HandleAppRefresh(BGTask task) 
+    public async void HandleAppRefresh(BGTask task) 
     {
-        BGAppRefreshTask refreshTask = (task as BGAppRefreshTask)!;
-        refreshTask.ExpirationHandler += 
+        using CancellationTokenSource cts = new();
+
+        BGAppRefreshTask refreshTask = (BGAppRefreshTask)task;
+        refreshTask.ExpirationHandler += cts.Cancel;
+
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        await frontendService.RunAsync(cts.Token);
     }
 
     protected override AppBuilder CreateAppBuilder()

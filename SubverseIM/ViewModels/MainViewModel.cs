@@ -13,15 +13,13 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels;
 
-public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
+public class MainViewModel : ViewModelBase, IFrontendService
 {
     private readonly IServiceManager serviceManager;
 
     private readonly ContactPageViewModel contactPage;
 
     private readonly CreateContactPageViewModel createContactPage;
-
-    private readonly CancellationTokenSource mainTaskCts;
 
     private PageViewModelBase currentPage;
 
@@ -42,9 +40,6 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         createContactPage = new(serviceManager);
 
         currentPage = contactPage;
-
-        mainTaskCts = new();
-        _ = RunAsync(mainTaskCts.Token);
     }
 
     public async Task RunAsync(CancellationToken cancellationToken = default)
@@ -60,7 +55,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         {
             foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
             {
-                await peerService.SendMessageAsync(message);
+                await peerService.SendMessageAsync(message, cancellationToken);
             }
         });
 
@@ -168,24 +163,5 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
             await createContactPage.InitializeAsync(launchedUri);
             CurrentPage = createContactPage;
         }
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                mainTaskCts.Dispose();
-            }
-
-            disposedValue = true;
-        }
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }
