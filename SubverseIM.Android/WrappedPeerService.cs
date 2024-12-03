@@ -165,5 +165,10 @@ namespace SubverseIM.Android
             NotificationManager? manager = NotificationManager.FromContext(this);
             manager?.Notify(notificationId, notif);
         }
+
+        public Task RunInBackgroundAsync(Task task)
+        {
+            return task;
+        }
     }
 }
