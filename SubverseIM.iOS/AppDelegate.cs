@@ -1,14 +1,12 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
+﻿using Avalonia;
 using Avalonia.iOS;
 using Avalonia.ReactiveUI;
 using BackgroundTasks;
 using Foundation;
-using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
+using System.IO;
+using System.Threading;
 using UIKit;
 
 namespace SubverseIM.iOS;
@@ -17,8 +15,10 @@ namespace SubverseIM.iOS;
 // User Interface of the application, as well as listening (and optionally responding) to 
 // application events from iOS.
 [Register("AppDelegate")]
-public partial class AppDelegate : AvaloniaAppDelegate<App>
+public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 {
+    private const string BGTASK_BOOTSTRAP_ID = "com.chosenfewsoftware.SubverseIM.bootstrap";
+
     private readonly ServiceManager serviceManager;
 
     private WrappedPeerService? wrappedPeerService;
@@ -26,14 +26,31 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
     public AppDelegate()
     {
         serviceManager = new();
-        UIApplication.Notifications.ObserveDidFinishLaunching(HandleApplicationDidLaunch);
     }
 
-    [Export("application:willFinishLaunchingWithOptions:")]
-    public bool WillFinishLaunchingWithOptions(UIApplication application, NSDictionary launchOptions)
+    [Export("application:didFinishLaunchingWithOptions:")]
+    new public bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
     {
-        BGTaskScheduler.Shared.Register("com.chosenfewsoftware.SubverseIM.bootstrap", null, HandleAppRefresh);
-        
+        base.FinishedLaunching(application, launchOptions);
+        BGTaskScheduler.Shared.Register(BGTASK_BOOTSTRAP_ID, null, HandleAppRefresh);
+
+        ((IAvaloniaAppDelegate)this).Deactivated += (s, ev) => ScheduleAppRefresh();
+        ((IAvaloniaAppDelegate)this).Activated += async (s, ev) =>
+        {
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            await frontendService.RunAsync();
+        };
+
+        serviceManager.GetOrRegister<ILauncherService>(this);
+
+        string appDataPath = System.Environment.GetFolderPath(
+            System.Environment.SpecialFolder.ApplicationData
+            );
+        string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
+        serviceManager.GetOrRegister<IDbService>(
+            new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
+            );
+
         wrappedPeerService = new(application);
         serviceManager.GetOrRegister<IPeerService>(
             (PeerService)wrappedPeerService
@@ -44,7 +61,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
 
     private void ScheduleAppRefresh()
     {
-        BGAppRefreshTaskRequest request = new BGAppRefreshTaskRequest("com.chosenfewsoftware.SubverseIM.bootstrap");
+        BGAppRefreshTaskRequest request = new BGAppRefreshTaskRequest(BGTASK_BOOTSTRAP_ID);
         request.EarliestBeginDate = NSDate.Now.AddSeconds(60.0);
         BGTaskScheduler.Shared.Submit(request, out NSError? _);
     }
@@ -60,14 +77,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         await frontendService.RunAsync(cts.Token);
-    }
-
-    public async void HandleApplicationDidLaunch(object? sender, UIApplicationLaunchEventArgs e)
-    {
-        ScheduleAppRefresh();
-        
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        await frontendService.RunAsync();
     }
 
     protected override AppBuilder CreateAppBuilder()
