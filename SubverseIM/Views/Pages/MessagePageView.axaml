@@ -33,7 +33,7 @@
 		<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
-					<DockPanel>
+					<DockPanel AutomationProperties.HelpText="{Binding ReadoutText}">
 						<TextBlock 
 							DockPanel.Dock="Left" 
 							VerticalAlignment="Top" 
