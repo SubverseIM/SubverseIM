@@ -23,6 +23,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     private PageViewModelBase currentPage;
 
+    private Task? mainTask;
+
     private bool disposedValue;
 
     public PageViewModelBase CurrentPage
@@ -42,7 +44,14 @@ public class MainViewModel : ViewModelBase, IFrontendService
         currentPage = contactPage;
     }
 
-    public async Task RunAsync(CancellationToken cancellationToken = default)
+    public async Task RunOnceAsync(CancellationToken cancellationToken = default) 
+    {
+        INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>();
+        await nativeService.RunInBackgroundAsync(mainTask ?? 
+            (mainTask = RunAsync(cancellationToken)));
+    }
+
+    private async Task RunAsync(CancellationToken cancellationToken)
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
         IPeerService peerService = await serviceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);

@@ -5,8 +5,10 @@ using BackgroundTasks;
 using Foundation;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
+using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using UIKit;
 
 namespace SubverseIM.iOS;
@@ -23,6 +25,12 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     private WrappedPeerService? wrappedPeerService;
 
+    private Uri? launchedUri;
+
+    public bool IsInForeground { get; private set; }
+
+    public bool NotificationsAllowed { get; private set; }
+
     public AppDelegate()
     {
         serviceManager = new();
@@ -34,12 +42,22 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         base.FinishedLaunching(application, launchOptions);
         BGTaskScheduler.Shared.Register(BGTASK_BOOTSTRAP_ID, null, HandleAppRefresh);
 
-        ((IAvaloniaAppDelegate)this).Deactivated += (s, ev) => ScheduleAppRefresh();
+        ((IAvaloniaAppDelegate)this).Deactivated += (s, ev) =>
+        {
+            IsInForeground = false;
+
+            ScheduleAppRefresh();
+        };
+
         ((IAvaloniaAppDelegate)this).Activated += async (s, ev) =>
         {
+            IsInForeground = true;
+
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.RunAsync();
+            await frontendService.RunOnceAsync();
         };
+
+        launchedUri = launchOptions[UIApplication.LaunchOptionsUrlKey] as NSUrl;
 
         serviceManager.GetOrRegister<ILauncherService>(this);
 
@@ -76,7 +94,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         refreshTask.ExpirationHandler += cts.Cancel;
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        await frontendService.RunAsync(cts.Token);
+        await frontendService.RunOnceAsync(cts.Token);
     }
 
     protected override AppBuilder CreateAppBuilder()
@@ -89,5 +107,25 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         return base.CustomizeAppBuilder(builder)
             .WithInterFont()
             .UseReactiveUI();
+    }
+
+    public Uri? GetLaunchedUri()
+    {
+        return launchedUri;
+    }
+
+    public Task<bool> ShowConfirmationDialogAsync(string title, string message)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task ShowAlertDialogAsync(string title, string message)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 }

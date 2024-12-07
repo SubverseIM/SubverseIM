@@ -88,7 +88,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         }
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        _ = frontendService.RunAsync();
+        _ = frontendService.RunOnceAsync();
     }
 
     protected override void OnDestroy()
