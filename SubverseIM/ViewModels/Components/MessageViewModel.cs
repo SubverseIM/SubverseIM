@@ -34,6 +34,8 @@ namespace SubverseIM.ViewModels.Components
             (string.IsNullOrEmpty(innerMessage.TopicName) ? string.Empty : 
             $" ({innerMessage.TopicName})");
 
+        public string ReadoutText => $"At {DateString}, {FromName} said: {Content}";
+
         public MessageViewModel(MessagePageViewModel messagePageView, SubverseContact? fromContact, SubverseMessage innerMessage)
         {
             this.messagePageView = messagePageView;
