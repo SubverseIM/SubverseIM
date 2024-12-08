@@ -11,6 +11,14 @@
 		<MtouchInterpreter>-all</MtouchInterpreter>
 		<MtouchLink>SdkOnly</MtouchLink>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="iTunesArtwork" />
+	  <None Remove="iTunesArtwork%402x" />
+	</ItemGroup>
+	<ItemGroup>
+	  <iTunesArtwork Include="iTunesArtwork" />
+	  <iTunesArtwork Include="iTunesArtwork@2x" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
