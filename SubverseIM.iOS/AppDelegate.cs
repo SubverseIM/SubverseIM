@@ -84,6 +84,18 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         BGTaskScheduler.Shared.Submit(request, out NSError? _);
     }
 
+    protected override AppBuilder CreateAppBuilder()
+    {
+        return AppBuilder.Configure(() => new App(serviceManager)).UseiOS();
+    }
+
+    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    {
+        return base.CustomizeAppBuilder(builder)
+            .WithInterFont()
+            .UseReactiveUI();
+    }
+
     public async void HandleAppRefresh(BGTask task) 
     {
         ScheduleAppRefresh();
@@ -97,35 +109,69 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         await frontendService.RunOnceAsync(cts.Token);
     }
 
-    protected override AppBuilder CreateAppBuilder()
-    {
-        return AppBuilder.Configure(() => new App(serviceManager)).UseiOS();
-    }
-
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
-    {
-        return base.CustomizeAppBuilder(builder)
-            .WithInterFont()
-            .UseReactiveUI();
-    }
-
     public Uri? GetLaunchedUri()
     {
         return launchedUri;
     }
 
-    public Task<bool> ShowConfirmationDialogAsync(string title, string message)
+    public async Task<bool> ShowConfirmationDialogAsync(string title, string message)
     {
-        throw new NotImplementedException();
+        TaskCompletionSource<bool> tcs = new();
+
+        UIAlertController alertController = UIAlertController.Create(
+            title, message, UIAlertControllerStyle.Alert);
+
+        UIAlertAction positiveAction = UIAlertAction
+            .Create("Yes", UIAlertActionStyle.Destructive, x => tcs.SetResult(true));
+        alertController.AddAction(positiveAction);
+
+        UIAlertAction negativeAction = UIAlertAction
+            .Create("No", UIAlertActionStyle.Default, x => tcs.SetResult(false));
+        alertController.AddAction(positiveAction);
+
+        await (Window?.RootViewController?.PresentViewControllerAsync(
+                alertController, true) ?? Task.CompletedTask);
+
+        return await tcs.Task;
     }
 
-    public Task ShowAlertDialogAsync(string title, string message)
+    public async Task ShowAlertDialogAsync(string title, string message)
     {
-        throw new NotImplementedException();
+        TaskCompletionSource tcs = new();
+
+        UIAlertController alertController = UIAlertController
+            .Create(title, message, UIAlertControllerStyle.Alert);
+
+        UIAlertAction defaultAction = UIAlertAction
+            .Create("OK", UIAlertActionStyle.Default, x => tcs.SetResult());
+        alertController.AddAction(defaultAction);
+
+        await (Window?.RootViewController
+            ?.PresentViewControllerAsync(
+                viewControllerToPresent: alertController, 
+                animated: true) ?? Task.CompletedTask);
+
+        await tcs.Task;
     }
 
     public Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        NSItemProvider itemProvider = new(
+            item: (NSString)content, 
+            typeIdentifier: "public.utf8-plain-text"
+            );
+        UIActivityItemsConfiguration configuration = new([itemProvider]);
+        UIActivityViewController activityViewController = new(configuration)
+        {
+            Title = title,
+        };
+
+        return Window?.RootViewController
+            ?.PresentViewControllerAsync(
+                viewControllerToPresent: 
+                activityViewController, 
+                animated: true)
+            .WaitAsync(cancellationToken) ?? 
+            Task.FromCanceled(cancellationToken);
     }
 }
