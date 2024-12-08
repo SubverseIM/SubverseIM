@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.iOS;
 using Avalonia.ReactiveUI;
 using BackgroundTasks;
@@ -52,18 +53,20 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         ((IAvaloniaAppDelegate)this).Activated += async (s, ev) =>
         {
             IsInForeground = true;
+            launchedUri = (ev as ProtocolActivatedEventArgs)?.Uri;
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             await frontendService.RunOnceAsync();
         };
 
-        launchedUri = launchOptions[UIApplication.LaunchOptionsUrlKey] as NSUrl;
+        launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
 
         serviceManager.GetOrRegister<ILauncherService>(this);
 
         string appDataPath = System.Environment.GetFolderPath(
             System.Environment.SpecialFolder.ApplicationData
             );
+        Directory.CreateDirectory(appDataPath);
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
         serviceManager.GetOrRegister<IDbService>(
             new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")

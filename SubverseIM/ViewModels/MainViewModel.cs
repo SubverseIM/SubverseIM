@@ -132,7 +132,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 {
                     await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);
                 }
-                else
+                else if(launcherService.NotificationsAllowed)
                 {
                     nativeService.ClearNotification(message);
                 }
