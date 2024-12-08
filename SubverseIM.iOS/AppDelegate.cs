@@ -53,10 +53,14 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         ((IAvaloniaAppDelegate)this).Activated += async (s, ev) =>
         {
             IsInForeground = true;
-            launchedUri = (ev as ProtocolActivatedEventArgs)?.Uri;
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             await frontendService.RunOnceAsync();
+
+            if((launchedUri = (ev as ProtocolActivatedEventArgs)?.Uri) is not null)
+            {
+                frontendService.NavigateLaunchedUri();
+            } 
         };
 
         launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
@@ -129,8 +133,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         alertController.AddAction(positiveAction);
 
         UIAlertAction negativeAction = UIAlertAction
-            .Create("No", UIAlertActionStyle.Default, x => tcs.SetResult(false));
-        alertController.AddAction(positiveAction);
+            .Create("No", UIAlertActionStyle.Cancel, x => tcs.SetResult(false));
+        alertController.AddAction(negativeAction);
 
         await (Window?.RootViewController?.PresentViewControllerAsync(
                 alertController, true) ?? Task.CompletedTask);
