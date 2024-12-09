@@ -56,7 +56,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             IsInForeground = true;
 
             (bool result, NSError? _) = await UNUserNotificationCenter.Current.RequestAuthorizationAsync(
-                options: UNAuthorizationOptions.Badge | UNAuthorizationOptions.Alert);
+                options: UNAuthorizationOptions.Badge | UNAuthorizationOptions.Alert | UNAuthorizationOptions.TimeSensitive);
             NotificationsAllowed = result;
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
