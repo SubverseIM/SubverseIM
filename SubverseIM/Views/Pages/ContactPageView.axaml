@@ -18,9 +18,15 @@
 			<TextBlock FontSize="16" HorizontalAlignment="Center">Start Conversation</TextBlock>
 		</Button>
 		<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
+			<ListBox.Styles>
+				<Style Selector="ListBoxItem">
+					<Setter Property="AutomationProperties.Name" Value="Contact"/>
+				</Style>
+			</ListBox.Styles>
 			<ListBox.ItemTemplate>
 				<DataTemplate>
-					<DockPanel Height="64">
+					<DockPanel Height="64"
+							   AutomationProperties.HelpText="{Binding DisplayName}">
 						<Panel DockPanel.Dock="Left" Width="64">
 							<Polygon Points="{Binding HexagonPoints}" Fill="White" />
 							<Image Source="{Binding ContactPhoto}"
