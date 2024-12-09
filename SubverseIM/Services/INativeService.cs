@@ -1,4 +1,5 @@
 ﻿using SubverseIM.Models;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,6 +11,6 @@ namespace SubverseIM.Services
 
         Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default);
 
-        Task RunInBackgroundAsync(Task task);
+        Task RunInBackgroundAsync(Func<CancellationToken, Task> taskFactory);
     }
 }

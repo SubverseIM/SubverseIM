@@ -44,11 +44,13 @@ public class MainViewModel : ViewModelBase, IFrontendService
         currentPage = contactPage;
     }
 
-    public async Task RunOnceAsync(CancellationToken cancellationToken = default) 
+    public async Task RunOnceAsync(CancellationToken cancellationToken = default)
     {
-        INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>();
-        await nativeService.RunInBackgroundAsync(mainTask ?? 
-            (mainTask = RunAsync(cancellationToken)));
+        if (mainTask?.IsCompleted ?? true)
+        {
+            INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>();
+            await (mainTask = nativeService.RunInBackgroundAsync(RunAsync));
+        }
     }
 
     private async Task RunAsync(CancellationToken cancellationToken)
@@ -72,7 +74,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         {
             foreach (SubverseContact contact in dbService.GetContacts())
             {
-                peerService.CachedPeers.Add(
+                peerService.CachedPeers.TryAdd(
                     contact.OtherPeer,
                     new SubversePeer
                     {
@@ -132,7 +134,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 {
                     await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);
                 }
-                else if(launcherService.NotificationsAllowed)
+                else if (launcherService.NotificationsAllowed)
                 {
                     nativeService.ClearNotification(message);
                 }

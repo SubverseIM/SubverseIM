@@ -10,7 +10,7 @@ using UserNotifications;
 
 namespace SubverseIM.iOS;
 
-public class WrappedPeerService : INativeService
+public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeService
 {
     private readonly UIApplication appInstance;
 
@@ -28,8 +28,6 @@ public class WrappedPeerService : INativeService
 
     public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default)
     {
-        int notificationId = message.TopicName?.GetHashCode() ?? message.Sender.GetHashCode();
-
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
         SubverseContact? contact = dbService.GetContact(message.Sender);
 
@@ -39,18 +37,30 @@ public class WrappedPeerService : INativeService
                 $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})",
             Body = message.Content ?? string.Empty,
         };
-        UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(15.0, false);
+        UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
         UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);
 
         await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
     }
 
-    public async Task RunInBackgroundAsync(Task task)
+    public async Task RunInBackgroundAsync(Func<CancellationToken, Task> taskFactory)
     {
         using CancellationTokenSource cts = new();
         nint handle = appInstance.BeginBackgroundTask(cts.Cancel);
-        await task.WaitAsync(cts.Token);
+        try
+        {
+            await taskFactory(cts.Token);
+        }
+        catch(OperationCanceledException) { }
         appInstance.EndBackgroundTask(handle);
+    }
+
+    public override void WillPresentNotification(
+        UNUserNotificationCenter center, UNNotification notification, 
+        Action<UNNotificationPresentationOptions> completionHandler
+        )
+    {
+        completionHandler(UNNotificationPresentationOptions.Banner | UNNotificationPresentationOptions.List);
     }
 
     public static implicit operator PeerService(WrappedPeerService instance)

@@ -116,7 +116,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 SendMessageText = null;
                 _ = nativeService.RunInBackgroundAsync(
-                    peerService.SendMessageAsync(message)
+                    ct => peerService.SendMessageAsync(message, ct)
                     );
             }
         }

@@ -44,29 +44,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         base.FinishedLaunching(application, launchOptions);
         BGTaskScheduler.Shared.Register(BGTASK_BOOTSTRAP_ID, null, HandleAppRefresh);
 
-        ((IAvaloniaAppDelegate)this).Deactivated += (s, ev) =>
-        {
-            IsInForeground = false;
-
-            ScheduleAppRefresh();
-        };
-
-        ((IAvaloniaAppDelegate)this).Activated += async (s, ev) =>
-        {
-            IsInForeground = true;
-
-            (bool result, NSError? _) = await UNUserNotificationCenter.Current.RequestAuthorizationAsync(
-                options: UNAuthorizationOptions.Badge | UNAuthorizationOptions.Alert | UNAuthorizationOptions.TimeSensitive);
-            NotificationsAllowed = result;
-
-            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.RunOnceAsync();
-
-            if((launchedUri = (ev as ProtocolActivatedEventArgs)?.Uri) is not null)
-            {
-                frontendService.NavigateLaunchedUri();
-            } 
-        };
+        ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
+        ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
 
         launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
         serviceManager.GetOrRegister<ILauncherService>(this);
@@ -84,6 +63,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         serviceManager.GetOrRegister<IPeerService>(
             (PeerService)wrappedPeerService
             );
+        UNUserNotificationCenter.Current.Delegate = wrappedPeerService;
+
+        HandleAppActivated(this, new(ActivationKind.Background));
 
         return true;
     }
@@ -93,6 +75,37 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         BGAppRefreshTaskRequest request = new BGAppRefreshTaskRequest(BGTASK_BOOTSTRAP_ID);
         request.EarliestBeginDate = NSDate.Now.AddSeconds(60.0);
         BGTaskScheduler.Shared.Submit(request, out NSError? _);
+    }
+
+    private void HandleAppDeactivated(object? sender, ActivatedEventArgs e)
+    {
+        IsInForeground = false;
+        ScheduleAppRefresh();
+    }
+
+    private async void HandleAppActivated(object? sender, ActivatedEventArgs e)
+    {
+        IsInForeground = true;
+
+        UNNotificationSettings settings = await UNUserNotificationCenter.Current.GetNotificationSettingsAsync();
+        if (settings.AuthorizationStatus != UNAuthorizationStatus.Authorized)
+        {
+            (bool result, NSError? _) = await UNUserNotificationCenter.Current.RequestAuthorizationAsync(
+                options: UNAuthorizationOptions.Badge | UNAuthorizationOptions.TimeSensitive
+                );
+            NotificationsAllowed = result;
+        }
+        else
+        {
+            NotificationsAllowed = true;
+        }
+
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        if ((launchedUri = (e as ProtocolActivatedEventArgs)?.Uri) is not null)
+        {
+            frontendService.NavigateLaunchedUri();
+        }
+        await frontendService.RunOnceAsync();
     }
 
     protected override AppBuilder CreateAppBuilder()
@@ -107,7 +120,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .UseReactiveUI();
     }
 
-    public async void HandleAppRefresh(BGTask task) 
+    public async void HandleAppRefresh(BGTask task)
     {
         ScheduleAppRefresh();
 
@@ -116,8 +129,13 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         BGAppRefreshTask refreshTask = (BGAppRefreshTask)task;
         refreshTask.ExpirationHandler += cts.Cancel;
 
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        await frontendService.RunOnceAsync(cts.Token);
+        try
+        {
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            await frontendService.RunOnceAsync(cts.Token);
+        }
+        catch (OperationCanceledException) { }
+        refreshTask.SetTaskCompleted(false);
     }
 
     public Uri? GetLaunchedUri()
@@ -133,7 +151,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             title, message, UIAlertControllerStyle.Alert);
 
         UIAlertAction positiveAction = UIAlertAction
-            .Create("Yes", UIAlertActionStyle.Destructive, x => tcs.SetResult(true));
+            .Create("Yes", UIAlertActionStyle.Default, x => tcs.SetResult(true));
         alertController.AddAction(positiveAction);
 
         UIAlertAction negativeAction = UIAlertAction
@@ -159,7 +177,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         await (Window?.RootViewController
             ?.PresentViewControllerAsync(
-                viewControllerToPresent: alertController, 
+                viewControllerToPresent: alertController,
                 animated: true) ?? Task.CompletedTask);
 
         await tcs.Task;
@@ -168,7 +186,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     public Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken = default)
     {
         NSItemProvider itemProvider = new(
-            item: (NSString)content, 
+            item: (NSString)content,
             typeIdentifier: "public.utf8-plain-text"
             );
         UIActivityItemsConfiguration configuration = new([itemProvider]);
@@ -179,10 +197,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         return Window?.RootViewController
             ?.PresentViewControllerAsync(
-                viewControllerToPresent: 
-                activityViewController, 
+                viewControllerToPresent:
+                activityViewController,
                 animated: true)
-            .WaitAsync(cancellationToken) ?? 
+            .WaitAsync(cancellationToken) ??
             Task.FromCanceled(cancellationToken);
     }
 }
