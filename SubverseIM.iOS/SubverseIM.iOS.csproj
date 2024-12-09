@@ -1,20 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net8.0-ios17.5</TargetFramework>
-		<SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
-		<RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
+		<TargetFramework>net8.0-ios17.0</TargetFramework>
+		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
+		<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
 		<CodesignKey>Apple Development: Isabelle Santin (QL6ZJ9H5U9)</CodesignKey>
 		<Nullable>enable</Nullable>
 		<ProvisioningType>manual</ProvisioningType>
-		<AvaloniaVersion>11.*</AvaloniaVersion>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<AvaloniaVersion>11.2.2</AvaloniaVersion>
+		<MtouchInterpreter>-all</MtouchInterpreter>
 		<MtouchLink>SdkOnly</MtouchLink>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<MtouchLink>SdkOnly</MtouchLink>
-	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="iTunesArtwork" />
+	  <None Remove="iTunesArtwork%402x" />
+	</ItemGroup>
+	<ItemGroup>
+	  <iTunesArtwork Include="iTunesArtwork" />
+	  <iTunesArtwork Include="iTunesArtwork@2x" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />

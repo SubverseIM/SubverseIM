@@ -90,6 +90,7 @@ namespace SubverseIM.ViewModels.Pages
 
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
+            INativeService nativeService = await ServiceManager.GetWithAwaitAsync<INativeService>();
 
             SubverseMessage message = new SubverseMessage()
             {
@@ -114,7 +115,9 @@ namespace SubverseIM.ViewModels.Pages
                 dbService.InsertOrUpdateItem(contact);
 
                 SendMessageText = null;
-                _ = peerService.SendMessageAsync(message);
+                _ = nativeService.RunInBackgroundAsync(
+                    ct => peerService.SendMessageAsync(message, ct)
+                    );
             }
         }
     }

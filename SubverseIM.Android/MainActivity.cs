@@ -41,6 +41,8 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     private readonly ServiceConnection<IPeerService> peerServiceConn;
 
+    private readonly CancellationTokenSource cancellationTokenSource;
+
     public bool NotificationsAllowed { get; private set; }
 
     public bool IsInForeground { get; private set; }
@@ -49,6 +51,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     {
         serviceManager = new();
         peerServiceConn = new();
+        cancellationTokenSource = new();
     }
 
     protected override async void OnCreate(Bundle? savedInstanceState)
@@ -101,10 +104,13 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         System.Environment.Exit(0);
     }
 
-    protected override void OnStart()
+    protected override async void OnStart()
     {
         base.OnStart();
         IsInForeground = true;
+
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        await frontendService.RunOnceAsync(cancellationTokenSource.Token);
     }
 
     protected override void OnStop()
@@ -174,7 +180,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         return tcs.Task;
     }
 
-    public Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken)
+    public Task ShareStringToAppAsync(string title, string content)
     {
         new ShareCompat.IntentBuilder(this)
             .SetType("text/plain")
@@ -191,6 +197,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         if (disposing) 
         {
             serviceManager.Dispose();
+            cancellationTokenSource.Dispose();
         }
     }
 }

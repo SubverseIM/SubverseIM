@@ -360,7 +360,7 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
-        public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
+        public async Task InjectAsync(IServiceManager serviceManager)
         {
             serviceManager.GetOrRegister(nativeService);
 
@@ -477,6 +477,7 @@ namespace SubverseIM.Services.Implementation
 
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
+            List<Task> sendTasks = new();
             foreach (SubversePeerId recipient in message.Recipients)
             {
                 SIPURI requestToUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
@@ -517,7 +518,7 @@ namespace SubverseIM.Services.Implementation
                     }
                 }
 
-                _ = Task.Run(async Task? () =>
+                sendTasks.Add(Task.Run(async Task? () =>
                 {
                     bool flag;
                     do
@@ -529,9 +530,11 @@ namespace SubverseIM.Services.Implementation
                         {
                             flag = callIdMap.ContainsKey(sipRequest.Header.CallId);
                         }
-                    } while (flag);
-                });
+                    } while (flag && !cancellationToken.IsCancellationRequested);
+                }));
             }
+
+            await Task.WhenAll(sendTasks);
         }
 
         public async Task SendInviteAsync(CancellationToken cancellationToken = default)

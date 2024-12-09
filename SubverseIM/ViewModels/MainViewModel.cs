@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels;
 
-public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
+public class MainViewModel : ViewModelBase, IFrontendService
 {
     private readonly IServiceManager serviceManager;
 
@@ -21,11 +21,9 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
     private readonly CreateContactPageViewModel createContactPage;
 
-    private readonly CancellationTokenSource mainTaskCts;
-
     private PageViewModelBase currentPage;
 
-    private bool disposedValue;
+    private Task? mainTask;
 
     public PageViewModelBase CurrentPage
     {
@@ -42,12 +40,32 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         createContactPage = new(serviceManager);
 
         currentPage = contactPage;
-
-        mainTaskCts = new();
-        _ = RunAsync(mainTaskCts.Token);
     }
 
-    public async Task RunAsync(CancellationToken cancellationToken = default)
+    public async Task RunOnceBackgroundAsync()
+    {
+        if (mainTask?.IsCompleted ?? true)
+        {
+            INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>();
+            mainTask = nativeService.RunInBackgroundAsync(RunAsync);
+        }
+
+        await mainTask;
+    }
+
+    public Task RunOnceAsync(CancellationToken cancellationToken)
+    {
+        if (mainTask?.IsCompleted ?? true)
+        {
+            return mainTask = RunAsync(cancellationToken);
+        }
+        else
+        {
+            return mainTask;
+        }
+    }
+
+    private async Task RunAsync(CancellationToken cancellationToken)
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
         IPeerService peerService = await serviceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
@@ -60,7 +78,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         {
             foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
             {
-                await peerService.SendMessageAsync(message);
+                await peerService.SendMessageAsync(message, cancellationToken);
             }
         });
 
@@ -68,7 +86,7 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
         {
             foreach (SubverseContact contact in dbService.GetContacts())
             {
-                peerService.CachedPeers.Add(
+                peerService.CachedPeers.TryAdd(
                     contact.OtherPeer,
                     new SubversePeer
                     {
@@ -126,9 +144,9 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
 
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
                 {
-                    await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);
+                    await nativeService.SendPushNotificationAsync(serviceManager, message);
                 }
-                else
+                else if (launcherService.NotificationsAllowed)
                 {
                     nativeService.ClearNotification(message);
                 }
@@ -168,24 +186,5 @@ public class MainViewModel : ViewModelBase, IFrontendService, IDisposable
             await createContactPage.InitializeAsync(launchedUri);
             CurrentPage = createContactPage;
         }
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                mainTaskCts.Dispose();
-            }
-
-            disposedValue = true;
-        }
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

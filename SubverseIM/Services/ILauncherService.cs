@@ -16,6 +16,6 @@ namespace SubverseIM.Services
 
         Task ShowAlertDialogAsync(string title, string message);
 
-        Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken = default);
+        Task ShareStringToAppAsync(string title, string content);
     }
 }

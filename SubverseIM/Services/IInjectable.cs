@@ -6,5 +6,5 @@ namespace SubverseIM.Services;
 
 public interface IInjectable
 {
-    Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken = default);
+    Task InjectAsync(IServiceManager serviceManager);
 }
