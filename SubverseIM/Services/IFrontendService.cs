@@ -16,6 +16,8 @@ namespace SubverseIM.Services
 
         void NavigateMessageView(IEnumerable<SubverseContact> contacts);
 
+        Task RunOnceBackgroundAsync();
+
         Task RunOnceAsync(CancellationToken cancellationToken = default);
     }
 }

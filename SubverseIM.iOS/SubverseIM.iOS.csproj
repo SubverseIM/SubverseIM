@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0-ios17.0</TargetFramework>
-		<SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
 		<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
 		<CodesignKey>Apple Development: Isabelle Santin (QL6ZJ9H5U9)</CodesignKey>
 		<Nullable>enable</Nullable>

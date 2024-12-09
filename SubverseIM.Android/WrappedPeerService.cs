@@ -6,7 +6,6 @@ using Android.Net;
 using Android.OS;
 using Android.Runtime;
 using AndroidX.Core.App;
-using AndroidX.Core.Content;
 using SubverseIM.Android.Services;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -106,11 +105,11 @@ namespace SubverseIM.Android
             }
         }
 
-        public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default)
+        public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message)
         {
             int notificationId = message.TopicName?.GetHashCode() ?? message.Sender.GetHashCode();
 
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             SubverseContact? contact = dbService.GetContact(message.Sender);
 
             Bitmap? avatarBitmap;
@@ -166,9 +165,9 @@ namespace SubverseIM.Android
             manager?.Notify(notificationId, notif);
         }
 
-        public Task RunInBackgroundAsync(Task task)
+        public Task RunInBackgroundAsync(System.Func<CancellationToken, Task> taskFactory)
         {
-            return task;
+            return taskFactory(default);
         }
     }
 }

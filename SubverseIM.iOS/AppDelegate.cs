@@ -90,9 +90,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         UNNotificationSettings settings = await UNUserNotificationCenter.Current.GetNotificationSettingsAsync();
         if (settings.AuthorizationStatus != UNAuthorizationStatus.Authorized)
         {
-            (bool result, NSError? _) = await UNUserNotificationCenter.Current.RequestAuthorizationAsync(
-                options: UNAuthorizationOptions.Badge | UNAuthorizationOptions.TimeSensitive
-                );
+            (bool result, NSError? _) = await UNUserNotificationCenter.Current
+                .RequestAuthorizationAsync(options: UNAuthorizationOptions.Badge | UNAuthorizationOptions.Sound);
             NotificationsAllowed = result;
         }
         else
@@ -105,7 +104,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         {
             frontendService.NavigateLaunchedUri();
         }
-        await frontendService.RunOnceAsync();
+        await frontendService.RunOnceBackgroundAsync();
     }
 
     protected override AppBuilder CreateAppBuilder()
@@ -135,7 +134,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             await frontendService.RunOnceAsync(cts.Token);
         }
         catch (OperationCanceledException) { }
-        refreshTask.SetTaskCompleted(false);
+        
+        refreshTask.SetTaskCompleted(true);
     }
 
     public Uri? GetLaunchedUri()
@@ -183,7 +183,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         await tcs.Task;
     }
 
-    public Task ShareStringToAppAsync(string title, string content, CancellationToken cancellationToken = default)
+    public Task ShareStringToAppAsync(string title, string content)
     {
         NSItemProvider itemProvider = new(
             item: (NSString)content,
@@ -199,8 +199,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             ?.PresentViewControllerAsync(
                 viewControllerToPresent:
                 activityViewController,
-                animated: true)
-            .WaitAsync(cancellationToken) ??
-            Task.FromCanceled(cancellationToken);
+                animated: true) ?? Task.CompletedTask;
     }
 }

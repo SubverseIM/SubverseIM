@@ -25,8 +25,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     private Task? mainTask;
 
-    private bool disposedValue;
-
     public PageViewModelBase CurrentPage
     {
         get { return currentPage; }
@@ -44,12 +42,26 @@ public class MainViewModel : ViewModelBase, IFrontendService
         currentPage = contactPage;
     }
 
-    public async Task RunOnceAsync(CancellationToken cancellationToken = default)
+    public async Task RunOnceBackgroundAsync()
     {
         if (mainTask?.IsCompleted ?? true)
         {
             INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>();
-            await (mainTask = nativeService.RunInBackgroundAsync(RunAsync));
+            mainTask = nativeService.RunInBackgroundAsync(RunAsync);
+        }
+
+        await mainTask;
+    }
+
+    public Task RunOnceAsync(CancellationToken cancellationToken)
+    {
+        if (mainTask?.IsCompleted ?? true)
+        {
+            return mainTask = RunAsync(cancellationToken);
+        }
+        else
+        {
+            return mainTask;
         }
     }
 
@@ -132,7 +144,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
                 {
-                    await nativeService.SendPushNotificationAsync(serviceManager, message, cancellationToken);
+                    await nativeService.SendPushNotificationAsync(serviceManager, message);
                 }
                 else if (launcherService.NotificationsAllowed)
                 {

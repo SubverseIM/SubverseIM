@@ -9,7 +9,7 @@ namespace SubverseIM.Services
     {
         void ClearNotification(SubverseMessage message);
 
-        Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default);
+        Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message);
 
         Task RunInBackgroundAsync(Func<CancellationToken, Task> taskFactory);
     }

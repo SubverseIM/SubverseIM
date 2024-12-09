@@ -360,7 +360,7 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
-        public async Task InjectAsync(IServiceManager serviceManager, CancellationToken cancellationToken)
+        public async Task InjectAsync(IServiceManager serviceManager)
         {
             serviceManager.GetOrRegister(nativeService);
 

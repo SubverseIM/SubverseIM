@@ -1,4 +1,3 @@
-using Foundation;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
@@ -22,13 +21,11 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
         peerService = new PeerService(this);
     }
 
-    public void ClearNotification(SubverseMessage message)
-    {
-    }
+    public void ClearNotification(SubverseMessage message) { }
 
-    public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message, CancellationToken cancellationToken = default)
+    public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message)
     {
-        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         SubverseContact? contact = dbService.GetContact(message.Sender);
 
         UNMutableNotificationContent content = new()
@@ -37,6 +34,7 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
                 $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})",
             Body = message.Content ?? string.Empty,
         };
+
         UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
         UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);
 
@@ -60,7 +58,10 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
         Action<UNNotificationPresentationOptions> completionHandler
         )
     {
-        completionHandler(UNNotificationPresentationOptions.Banner | UNNotificationPresentationOptions.List);
+        completionHandler(
+            UNNotificationPresentationOptions.Banner | 
+            UNNotificationPresentationOptions.List | 
+            UNNotificationPresentationOptions.Sound);
     }
 
     public static implicit operator PeerService(WrappedPeerService instance)
