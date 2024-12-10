@@ -61,6 +61,6 @@
 		</dict>
 	</array>
 	<key>XSAppIconAssets</key>
-	<string>Media.xcassets/AppIcon.appiconset</string>
+	<string>Media.xcassets/AppIcons.appiconset</string>
 </dict>
 </plist>
