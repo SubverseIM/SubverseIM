@@ -6,6 +6,7 @@ using BackgroundTasks;
 using Foundation;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
+using SubverseIM.ViewModels;
 using System;
 using System.IO;
 using System.Threading;
@@ -50,8 +51,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
         serviceManager.GetOrRegister<ILauncherService>(this);
 
-        string appDataPath = System.Environment.GetFolderPath(
-            System.Environment.SpecialFolder.ApplicationData
+        string appDataPath = Environment.GetFolderPath(
+            Environment.SpecialFolder.ApplicationData
             );
         Directory.CreateDirectory(appDataPath);
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
@@ -123,6 +124,21 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     {
         ScheduleAppRefresh();
 
+        string appDataPath = Environment.GetFolderPath(
+            Environment.SpecialFolder.ApplicationData
+            );
+        Directory.CreateDirectory(appDataPath);
+        string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
+        serviceManager.GetOrRegister<IDbService>(
+            new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
+        );
+
+        wrappedPeerService = new(null);
+        serviceManager.GetOrRegister<IPeerService>(
+            (PeerService)wrappedPeerService
+            );
+        UNUserNotificationCenter.Current.Delegate = wrappedPeerService;
+
         using CancellationTokenSource cts = new();
 
         BGAppRefreshTask refreshTask = (BGAppRefreshTask)task;
@@ -130,7 +146,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         try
         {
-            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            IFrontendService frontendService = new MainViewModel(serviceManager);
+            serviceManager.GetOrRegister(frontendService);
+
             await frontendService.RunOnceAsync(cts.Token);
         }
         catch (OperationCanceledException) { }

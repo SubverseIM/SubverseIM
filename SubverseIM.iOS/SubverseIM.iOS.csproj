@@ -4,10 +4,10 @@
 		<TargetFramework>net8.0-ios17.0</TargetFramework>
 		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
 		<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
-		<CodesignKey>Apple Development: Isabelle Santin (QL6ZJ9H5U9)</CodesignKey>
+		<CodesignKey>iPhone Distribution: Isabelle Santin (J53Q67A7G9)</CodesignKey>
 		<Nullable>enable</Nullable>
 		<ProvisioningType>manual</ProvisioningType>
-		<AvaloniaVersion>11.2.2</AvaloniaVersion>
+		<AvaloniaVersion>11.3.999-cibuild0053749-alpha</AvaloniaVersion>
 		<MtouchInterpreter>-all</MtouchInterpreter>
 		<MtouchLink>SdkOnly</MtouchLink>
 	</PropertyGroup>
@@ -28,10 +28,5 @@
 	<ItemGroup>
 		<ProjectReference Include="..\SubverseIM\SubverseIM.csproj" />
 	</ItemGroup>
-
-	<ProjectExtensions>
-		<VisualStudio>
-			<UserProperties XamarinHotReloadWrongLinkerErrorInfoBarSubverseIMiOSHideInfoBar="True" />
-		</VisualStudio>
-	</ProjectExtensions>
+	
 </Project>
