@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.2.000</string>
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>1.2.000</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
@@ -25,11 +25,15 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>CFBundleIdentifier</key>
 	<string>com.chosenfewsoftware.SubverseIM</string>
@@ -49,7 +53,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>CFBundleURLName</key>
-			<string>com.ChosenFewSofware.SubverseIM</string>
+			<string>com.ChosenFewSoftware.SubverseIM</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>sv</string>
@@ -57,6 +61,6 @@
 		</dict>
 	</array>
 	<key>XSAppIconAssets</key>
-	<string>Media.xcassets/AppIcons.appiconset</string>
+	<string>Media.xcassets/AppIcon.appiconset</string>
 </dict>
 </plist>
