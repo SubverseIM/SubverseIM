@@ -165,9 +165,9 @@ namespace SubverseIM.Android
             manager?.Notify(notificationId, notif);
         }
 
-        public Task RunInBackgroundAsync(System.Func<CancellationToken, Task> taskFactory)
+        public Task RunInBackgroundAsync(System.Func<CancellationToken, Task> taskFactory, CancellationToken cancellationToken)
         {
-            return taskFactory(default);
+            return taskFactory(cancellationToken);
         }
     }
 }

@@ -11,11 +11,11 @@ namespace SubverseIM.iOS;
 
 public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeService
 {
-    private readonly UIApplication appInstance;
+    private readonly UIApplication? appInstance;
 
     private readonly PeerService peerService;
 
-    public WrappedPeerService(UIApplication appInstance)
+    public WrappedPeerService(UIApplication? appInstance)
     {
         this.appInstance = appInstance;
         peerService = new PeerService(this);
@@ -41,16 +41,27 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
         await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
     }
 
-    public async Task RunInBackgroundAsync(Func<CancellationToken, Task> taskFactory)
+    public async Task RunInBackgroundAsync(Func<CancellationToken, Task> taskFactory, CancellationToken cancellationToken)
     {
-        using CancellationTokenSource cts = new();
-        nint handle = appInstance.BeginBackgroundTask(cts.Cancel);
-        try
+        if (appInstance is null)
         {
-            await taskFactory(cts.Token);
+            try
+            {
+                await taskFactory(cancellationToken);
+            }
+            catch (OperationCanceledException) { }
         }
-        catch(OperationCanceledException) { }
-        appInstance.EndBackgroundTask(handle);
+        else 
+        {
+            using CancellationTokenSource cts = new();
+            nint handle = appInstance.BeginBackgroundTask(cts.Cancel);
+            try
+            {
+                await taskFactory(cts.Token);
+            }
+            catch (OperationCanceledException) { }
+            appInstance.EndBackgroundTask(handle);
+        }
     }
 
     public override void WillPresentNotification(
