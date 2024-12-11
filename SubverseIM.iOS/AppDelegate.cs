@@ -24,7 +24,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 {
     private const string BGTASK_BOOTSTRAP_ID = "com.chosenfewsoftware.SubverseIM.bootstrap";
 
-    private readonly ServiceManager serviceManager;
+    private ServiceManager? serviceManager;
 
     private WrappedPeerService? wrappedPeerService;
 
@@ -33,43 +33,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     public bool IsInForeground { get; private set; }
 
     public bool NotificationsAllowed { get; private set; }
-
-    public AppDelegate()
-    {
-        serviceManager = new();
-    }
-
-    [Export("application:didFinishLaunchingWithOptions:")]
-    new public bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
-    {
-        base.FinishedLaunching(application, launchOptions);
-        BGTaskScheduler.Shared.Register(BGTASK_BOOTSTRAP_ID, null, HandleAppRefresh);
-
-        ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
-        ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
-
-        launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
-        serviceManager.GetOrRegister<ILauncherService>(this);
-
-        string appDataPath = Environment.GetFolderPath(
-            Environment.SpecialFolder.ApplicationData
-            );
-        Directory.CreateDirectory(appDataPath);
-        string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
-        serviceManager.GetOrRegister<IDbService>(
-            new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
-            );
-
-        wrappedPeerService = new(application);
-        serviceManager.GetOrRegister<IPeerService>(
-            (PeerService)wrappedPeerService
-            );
-        UNUserNotificationCenter.Current.Delegate = wrappedPeerService;
-
-        HandleAppActivated(this, new(ActivationKind.Background));
-
-        return true;
-    }
 
     private void ScheduleAppRefresh()
     {
@@ -100,12 +63,13 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             NotificationsAllowed = true;
         }
 
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        Task<IFrontendService>? resolveServiceTask = serviceManager?.GetWithAwaitAsync<IFrontendService>();
+        IFrontendService? frontendService = resolveServiceTask is null ? null : await resolveServiceTask;
         if ((launchedUri = (e as ProtocolActivatedEventArgs)?.Uri) is not null)
         {
-            frontendService.NavigateLaunchedUri();
+            frontendService?.NavigateLaunchedUri();
         }
-        await frontendService.RunOnceBackgroundAsync();
+        await (frontendService?.RunOnceBackgroundAsync() ?? Task.CompletedTask);
     }
 
     protected override AppBuilder CreateAppBuilder()
@@ -119,10 +83,54 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .WithInterFont()
             .UseReactiveUI();
     }
+    
+    public Uri? GetLaunchedUri()
+    {
+        return launchedUri;
+    }
+
+    [Export("application:didFinishLaunchingWithOptions:")]
+    new public bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
+    {
+        serviceManager?.Dispose();
+        serviceManager = new();
+
+        base.FinishedLaunching(application, launchOptions);
+
+        BGTaskScheduler.Shared.Register(BGTASK_BOOTSTRAP_ID, null, HandleAppRefresh);
+
+        ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
+        ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
+
+        launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
+        serviceManager.GetOrRegister<ILauncherService>(this);
+
+        string appDataPath = Environment.GetFolderPath(
+            Environment.SpecialFolder.ApplicationData
+            );
+        Directory.CreateDirectory(appDataPath);
+        string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
+        serviceManager.GetOrRegister<IDbService>(
+            new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
+            );
+
+        wrappedPeerService = new(application);
+        serviceManager.GetOrRegister<IPeerService>(
+            (PeerService)wrappedPeerService
+            );
+        UNUserNotificationCenter.Current.Delegate = wrappedPeerService;
+
+        HandleAppActivated(this, new(ActivationKind.Background));
+
+        return true;
+    }
 
     public async void HandleAppRefresh(BGTask task)
     {
         ScheduleAppRefresh();
+
+        serviceManager?.Dispose();
+        serviceManager = new();
 
         string appDataPath = Environment.GetFolderPath(
             Environment.SpecialFolder.ApplicationData
@@ -154,11 +162,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         catch (OperationCanceledException) { }
         
         refreshTask.SetTaskCompleted(true);
-    }
-
-    public Uri? GetLaunchedUri()
-    {
-        return launchedUri;
     }
 
     public async Task<bool> ShowConfirmationDialogAsync(string title, string message)

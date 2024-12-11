@@ -16,7 +16,7 @@ public partial class App : Application
 
     public App() : base() { }
 
-    public App(IServiceManager serviceManager) : this()
+    public App(IServiceManager? serviceManager) : this()
     {
         this.serviceManager = serviceManager;
     }

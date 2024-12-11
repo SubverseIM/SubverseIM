@@ -76,7 +76,8 @@ namespace SubverseIM.Services.Implementation
             return newInstance;
         }
 
-        public async Task<TService> GetWithAwaitAsync<TService>(CancellationToken cancellationToken = default) where TService : class
+        public async Task<TService> GetWithAwaitAsync<TService>(CancellationToken cancellationToken = default) 
+            where TService : class
         {
             lock (serviceMap)
             {
@@ -101,7 +102,8 @@ namespace SubverseIM.Services.Implementation
                 }
             }
 
-            return (TService)await instanceTcs.Task;
+            return (TService)await instanceTcs.Task
+                .WaitAsync(cancellationToken);
         }
 
         protected virtual void Dispose(bool disposing)
