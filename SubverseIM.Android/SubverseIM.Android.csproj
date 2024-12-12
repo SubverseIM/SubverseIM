@@ -5,7 +5,7 @@
 		<SupportedOSPlatformVersion>28</SupportedOSPlatformVersion>
 		<Nullable>enable</Nullable>
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
-		<AvaloniaVersion>11.3.999-cibuild0053834-alpha</AvaloniaVersion>
+		<AvaloniaVersion>11.3.999-cibuild0053863-alpha</AvaloniaVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

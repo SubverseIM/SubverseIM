@@ -7,7 +7,7 @@
 		<CodesignKey>iPhone Distribution: Isabelle Santin (J53Q67A7G9)</CodesignKey>
 		<Nullable>enable</Nullable>
 		<ProvisioningType>manual</ProvisioningType>
-		<AvaloniaVersion>11.3.999-cibuild0053825-alpha</AvaloniaVersion>
+		<AvaloniaVersion>11.3.999-cibuild0053863-alpha</AvaloniaVersion>
 		<MtouchInterpreter>-all</MtouchInterpreter>
 		<MtouchLink>SdkOnly</MtouchLink>
 	</PropertyGroup>
