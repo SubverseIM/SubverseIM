@@ -60,13 +60,13 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        private bool isDoubleSelected;
-        public bool IsDoubleSelected
+        private bool shouldShowOptions;
+        public bool ShouldShowOptions 
         {
-            get => isDoubleSelected;
-            set
+            get => shouldShowOptions;
+            set 
             {
-                this.RaiseAndSetIfChanged(ref isDoubleSelected, value);
+                this.RaiseAndSetIfChanged(ref shouldShowOptions, value);
             }
         }
 

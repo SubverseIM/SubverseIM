@@ -6,6 +6,7 @@ using SubverseIM.ViewModels.Components;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -82,6 +83,16 @@ namespace SubverseIM.ViewModels.Pages
         public async Task SendCommandAsync() 
         {
             if (string.IsNullOrEmpty(SendMessageText)) return;
+
+            string filteredText = SendMessageTopicName ?? string.Empty;
+            filteredText = Regex.Replace(filteredText, @"\s+", "-");
+            filteredText = Regex.Replace(filteredText, @"[^\w\-]", string.Empty);
+            filteredText = Regex.Match(filteredText, @"\#?(\w[\w\-]*\w)").Value;
+
+            if (filteredText.Length > 0)
+            {
+                SendMessageTopicName = $"#{filteredText.ToLowerInvariant()}";
+            }
 
             if (!string.IsNullOrEmpty(SendMessageTopicName) && !TopicsList.Contains(SendMessageTopicName))
             {
