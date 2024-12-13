@@ -1,9 +1,13 @@
 ﻿using Android;
+using Android.AccessibilityServices;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Text;
 using Android.Util;
+using Android.Views.Accessibility;
+using Android.Widget;
 using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
@@ -44,8 +48,16 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     private readonly CancellationTokenSource cancellationTokenSource;
 
     public bool NotificationsAllowed { get; private set; }
-
     public bool IsInForeground { get; private set; }
+
+    public bool IsAccessibilityEnabled 
+    { 
+        get 
+        {
+            AccessibilityManager am = (AccessibilityManager)GetSystemService(AccessibilityService)!;
+            return am.IsEnabled;
+        } 
+    }
 
     public MainActivity()
     {
@@ -175,6 +187,26 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             ?.SetTitle(title)
             ?.SetMessage(message)
             ?.SetNeutralButton("Ok", (s, ev) => tcs.SetResult())
+            ?.Show();
+
+        return tcs.Task;
+    }
+
+    public Task<string?> ShowInputDialogAsync(string prompt, string? defaultText)
+    {
+        TaskCompletionSource<string?> tcs = new();
+
+        FrameLayout frameLayout = new(this);
+        frameLayout.SetPadding(25, 25, 25, 25);
+
+        EditText editText = new(this) { InputType = InputTypes.ClassText, Text = defaultText };
+        frameLayout.AddView(editText);
+
+        AlertDialog? alertDialog = new AlertDialog.Builder(this)
+            ?.SetTitle(prompt)
+            ?.SetView(frameLayout)
+            ?.SetPositiveButton("Submit", (s, ev) => tcs.SetResult(editText.Text))
+            ?.SetNegativeButton("Cancel", (s, ev) => tcs.SetResult(null))
             ?.Show();
 
         return tcs.Task;
