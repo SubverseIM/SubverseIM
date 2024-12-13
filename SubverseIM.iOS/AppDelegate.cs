@@ -34,6 +34,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public bool NotificationsAllowed { get; private set; }
 
+    public bool IsAccessibilityEnabled => false;
+
     private void ScheduleAppRefresh()
     {
         BGAppRefreshTaskRequest request = new BGAppRefreshTaskRequest(BGTASK_BOOTSTRAP_ID);
@@ -202,6 +204,11 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
                 animated: true) ?? Task.CompletedTask);
 
         await tcs.Task;
+    }
+
+    public Task<string?> ShowInputDialogAsync(string prompt, string? defaultText = null)
+    {
+        throw new NotImplementedException();
     }
 
     public Task ShareStringToAppAsync(string title, string content)
