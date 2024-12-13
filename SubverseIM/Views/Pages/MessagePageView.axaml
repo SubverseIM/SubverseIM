@@ -25,7 +25,7 @@
 					Command="{Binding SendCommandAsync}">
 				<TextBlock FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center">Send</TextBlock>
 			</Button>
-			<TextBox HorizontalAlignment="Stretch" 
+			<TextBox x:Name="messageBox" HorizontalAlignment="Stretch" 
 					 VerticalAlignment="Stretch" 
 					 Watermark="Write a message..." 
 					 Text="{Binding SendMessageText}" />

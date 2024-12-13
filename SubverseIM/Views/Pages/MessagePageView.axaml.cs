@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System.Linq;
@@ -14,6 +15,39 @@ public partial class MessagePageView : UserControl
         InitializeComponent();
         messages.SelectionChanged += Messages_SelectionChanged;
         topicBox.TextChanged += TopicBox_TextChanged;
+
+        messageBox.GotFocus += TextBoxGotFocus;
+        topicBox.GotFocus += TextBoxGotFocus;
+    }
+
+    private async void TextBoxGotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
+    {
+        ILauncherService launcherService = await (DataContext as MessagePageViewModel)!
+            .ServiceManager.GetWithAwaitAsync<ILauncherService>();
+
+        if (launcherService.IsAccessibilityEnabled && sender is TextBox textBox)
+        {
+            textBox.IsEnabled = false;
+
+            string? messageText = await launcherService.ShowInputDialogAsync(
+                textBox.Watermark ?? "Enter Input Text", textBox.Text
+                );
+            textBox.Text = messageText;
+
+            textBox.IsEnabled = true;
+        }
+        else if (launcherService.IsAccessibilityEnabled && sender is AutoCompleteBox autoCompleteBox)
+        {
+            autoCompleteBox.IsEnabled = false;
+
+            string? messageText = await launcherService.ShowInputDialogAsync(
+                autoCompleteBox.Watermark ?? "Enter Input Text", autoCompleteBox.Text
+                );
+            autoCompleteBox.Text = messageText;
+
+            autoCompleteBox.IsEnabled = true;
+            TopicBox_TextChanged(null, new TextChangedEventArgs(null));
+        }
     }
 
     private async void TopicBox_TextChanged(object? sender, TextChangedEventArgs e)
