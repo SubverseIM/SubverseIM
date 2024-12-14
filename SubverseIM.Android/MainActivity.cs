@@ -1,11 +1,9 @@
 ﻿using Android;
-using Android.AccessibilityServices;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Android.Text;
-using Android.Util;
 using Android.Views.Accessibility;
 using Android.Widget;
 using AndroidX.Core.App;
@@ -28,7 +26,7 @@ namespace SubverseIM.Android;
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,
-    ScreenOrientation = ScreenOrientation.Portrait,
+    ScreenOrientation = ScreenOrientation.Portrait | ScreenOrientation.Landscape,
     ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.UiMode,
     LaunchMode = LaunchMode.SingleInstance)]
 [IntentFilter(
