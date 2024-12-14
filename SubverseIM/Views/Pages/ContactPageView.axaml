@@ -51,7 +51,7 @@
 								Edit
 							</TextBlock>
 						</Button>
-						<TextBlock VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
+						<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
 					</DockPanel>
 				</DataTemplate>
 			</ListBox.ItemTemplate>

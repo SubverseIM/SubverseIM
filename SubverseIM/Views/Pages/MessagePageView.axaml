@@ -58,10 +58,10 @@
 							</TextBlock>
 						</Button>
 						<DockPanel>
-							<TextBlock DockPanel.Dock="Top" 
+							<TextBlock TextWrapping="Wrap" DockPanel.Dock="Top" 
 									   Text="{Binding FromName}" 
-									   Margin="1"/>
-							<TextBlock Text="{Binding Content}" Margin="2" />
+									   Margin="2"/>
+							<TextBlock TextWrapping="Wrap" Text="{Binding Content}" Margin="2" />
 						</DockPanel>
 					</DockPanel>
 				</DataTemplate>
