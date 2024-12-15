@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -69,16 +70,13 @@ public partial class ContactPageView : UserControl
 
         if (isFirstTap)
         {
-            tapTimer.Change(250, Timeout.Infinite);
+            tapTimer.Change(300, Timeout.Infinite);
         }
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
-
-        bool isLongPress;
-        lock (pressTimerState) { isLongPress = pressTimerState.HasElapsed; }
 
         pressTimer.Change(Timeout.Infinite, Timeout.Infinite);
     }
@@ -91,20 +89,15 @@ public partial class ContactPageView : UserControl
         bool isLongPress;
         lock (pressTimerState) { isLongPress = pressTimerState.HasElapsed; }
 
-        if (contacts.SelectedItems?.Count > 1)
+        IEnumerable<object?> selectedItems = contacts.Items
+            .Where(x => x is ContactViewModel vm && (vm.IsSelected || vm.ShouldShowOptions));
+        if (selectedItems.Count() > 0)
         {
-            foreach (var item in contacts.SelectedItems
-                .Cast<ContactViewModel?>()
-                .Where(x => x is not null)
+            foreach (var item in selectedItems
                 .Cast<ContactViewModel>())
             {
                 item.ShouldShowOptions = false;
                 item.IsSelected = false;
-            }
-
-            if (isDoubleTap)
-            {
-                lock (tapTimerState) { tapTimerState.TapCount = 0; }
             }
 
             if (isLongPress)
@@ -112,9 +105,10 @@ public partial class ContactPageView : UserControl
                 lock (pressTimerState) { pressTimerState.HasElapsed = false; }
             }
 
-            if (isDoubleTap || isLongPress)
+            if (isDoubleTap)
             {
-                contacts.SelectedItems.Clear();
+                lock (tapTimerState) { tapTimerState.TapCount = 0; }
+                contacts.SelectedItems?.Clear();
             }
         }
 
@@ -133,10 +127,10 @@ public partial class ContactPageView : UserControl
             .Cast<ContactViewModel>())
         {
             item.ShouldShowOptions = isDoubleTap;
-            item.IsSelected = isLongPress;
+            item.IsSelected = !isLongPress;
         }
 
-        if (isLongPress && DataContext is not null)
+        if (!isLongPress && DataContext is not null)
         {
             await ((ContactPageViewModel)DataContext).MessageCommandAsync();
         }
