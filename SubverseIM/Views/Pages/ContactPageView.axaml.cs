@@ -11,12 +11,19 @@ namespace SubverseIM.Views.Pages;
 
 public partial class ContactPageView : UserControl
 {
+    private class PressTimerState
+    {
+        public bool HasElapsed { get; set; }
+    }
+
     private class TapTimerState
     {
         public int TapCount { get; set; }
     }
 
-    private readonly Timer tapTimer;
+    private readonly Timer pressTimer, tapTimer;
+
+    private readonly PressTimerState pressTimerState;
 
     private readonly TapTimerState tapTimerState;
 
@@ -28,7 +35,17 @@ public partial class ContactPageView : UserControl
         tapTimer = new Timer(TapTimerElapsed, tapTimerState,
             Timeout.Infinite, Timeout.Infinite);
 
+        pressTimerState = new();
+        pressTimer = new Timer(PressTimerElapsed, pressTimerState,
+            Timeout.Infinite, Timeout.Infinite);
+
         contacts.SelectionChanged += Contacts_SelectionChanged;
+    }
+
+    private void PressTimerElapsed(object? state)
+    {
+        Debug.Assert(state == pressTimerState);
+        lock (pressTimerState) { pressTimerState.HasElapsed = true; }
     }
 
     private void TapTimerElapsed(object? state)
@@ -37,9 +54,12 @@ public partial class ContactPageView : UserControl
         lock (tapTimerState) { tapTimerState.TapCount = 0; }
     }
 
-    protected override void OnPointerReleased(PointerReleasedEventArgs e)
+    protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
-        base.OnPointerReleased(e);
+        base.OnPointerPressed(e);
+
+        lock (pressTimerState) { pressTimerState.HasElapsed = false; }
+        pressTimer.Change(300, Timeout.Infinite);
 
         bool isFirstTap;
         lock (tapTimerState)
@@ -53,35 +73,72 @@ public partial class ContactPageView : UserControl
         }
     }
 
-    private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    protected override void OnPointerReleased(PointerReleasedEventArgs e)
+    {
+        base.OnPointerReleased(e);
+
+        bool isLongPress;
+        lock (pressTimerState) { isLongPress = pressTimerState.HasElapsed; }
+
+        pressTimer.Change(Timeout.Infinite, Timeout.Infinite);
+    }
+
+    private async void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         bool isDoubleTap;
-        lock (tapTimerState) { isDoubleTap = tapTimerState.TapCount > 0; }
+        lock (tapTimerState) { isDoubleTap = tapTimerState.TapCount > 1; }
+
+        bool isLongPress;
+        lock (pressTimerState) { isLongPress = pressTimerState.HasElapsed; }
 
         if (contacts.SelectedItems?.Count > 1)
         {
-            foreach (var item in contacts.SelectedItems.Cast<ContactViewModel>())
+            foreach (var item in contacts.SelectedItems
+                .Cast<ContactViewModel?>()
+                .Where(x => x is not null)
+                .Cast<ContactViewModel>())
             {
                 item.ShouldShowOptions = false;
+                item.IsSelected = false;
             }
 
             if (isDoubleTap)
             {
                 lock (tapTimerState) { tapTimerState.TapCount = 0; }
+            }
+
+            if (isLongPress)
+            {
+                lock (pressTimerState) { pressTimerState.HasElapsed = false; }
+            }
+
+            if (isDoubleTap || isLongPress)
+            {
                 contacts.SelectedItems.Clear();
             }
         }
 
-        foreach (var item in e.AddedItems.Cast<ContactViewModel>())
+        foreach (var item in e.AddedItems
+            .Cast<ContactViewModel?>()
+            .Where(x => x is not null)
+            .Cast<ContactViewModel>())
         {
             item.ShouldShowOptions = isDoubleTap;
             item.IsSelected = true;
         }
 
-        foreach (var item in e.RemovedItems.Cast<ContactViewModel>())
+        foreach (var item in e.RemovedItems
+            .Cast<ContactViewModel?>()
+            .Where(x => x is not null)
+            .Cast<ContactViewModel>())
         {
             item.ShouldShowOptions = isDoubleTap;
-            item.IsSelected = false;
+            item.IsSelected = isLongPress;
+        }
+
+        if (isLongPress && DataContext is not null)
+        {
+            await ((ContactPageViewModel)DataContext).MessageCommandAsync();
         }
     }
 
