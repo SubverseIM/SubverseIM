@@ -277,9 +277,14 @@ namespace SubverseIM.Services.Implementation
                     CallId = sipRequest.Header.CallId,
                     Content = messageContent,
                     Sender = fromPeer,
-                    Recipients = [toPeer],
+                    Recipients = sipRequest.Header.Contact
+                        .Select(x => SubversePeerId.FromString(x.ContactURI.User))
+                        .ToArray(),
+                    RecipientNames = sipRequest.Header.Contact
+                        .Select(x => x.ContactName)
+                        .ToArray(),
                     DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
-                    TopicName = sipRequest.Header.To.ToURI.Parameters.Get("topic"),
+                    TopicName = sipRequest.URI.Parameters.Get("topic"),
                     WasDelivered = true,
                 });
 
@@ -500,6 +505,13 @@ namespace SubverseIM.Services.Implementation
                 }
 
                 sipRequest.Header.SetDateHeader();
+
+                for(int i = 0; i < message.Recipients.Length; i++)
+                {
+                    SubverseContact? contact = DbService.GetContact(message.Recipients[i]);
+                    SIPURI contactUri = SIPURI.ParseSIPURI($"sip:{message.Recipients[i]}@subverse.network");
+                    sipRequest.Header.Contact.Add(new(contact?.DisplayName ?? message.RecipientNames[i], contactUri));
+                }
 
                 using (PGP pgp = new(await GetPeerKeysAsync(recipient, cancellationToken)))
                 {

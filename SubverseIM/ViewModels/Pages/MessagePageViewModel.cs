@@ -113,6 +113,8 @@ namespace SubverseIM.ViewModels.Pages
 
                 Recipients = contacts.Select(x => x.OtherPeer).ToArray(),
 
+                RecipientNames = contacts.Select(x => x.DisplayName ?? "Anonymous").ToArray(),
+
                 Content = SendMessageText,
                 DateSignedOn = DateTime.UtcNow,
             };

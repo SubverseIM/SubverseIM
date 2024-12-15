@@ -59,8 +59,9 @@
 						</Button>
 						<DockPanel>
 							<TextBlock TextWrapping="Wrap" DockPanel.Dock="Top" 
-									   Text="{Binding FromName}" 
+									   Text="{Binding FromHeading}" 
 									   Margin="2"/>
+							<TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap" Text="{Binding CCFooter}" Margin="2" />
 							<TextBlock TextWrapping="Wrap" Text="{Binding Content}" Margin="2" />
 						</DockPanel>
 					</DockPanel>
