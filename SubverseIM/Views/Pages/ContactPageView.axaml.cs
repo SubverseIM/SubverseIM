@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System.Collections.Generic;
@@ -12,12 +13,17 @@ namespace SubverseIM.Views.Pages;
 
 public partial class ContactPageView : UserControl
 {
-    private class PressTimerState
+    private class TimerState 
+    {
+        public object? DataContext { get; set; }
+    }
+
+    private class PressTimerState : TimerState
     {
         public bool HasElapsed { get; set; }
     }
 
-    private class TapTimerState
+    private class TapTimerState : TimerState
     {
         public int TapCount { get; set; }
     }
@@ -49,10 +55,29 @@ public partial class ContactPageView : UserControl
         lock (pressTimerState) { pressTimerState.HasElapsed = true; }
     }
 
-    private void TapTimerElapsed(object? state)
+    private async void TapTimerElapsed(object? state)
     {
         Debug.Assert(state == tapTimerState);
-        lock (tapTimerState) { tapTimerState.TapCount = 0; }
+
+        bool isLongPress;
+        lock (pressTimerState) { isLongPress = pressTimerState.HasElapsed; }
+
+        bool isDoubleTap;
+        ContactPageViewModel? dataContext;
+        lock (tapTimerState) 
+        { 
+            isDoubleTap = tapTimerState.TapCount > 1;
+            dataContext = tapTimerState.DataContext as ContactPageViewModel;
+        }
+
+        if (!isLongPress && !isDoubleTap && dataContext is not null)
+        {
+            await Dispatcher.UIThread.InvokeAsync(dataContext.MessageCommandAsync);
+        }
+        else
+        {
+            lock (tapTimerState) { tapTimerState.TapCount = 0; }
+        }
     }
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
@@ -60,7 +85,7 @@ public partial class ContactPageView : UserControl
         base.OnPointerPressed(e);
 
         lock (pressTimerState) { pressTimerState.HasElapsed = false; }
-        pressTimer.Change(300, Timeout.Infinite);
+        pressTimer.Change(275, Timeout.Infinite);
 
         bool isFirstTap;
         lock (tapTimerState)
@@ -81,7 +106,7 @@ public partial class ContactPageView : UserControl
         pressTimer.Change(Timeout.Infinite, Timeout.Infinite);
     }
 
-    private async void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         bool isDoubleTap;
         lock (tapTimerState) { isDoubleTap = tapTimerState.TapCount > 1; }
@@ -97,18 +122,11 @@ public partial class ContactPageView : UserControl
                 .Cast<ContactViewModel>())
             {
                 item.ShouldShowOptions = false;
-                item.IsSelected = false;
             }
 
             if (isLongPress)
             {
                 lock (pressTimerState) { pressTimerState.HasElapsed = false; }
-            }
-
-            if (isDoubleTap)
-            {
-                lock (tapTimerState) { tapTimerState.TapCount = 0; }
-                contacts.SelectedItems?.Clear();
             }
         }
 
@@ -129,16 +147,15 @@ public partial class ContactPageView : UserControl
             item.ShouldShowOptions = isDoubleTap;
             item.IsSelected = !isLongPress;
         }
-
-        if (!isLongPress && DataContext is not null)
-        {
-            await ((ContactPageViewModel)DataContext).MessageCommandAsync();
-        }
     }
 
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
+
+        pressTimerState.DataContext = DataContext;
+        tapTimerState.DataContext = DataContext;
+
         await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
     }
 }

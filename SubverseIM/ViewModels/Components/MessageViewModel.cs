@@ -30,11 +30,18 @@ namespace SubverseIM.ViewModels.Components
             .DateSignedOn.ToLocalTime()
             .ToString("dd/MM/yy\nHH:mm:ss");
 
-        public string FromName => (fromContact?.DisplayName ?? "You") + 
-            (string.IsNullOrEmpty(innerMessage.TopicName) ? string.Empty : 
-            $" ({innerMessage.TopicName})");
+        public string FromName => fromContact?.DisplayName ?? "You";
 
-        public string ReadoutText => $"At {DateString}, {FromName} said: {Content}";
+        public string FromHeading => FromName + 
+            (string.IsNullOrEmpty(innerMessage.TopicName) ? 
+            string.Empty : $" ({innerMessage.TopicName})");
+
+        public string CCFooter => innerMessage.RecipientNames.Length > 1 ?
+            $"CC: {string.Join(", ", innerMessage.RecipientNames)}" : string.Empty;
+
+        public string ReadoutText => string.IsNullOrEmpty(innerMessage.TopicName) ?
+            $"At {DateString}, {FromName} said: {Content}" : 
+            $"At {DateString}, {FromName} on topic {innerMessage.TopicName} said: {Content}";
 
         public MessageViewModel(MessagePageViewModel messagePageView, SubverseContact? fromContact, SubverseMessage innerMessage)
         {

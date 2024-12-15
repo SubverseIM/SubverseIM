@@ -8,6 +8,7 @@ namespace SubverseIM.Models
         public SubverseMessage() 
         {
             Recipients = [];
+            RecipientNames = [];
         }
 
         public ObjectId? Id { get; set; }
@@ -19,6 +20,8 @@ namespace SubverseIM.Models
         public SubversePeerId Sender { get; set; }
 
         public SubversePeerId[] Recipients { get; set; }
+
+        public string[] RecipientNames { get; set; }
 
         public DateTime DateSignedOn { get; set; }
 
