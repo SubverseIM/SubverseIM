@@ -16,7 +16,14 @@
 			<TextBlock FontSize="16" HorizontalAlignment="Center" >Back to Contacts</TextBlock>
 		</Button>
 		<DockPanel DockPanel.Dock="Top" MaxHeight="150">
-			<Label DockPanel.Dock="Top">Participants</Label>
+			<DockPanel DockPanel.Dock="Top">
+				<Button DockPanel.Dock="Right"
+						VerticalAlignment="Stretch"
+						Command="{Binding AddCommandAsync}">
+					<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">Add</TextBlock>
+				</Button>
+				<Label>Participants</Label>
+			</DockPanel>
 			<ListBox x:Name="contacts" SelectionMode="Single,Toggle" ItemsSource="{Binding ContactsList}">
 				<ListBox.Styles>
 					<Style Selector="ListBoxItem">

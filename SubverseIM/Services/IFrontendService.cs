@@ -1,4 +1,5 @@
 ﻿using SubverseIM.Models;
+using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -12,7 +13,7 @@ namespace SubverseIM.Services
 
         void NavigateLaunchedUri();
 
-        void NavigateContactView();
+        void NavigateContactView(MessagePageViewModel? parentOrNull = null);
 
         void NavigateContactView(SubverseContact contact);
 

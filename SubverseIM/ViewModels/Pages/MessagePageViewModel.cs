@@ -47,15 +47,21 @@ namespace SubverseIM.ViewModels.Pages
         public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
             ContactsList = [..contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
+            ContactsList.CollectionChanged += ContactsListChanged;
+
             MessageList = new();
             TopicsList = new();
-
-            ContactsList.CollectionChanged += ContactsList_CollectionChanged;
         }
 
-        private async void ContactsList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        private async void ContactsListChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             await InitializeAsync();
+        }
+
+        public async Task AddCommandAsync()
+        {
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigateContactView(this);
         }
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default) 

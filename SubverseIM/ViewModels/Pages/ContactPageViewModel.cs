@@ -17,7 +17,6 @@ namespace SubverseIM.ViewModels.Pages
 
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
-
         private bool isNotDialog;
         public bool IsNotDialog 
         {
@@ -28,13 +27,24 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        private bool isDialog;
+        public bool IsDialog 
+        {
+            get => isDialog;
+            private set     
+            {
+                IsNotDialog = !value;
+                this.RaiseAndSetIfChanged(ref isDialog, value);
+            }
+        }
+
         private MessagePageViewModel? parent;
         public MessagePageViewModel? Parent 
         {
             get => parent;
             set 
             {
-                IsNotDialog = value is null;
+                IsDialog = value is not null;
                 this.RaiseAndSetIfChanged(ref parent, value);
             }
         }
@@ -85,7 +95,8 @@ namespace SubverseIM.ViewModels.Pages
         public async Task AddParticipantsAsync()
         {
             Debug.Assert(Parent is not null);
-            foreach (ContactViewModel vm in ContactsList.Where(x => x.IsSelected)) 
+            foreach (ContactViewModel vm in ContactsList.Where(x => !Parent.ContactsList
+                .Any(y => x.innerContact.OtherPeer == y.innerContact.OtherPeer))) 
             {
                 Parent.ContactsList.Add(vm);
             }

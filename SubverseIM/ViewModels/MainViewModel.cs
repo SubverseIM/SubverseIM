@@ -191,8 +191,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
         }
     }
 
-    public void NavigateContactView()
+    public void NavigateContactView(MessagePageViewModel? parentOrNull)
     {
+        contactPage.Parent = parentOrNull;
         CurrentPage = contactPage;
     }
 

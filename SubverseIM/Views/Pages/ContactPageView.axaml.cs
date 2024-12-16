@@ -70,7 +70,10 @@ public partial class ContactPageView : UserControl
             dataContext = tapTimerState.DataContext as ContactPageViewModel;
         }
 
-        if (!isLongPress && !isDoubleTap && dataContext is not null)
+        if (!isLongPress && 
+            !isDoubleTap && 
+            dataContext is not null && 
+            dataContext.Parent is null)
         {
             await Dispatcher.UIThread.InvokeAsync(dataContext.MessageCommandAsync);
         }
@@ -145,7 +148,7 @@ public partial class ContactPageView : UserControl
             .Cast<ContactViewModel>())
         {
             item.ShouldShowOptions = isDoubleTap;
-            item.IsSelected = !isLongPress;
+            item.IsSelected = !isLongPress && ((ContactPageViewModel)DataContext!).Parent is null;
         }
     }
 
