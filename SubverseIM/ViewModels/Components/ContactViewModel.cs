@@ -1,19 +1,18 @@
-﻿using Avalonia.Media;
+﻿using Avalonia;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
-using System.Collections.Generic;
+using SubverseIM.ViewModels.Pages;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia;
-using SubverseIM.Services.Implementation;
-using Avalonia.Platform.Storage;
-using System.Linq;
-using SubverseIM.ViewModels.Pages;
 
 namespace SubverseIM.ViewModels.Components
 {
@@ -46,7 +45,7 @@ namespace SubverseIM.ViewModels.Components
 
         internal readonly IServiceManager serviceManager;
 
-        internal readonly ContactPageViewModel? contactPageView;
+        internal readonly IContactContainer? contactContainer;
 
         internal readonly SubverseContact innerContact;
 
@@ -111,10 +110,10 @@ namespace SubverseIM.ViewModels.Components
 
         public Geometry HexagonPath => hexagonPath;
 
-        public ContactViewModel(IServiceManager serviceManager, ContactPageViewModel? contactPageView, SubverseContact innerContact)
+        public ContactViewModel(IServiceManager serviceManager, IContactContainer? contactContainer, SubverseContact innerContact)
         {
             this.serviceManager = serviceManager;
-            this.contactPageView = contactPageView;
+            this.contactContainer = contactContainer;
             this.innerContact = innerContact;
         }
 
@@ -175,14 +174,20 @@ namespace SubverseIM.ViewModels.Components
             frontendService.NavigateContactView(innerContact);
         }
 
-        public async Task DeleteCommandAsync() 
+        public async Task DeleteCommandAsync(bool deleteFromDb) 
         {
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
-            if (await launcherService.ShowConfirmationDialogAsync("Delete this Contact?", "Are you sure you want to delete this contact?"))
+            if (await launcherService.ShowConfirmationDialogAsync("Remove this Contact?", deleteFromDb ?
+                "Are you sure you want to remove this contact?" :
+                "Are you sure you want to remove this recipient from the conversation?"))
             {
-                IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-                dbService.DeleteItemById<SubverseContact>(innerContact.Id);
-                contactPageView?.ContactsList.Remove(this);
+                if (deleteFromDb)
+                {
+                    IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+                    dbService.DeleteItemById<SubverseContact>(innerContact.Id);
+                }
+
+                contactContainer?.ContactsList.Remove(this);
             }
         }
 

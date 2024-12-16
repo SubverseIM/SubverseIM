@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
-    public class ContactPageViewModel : PageViewModelBase
+    public class ContactPageViewModel : PageViewModelBase, IContactContainer
     {
         public override string Title => "Contacts View";
 

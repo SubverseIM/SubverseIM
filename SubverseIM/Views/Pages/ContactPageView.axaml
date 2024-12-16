@@ -38,6 +38,7 @@
 								VerticalAlignment="Stretch"
 								IsVisible="{Binding ShouldShowOptions}"
 								Command="{Binding DeleteCommandAsync}"
+								CommandParameter="True"
 								Background="DarkRed">
 							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">
 								Delete

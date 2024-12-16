@@ -4,6 +4,7 @@ using LiteDB;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
@@ -129,7 +130,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                 bool isCurrentPeer = false;
                 if (contact is not null && currentPage is MessagePageViewModel vm &&
-                    (isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer) &&
+                    (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == contact.OtherPeer) &&
                     (message.TopicName == vm.SendMessageTopicName ||
                     string.IsNullOrEmpty(vm.SendMessageTopicName))))
                 {
@@ -139,7 +140,17 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         vm.TopicsList.Insert(0, message.TopicName);
                     }
 
-                    vm.MessageList.Insert(0, new(vm, contact, message));
+                    MessageViewModel messageViewModel = new(vm, contact, message);
+                    foreach (SubverseContact participant in messageViewModel.CcContacts
+                        .Where(x => !vm.ContactsList
+                            .Select(y => y.innerContact)
+                            .Any(y => x.OtherPeer == y.OtherPeer)
+                            )) 
+                    {
+                        vm.ContactsList.Add(new(serviceManager, null, participant));
+                    }
+
+                    vm.MessageList.Insert(0, messageViewModel);
                 }
 
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))

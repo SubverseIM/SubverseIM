@@ -18,6 +18,29 @@ public partial class MessagePageView : UserControl
 
         messageBox.GotFocus += TextBoxGotFocus;
         topicBox.GotFocus += TextBoxGotFocus;
+
+        contacts.SelectionChanged += Contacts_SelectionChanged;
+    }
+
+    private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (contacts.ItemCount == 1) return;
+
+        foreach (var contact in e.AddedItems
+            .Cast<ContactViewModel?>()
+            .Where(x => x is not null)
+            .Cast<ContactViewModel>()) 
+        {
+            contact.ShouldShowOptions = true;
+        }
+
+        foreach (var contact in e.RemovedItems
+            .Cast<ContactViewModel?>()
+            .Where(x => x is not null)
+            .Cast<ContactViewModel>())
+        {
+            contact.ShouldShowOptions = false;
+        }
     }
 
     private async void TextBoxGotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
