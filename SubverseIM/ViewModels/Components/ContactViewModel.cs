@@ -6,7 +6,6 @@ using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
-using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -165,13 +164,15 @@ namespace SubverseIM.ViewModels.Components
             dbService.InsertOrUpdateItem(innerContact);
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateContactView();
+            frontendService.NavigatePreviousView();
         }
 
         public async Task EditCommandAsync()
         {
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateContactView(innerContact);
+
+            ShouldShowOptions = false;
         }
 
         public async Task DeleteCommandAsync(bool deleteFromDb) 
@@ -188,13 +189,14 @@ namespace SubverseIM.ViewModels.Components
                 }
 
                 contactContainer?.ContactsList.Remove(this);
+                ShouldShowOptions = false;
             }
         }
 
         public async Task CancelCommandAsync() 
         {
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateContactView();
+            frontendService.NavigatePreviousView();
         }
     }
 }

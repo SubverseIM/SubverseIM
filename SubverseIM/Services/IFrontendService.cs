@@ -8,6 +8,8 @@ namespace SubverseIM.Services
 {
     public interface IFrontendService
     {
+        bool NavigatePreviousView();
+
         void NavigateLaunchedUri();
 
         void NavigateContactView();

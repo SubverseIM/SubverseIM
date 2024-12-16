@@ -19,7 +19,9 @@ namespace SubverseIM.Services
 
         SubverseMessage GetMessageByCallId(string callId);
 
-        bool InsertOrUpdateItem<T>(T item);
+        bool InsertOrUpdateItem(SubverseContact newItem);
+
+        bool InsertOrUpdateItem(SubverseMessage newItem);
 
         bool DeleteItemById<T>(BsonValue id);
 

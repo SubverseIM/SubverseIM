@@ -85,16 +85,26 @@ namespace SubverseIM.Services.Implementation
             return messages.FindOne(x => x.CallId == callId);
         }
 
-        public bool InsertOrUpdateItem<T>(T item)
+        public bool InsertOrUpdateItem(SubverseContact newItem)
         {
-            var contacts = db.GetCollection<T>();
-            return contacts.Upsert(item);
+            var contacts = db.GetCollection<SubverseContact>();
+
+            SubverseContact? storedItem = GetContact(newItem.OtherPeer);
+            newItem.Id = storedItem?.Id;
+
+            return contacts.Upsert(newItem);
+        }
+
+        public bool InsertOrUpdateItem(SubverseMessage newItem)
+        {
+            var messages = db.GetCollection<SubverseMessage>();
+            return messages.Upsert(newItem);
         }
 
         public bool DeleteItemById<T>(BsonValue id)
         {
-            var contacts = db.GetCollection<T>();
-            return contacts.Delete(id);
+            var collection = db.GetCollection<T>();
+            return collection.Delete(id);
         }
 
         public bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream)

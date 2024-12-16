@@ -22,6 +22,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     private readonly CreateContactPageViewModel createContactPage;
 
+    private Stack<PageViewModelBase> previousPages;
+
     private PageViewModelBase currentPage;
 
     private Task? mainTask;
@@ -29,7 +31,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
     public PageViewModelBase CurrentPage
     {
         get { return currentPage; }
-        private set { this.RaiseAndSetIfChanged(ref currentPage, value); }
+        private set 
+        {
+            previousPages.Push(currentPage);
+            this.RaiseAndSetIfChanged(ref currentPage, value); 
+        }
     }
 
     public MainViewModel(IServiceManager serviceManager)
@@ -40,6 +46,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         contactPage = new(serviceManager);
         createContactPage = new(serviceManager);
 
+        previousPages = new();
         currentPage = contactPage;
     }
 
@@ -169,6 +176,19 @@ public class MainViewModel : ViewModelBase, IFrontendService
     public void RegisterStorageProvider(IStorageProvider storageProvider)
     {
         serviceManager.GetOrRegister(storageProvider);
+    }
+
+    public bool NavigatePreviousView() 
+    {
+        if (previousPages.TryPop(out PageViewModelBase? previousPage))
+        {
+            CurrentPage = previousPage;
+            return true;
+        }
+        else 
+        {
+            return false;
+        }
     }
 
     public void NavigateContactView()
