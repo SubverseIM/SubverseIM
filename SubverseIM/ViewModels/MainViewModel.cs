@@ -154,7 +154,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                             .Any(y => x.OtherPeer == y.OtherPeer)
                             )) 
                     {
-                        vm.ContactsList.Add(new(serviceManager, null, participant));
+                        vm.ContactsList.Add(new(serviceManager, vm, participant));
                     }
 
                     vm.MessageList.Insert(0, messageViewModel);

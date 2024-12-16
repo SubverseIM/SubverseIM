@@ -41,8 +41,12 @@ namespace SubverseIM.ViewModels.Components
             $"CC: {string.Join(", ", innerMessage.RecipientNames)}" : string.Empty;
 
         public string ReadoutText => string.IsNullOrEmpty(innerMessage.TopicName) ?
-            $"At {DateString}, {FromName} said: {Content}" : 
-            $"At {DateString}, {FromName} on topic {innerMessage.TopicName} said: {Content}";
+            $"At {DateString}, {FromName} said: {Content}{(innerMessage.Recipients.Length > 1 ?
+                " to " + string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] : 
+                string.Empty)}" : 
+            $"At {DateString}, {FromName} on topic {innerMessage.TopicName} said: {Content}{(innerMessage.Recipients.Length > 1 ?
+                " to " + string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] : 
+                string.Empty)}";
 
         public SubverseContact[] CcContacts { get; }
 

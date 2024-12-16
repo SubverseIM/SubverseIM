@@ -95,10 +95,12 @@ namespace SubverseIM.ViewModels.Pages
         public async Task AddParticipantsAsync()
         {
             Debug.Assert(Parent is not null);
-            foreach (ContactViewModel vm in ContactsList.Where(x => !Parent.ContactsList
-                .Any(y => x.innerContact.OtherPeer == y.innerContact.OtherPeer))) 
+            foreach (SubverseContact contact in ContactsList
+                .Where(x => x.IsSelected && !Parent.ContactsList
+                    .Any(y => x.innerContact.OtherPeer == y.innerContact.OtherPeer))
+                .Select(x => x.innerContact)) 
             {
-                Parent.ContactsList.Add(vm);
+                Parent.ContactsList.Add(new(ServiceManager, Parent, contact));
             }
 
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();

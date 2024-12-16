@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System.Collections.Generic;
@@ -33,6 +34,8 @@ public partial class ContactPageView : UserControl
     private readonly PressTimerState pressTimerState;
 
     private readonly TapTimerState tapTimerState;
+
+    private ILauncherService? launcherService;
 
     public ContactPageView()
     {
@@ -70,7 +73,8 @@ public partial class ContactPageView : UserControl
             dataContext = tapTimerState.DataContext as ContactPageViewModel;
         }
 
-        if (!isLongPress && 
+        if (launcherService?.IsAccessibilityEnabled == false &&
+            !isLongPress && 
             !isDoubleTap && 
             dataContext is not null && 
             dataContext.Parent is null)
@@ -148,7 +152,9 @@ public partial class ContactPageView : UserControl
             .Cast<ContactViewModel>())
         {
             item.ShouldShowOptions = isDoubleTap;
-            item.IsSelected = !isLongPress && ((ContactPageViewModel)DataContext!).Parent is null;
+            item.IsSelected = !isLongPress && 
+                launcherService?.IsAccessibilityEnabled == false &&
+                ((ContactPageViewModel)DataContext!).Parent is null;
         }
     }
 
@@ -160,5 +166,8 @@ public partial class ContactPageView : UserControl
         tapTimerState.DataContext = DataContext;
 
         await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
+        ILauncherService launcherService = await ((ContactPageViewModel)DataContext!)
+            .ServiceManager.GetWithAwaitAsync<ILauncherService>();
+        this.launcherService = launcherService;
     }
 }
