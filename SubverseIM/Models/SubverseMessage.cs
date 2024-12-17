@@ -19,6 +19,8 @@ namespace SubverseIM.Models
 
         public SubversePeerId Sender { get; set; }
 
+        public string? SenderName { get; set; }
+
         public SubversePeerId[] Recipients { get; set; }
 
         public string[] RecipientNames { get; set; }

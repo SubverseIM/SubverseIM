@@ -112,8 +112,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 new SubverseContact()
                 {
                     OtherPeer = message.Sender,
-                    DisplayName = "Anonymous",
-                    UserNote = "Anonymous User via the Subverse Network"
+                    DisplayName = message.SenderName,
                 };
 
             contact.DateLastChattedWith = message.DateSignedOn;

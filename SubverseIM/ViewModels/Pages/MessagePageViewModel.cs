@@ -122,10 +122,10 @@ namespace SubverseIM.ViewModels.Pages
                 TopicName = SendMessageTopicName,
 
                 Sender = peerService.ThisPeer,
+                SenderName = "Anonymous",
 
-                Recipients = ContactsList.Select(x => x.innerContact.OtherPeer).ToArray(),
-
-                RecipientNames = ContactsList.Select(x => x.innerContact.DisplayName ?? "Anonymous").ToArray(),
+                Recipients = [..ContactsList.Select(x => x.innerContact.OtherPeer)],
+                RecipientNames = [..ContactsList.Select(x => x.innerContact.DisplayName ?? "Anonymous")],
 
                 Content = SendMessageText,
                 DateSignedOn = DateTime.UtcNow,
