@@ -146,6 +146,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         vm.TopicsList.Insert(0, message.TopicName);
                     }
 
+                    bool shouldAddMessage = true;
                     MessageViewModel messageViewModel = new(vm, contact, message);
                     foreach (SubverseContact participant in messageViewModel.CcContacts
                         .Where(x => !vm.ContactsList
@@ -156,9 +157,13 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         if(participant.OtherPeer == peerService.ThisPeer) continue;
 
                         vm.ContactsList.Add(new(serviceManager, vm, participant));
+                        shouldAddMessage = false;
                     }
 
-                    vm.MessageList.Insert(0, messageViewModel);
+                    if (shouldAddMessage)
+                    {
+                        vm.MessageList.Insert(0, messageViewModel);
+                    }
                 }
 
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
