@@ -54,6 +54,7 @@ namespace SubverseIM.Services.Implementation
                 .Where(x => otherPeer == x.Sender || x.Recipients.Contains(otherPeer))
                 .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
                 .ToEnumerable())
+                .DistinctBy(x => x.CallId)
                 .OrderByDescending(x => x.DateSignedOn);
         }
 
