@@ -165,7 +165,7 @@ namespace SubverseIM.Services.Implementation
                     throw new InvalidOperationException("Could not find private key file in application database!");
                 }
             }
-            else if (peer?.KeyContainer is not null)
+            else if (peer?.KeyContainer is not null && peer.KeyContainer.PublicKey is not null)
             {
                 peerKeys = peer.KeyContainer;
             }
@@ -235,8 +235,8 @@ namespace SubverseIM.Services.Implementation
 
         private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
         {
-            SubversePeerId fromPeer = SubversePeerId.FromString(sipRequest.Header.From.FromURI.User);
-            SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
+            SubversePeerId fromPeer = SubversePeerId.FromString(sipRequest.Header.Contact[0].ContactURI.User);
+            SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
 
             if (toPeer != ThisPeer)
             {
@@ -277,10 +277,10 @@ namespace SubverseIM.Services.Implementation
                     CallId = sipRequest.Header.CallId,
                     Content = messageContent,
                     Sender = fromPeer,
-                    Recipients = sipRequest.Header.Contact
+                    Recipients = sipRequest.Header.Contact[1..]
                         .Select(x => SubversePeerId.FromString(x.ContactURI.User))
                         .ToArray(),
-                    RecipientNames = sipRequest.Header.Contact
+                    RecipientNames = sipRequest.Header.Contact[1..]
                         .Select(x => x.ContactName)
                         .ToArray(),
                     DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
@@ -331,7 +331,7 @@ namespace SubverseIM.Services.Implementation
 
         private async Task SendSIPRequestAsync(SIPRequest sipRequest, CancellationToken cancellationToken = default)
         {
-            SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
+            SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
             IPEndPoint? cachedEndPoint;
             lock (CachedPeers)
             {
@@ -485,18 +485,16 @@ namespace SubverseIM.Services.Implementation
             List<Task> sendTasks = new();
             foreach (SubversePeerId recipient in message.Recipients)
             {
-                SIPURI requestToUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
+                SIPURI requestUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
                 if (message.TopicName is not null)
                 {
-                    requestToUri.Parameters.Set("topic", message.TopicName);
+                    requestUri.Parameters.Set("topic", message.TopicName);
                 }
 
-                SIPURI requestFromUri = SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network");
-
                 SIPRequest sipRequest = SIPRequest.GetRequest(
-                    SIPMethodsEnum.MESSAGE, requestToUri,
-                    new SIPToHeader(string.Empty, requestToUri, string.Empty),
-                    new SIPFromHeader(string.Empty, requestFromUri, string.Empty)
+                    SIPMethodsEnum.MESSAGE, requestUri, 
+                    new(string.Empty, SIPURI.None, string.Empty), 
+                    new(string.Empty, SIPURI.None, string.Empty)
                     );
 
                 if (message.CallId is not null)
@@ -506,11 +504,13 @@ namespace SubverseIM.Services.Implementation
 
                 sipRequest.Header.SetDateHeader();
 
+                sipRequest.Header.Contact = new() { new("Sender", SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network")) };
                 for(int i = 0; i < message.Recipients.Length; i++)
                 {
-                    SubverseContact? contact = DbService.GetContact(message.Recipients[i]);
+                    if (message.Recipients[i] == recipient) continue;
+
                     SIPURI contactUri = SIPURI.ParseSIPURI($"sip:{message.Recipients[i]}@subverse.network");
-                    sipRequest.Header.Contact.Add(new(contact?.DisplayName ?? message.RecipientNames[i], contactUri));
+                    sipRequest.Header.Contact.Add(new(message.RecipientNames[i], contactUri));
                 }
 
                 using (PGP pgp = new(await GetPeerKeysAsync(recipient, cancellationToken)))
