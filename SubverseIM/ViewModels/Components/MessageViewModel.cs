@@ -2,6 +2,7 @@
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Components
@@ -36,18 +37,33 @@ namespace SubverseIM.ViewModels.Components
             (string.IsNullOrEmpty(innerMessage.TopicName) ? 
             string.Empty : $" ({innerMessage.TopicName})");
 
-        public string CCFooter => innerMessage.RecipientNames.Length > 1 ?
+        public string CcFooter => innerMessage.RecipientNames.Length > 1 ?
             $"CC: {string.Join(", ", innerMessage.RecipientNames)}" : string.Empty;
 
         public string ReadoutText => string.IsNullOrEmpty(innerMessage.TopicName) ?
-            $"At {DateString}, {FromName} said: {Content}" : 
-            $"At {DateString}, {FromName} on topic {innerMessage.TopicName} said: {Content}";
+            $"At {DateString}, {FromName} said: {Content}{(innerMessage.Recipients.Length > 1 ?
+                " to " + string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] : 
+                string.Empty)}" : 
+            $"At {DateString}, {FromName} on topic {innerMessage.TopicName} said: {Content}{(innerMessage.Recipients.Length > 1 ?
+                " to " + string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] : 
+                string.Empty)}";
+
+        public SubverseContact[] CcContacts { get; }
 
         public MessageViewModel(MessagePageViewModel messagePageView, SubverseContact? fromContact, SubverseMessage innerMessage)
         {
             this.messagePageView = messagePageView;
             this.fromContact = fromContact;
             this.innerMessage = innerMessage;
+
+            CcContacts = innerMessage.Recipients
+                .Zip(innerMessage.RecipientNames)
+                .Select(x => new SubverseContact() 
+                { 
+                    OtherPeer = x.First,
+                    DisplayName = x.Second,
+                })
+                .ToArray();
         }
 
         public async Task DeleteCommandAsync() 

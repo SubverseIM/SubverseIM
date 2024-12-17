@@ -4,7 +4,9 @@ using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -12,10 +14,8 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
-    public class MessagePageViewModel : PageViewModelBase
+    public class MessagePageViewModel : PageViewModelBase, IContactContainer
     {
-        internal readonly SubverseContact[] contacts;
-
         public override string Title => $"Conversation View";
         
         public ObservableCollection<ContactViewModel> ContactsList { get; }
@@ -44,13 +44,24 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public MessagePageViewModel(IServiceManager serviceManager, SubverseContact[] contacts) : base(serviceManager)
+        public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
-            this.contacts = contacts;
+            ContactsList = [..contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
+            ContactsList.CollectionChanged += ContactsListChanged;
 
-            ContactsList = new(contacts.Select(x => new ContactViewModel(serviceManager, null, x)));
             MessageList = new();
             TopicsList = new();
+        }
+
+        private async void ContactsListChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            await InitializeAsync();
+        }
+
+        public async Task AddCommandAsync()
+        {
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigateContactView(this);
         }
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default) 
@@ -59,7 +70,7 @@ namespace SubverseIM.ViewModels.Pages
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
 
             MessageList.Clear();
-            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(contacts.Select(x => x.OtherPeer).ToHashSet(), null).Take(250))
+            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(ContactsList.Select(x => x.innerContact.OtherPeer).ToHashSet(), null).Take(250))
             {
                 if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName)) 
                 {
@@ -68,8 +79,10 @@ namespace SubverseIM.ViewModels.Pages
 
                 if (string.IsNullOrEmpty(SendMessageTopicName) || message.TopicName == SendMessageTopicName)
                 {
-                    MessageList.Add(new(this, peerService.ThisPeer == message.Sender ? null :
-                        contacts.Single(x => x.OtherPeer == message.Sender), message));
+                    MessageList.Add(new(this, peerService.ThisPeer == message.Sender ? null : 
+                        dbService.GetContact(message.Sender) ?? new() 
+                        { DisplayName = message.SenderName, OtherPeer = message.Sender }, 
+                        message));
                 }
             }
         }
@@ -110,10 +123,10 @@ namespace SubverseIM.ViewModels.Pages
                 TopicName = SendMessageTopicName,
 
                 Sender = peerService.ThisPeer,
+                SenderName = "Anonymous",
 
-                Recipients = contacts.Select(x => x.OtherPeer).ToArray(),
-
-                RecipientNames = contacts.Select(x => x.DisplayName ?? "Anonymous").ToArray(),
+                Recipients = [..ContactsList.Select(x => x.innerContact.OtherPeer)],
+                RecipientNames = [..ContactsList.Select(x => x.innerContact.DisplayName ?? "Anonymous")],
 
                 Content = SendMessageText,
                 DateSignedOn = DateTime.UtcNow,
@@ -122,7 +135,7 @@ namespace SubverseIM.ViewModels.Pages
             MessageList.Insert(0, new(this, null, message));
             dbService.InsertOrUpdateItem(message);
 
-            foreach (SubverseContact contact in contacts) 
+            foreach (SubverseContact contact in ContactsList.Select(x => x.innerContact)) 
             {
                 contact.DateLastChattedWith = message.DateSignedOn;
                 dbService.InsertOrUpdateItem(contact);

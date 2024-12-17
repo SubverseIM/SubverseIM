@@ -1,24 +1,58 @@
-﻿using SubverseIM.Models;
+﻿using ReactiveUI;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
-    public class ContactPageViewModel : PageViewModelBase
+    public class ContactPageViewModel : PageViewModelBase, IContactContainer
     {
         public override string Title => "Contacts View";
 
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
+        private bool isNotDialog;
+        public bool IsNotDialog 
+        {
+            get => isNotDialog;
+            private set     
+            {
+                this.RaiseAndSetIfChanged(ref isNotDialog, value);
+            }
+        }
+
+        private bool isDialog;
+        public bool IsDialog 
+        {
+            get => isDialog;
+            private set     
+            {
+                IsNotDialog = !value;
+                this.RaiseAndSetIfChanged(ref isDialog, value);
+            }
+        }
+
+        private MessagePageViewModel? parent;
+        public MessagePageViewModel? Parent 
+        {
+            get => parent;
+            set 
+            {
+                IsDialog = value is not null;
+                this.RaiseAndSetIfChanged(ref parent, value);
+            }
+        }
+
         public ContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)
         {
             ContactsList = new();
+            Parent = null;
         }
 
         public async Task LoadContactsAsync(CancellationToken cancellationToken = default) 
@@ -56,6 +90,21 @@ namespace SubverseIM.ViewModels.Pages
                 ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
                 await launcherService.ShowAlertDialogAsync("Note", "You must select at least one contact to start a conversation.");
             }
+        }
+
+        public async Task AddParticipantsAsync()
+        {
+            Debug.Assert(Parent is not null);
+            foreach (SubverseContact contact in ContactsList
+                .Where(x => x.IsSelected && !Parent.ContactsList
+                    .Any(y => x.innerContact.OtherPeer == y.innerContact.OtherPeer))
+                .Select(x => x.innerContact)) 
+            {
+                Parent.ContactsList.Add(new(ServiceManager, Parent, contact));
+            }
+
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+            Debug.Assert(frontendService.NavigatePreviousView());
         }
     }
 }

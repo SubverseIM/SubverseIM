@@ -4,6 +4,7 @@ using LiteDB;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     private readonly CreateContactPageViewModel createContactPage;
 
+    private Stack<PageViewModelBase> previousPages;
+
     private PageViewModelBase currentPage;
 
     private Task? mainTask;
@@ -28,7 +31,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
     public PageViewModelBase CurrentPage
     {
         get { return currentPage; }
-        private set { this.RaiseAndSetIfChanged(ref currentPage, value); }
+        private set 
+        {
+            previousPages.Push(currentPage);
+            this.RaiseAndSetIfChanged(ref currentPage, value); 
+        }
     }
 
     public MainViewModel(IServiceManager serviceManager)
@@ -39,6 +46,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         contactPage = new(serviceManager);
         createContactPage = new(serviceManager);
 
+        previousPages = new();
         currentPage = contactPage;
     }
 
@@ -104,8 +112,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 new SubverseContact()
                 {
                     OtherPeer = message.Sender,
-                    DisplayName = "Anonymous",
-                    UserNote = "Anonymous User via the Subverse Network"
+                    DisplayName = message.SenderName,
                 };
 
             contact.DateLastChattedWith = message.DateSignedOn;
@@ -129,7 +136,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                 bool isCurrentPeer = false;
                 if (contact is not null && currentPage is MessagePageViewModel vm &&
-                    (isCurrentPeer = vm.contacts.Any(x => x.OtherPeer == contact.OtherPeer) &&
+                    (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == contact.OtherPeer) &&
                     (message.TopicName == vm.SendMessageTopicName ||
                     string.IsNullOrEmpty(vm.SendMessageTopicName))))
                 {
@@ -139,7 +146,19 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         vm.TopicsList.Insert(0, message.TopicName);
                     }
 
-                    vm.MessageList.Insert(0, new(vm, contact, message));
+                    MessageViewModel messageViewModel = new(vm, contact, message);
+                    foreach (SubverseContact participant in messageViewModel.CcContacts
+                        .Where(x => !vm.ContactsList
+                            .Select(y => y.innerContact)
+                            .Any(y => x.OtherPeer == y.OtherPeer)
+                            )) 
+                    {
+                        if(participant.OtherPeer == peerService.ThisPeer) continue;
+
+                        vm.ContactsList.Add(new(serviceManager, vm, participant));
+                    }
+
+                    vm.MessageList.Insert(0, messageViewModel);
                 }
 
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
@@ -160,8 +179,22 @@ public class MainViewModel : ViewModelBase, IFrontendService
         serviceManager.GetOrRegister(storageProvider);
     }
 
-    public void NavigateContactView()
+    public bool NavigatePreviousView() 
     {
+        if (previousPages.TryPop(out PageViewModelBase? previousPage))
+        {
+            CurrentPage = previousPage;
+            return true;
+        }
+        else 
+        {
+            return false;
+        }
+    }
+
+    public void NavigateContactView(MessagePageViewModel? parentOrNull)
+    {
+        contactPage.Parent = parentOrNull;
         CurrentPage = contactPage;
     }
 
@@ -181,9 +214,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         Uri? launchedUri = launcherService.GetLaunchedUri();
 
-        if (launchedUri is not null)
+        if (launchedUri is not null && await createContactPage.InitializeAsync(launchedUri))
         {
-            await createContactPage.InitializeAsync(launchedUri);
             CurrentPage = createContactPage;
         }
     }

@@ -2,10 +2,13 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
+using Android.Health.Connect.DataTypes;
 using Android.OS;
+using Android.Runtime;
 using Android.Text;
 using Android.Views.Accessibility;
 using Android.Widget;
+using AndroidX.Activity;
 using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
@@ -39,11 +42,31 @@ namespace SubverseIM.Android;
     DataScheme = "sv")]
 public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 {
+    private const int REQUEST_NOTIFICATION_PERMISSION = 1000;
+
+    private class ActivityBackPressedCallback : OnBackPressedCallback
+    {
+        private readonly IServiceManager serviceManager;
+
+        public ActivityBackPressedCallback(IServiceManager serviceManager) : base(true)
+        {
+            this.serviceManager = serviceManager;
+        }
+
+        public override async void HandleOnBackPressed()
+        {
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigatePreviousView();
+        }
+    }
+
     private readonly ServiceManager serviceManager;
 
     private readonly ServiceConnection<IPeerService> peerServiceConn;
 
     private readonly CancellationTokenSource cancellationTokenSource;
+
+    private readonly ActivityBackPressedCallback backPressedCallback;
 
     public bool NotificationsAllowed { get; private set; }
     public bool IsInForeground { get; private set; }
@@ -62,16 +85,20 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         serviceManager = new();
         peerServiceConn = new();
         cancellationTokenSource = new();
+
+        backPressedCallback = new(serviceManager);
     }
 
     protected override async void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
 
+        OnBackPressedDispatcher.AddCallback(backPressedCallback);
+
         if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
             CheckSelfPermission(Manifest.Permission.PostNotifications) == Permission.Denied)
         {
-            RequestPermissions([Manifest.Permission.PostNotifications], 1001);
+            RequestPermissions([Manifest.Permission.PostNotifications], REQUEST_NOTIFICATION_PERMISSION);
         }
         else
         {
@@ -133,7 +160,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     {
         switch (requestCode)
         {
-            case 1001:
+            case REQUEST_NOTIFICATION_PERMISSION:
                 NotificationsAllowed = grantResults.All(x => x == Permission.Granted);
                 break;
         }

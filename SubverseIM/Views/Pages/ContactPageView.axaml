@@ -11,11 +11,14 @@
 	</Design.DataContext>
 
 	<DockPanel>
-		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}">
+		<Button IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}">
 			<TextBlock FontSize="16" HorizontalAlignment="Center">Invite Friend</TextBlock>
 		</Button>
-		<Button HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding MessageCommandAsync}">
+		<Button IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding MessageCommandAsync}">
 			<TextBlock FontSize="16" HorizontalAlignment="Center">Start Conversation</TextBlock>
+		</Button>
+		<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsAsync}">
+			<TextBlock FontSize="16" HorizontalAlignment="Center">Add Selected Contacts</TextBlock>
 		</Button>
 		<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
 			<ListBox.Styles>
@@ -38,6 +41,7 @@
 								VerticalAlignment="Stretch"
 								IsVisible="{Binding ShouldShowOptions}"
 								Command="{Binding DeleteCommandAsync}"
+								CommandParameter="True"
 								Background="DarkRed">
 							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">
 								Delete

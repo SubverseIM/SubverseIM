@@ -21,15 +21,24 @@ namespace SubverseIM.ViewModels.Pages
         {
         }
 
-        public async Task InitializeAsync(Uri contactUri, CancellationToken cancellationToken = default) 
+        public async Task<bool> InitializeAsync(Uri contactUri, CancellationToken cancellationToken = default)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
+            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
 
             SubversePeerId otherPeer = SubversePeerId.FromString(contactUri.DnsSafeHost);
-            Contact = new(ServiceManager, null, dbService.GetContact(otherPeer) ?? 
-                new SubverseContact() { OtherPeer = otherPeer });
+            if (otherPeer == peerService.ThisPeer)
+            {
+                return false;
+            }
+            else
+            {
+                Contact = new(ServiceManager, null, dbService.GetContact(otherPeer) ??
+                    new SubverseContact() { OtherPeer = otherPeer });
 
-            await Contact.LoadPhotoAsync(cancellationToken);
+                await Contact.LoadPhotoAsync(cancellationToken);
+                return true;
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Implementation
 {
-    public class PeerService : IPeerService, IInjectable
+    public class PeerService : IPeerService, IInjectable, IDisposable
     {
         private const int MAGIC_PORT_NUM = 6_03_03;
 
@@ -61,6 +61,7 @@ namespace SubverseIM.Services.Implementation
         private IDbService DbService => dbServiceTcs.Task.Result;
 
         private readonly TaskCompletionSource<ILauncherService> launcherServiceTcs;
+
         private ILauncherService LauncherService => launcherServiceTcs.Task.Result;
 
         public IPEndPoint? LocalEndPoint { get; private set; }
@@ -165,7 +166,7 @@ namespace SubverseIM.Services.Implementation
                     throw new InvalidOperationException("Could not find private key file in application database!");
                 }
             }
-            else if (peer?.KeyContainer is not null)
+            else if (peer?.KeyContainer is not null && peer.KeyContainer.PublicKey is not null)
             {
                 peerKeys = peer.KeyContainer;
             }
@@ -236,7 +237,10 @@ namespace SubverseIM.Services.Implementation
         private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
         {
             SubversePeerId fromPeer = SubversePeerId.FromString(sipRequest.Header.From.FromURI.User);
+            string fromName = sipRequest.Header.From.FromName;
+
             SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
+            string toName = sipRequest.Header.To.ToName;
 
             if (toPeer != ThisPeer)
             {
@@ -277,12 +281,12 @@ namespace SubverseIM.Services.Implementation
                     CallId = sipRequest.Header.CallId,
                     Content = messageContent,
                     Sender = fromPeer,
-                    Recipients = sipRequest.Header.Contact
+                    SenderName = fromName,
+                    Recipients = [toPeer, ..sipRequest.Header.Contact
                         .Select(x => SubversePeerId.FromString(x.ContactURI.User))
-                        .ToArray(),
-                    RecipientNames = sipRequest.Header.Contact
-                        .Select(x => x.ContactName)
-                        .ToArray(),
+                        ],
+                    RecipientNames = [toName, ..sipRequest.Header.Contact
+                        .Select(x => x.ContactName)],
                     DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
                     TopicName = sipRequest.URI.Parameters.Get("topic"),
                     WasDelivered = true,
@@ -331,7 +335,7 @@ namespace SubverseIM.Services.Implementation
 
         private async Task SendSIPRequestAsync(SIPRequest sipRequest, CancellationToken cancellationToken = default)
         {
-            SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
+            SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
             IPEndPoint? cachedEndPoint;
             lock (CachedPeers)
             {
@@ -467,6 +471,7 @@ namespace SubverseIM.Services.Implementation
             }
 
             await dhtEngine.StopAsync();
+            await portForwarder.StopAsync(default);
             sipTransport.Shutdown();
         }
 
@@ -483,20 +488,21 @@ namespace SubverseIM.Services.Implementation
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
             List<Task> sendTasks = new();
-            foreach (SubversePeerId recipient in message.Recipients)
+            foreach ((SubversePeerId recipient, string contactName) in message.Recipients.Zip(message.RecipientNames))
             {
-                SIPURI requestToUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
+                SIPURI requestUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
                 if (message.TopicName is not null)
                 {
-                    requestToUri.Parameters.Set("topic", message.TopicName);
+                    requestUri.Parameters.Set("topic", message.TopicName);
                 }
 
-                SIPURI requestFromUri = SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network");
+                SIPURI toURI = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
+                SIPURI fromURI = SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network");
 
                 SIPRequest sipRequest = SIPRequest.GetRequest(
-                    SIPMethodsEnum.MESSAGE, requestToUri,
-                    new SIPToHeader(string.Empty, requestToUri, string.Empty),
-                    new SIPFromHeader(string.Empty, requestFromUri, string.Empty)
+                    SIPMethodsEnum.MESSAGE, requestUri, 
+                    new(contactName, toURI, null), 
+                    new(message.SenderName, fromURI, null)
                     );
 
                 if (message.CallId is not null)
@@ -506,11 +512,13 @@ namespace SubverseIM.Services.Implementation
 
                 sipRequest.Header.SetDateHeader();
 
+                sipRequest.Header.Contact = new();
                 for(int i = 0; i < message.Recipients.Length; i++)
                 {
-                    SubverseContact? contact = DbService.GetContact(message.Recipients[i]);
+                    if (message.Recipients[i] == recipient) continue;
+
                     SIPURI contactUri = SIPURI.ParseSIPURI($"sip:{message.Recipients[i]}@subverse.network");
-                    sipRequest.Header.Contact.Add(new(contact?.DisplayName ?? message.RecipientNames[i], contactUri));
+                    sipRequest.Header.Contact.Add(new(message.RecipientNames[i], contactUri));
                 }
 
                 using (PGP pgp = new(await GetPeerKeysAsync(recipient, cancellationToken)))
@@ -533,11 +541,11 @@ namespace SubverseIM.Services.Implementation
                 sendTasks.Add(Task.Run(async Task? () =>
                 {
                     bool flag;
+                    using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(300));
                     do
                     {
                         await SendSIPRequestAsync(sipRequest, cancellationToken);
-                        await Task.Delay(150);
-
+                        await timer.WaitForNextTickAsync(cancellationToken);
                         lock (callIdMap)
                         {
                             flag = callIdMap.ContainsKey(sipRequest.Header.CallId);
@@ -554,6 +562,32 @@ namespace SubverseIM.Services.Implementation
             string inviteId = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
             await LauncherService.ShareStringToAppAsync("Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
+        }
+
+        private bool disposedValue;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    dhtEngine.Dispose();
+                    http.Dispose();
+                    sipChannel.Dispose();
+                    sipTransport.Dispose();
+                    timer.Dispose();
+                }
+
+                CachedPeers.Clear();
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }
