@@ -79,9 +79,10 @@ namespace SubverseIM.ViewModels.Pages
 
                 if (string.IsNullOrEmpty(SendMessageTopicName) || message.TopicName == SendMessageTopicName)
                 {
-                    MessageList.Add(new(this, peerService.ThisPeer == message.Sender ? null :
-                        ContactsList.Single(x => x.innerContact.OtherPeer == message.Sender)
-                        .innerContact, message));
+                    MessageList.Add(new(this, peerService.ThisPeer == message.Sender ? null : 
+                        dbService.GetContact(message.Sender) ?? new() 
+                        { DisplayName = message.SenderName, OtherPeer = message.Sender }, 
+                        message));
                 }
             }
         }

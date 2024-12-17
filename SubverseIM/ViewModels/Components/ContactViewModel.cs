@@ -164,7 +164,10 @@ namespace SubverseIM.ViewModels.Components
             dbService.InsertOrUpdateItem(innerContact);
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigatePreviousView();
+            if(!frontendService.NavigatePreviousView())
+            {
+                frontendService.NavigateContactView();
+            }
         }
 
         public async Task EditCommandAsync()
@@ -196,7 +199,10 @@ namespace SubverseIM.ViewModels.Components
         public async Task CancelCommandAsync() 
         {
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigatePreviousView();
+            if(!frontendService.NavigatePreviousView())
+            {
+                frontendService.NavigateContactView();
+            }
         }
     }
 }

@@ -153,6 +153,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
                             .Any(y => x.OtherPeer == y.OtherPeer)
                             )) 
                     {
+                        if(participant.OtherPeer == peerService.ThisPeer) continue;
+
                         vm.ContactsList.Add(new(serviceManager, vm, participant));
                     }
 
@@ -212,9 +214,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         Uri? launchedUri = launcherService.GetLaunchedUri();
 
-        if (launchedUri is not null)
+        if (launchedUri is not null && await createContactPage.InitializeAsync(launchedUri))
         {
-            await createContactPage.InitializeAsync(launchedUri);
             CurrentPage = createContactPage;
         }
     }

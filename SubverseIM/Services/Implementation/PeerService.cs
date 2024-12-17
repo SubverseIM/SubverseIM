@@ -501,8 +501,8 @@ namespace SubverseIM.Services.Implementation
 
                 SIPRequest sipRequest = SIPRequest.GetRequest(
                     SIPMethodsEnum.MESSAGE, requestUri, 
-                    new(message.SenderName, toURI, null), 
-                    new(contactName, fromURI, null)
+                    new(contactName, toURI, null), 
+                    new(message.SenderName, fromURI, null)
                     );
 
                 if (message.CallId is not null)

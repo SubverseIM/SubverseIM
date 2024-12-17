@@ -51,10 +51,9 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.CallId, unique: true);
 
             return otherPeers.SelectMany(otherPeer => messages.Query()
-                .Where(x => otherPeers.Contains(x.Sender) || x.Recipients.Contains(otherPeer))
+                .Where(x => otherPeer == x.Sender || x.Recipients.Contains(otherPeer))
                 .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
                 .ToEnumerable())
-                .DistinctBy(x => x.CallId)
                 .OrderByDescending(x => x.DateSignedOn);
         }
 
