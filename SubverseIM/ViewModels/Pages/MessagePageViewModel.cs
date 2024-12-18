@@ -6,7 +6,6 @@ using SubverseIM.ViewModels.Components;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -71,14 +70,16 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task InitializeAsync(CancellationToken cancellationToken = default)
+        public async Task InitializeAsync(bool firstOpen, CancellationToken cancellationToken = default)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
 
             MessageList.Clear();
-            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(
-                ContactsList.Select(x => x.innerContact.OtherPeer).ToHashSet(), null).Take(250))
+            HashSet<SubversePeerId> participants = ContactsList
+                .Select(x => x.innerContact.OtherPeer).ToHashSet();
+            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(participants, null).Take(250))
             {
                 if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName))
                 {
@@ -86,22 +87,40 @@ namespace SubverseIM.ViewModels.Pages
                 }
 
 
-                SubverseContact? contact = dbService.GetContact(message.Sender) ?? 
+                SubverseContact sender = dbService.GetContact(message.Sender) ?? 
                     new() { OtherPeer = message.Sender, DisplayName = message.SenderName, };
 
                 bool isEmptyTopic = string.IsNullOrEmpty(SendMessageTopicName);
                 bool isCurrentTopic = message.TopicName == SendMessageTopicName;
-                bool isSentByMe = peerService.ThisPeer == message.Sender;
+                bool isSentByMe = peerService.ThisPeer == sender.OtherPeer;
 
-                if (!isSentByMe && !isEmptyTopic && isCurrentTopic)
+                if (!isEmptyTopic && isCurrentTopic)
                 {
-                    AddUniqueParticipant(contact);
+                    foreach ((SubversePeerId otherPeer, string contactName) in
+                        ((IEnumerable<SubversePeerId>)[message.Sender, .. message.Recipients])
+                        .Zip([message.SenderName ?? "Anonymous", .. message.RecipientNames]))
+                    {
+                        if (otherPeer == peerService.ThisPeer) continue;
+
+                        SubverseContact participant = dbService.GetContact(otherPeer) ??
+                            new() { OtherPeer = otherPeer, DisplayName = contactName, };
+                        AddUniqueParticipant(participant);
+                    }
                 }
 
                 if (isEmptyTopic || isCurrentTopic)
                 {
-                    MessageList.Add(new(this, isSentByMe ? null : contact, message));
+                    MessageList.Add(new(this, isSentByMe ? null : sender, message));
                 }
+            }
+
+            if (firstOpen)
+            {
+                try
+                {
+                    SendMessageTopicName = await launcherService.ShowSelectionDialogAsync("Select a topic:", TopicsList);
+                }
+                catch (NotImplementedException) { }
             }
         }
 
