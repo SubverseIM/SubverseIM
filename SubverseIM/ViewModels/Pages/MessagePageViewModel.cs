@@ -50,10 +50,27 @@ namespace SubverseIM.ViewModels.Pages
             TopicsList = new();
         }
 
-        public async Task AddCommandAsync()
+        public async Task AddParticipantsCommandAsync()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateContactView(this);
+        }
+
+        public async Task AddTopicCommandAsync() 
+        {
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
+
+            string filteredText = await launcherService.ShowInputDialogAsync("New topic") ?? string.Empty;
+            filteredText = Regex.Replace(filteredText, @"\s+", "-");
+            filteredText = Regex.Replace(filteredText, @"[^\w\-]", string.Empty);
+            filteredText = Regex.Match(filteredText, @"\#?(\w[\w\-]*\w)").Value;
+            filteredText = filteredText.Length > 0 ? $"#{filteredText.ToLowerInvariant()}" : string.Empty;
+
+            if (!string.IsNullOrEmpty(filteredText) && !TopicsList.Contains(filteredText))
+            {
+                TopicsList.Insert(0, filteredText);
+                SendMessageTopicName = filteredText;
+            }
         }
 
         public bool AddUniqueParticipant(SubverseContact newContact)
@@ -70,7 +87,7 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task InitializeAsync(bool firstOpen, CancellationToken cancellationToken = default)
+        public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
@@ -83,7 +100,9 @@ namespace SubverseIM.ViewModels.Pages
             {
                 if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName))
                 {
+                    string? currentTopicName = SendMessageTopicName;
                     TopicsList.Insert(0, message.TopicName);
+                    SendMessageTopicName = currentTopicName;
                 }
 
 
@@ -112,15 +131,6 @@ namespace SubverseIM.ViewModels.Pages
                 {
                     MessageList.Add(new(this, isSentByMe ? null : sender, message));
                 }
-            }
-
-            if (firstOpen)
-            {
-                try
-                {
-                    SendMessageTopicName = await launcherService.ShowSelectionDialogAsync("Select a topic:", TopicsList);
-                }
-                catch (NotImplementedException) { }
             }
         }
 

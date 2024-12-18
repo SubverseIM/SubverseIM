@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Threading;
-using System.Collections.Generic;
 
 namespace SubverseIM.Services
 {
@@ -20,8 +18,6 @@ namespace SubverseIM.Services
         Task ShowAlertDialogAsync(string title, string message);
 
         Task<string?> ShowInputDialogAsync(string prompt, string? defaultText = null);
-
-        Task<string?> ShowSelectionDialogAsync(string prompt, IEnumerable<string> options);
 
         Task ShareStringToAppAsync(string title, string content);
     }

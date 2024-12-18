@@ -207,14 +207,26 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         await tcs.Task;
     }
 
-    public Task<string?> ShowInputDialogAsync(string prompt, string? defaultText = null)
+    public async Task<string?> ShowInputDialogAsync(string prompt, string? defaultText = null)
     {
-        throw new NotImplementedException();
-    }
+        TaskCompletionSource<string?> tcs = new();
 
-    public Task<string?> ShowSelectionDialogAsync(string prompt, IEnumerable<string> options)
-    {
-        throw new NotImplementedException();
+        UIAlertController alertController = UIAlertController
+            .Create(prompt, null, UIAlertControllerStyle.Alert);
+
+        UITextField? inputView = null;
+        alertController.AddTextField(x => inputView = x);
+
+        UIAlertAction defaultAction = UIAlertAction
+            .Create("Submit", UIAlertActionStyle.Default, x => tcs.SetResult(inputView?.Text));
+        alertController.AddAction(defaultAction);
+
+        await (Window?.RootViewController
+            ?.PresentViewControllerAsync(
+                viewControllerToPresent: alertController,
+                animated: true) ?? Task.CompletedTask);
+
+        return await tcs.Task;
     }
 
     public Task ShareStringToAppAsync(string title, string content)

@@ -14,12 +14,10 @@ public partial class MessagePageView : UserControl
     {
         InitializeComponent();
         messages.SelectionChanged += Messages_SelectionChanged;
-        topicBox.TextChanged += TopicBox_TextChanged;
+        topicBox.SelectionChanged += TopicBox_SelectionChanged;
+        contacts.SelectionChanged += Contacts_SelectionChanged;
 
         messageBox.GotFocus += TextBoxGotFocus;
-        topicBox.GotFocus += TextBoxGotFocus;
-
-        contacts.SelectionChanged += Contacts_SelectionChanged;
     }
 
     private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -59,23 +57,11 @@ public partial class MessagePageView : UserControl
 
             textBox.IsEnabled = true;
         }
-        else if (launcherService.IsAccessibilityEnabled && sender is AutoCompleteBox autoCompleteBox)
-        {
-            autoCompleteBox.IsEnabled = false;
-
-            string? messageText = await launcherService.ShowInputDialogAsync(
-                autoCompleteBox.Watermark ?? "Enter Input Text", autoCompleteBox.Text
-                );
-            autoCompleteBox.Text = messageText;
-
-            autoCompleteBox.IsEnabled = true;
-            TopicBox_TextChanged(null, new TextChangedEventArgs(null));
-        }
     }
 
-    private async void TopicBox_TextChanged(object? sender, TextChangedEventArgs e)
+    private async void TopicBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        await ((DataContext as MessagePageViewModel)?.InitializeAsync(firstOpen : false) ?? Task.CompletedTask);
+        await ((DataContext as MessagePageViewModel)?.InitializeAsync() ?? Task.CompletedTask);
     }
 
     private void Messages_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -94,6 +80,6 @@ public partial class MessagePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        await ((DataContext as MessagePageViewModel)?.InitializeAsync(firstOpen: true) ?? Task.CompletedTask);
+        await ((DataContext as MessagePageViewModel)?.InitializeAsync() ?? Task.CompletedTask);
     }
 }
