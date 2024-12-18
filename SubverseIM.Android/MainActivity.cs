@@ -9,18 +9,23 @@ using Android.Text;
 using Android.Views.Accessibility;
 using Android.Widget;
 using AndroidX.Activity;
+using AndroidX.AppCompat.View.Menu;
 using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
+using Java.Lang;
 using SubverseIM.Android.Services;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using R = Android.Resource;
 
 namespace SubverseIM.Android;
 
@@ -231,6 +236,32 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             ?.SetTitle(prompt)
             ?.SetView(frameLayout)
             ?.SetPositiveButton("Submit", (s, ev) => tcs.SetResult(editText.Text))
+            ?.SetNegativeButton("Cancel", (s, ev) => tcs.SetResult(null))
+            ?.Show();
+
+        return tcs.Task;
+    }
+
+    public Task<string?> ShowSelectionDialogAsync(string prompt, IEnumerable<string> options)
+    {
+        TaskCompletionSource<string?> tcs = new();
+
+        FrameLayout frameLayout = new(this);
+        frameLayout.SetPadding(25, 25, 25, 25);
+
+        ArrayAdapter adapter = new ArrayAdapter<ICharSequence>(this, R.Layout.SimpleSpinnerItem,
+            CharSequence.ArrayFromStringArray(options.ToArray()));
+        adapter.SetDropDownViewResource(R.Layout.SimpleSpinnerDropDownItem);
+
+        Spinner spinner = new(this);
+        spinner.Adapter = adapter;
+
+        frameLayout.AddView(spinner);
+
+        AlertDialog? alertDialog = new AlertDialog.Builder(this)
+            ?.SetTitle(prompt)
+            ?.SetView(frameLayout)
+            ?.SetPositiveButton("Submit", (s, ev) => tcs.SetResult(spinner.SelectedItem?.ToString()))
             ?.SetNegativeButton("Cancel", (s, ev) => tcs.SetResult(null))
             ?.Show();
 

@@ -8,6 +8,7 @@ using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -207,6 +208,11 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     }
 
     public Task<string?> ShowInputDialogAsync(string prompt, string? defaultText = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string?> ShowSelectionDialogAsync(string prompt, IEnumerable<string> options)
     {
         throw new NotImplementedException();
     }

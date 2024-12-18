@@ -75,7 +75,7 @@ public partial class MessagePageView : UserControl
 
     private async void TopicBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
-        await ((DataContext as MessagePageViewModel)?.InitializeAsync() ?? Task.CompletedTask);
+        await ((DataContext as MessagePageViewModel)?.InitializeAsync(firstOpen : false) ?? Task.CompletedTask);
     }
 
     private void Messages_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -94,6 +94,6 @@ public partial class MessagePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        await ((DataContext as MessagePageViewModel)?.InitializeAsync() ?? Task.CompletedTask);
+        await ((DataContext as MessagePageViewModel)?.InitializeAsync(firstOpen: true) ?? Task.CompletedTask);
     }
 }
