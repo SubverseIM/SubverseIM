@@ -38,7 +38,7 @@ namespace SubverseIM.ViewModels.Components
             string.Empty : $" ({innerMessage.TopicName})");
 
         public string CcFooter => innerMessage.RecipientNames.Length > 1 ?
-            $"CC: {string.Join(", ", innerMessage.RecipientNames)}" : string.Empty;
+            $"Cc: {string.Join(", ", innerMessage.RecipientNames)}" : string.Empty;
 
         public string ReadoutText => string.IsNullOrEmpty(innerMessage.TopicName) ?
             $"At {DateString}, {FromName} said: {Content}{(innerMessage.Recipients.Length > 1 ?

@@ -96,15 +96,14 @@ namespace SubverseIM.ViewModels.Pages
         {
             Debug.Assert(Parent is not null);
             foreach (SubverseContact contact in ContactsList
-                .Where(x => x.IsSelected && !Parent.ContactsList
-                    .Any(y => x.innerContact.OtherPeer == y.innerContact.OtherPeer))
+                .Where(x => x.IsSelected)
                 .Select(x => x.innerContact)) 
             {
-                Parent.ContactsList.Add(new(ServiceManager, Parent, contact));
+                Parent.AddUniqueParticipant(contact);
             }
 
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            Debug.Assert(frontendService.NavigatePreviousView());
+            frontendService.NavigatePreviousView();
         }
     }
 }

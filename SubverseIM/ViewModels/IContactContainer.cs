@@ -1,4 +1,5 @@
-﻿using SubverseIM.ViewModels.Components;
+﻿using SubverseIM.Models;
+using SubverseIM.ViewModels.Components;
 using System.Collections.ObjectModel;
 
 namespace SubverseIM.ViewModels
