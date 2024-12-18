@@ -170,4 +170,11 @@ public partial class ContactPageView : UserControl
             .ServiceManager.GetWithAwaitAsync<ILauncherService>();
         this.launcherService = launcherService;
     }
+
+    protected override void OnUnloaded(RoutedEventArgs e)
+    {
+        base.OnUnloaded(e);
+
+        ((ContactPageViewModel)DataContext!).Parent = null;
+    }
 }

@@ -17,18 +17,18 @@ namespace SubverseIM.ViewModels.Pages
     public class MessagePageViewModel : PageViewModelBase, IContactContainer
     {
         public override string Title => $"Conversation View";
-        
+
         public ObservableCollection<ContactViewModel> ContactsList { get; }
-        
+
         public ObservableCollection<MessageViewModel> MessageList { get; }
 
         public ObservableCollection<string> TopicsList { get; }
 
         private string? sendMessageText;
-        public string? SendMessageText 
-        { 
+        public string? SendMessageText
+        {
             get => sendMessageText;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref sendMessageText, value?.Trim());
             }
@@ -46,16 +46,9 @@ namespace SubverseIM.ViewModels.Pages
 
         public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
-            ContactsList = [..contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
-            ContactsList.CollectionChanged += ContactsListChanged;
-
+            ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             MessageList = new();
             TopicsList = new();
-        }
-
-        private async void ContactsListChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            await InitializeAsync();
         }
 
         public async Task AddCommandAsync()
@@ -64,25 +57,50 @@ namespace SubverseIM.ViewModels.Pages
             frontendService.NavigateContactView(this);
         }
 
-        public async Task InitializeAsync(CancellationToken cancellationToken = default) 
+        public bool AddUniqueParticipant(SubverseContact newContact)
+        {
+            if (!ContactsList.Select(otherContact => otherContact.innerContact)
+                .Any(otherContact => newContact.OtherPeer == otherContact.OtherPeer))
+            {
+                ContactsList.Add(new(ServiceManager, this, newContact));
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
 
             MessageList.Clear();
-            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(ContactsList.Select(x => x.innerContact.OtherPeer).ToHashSet(), null).Take(250))
+            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(
+                ContactsList.Select(x => x.innerContact.OtherPeer).ToHashSet(), null).Take(250))
             {
-                if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName)) 
+                if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName))
                 {
                     TopicsList.Insert(0, message.TopicName);
                 }
 
-                if (string.IsNullOrEmpty(SendMessageTopicName) || message.TopicName == SendMessageTopicName)
+
+                SubverseContact? contact = dbService.GetContact(message.Sender) ?? 
+                    new() { OtherPeer = message.Sender, DisplayName = message.SenderName, };
+
+                bool isEmptyTopic = string.IsNullOrEmpty(SendMessageTopicName);
+                bool isCurrentTopic = message.TopicName == SendMessageTopicName;
+                bool isSentByMe = peerService.ThisPeer == message.Sender;
+
+                if (!isSentByMe && !isEmptyTopic && isCurrentTopic)
                 {
-                    MessageList.Add(new(this, peerService.ThisPeer == message.Sender ? null : 
-                        dbService.GetContact(message.Sender) ?? new() 
-                        { DisplayName = message.SenderName, OtherPeer = message.Sender }, 
-                        message));
+                    AddUniqueParticipant(contact);
+                }
+
+                if (isEmptyTopic || isCurrentTopic)
+                {
+                    MessageList.Add(new(this, isSentByMe ? null : contact, message));
                 }
             }
         }
@@ -93,7 +111,7 @@ namespace SubverseIM.ViewModels.Pages
             frontendService.NavigateContactView();
         }
 
-        public async Task SendCommandAsync() 
+        public async Task SendCommandAsync()
         {
             if (string.IsNullOrEmpty(SendMessageText)) return;
 
@@ -125,8 +143,8 @@ namespace SubverseIM.ViewModels.Pages
                 Sender = peerService.ThisPeer,
                 SenderName = "Anonymous",
 
-                Recipients = [..ContactsList.Select(x => x.innerContact.OtherPeer)],
-                RecipientNames = [..ContactsList.Select(x => x.innerContact.DisplayName ?? "Anonymous")],
+                Recipients = [.. ContactsList.Select(x => x.innerContact.OtherPeer)],
+                RecipientNames = [.. ContactsList.Select(x => x.innerContact.DisplayName ?? "Anonymous")],
 
                 Content = SendMessageText,
                 DateSignedOn = DateTime.UtcNow,
@@ -135,7 +153,7 @@ namespace SubverseIM.ViewModels.Pages
             MessageList.Insert(0, new(this, null, message));
             dbService.InsertOrUpdateItem(message);
 
-            foreach (SubverseContact contact in ContactsList.Select(x => x.innerContact)) 
+            foreach (SubverseContact contact in ContactsList.Select(x => x.innerContact))
             {
                 contact.DateLastChattedWith = message.DateSignedOn;
                 dbService.InsertOrUpdateItem(contact);

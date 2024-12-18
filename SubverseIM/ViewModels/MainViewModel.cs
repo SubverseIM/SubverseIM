@@ -1,5 +1,4 @@
-﻿using Avalonia.Controls;
-using Avalonia.Platform.Storage;
+﻿using Avalonia.Platform.Storage;
 using LiteDB;
 using ReactiveUI;
 using SubverseIM.Models;
@@ -31,10 +30,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
     public PageViewModelBase CurrentPage
     {
         get { return currentPage; }
-        private set 
+        private set
         {
             previousPages.Push(currentPage);
-            this.RaiseAndSetIfChanged(ref currentPage, value); 
+            this.RaiseAndSetIfChanged(ref currentPage, value);
         }
     }
 
@@ -46,7 +45,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         contactPage = new(serviceManager);
         createContactPage = new(serviceManager);
 
-        previousPages = new();
+        previousPages = new([contactPage]);
         currentPage = contactPage;
     }
 
@@ -80,15 +79,19 @@ public class MainViewModel : ViewModelBase, IFrontendService
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
         INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>(cancellationToken);
 
-        _ = peerService.BootstrapSelfAsync(cancellationToken);
-
-        _ = Task.Run(async Task? () =>
-        {
-            foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
+        List<Task> subTasks =
+        [
+            peerService.BootstrapSelfAsync(cancellationToken),
+            Task.Run(async Task? () =>
             {
-                await peerService.SendMessageAsync(message, cancellationToken);
-            }
-        });
+                foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
+                {
+                    if (cancellationToken.IsCancellationRequested) break;
+                    await peerService.SendMessageAsync(message, cancellationToken);
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+            }, cancellationToken),
+        ];
 
         lock (peerService.CachedPeers)
         {
@@ -146,24 +149,13 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         vm.TopicsList.Insert(0, message.TopicName);
                     }
 
-                    bool shouldAddMessage = true;
                     MessageViewModel messageViewModel = new(vm, contact, message);
-                    foreach (SubverseContact participant in messageViewModel.CcContacts
-                        .Where(x => !vm.ContactsList
-                            .Select(y => y.innerContact)
-                            .Any(y => x.OtherPeer == y.OtherPeer)
-                            )) 
+                    foreach (SubverseContact participant in messageViewModel.CcContacts)
                     {
-                        if(participant.OtherPeer == peerService.ThisPeer) continue;
-
-                        vm.ContactsList.Add(new(serviceManager, vm, participant));
-                        shouldAddMessage = false;
+                        if (participant.OtherPeer == peerService.ThisPeer) continue;
+                        vm.AddUniqueParticipant(participant);
                     }
-
-                    if (shouldAddMessage)
-                    {
-                        vm.MessageList.Insert(0, messageViewModel);
-                    }
+                    vm.MessageList.Insert(0, messageViewModel);
                 }
 
                 if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
@@ -177,6 +169,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
             }
             catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
         }
+
+        await Task.WhenAll(subTasks);
     }
 
     public void RegisterStorageProvider(IStorageProvider storageProvider)
@@ -184,14 +178,14 @@ public class MainViewModel : ViewModelBase, IFrontendService
         serviceManager.GetOrRegister(storageProvider);
     }
 
-    public bool NavigatePreviousView() 
+    public bool NavigatePreviousView()
     {
         if (previousPages.TryPop(out PageViewModelBase? previousPage))
         {
-            CurrentPage = previousPage;
+            this.RaiseAndSetIfChanged(ref currentPage, previousPage, nameof(CurrentPage));
             return true;
         }
-        else 
+        else
         {
             return false;
         }
@@ -205,13 +199,15 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public async void NavigateContactView(SubverseContact contact)
     {
-        await createContactPage.InitializeAsync(new Uri($"sv://{contact.OtherPeer}"));
-        CurrentPage = createContactPage;
+        if (await createContactPage.InitializeAsync(new Uri($"sv://{contact.OtherPeer}")))
+        {
+            CurrentPage = createContactPage;
+        }
     }
 
     public void NavigateMessageView(IEnumerable<SubverseContact> contacts)
     {
-        CurrentPage = new MessagePageViewModel(serviceManager, contacts.ToArray());
+        CurrentPage = new MessagePageViewModel(serviceManager, contacts);
     }
 
     public async void NavigateLaunchedUri()
