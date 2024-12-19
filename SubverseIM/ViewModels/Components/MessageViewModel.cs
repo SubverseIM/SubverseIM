@@ -2,13 +2,17 @@
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
+using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Components
 {
     public class MessageViewModel : ViewModelBase
     {
+        private static readonly Regex URL_REGEX = new(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)");
+
         private readonly MessagePageViewModel messagePageView;
 
         private readonly SubverseContact? fromContact;
@@ -25,7 +29,7 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public string Content => innerMessage.Content ?? string.Empty;
+        public string Content => URL_REGEX.Replace(innerMessage.Content ?? string.Empty, "[embed]");
 
         public string DateString => innerMessage
             .DateSignedOn.ToLocalTime()
@@ -50,6 +54,8 @@ namespace SubverseIM.ViewModels.Components
 
         public SubverseContact[] CcContacts { get; }
 
+        public EmbedViewModel[] Embeds { get; }
+
         public MessageViewModel(MessagePageViewModel messagePageView, SubverseContact? fromContact, SubverseMessage innerMessage)
         {
             this.messagePageView = messagePageView;
@@ -63,6 +69,12 @@ namespace SubverseIM.ViewModels.Components
                     OtherPeer = x.First,
                     DisplayName = x.Second,
                 })
+                .ToArray();
+
+            Embeds = URL_REGEX.Matches(
+                innerMessage.Content ?? string.Empty
+                ).Where(x => x.Success)
+                .Select(x => new EmbedViewModel(x.Value))
                 .ToArray();
         }
 
