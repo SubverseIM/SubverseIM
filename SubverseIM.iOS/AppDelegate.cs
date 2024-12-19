@@ -86,7 +86,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .WithInterFont()
             .UseReactiveUI();
     }
-    
+
     public Uri? GetLaunchedUri()
     {
         return launchedUri;
@@ -163,7 +163,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             await frontendService.RunOnceAsync(cts.Token);
         }
         catch (OperationCanceledException) { }
-        
+
         refreshTask.SetTaskCompleted(true);
     }
 
@@ -215,11 +215,19 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .Create(prompt, null, UIAlertControllerStyle.Alert);
 
         UITextField? inputView = null;
-        alertController.AddTextField(x => inputView = x);
+        alertController.AddTextField(x =>
+        {
+            x.Text = defaultText;
+            inputView = x;
+        });
 
-        UIAlertAction defaultAction = UIAlertAction
+        UIAlertAction positiveAction = UIAlertAction
             .Create("Submit", UIAlertActionStyle.Default, x => tcs.SetResult(inputView?.Text));
-        alertController.AddAction(defaultAction);
+        alertController.AddAction(positiveAction);
+
+        UIAlertAction negativeAction = UIAlertAction
+            .Create("Cancel", UIAlertActionStyle.Cancel, x => tcs.SetResult(null));
+        alertController.AddAction(negativeAction);
 
         await (Window?.RootViewController
             ?.PresentViewControllerAsync(
