@@ -1,6 +1,7 @@
 ﻿using Avalonia.Platform.Storage;
 using LiteDB;
 using ReactiveUI;
+using SIPSorcery.SIP;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
@@ -82,16 +83,12 @@ public class MainViewModel : ViewModelBase, IFrontendService
         List<Task> subTasks =
         [
             peerService.BootstrapSelfAsync(cancellationToken),
-            Task.Run(async Task? () =>
-            {
-                foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
-                {
-                    if (cancellationToken.IsCancellationRequested) break;
-                    await peerService.SendMessageAsync(message, cancellationToken);
-                }
-                cancellationToken.ThrowIfCancellationRequested();
-            }, cancellationToken),
         ];
+
+        foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
+        {
+            subTasks.Add(Task.Run(() => peerService.SendMessageAsync(message, cancellationToken)));
+        }
 
         lock (peerService.CachedPeers)
         {
@@ -103,6 +100,24 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     {
                         OtherPeer = contact.OtherPeer
                     });
+
+                SubverseMessage message = new SubverseMessage()
+                {
+                    CallId = CallProperties.CreateNewCallId(),
+
+                    TopicName = "#system",
+
+                    Sender = peerService.ThisPeer,
+                    SenderName = "Anonymous",
+
+                    Recipients = [contact.OtherPeer],
+                    RecipientNames = [contact.DisplayName ?? "Anonymous"],
+
+                    Content = "<joined SubverseIM>",
+                    DateSignedOn = DateTime.UtcNow,
+                };
+
+                subTasks.Add(Task.Run(() => peerService.SendMessageAsync(message, cancellationToken)));
             }
         }
 
@@ -119,7 +134,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 };
 
             contact.DateLastChattedWith = message.DateSignedOn;
-            dbService.InsertOrUpdateItem(contact);
+
+            if (message.TopicName != "#system")
+            {
+                dbService.InsertOrUpdateItem(contact);
+            }
 
             await contactPage.LoadContactsAsync(cancellationToken);
 
@@ -144,7 +163,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     string.IsNullOrEmpty(vm.SendMessageTopicName))))
                 {
                     if (!string.IsNullOrEmpty(message.TopicName) &&
-                        !vm.TopicsList.Contains(message.TopicName))
+                        !vm.TopicsList.Contains(message.TopicName) && 
+                        message.TopicName != "#system")
                     {
                         vm.TopicsList.Insert(0, message.TopicName);
                     }
