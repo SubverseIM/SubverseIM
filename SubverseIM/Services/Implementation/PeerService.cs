@@ -276,17 +276,26 @@ namespace SubverseIM.Services.Implementation
                     messagesBag.Add(tcs = new());
                 }
 
+                IEnumerable<SubversePeerId> recipients = [toPeer, ..sipRequest.Header.Contact
+                        .Select(x => SubversePeerId.FromString(x.ContactURI.User))];
+
+                IEnumerable<string?> localRecipientNames = recipients
+                    .Select(x => DbService.GetContact(x)?.DisplayName);
+
+                IEnumerable<string> remoteRecipientNames = 
+                    [toName, ..sipRequest.Header.Contact.Select(x => x.ContactName)];
+
                 tcs.SetResult(new SubverseMessage
                 {
                     CallId = sipRequest.Header.CallId,
                     Content = messageContent,
                     Sender = fromPeer,
                     SenderName = fromName,
-                    Recipients = [toPeer, ..sipRequest.Header.Contact
-                        .Select(x => SubversePeerId.FromString(x.ContactURI.User))
-                        ],
-                    RecipientNames = [toName, ..sipRequest.Header.Contact
-                        .Select(x => x.ContactName)],
+                    Recipients = recipients.ToArray(),
+                    RecipientNames = localRecipientNames
+                        .Zip(remoteRecipientNames)
+                        .Select(x => x.First ?? x.Second)
+                        .ToArray(),
                     DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
                     TopicName = sipRequest.URI.Parameters.Get("topic"),
                     WasDelivered = true,
