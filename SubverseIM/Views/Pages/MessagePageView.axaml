@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="using:SubverseIM.ViewModels.Pages"
+			 xmlns:vmx="using:SubverseIM.ViewModels.Components"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SubverseIM.Views.Pages.MessagePageView"
 			 x:DataType="vm:MessagePageViewModel">
@@ -112,6 +113,17 @@
 									   Text="{Binding FromHeading}"
 									   Margin="2"/>
 							<TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap" Text="{Binding CcFooter}" Margin="2" />
+							<ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Embeds}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<HyperlinkButton Padding="0" IsEnabled="True"
+												NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
+											<TextBlock TextWrapping="Wrap" 
+													   Text="{Binding HostName, DataType={x:Type vmx:EmbedViewModel}}" />
+										</HyperlinkButton>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
 							<TextBlock TextWrapping="Wrap" Text="{Binding Content}" Margin="2" />
 						</DockPanel>
 					</DockPanel>
