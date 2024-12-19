@@ -134,11 +134,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 };
 
             contact.DateLastChattedWith = message.DateSignedOn;
-
-            if (message.TopicName != "#system")
-            {
-                dbService.InsertOrUpdateItem(contact);
-            }
+            dbService.InsertOrUpdateItem(contact);
 
             await contactPage.LoadContactsAsync(cancellationToken);
 
@@ -154,7 +150,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
             try
             {
-                dbService.InsertOrUpdateItem(message);
+                if (message.TopicName != "#system")
+                {
+                    dbService.InsertOrUpdateItem(message);
+                }
 
                 bool isCurrentPeer = false;
                 if (contact is not null && currentPage is MessagePageViewModel vm &&
@@ -163,7 +162,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     string.IsNullOrEmpty(vm.SendMessageTopicName))))
                 {
                     if (!string.IsNullOrEmpty(message.TopicName) &&
-                        !vm.TopicsList.Contains(message.TopicName) && 
+                        !vm.TopicsList.Contains(message.TopicName) &&
                         message.TopicName != "#system")
                     {
                         vm.TopicsList.Insert(0, message.TopicName);
