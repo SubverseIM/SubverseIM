@@ -81,7 +81,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         get 
         {
             AccessibilityManager am = (AccessibilityManager)GetSystemService(AccessibilityService)!;
-            return am.IsEnabled;
+            return am.IsTouchExplorationEnabled;
         } 
     }
 
@@ -237,32 +237,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             ?.SetView(frameLayout)
             ?.SetPositiveButton("Submit", (s, ev) => tcs.SetResult(editText.Text))
             ?.SetNegativeButton("Cancel", (s, ev) => tcs.SetResult(null))
-            ?.Show();
-
-        return tcs.Task;
-    }
-
-    public Task<string?> ShowSelectionDialogAsync(string prompt, IEnumerable<string> options)
-    {
-        TaskCompletionSource<string?> tcs = new();
-
-        FrameLayout frameLayout = new(this);
-        frameLayout.SetPadding(25, 25, 25, 25);
-
-        ArrayAdapter adapter = new ArrayAdapter<ICharSequence>(this, R.Layout.SimpleSpinnerItem,
-            CharSequence.ArrayFromStringArray(options.ToArray()));
-        adapter.SetDropDownViewResource(R.Layout.SimpleSpinnerDropDownItem);
-
-        Spinner spinner = new(this);
-        spinner.Adapter = adapter;
-
-        frameLayout.AddView(spinner);
-
-        AlertDialog? alertDialog = new AlertDialog.Builder(this)
-            ?.SetTitle(prompt)
-            ?.SetView(frameLayout)
-            ?.SetPositiveButton("Submit", (s, ev) => tcs.SetResult(spinner.SelectedItem?.ToString()))
-            ?.SetNegativeButton("Cancel", (s, ev) => tcs.SetResult(null))
+            ?.SetCancelable(false)
             ?.Show();
 
         return tcs.Task;

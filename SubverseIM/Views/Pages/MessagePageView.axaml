@@ -19,7 +19,7 @@
 			<DockPanel DockPanel.Dock="Top">
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
-						Command="{Binding AddCommandAsync}">
+						Command="{Binding AddParticipantsCommandAsync}">
 					<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">Add</TextBlock>
 				</Button>
 				<Label>Participants</Label>
@@ -57,19 +57,27 @@
 				</ListBox.ItemTemplate>
 			</ListBox>
 		</DockPanel>
-		<AutoCompleteBox x:Name="topicBox" DockPanel.Dock="Top" 
-						 ItemsSource="{Binding TopicsList}" 
-						 Watermark="#topic-name"
-						 Text="{Binding SendMessageTopicName}" />
+		<DockPanel DockPanel.Dock="Top">
+			<Button DockPanel.Dock="Right"
+					VerticalAlignment="Stretch"
+					Command="{Binding AddTopicCommandAsync}">
+				<TextBlock FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center">+</TextBlock>
+			</Button>
+			<ComboBox x:Name="topicBox" DockPanel.Dock="Top"
+					  HorizontalAlignment="Stretch"
+					  VerticalAlignment="Stretch"
+					  ItemsSource="{Binding TopicsList}"
+					  SelectedItem="{Binding SendMessageTopicName}" />
+		</DockPanel>
 		<DockPanel DockPanel.Dock="Top">
 			<Button DockPanel.Dock="Right"
 					VerticalAlignment="Stretch"
 					Command="{Binding SendCommandAsync}">
 				<TextBlock FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center">Send</TextBlock>
 			</Button>
-			<TextBox x:Name="messageBox" HorizontalAlignment="Stretch" 
-					 VerticalAlignment="Stretch" 
-					 Watermark="Write a message..." 
+			<TextBox x:Name="messageBox" HorizontalAlignment="Stretch"
+					 VerticalAlignment="Stretch"
+					 Watermark="Write a message..."
 					 Text="{Binding SendMessageText}" />
 		</DockPanel>
 		<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
@@ -80,12 +88,12 @@
 			</ListBox.Styles>
 			<ListBox.ItemTemplate>
 				<DataTemplate>
-					<DockPanel 
+					<DockPanel
 						AutomationProperties.HelpText="{Binding ReadoutText}">
-						<TextBlock 
-							DockPanel.Dock="Left" 
-							VerticalAlignment="Top" 
-							Text="{Binding DateString}" 
+						<TextBlock
+							DockPanel.Dock="Left"
+							VerticalAlignment="Top"
+							Text="{Binding DateString}"
 							Margin="2" />
 						<Button Background="DarkRed"
 								DockPanel.Dock="Right"
@@ -93,15 +101,15 @@
 								Margin="2"
 								IsVisible="{Binding IsSelected}"
 								Command="{Binding DeleteCommandAsync}">
-							<TextBlock 
-								VerticalAlignment="Center" 
+							<TextBlock
+								VerticalAlignment="Center"
 								HorizontalAlignment="Center">
 								Delete
 							</TextBlock>
 						</Button>
 						<DockPanel>
-							<TextBlock TextWrapping="Wrap" DockPanel.Dock="Top" 
-									   Text="{Binding FromHeading}" 
+							<TextBlock TextWrapping="Wrap" DockPanel.Dock="Top"
+									   Text="{Binding FromHeading}"
 									   Margin="2"/>
 							<TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap" Text="{Binding CcFooter}" Margin="2" />
 							<TextBlock TextWrapping="Wrap" Text="{Binding Content}" Margin="2" />
