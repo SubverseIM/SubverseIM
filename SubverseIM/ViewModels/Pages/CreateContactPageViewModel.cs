@@ -1,6 +1,7 @@
 ﻿using Avalonia.Platform.Storage;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Components;
 using System;
 using System.Collections.Generic;
@@ -21,24 +22,13 @@ namespace SubverseIM.ViewModels.Pages
         {
         }
 
-        public async Task<bool> InitializeAsync(Uri contactUri, CancellationToken cancellationToken = default)
+        public async Task InitializeAsync(Uri contactUri, CancellationToken cancellationToken = default)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
-            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
-
             SubversePeerId otherPeer = SubversePeerId.FromString(contactUri.DnsSafeHost);
-            if (otherPeer == peerService.ThisPeer)
-            {
-                return false;
-            }
-            else
-            {
-                Contact = new(ServiceManager, null, dbService.GetContact(otherPeer) ??
-                    new SubverseContact() { OtherPeer = otherPeer });
-
-                await Contact.LoadPhotoAsync(cancellationToken);
-                return true;
-            }
+            Contact = new(ServiceManager, null, dbService.GetContact(otherPeer) ??
+                new SubverseContact() { OtherPeer = otherPeer });
+            await Contact.LoadPhotoAsync(cancellationToken);
         }
     }
 }

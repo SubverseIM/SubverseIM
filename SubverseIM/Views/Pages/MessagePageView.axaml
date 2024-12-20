@@ -68,7 +68,8 @@
 					  HorizontalAlignment="Stretch"
 					  VerticalAlignment="Stretch"
 					  ItemsSource="{Binding TopicsList}"
-					  SelectedItem="{Binding SendMessageTopicName}" />
+					  SelectedItem="{Binding SendMessageTopicName}"
+					  AutomationProperties.HelpText="Choose conversation topic." />
 		</DockPanel>
 		<DockPanel DockPanel.Dock="Top">
 			<Button DockPanel.Dock="Right"

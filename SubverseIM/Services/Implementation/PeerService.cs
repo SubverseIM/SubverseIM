@@ -68,8 +68,6 @@ namespace SubverseIM.Services.Implementation
 
         public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
-        public SubversePeerId ThisPeer => thisPeerTcs.Task.Result;
-
         public PeerService(INativeService nativeService)
         {
             this.nativeService = nativeService;
@@ -183,9 +181,10 @@ namespace SubverseIM.Services.Implementation
             try
             {
                 SubversePeer peer;
+                SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
                 lock (CachedPeers)
                 {
-                    peer = CachedPeers[ThisPeer];
+                    peer = CachedPeers[thisPeer];
                 }
 
                 ReadOnlyMemory<byte> nodesBytes = await dhtEngine.SaveNodesAsync();
@@ -206,7 +205,7 @@ namespace SubverseIM.Services.Implementation
                 using (ByteArrayContent requestContent = new(requestBytes)
                 { Headers = { ContentType = new("application/octet-stream") } })
                 {
-                    HttpResponseMessage response = await http.PostAsync($"nodes?p={ThisPeer}", requestContent, cancellationToken);
+                    HttpResponseMessage response = await http.PostAsync($"nodes?p={thisPeer}", requestContent, cancellationToken);
                     return await response.Content.ReadFromJsonAsync<bool>(cancellationToken);
                 }
             }
@@ -242,7 +241,7 @@ namespace SubverseIM.Services.Implementation
             SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
             string toName = sipRequest.Header.To.ToName;
 
-            if (toPeer != ThisPeer)
+            if (toPeer != await GetPeerIdAsync())
             {
                 await SendSIPRequestAsync(sipRequest);
                 SIPResponse sipResponse = SIPResponse.GetResponse(
@@ -395,18 +394,19 @@ namespace SubverseIM.Services.Implementation
             publicKeyStream.Dispose();
             privateKeyStream.Dispose();
 
-            thisPeerTcs.SetResult(new(myKeys.PublicKey.GetFingerprint()));
+            SubversePeerId thisPeer = new(myKeys.PublicKey.GetFingerprint());
+            thisPeerTcs.SetResult(thisPeer);
 
             lock (CachedPeers)
             {
-                CachedPeers.Add(ThisPeer, new SubversePeer
+                CachedPeers.Add(thisPeer, new SubversePeer
                 {
-                    OtherPeer = ThisPeer,
+                    OtherPeer = thisPeer,
                     KeyContainer = myKeys
                 });
             }
 
-            dbService.GetMessagesWithPeersOnTopic([ThisPeer], null);
+            dbService.GetMessagesWithPeersOnTopic([thisPeer], null);
         }
 
         public async Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
@@ -482,6 +482,11 @@ namespace SubverseIM.Services.Implementation
             await dhtEngine.StopAsync();
             await portForwarder.StopAsync(default);
             sipTransport.Shutdown();
+        }
+
+        public async Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default)
+        {
+            return await thisPeerTcs.Task.WaitAsync(cancellationToken);
         }
 
         public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
@@ -568,7 +573,8 @@ namespace SubverseIM.Services.Implementation
 
         public async Task SendInviteAsync(CancellationToken cancellationToken = default)
         {
-            string inviteId = await http.GetFromJsonAsync<string>($"invite?p={ThisPeer}") ??
+            SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
+            string inviteId = await http.GetFromJsonAsync<string>($"invite?p={thisPeer}") ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
             await LauncherService.ShareStringToAppAsync("Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
         }
