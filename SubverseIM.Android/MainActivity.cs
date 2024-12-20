@@ -34,8 +34,8 @@ namespace SubverseIM.Android;
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,
-    ScreenOrientation = ScreenOrientation.Portrait | ScreenOrientation.Landscape,
-    ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.UiMode,
+    ScreenOrientation = ScreenOrientation.FullSensor,
+    ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.Orientation,
     LaunchMode = LaunchMode.SingleInstance)]
 [IntentFilter(
     [Intent.ActionView],

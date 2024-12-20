@@ -80,6 +80,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
         INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>(cancellationToken);
 
+        SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
+        SubverseContact? thisContact = dbService.GetContact(thisPeer);
+
         List<Task> subTasks =
         [
             peerService.BootstrapSelfAsync(cancellationToken),
@@ -107,8 +110,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                     TopicName = "#system",
 
-                    Sender = peerService.ThisPeer,
-                    SenderName = "Anonymous",
+                    Sender = thisPeer,
+                    SenderName = thisContact?.DisplayName ?? "Anonymous",
 
                     Recipients = [contact.OtherPeer],
                     RecipientNames = [contact.DisplayName ?? "Anonymous"],
@@ -171,13 +174,13 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     MessageViewModel messageViewModel = new(vm, contact, message);
                     foreach (SubverseContact participant in messageViewModel.CcContacts)
                     {
-                        if (participant.OtherPeer == peerService.ThisPeer) continue;
+                        if (participant.OtherPeer == thisPeer) continue;
                         vm.AddUniqueParticipant(participant);
                     }
                     vm.MessageList.Insert(0, messageViewModel);
                 }
 
-                if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || !isCurrentPeer))
+                if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || launcherService.IsAccessibilityEnabled || !isCurrentPeer))
                 {
                     await nativeService.SendPushNotificationAsync(serviceManager, message);
                 }
@@ -218,10 +221,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public async void NavigateContactView(SubverseContact contact)
     {
-        if (await createContactPage.InitializeAsync(new Uri($"sv://{contact.OtherPeer}")))
-        {
-            CurrentPage = createContactPage;
-        }
+        await createContactPage.InitializeAsync(new Uri($"sv://{contact.OtherPeer}"));
+        CurrentPage = createContactPage;
     }
 
     public void NavigateMessageView(IEnumerable<SubverseContact> contacts)
@@ -234,8 +235,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         Uri? launchedUri = launcherService.GetLaunchedUri();
 
-        if (launchedUri is not null && await createContactPage.InitializeAsync(launchedUri))
+        if (launchedUri is not null)
         {
+            await createContactPage.InitializeAsync(launchedUri);
             CurrentPage = createContactPage;
         }
     }

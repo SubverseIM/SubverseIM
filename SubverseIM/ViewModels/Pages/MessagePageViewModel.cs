@@ -90,8 +90,10 @@ namespace SubverseIM.ViewModels.Pages
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
-            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
+
+            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
+            SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
 
             MessageList.Clear();
             HashSet<SubversePeerId> participants = ContactsList
@@ -111,7 +113,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 bool isEmptyTopic = string.IsNullOrEmpty(SendMessageTopicName);
                 bool isCurrentTopic = message.TopicName == SendMessageTopicName;
-                bool isSentByMe = peerService.ThisPeer == sender.OtherPeer;
+                bool isSentByMe = thisPeer == sender.OtherPeer;
 
                 if (!isEmptyTopic && isCurrentTopic)
                 {
@@ -119,7 +121,7 @@ namespace SubverseIM.ViewModels.Pages
                         ((IEnumerable<SubversePeerId>)[message.Sender, .. message.Recipients])
                         .Zip([message.SenderName ?? "Anonymous", .. message.RecipientNames]))
                     {
-                        if (otherPeer == peerService.ThisPeer) continue;
+                        if (otherPeer == thisPeer) continue;
 
                         SubverseContact participant = dbService.GetContact(otherPeer) ??
                             new() { OtherPeer = otherPeer, DisplayName = contactName, };
@@ -144,24 +146,12 @@ namespace SubverseIM.ViewModels.Pages
         {
             if (string.IsNullOrEmpty(SendMessageText)) return;
 
-            string filteredText = SendMessageTopicName ?? string.Empty;
-            filteredText = Regex.Replace(filteredText, @"\s+", "-");
-            filteredText = Regex.Replace(filteredText, @"[^\w\-]", string.Empty);
-            filteredText = Regex.Match(filteredText, @"\#?(\w[\w\-]*\w)").Value;
-
-            if (filteredText.Length > 0)
-            {
-                SendMessageTopicName = $"#{filteredText.ToLowerInvariant()}";
-            }
-
-            if (!string.IsNullOrEmpty(SendMessageTopicName) && !TopicsList.Contains(SendMessageTopicName))
-            {
-                TopicsList.Insert(0, SendMessageTopicName);
-            }
-
-            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
             INativeService nativeService = await ServiceManager.GetWithAwaitAsync<INativeService>();
+
+            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
+            SubversePeerId thisPeer = await peerService.GetPeerIdAsync();
+            SubverseContact? thisContact = dbService.GetContact(thisPeer);
 
             SubverseMessage message = new SubverseMessage()
             {
@@ -169,8 +159,8 @@ namespace SubverseIM.ViewModels.Pages
 
                 TopicName = SendMessageTopicName,
 
-                Sender = peerService.ThisPeer,
-                SenderName = "Anonymous",
+                Sender = thisPeer,
+                SenderName = thisContact?.DisplayName ?? "Anonymous",
 
                 Recipients = [.. ContactsList.Select(x => x.innerContact.OtherPeer)],
                 RecipientNames = [.. ContactsList.Select(x => x.innerContact.DisplayName ?? "Anonymous")],

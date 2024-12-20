@@ -8,13 +8,13 @@ namespace SubverseIM.Services
 {
     public interface IPeerService
     {
-        SubversePeerId ThisPeer { get; }
-
         IPEndPoint? LocalEndPoint { get; }
 
         IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
         Task BootstrapSelfAsync(CancellationToken cancellationToken = default);
+
+        Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default);
 
         Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default);
 
