@@ -17,7 +17,7 @@
 		<Button IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding MessageCommandAsync}">
 			<TextBlock FontSize="16" HorizontalAlignment="Center">Start Conversation</TextBlock>
 		</Button>
-		<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsAsync}">
+		<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommandAsync}">
 			<TextBlock FontSize="16" HorizontalAlignment="Center">Add Selected Contacts</TextBlock>
 		</Button>
 		<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >

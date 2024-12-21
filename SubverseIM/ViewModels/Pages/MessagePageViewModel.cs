@@ -91,6 +91,12 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        public void RemoveContact(ContactViewModel contact) 
+        {
+            permContactsList.Remove(contact);
+            ContactsList.Remove(contact);
+        }
+
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);

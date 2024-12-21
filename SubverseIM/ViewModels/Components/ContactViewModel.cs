@@ -191,7 +191,7 @@ namespace SubverseIM.ViewModels.Components
                     dbService.DeleteItemById<SubverseContact>(innerContact.Id);
                 }
 
-                contactContainer?.ContactsList.Remove(this);
+                contactContainer?.RemoveContact(this);
                 ShouldShowOptions = false;
             }
         }

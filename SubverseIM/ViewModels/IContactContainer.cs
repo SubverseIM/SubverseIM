@@ -1,11 +1,9 @@
-﻿using SubverseIM.Models;
-using SubverseIM.ViewModels.Components;
-using System.Collections.ObjectModel;
+﻿using SubverseIM.ViewModels.Components;
 
 namespace SubverseIM.ViewModels
 {
     public interface IContactContainer
     {
-        ObservableCollection<ContactViewModel> ContactsList { get; }
+        void RemoveContact(ContactViewModel contact);
     }
 }
