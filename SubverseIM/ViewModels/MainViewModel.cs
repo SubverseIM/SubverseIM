@@ -162,7 +162,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 if (contact is not null && currentPage is MessagePageViewModel vm &&
                     (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == contact.OtherPeer) &&
                     (message.TopicName == vm.SendMessageTopicName ||
-                    string.IsNullOrEmpty(vm.SendMessageTopicName))))
+                    (string.IsNullOrEmpty(message.TopicName) && 
+                    string.IsNullOrEmpty(vm.SendMessageTopicName)))))
                 {
                     if (!string.IsNullOrEmpty(message.TopicName) &&
                         !vm.TopicsList.Contains(message.TopicName) &&

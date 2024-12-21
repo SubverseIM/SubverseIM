@@ -148,7 +148,8 @@ namespace SubverseIM.ViewModels.Pages
                     new() { OtherPeer = message.Sender, DisplayName = message.SenderName, };
 
                 bool isEmptyTopic = string.IsNullOrEmpty(SendMessageTopicName);
-                bool isCurrentTopic = message.TopicName == SendMessageTopicName;
+                bool isCurrentTopic = message.TopicName == SendMessageTopicName || 
+                    (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(SendMessageTopicName));
                 bool isSentByMe = thisPeer == sender.OtherPeer;
 
                 if (!isEmptyTopic && isCurrentTopic)
@@ -165,7 +166,7 @@ namespace SubverseIM.ViewModels.Pages
                     }
                 }
 
-                if (isEmptyTopic || isCurrentTopic)
+                if (isCurrentTopic)
                 {
                     MessageList.Add(new(this, isSentByMe ? null : sender, message));
                 }
