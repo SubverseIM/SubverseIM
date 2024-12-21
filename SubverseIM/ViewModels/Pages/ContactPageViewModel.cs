@@ -99,7 +99,7 @@ namespace SubverseIM.ViewModels.Pages
                 .Where(x => x.IsSelected)
                 .Select(x => x.innerContact)) 
             {
-                Parent.AddUniqueParticipant(contact);
+                Parent.AddUniqueParticipant(contact, true);
             }
 
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();

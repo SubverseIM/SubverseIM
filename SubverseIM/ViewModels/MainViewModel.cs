@@ -175,7 +175,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     foreach (SubverseContact participant in messageViewModel.CcContacts)
                     {
                         if (participant.OtherPeer == thisPeer) continue;
-                        vm.AddUniqueParticipant(participant);
+                        vm.AddUniqueParticipant(participant, false);
                     }
                     vm.MessageList.Insert(0, messageViewModel);
                 }
