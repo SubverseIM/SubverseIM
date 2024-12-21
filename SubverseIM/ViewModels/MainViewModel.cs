@@ -221,6 +221,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public async void NavigateContactView(SubverseContact contact)
     {
+        if (CurrentPage is MessagePageViewModel messagePageViewModel) 
+        {
+            messagePageViewModel.ShouldRefreshContacts = false;
+        }
+
         await createContactPage.InitializeAsync(new Uri($"sv://{contact.OtherPeer}"));
         CurrentPage = createContactPage;
     }

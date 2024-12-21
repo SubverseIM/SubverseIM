@@ -45,6 +45,16 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        private bool shouldRefreshContacts;
+        public bool ShouldRefreshContacts
+        {
+            get => shouldRefreshContacts;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref shouldRefreshContacts, value);
+            }
+        }
+
         public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
             permContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
@@ -59,7 +69,7 @@ namespace SubverseIM.ViewModels.Pages
             frontendService.NavigateContactView(this);
         }
 
-        public async Task AddTopicCommandAsync() 
+        public async Task AddTopicCommandAsync()
         {
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
 
@@ -91,7 +101,7 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public void RemoveContact(ContactViewModel contact) 
+        public void RemoveContact(ContactViewModel contact)
         {
             permContactsList.Remove(contact);
             ContactsList.Remove(contact);
@@ -105,8 +115,22 @@ namespace SubverseIM.ViewModels.Pages
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
 
-            ContactsList.Clear();
             MessageList.Clear();
+
+            if (shouldRefreshContacts)
+            {
+                ContactsList.Clear();
+                foreach (ContactViewModel vm in permContactsList)
+                {
+                    if (vm.innerContact.OtherPeer == thisPeer && permContactsList.Count > 1) continue;
+
+                    ContactsList.Add(vm);
+                }
+            }
+            else
+            {
+                ShouldRefreshContacts = true;
+            }
 
             HashSet<SubversePeerId> participantIds = permContactsList
                 .Select(x => x.innerContact.OtherPeer)
@@ -119,7 +143,6 @@ namespace SubverseIM.ViewModels.Pages
                     TopicsList.Add(message.TopicName);
                     SendMessageTopicName = currentTopicName;
                 }
-
 
                 SubverseContact sender = dbService.GetContact(message.Sender) ??
                     new() { OtherPeer = message.Sender, DisplayName = message.SenderName, };
@@ -145,16 +168,6 @@ namespace SubverseIM.ViewModels.Pages
                 if (isEmptyTopic || isCurrentTopic)
                 {
                     MessageList.Add(new(this, isSentByMe ? null : sender, message));
-                }
-            }
-
-            if (ContactsList.Count == 0) 
-            {
-                foreach (ContactViewModel vm in permContactsList)
-                {
-                    if (vm.innerContact.OtherPeer == thisPeer && permContactsList.Count > 1) continue;
-
-                    ContactsList.Add(vm);
                 }
             }
         }
