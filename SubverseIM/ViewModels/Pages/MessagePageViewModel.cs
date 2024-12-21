@@ -15,6 +15,8 @@ namespace SubverseIM.ViewModels.Pages
 {
     public class MessagePageViewModel : PageViewModelBase, IContactContainer
     {
+        private readonly SubverseContact[] contacts;
+
         public override string Title => $"Conversation View";
 
         public ObservableCollection<ContactViewModel> ContactsList { get; }
@@ -45,9 +47,10 @@ namespace SubverseIM.ViewModels.Pages
 
         public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
+            this.contacts = contacts.ToArray();
             ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
-            MessageList = new();
-            TopicsList = new();
+            MessageList = [];
+            TopicsList = [string.Empty];
         }
 
         public async Task AddParticipantsCommandAsync()
@@ -95,15 +98,16 @@ namespace SubverseIM.ViewModels.Pages
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
 
+            ContactsList.Clear();
             MessageList.Clear();
-            HashSet<SubversePeerId> participants = ContactsList
-                .Select(x => x.innerContact.OtherPeer).ToHashSet();
-            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(participants, null).Take(250))
+
+            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(
+                contacts.Select(x => x.OtherPeer).ToHashSet(), null).Take(250))
             {
                 if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName))
                 {
                     string? currentTopicName = SendMessageTopicName;
-                    TopicsList.Insert(0, message.TopicName);
+                    TopicsList.Add(message.TopicName);
                     SendMessageTopicName = currentTopicName;
                 }
 
@@ -126,6 +130,15 @@ namespace SubverseIM.ViewModels.Pages
                         SubverseContact participant = dbService.GetContact(otherPeer) ??
                             new() { OtherPeer = otherPeer, DisplayName = contactName, };
                         AddUniqueParticipant(participant);
+                    }
+                }
+                else if (isEmptyTopic)
+                {
+                    foreach (SubverseContact contact in contacts)
+                    {
+                        if (contact.OtherPeer == thisPeer && contacts.Length > 1) continue;
+
+                        AddUniqueParticipant(contact);
                     }
                 }
 

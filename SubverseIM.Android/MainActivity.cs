@@ -2,30 +2,23 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Android.Health.Connect.DataTypes;
 using Android.OS;
-using Android.Runtime;
 using Android.Text;
 using Android.Views.Accessibility;
 using Android.Widget;
 using AndroidX.Activity;
-using AndroidX.AppCompat.View.Menu;
 using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
-using Java.Lang;
 using SubverseIM.Android.Services;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using R = Android.Resource;
 
 namespace SubverseIM.Android;
 
@@ -34,7 +27,7 @@ namespace SubverseIM.Android;
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,
-    ScreenOrientation = ScreenOrientation.FullSensor,
+    ScreenOrientation = ScreenOrientation.FullUser,
     ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.Orientation,
     LaunchMode = LaunchMode.SingleInstance)]
 [IntentFilter(
