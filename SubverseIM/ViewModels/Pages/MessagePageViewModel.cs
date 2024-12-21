@@ -15,7 +15,7 @@ namespace SubverseIM.ViewModels.Pages
 {
     public class MessagePageViewModel : PageViewModelBase, IContactContainer
     {
-        private readonly SubverseContact[] contacts;
+        private readonly List<ContactViewModel> permContactsList;
 
         public override string Title => $"Conversation View";
 
@@ -47,7 +47,7 @@ namespace SubverseIM.ViewModels.Pages
 
         public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
-            this.contacts = contacts.ToArray();
+            permContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             MessageList = [];
             TopicsList = [string.Empty];
@@ -76,18 +76,25 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public bool AddUniqueParticipant(SubverseContact newContact)
+        public bool AddUniqueParticipant(SubverseContact newContact, bool permanent)
         {
-            if (!ContactsList.Select(otherContact => otherContact.innerContact)
+            IList<ContactViewModel> listToModify = permanent ? permContactsList : ContactsList;
+            if (!listToModify.Select(otherContact => otherContact.innerContact)
                 .Any(otherContact => newContact.OtherPeer == otherContact.OtherPeer))
             {
-                ContactsList.Add(new(ServiceManager, this, newContact));
+                listToModify.Add(new(ServiceManager, this, newContact));
                 return true;
             }
             else
             {
                 return false;
             }
+        }
+
+        public void RemoveContact(ContactViewModel contact) 
+        {
+            permContactsList.Remove(contact);
+            ContactsList.Remove(contact);
         }
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -101,8 +108,10 @@ namespace SubverseIM.ViewModels.Pages
             ContactsList.Clear();
             MessageList.Clear();
 
-            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(
-                contacts.Select(x => x.OtherPeer).ToHashSet(), null).Take(250))
+            HashSet<SubversePeerId> participantIds = permContactsList
+                .Select(x => x.innerContact.OtherPeer)
+                .ToHashSet();
+            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(participantIds, null).Take(250))
             {
                 if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName))
                 {
@@ -112,7 +121,7 @@ namespace SubverseIM.ViewModels.Pages
                 }
 
 
-                SubverseContact sender = dbService.GetContact(message.Sender) ?? 
+                SubverseContact sender = dbService.GetContact(message.Sender) ??
                     new() { OtherPeer = message.Sender, DisplayName = message.SenderName, };
 
                 bool isEmptyTopic = string.IsNullOrEmpty(SendMessageTopicName);
@@ -129,22 +138,23 @@ namespace SubverseIM.ViewModels.Pages
 
                         SubverseContact participant = dbService.GetContact(otherPeer) ??
                             new() { OtherPeer = otherPeer, DisplayName = contactName, };
-                        AddUniqueParticipant(participant);
-                    }
-                }
-                else if (isEmptyTopic)
-                {
-                    foreach (SubverseContact contact in contacts)
-                    {
-                        if (contact.OtherPeer == thisPeer && contacts.Length > 1) continue;
-
-                        AddUniqueParticipant(contact);
+                        AddUniqueParticipant(participant, false);
                     }
                 }
 
                 if (isEmptyTopic || isCurrentTopic)
                 {
                     MessageList.Add(new(this, isSentByMe ? null : sender, message));
+                }
+            }
+
+            if (ContactsList.Count == 0) 
+            {
+                foreach (ContactViewModel vm in permContactsList)
+                {
+                    if (vm.innerContact.OtherPeer == thisPeer && permContactsList.Count > 1) continue;
+
+                    ContactsList.Add(vm);
                 }
             }
         }

@@ -55,6 +55,11 @@ namespace SubverseIM.ViewModels.Pages
             Parent = null;
         }
 
+        public void RemoveContact(ContactViewModel contact) 
+        {
+            ContactsList.Remove(contact);
+        }
+
         public async Task LoadContactsAsync(CancellationToken cancellationToken = default) 
         {
             ContactsList.Clear();
@@ -92,14 +97,14 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task AddParticipantsAsync()
+        public async Task AddParticipantsCommandAsync()
         {
             Debug.Assert(Parent is not null);
             foreach (SubverseContact contact in ContactsList
                 .Where(x => x.IsSelected)
                 .Select(x => x.innerContact)) 
             {
-                Parent.AddUniqueParticipant(contact);
+                Parent.AddUniqueParticipant(contact, true);
             }
 
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
