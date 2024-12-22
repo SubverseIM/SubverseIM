@@ -1,6 +1,5 @@
 ﻿using SubverseIM.Models;
 using SubverseIM.ViewModels.Pages;
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +16,7 @@ namespace SubverseIM.Services
 
         void NavigateContactView(SubverseContact contact);
 
-        void NavigateMessageView(IEnumerable<SubverseContact> contacts);
+        void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName = null);
 
         Task RunOnceBackgroundAsync();
 

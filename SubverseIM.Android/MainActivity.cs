@@ -12,9 +12,12 @@ using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
 using SubverseIM.Android.Services;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -179,7 +182,23 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         Intent = intent;
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        frontendService.NavigateLaunchedUri();
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+
+        IEnumerable<SubverseContact>? contacts = Intent?
+                .GetStringArrayExtra(WrappedPeerService.EXTRA_PARTICIPANTS_ID)?
+                .Select(x => dbService.GetContact(SubversePeerId.FromString(x)))
+                .Where(x => x is not null)
+                .Cast<SubverseContact>();
+        string? topicName = Intent?.GetStringExtra(WrappedPeerService.EXTRA_TOPIC_ID);
+
+        if (Intent?.DataString is not null)
+        {
+            frontendService.NavigateLaunchedUri();
+        }
+        else if(contacts is not null)
+        {
+            frontendService.NavigateMessageView(contacts, topicName);
+        }
     }
 
     public Uri? GetLaunchedUri()

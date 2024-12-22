@@ -231,9 +231,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
         CurrentPage = createContactPage;
     }
 
-    public void NavigateMessageView(IEnumerable<SubverseContact> contacts)
+    public void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName)
     {
-        CurrentPage = new MessagePageViewModel(serviceManager, contacts);
+        CurrentPage = new MessagePageViewModel(serviceManager, contacts) { SendMessageTopicName = topicName };
     }
 
     public async void NavigateLaunchedUri()
