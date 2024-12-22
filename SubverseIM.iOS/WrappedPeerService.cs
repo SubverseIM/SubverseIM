@@ -2,21 +2,31 @@ using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UIKit;
 using UserNotifications;
+using System.Linq;
+using Foundation;
 
 namespace SubverseIM.iOS;
 
 public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeService
 {
+    public const string EXTRA_PARTICIPANTS_ID = "com.ChosenFewSoftware.SubverseIM.ConversationParticipants";
+
+    public const string EXTRA_TOPIC_ID = "com.ChosenFewSoftware.SubverseIM.MessageTopic";
+
+    private readonly IServiceManager serviceManager;
+
     private readonly UIApplication? appInstance;
 
     private readonly PeerService peerService;
 
-    public WrappedPeerService(UIApplication? appInstance)
+    public WrappedPeerService(IServiceManager serviceManager, UIApplication? appInstance)
     {
+        this.serviceManager = serviceManager;
         this.appInstance = appInstance;
         peerService = new PeerService(this);
     }
@@ -35,6 +45,16 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
             Body = message.Content ?? string.Empty,
         };
 
+        var extraData = new NSDictionary<NSString, NSString?>(
+            [(NSString)EXTRA_PARTICIPANTS_ID, (NSString)EXTRA_TOPIC_ID],
+            [
+                (NSString)string.Join(';', ((IEnumerable<SubversePeerId>)
+                [message.Sender, .. message.Recipients])
+                .Select(x => x.ToString())), 
+                (NSString?)message.TopicName
+            ]);
+        content.UserInfo = extraData;
+
         UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
         UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);
 
@@ -51,7 +71,7 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
             }
             catch (OperationCanceledException) { }
         }
-        else 
+        else
         {
             using CancellationTokenSource cts = new();
             nint handle = appInstance.BeginBackgroundTask(cts.Cancel);
@@ -64,14 +84,33 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
         }
     }
 
+    public override async void DidReceiveNotificationResponse(UNUserNotificationCenter center, UNNotificationResponse response, Action completionHandler)
+    {
+        UNNotificationContent content = response.Notification.Request.Content;
+
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+
+        IEnumerable<SubverseContact> participants =
+            content.UserInfo[EXTRA_PARTICIPANTS_ID]
+            .ToString().Split(';')
+            .Select(SubversePeerId.FromString)
+            .Select(dbService.GetContact)
+            .Where(x => x is not null)
+            .Cast<SubverseContact>();
+        string? topicName = content.UserInfo[EXTRA_TOPIC_ID] as NSString;
+        frontendService.NavigateMessageView(participants, topicName);
+        completionHandler();
+    }
+
     public override void WillPresentNotification(
-        UNUserNotificationCenter center, UNNotification notification, 
+        UNUserNotificationCenter center, UNNotification notification,
         Action<UNNotificationPresentationOptions> completionHandler
         )
     {
         completionHandler(
-            UNNotificationPresentationOptions.Banner | 
-            UNNotificationPresentationOptions.List | 
+            UNNotificationPresentationOptions.Banner |
+            UNNotificationPresentationOptions.List |
             UNNotificationPresentationOptions.Sound);
     }
 

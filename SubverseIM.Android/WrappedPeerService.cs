@@ -12,6 +12,7 @@ using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,6 +24,10 @@ namespace SubverseIM.Android
         private const string MSG_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.UserMessage";
 
         private const string SRV_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.ForegroundService";
+
+        public const string EXTRA_PARTICIPANTS_ID = "com.ChosenFewSoftware.SubverseIM.ConversationParticipants";
+
+        public const string EXTRA_TOPIC_ID = "com.ChosenFewSoftware.SubverseIM.MessageTopic";
 
         private readonly IPeerService peerService;
 
@@ -146,6 +151,12 @@ namespace SubverseIM.Android
             notifyIntent.SetAction(Intent.ActionMain);
             notifyIntent.AddCategory(Intent.CategoryLauncher);
             notifyIntent.AddFlags(ActivityFlags.NewTask);
+            notifyIntent.PutExtra(EXTRA_TOPIC_ID, message.TopicName);
+            notifyIntent.PutExtra(EXTRA_PARTICIPANTS_ID, 
+                ((IEnumerable<SubversePeerId>)
+                [message.Sender, .. message.Recipients])
+                .Select(x => x.ToString())
+                .ToArray());
 
             PendingIntent? pendingIntent = PendingIntent.GetActivity(
                 this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |

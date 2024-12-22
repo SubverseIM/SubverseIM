@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using ReactiveUI;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
@@ -80,6 +81,9 @@ public partial class MessagePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        await ((DataContext as MessagePageViewModel)?.InitializeAsync() ?? Task.CompletedTask);
+        await ((MessagePageViewModel)DataContext!).InitializeAsync();
+        ((MessagePageViewModel)DataContext!).RaisePropertyChanged(
+            nameof(MessagePageViewModel.SendMessageTopicName)
+            );
     }
 }

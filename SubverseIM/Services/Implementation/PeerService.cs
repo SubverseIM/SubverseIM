@@ -555,7 +555,7 @@ namespace SubverseIM.Services.Implementation
                 sendTasks.Add(Task.Run(async Task? () =>
                 {
                     bool flag;
-                    using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(300));
+                    using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(1500));
                     do
                     {
                         await SendSIPRequestAsync(sipRequest, cancellationToken);
