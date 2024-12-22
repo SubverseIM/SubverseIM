@@ -88,9 +88,14 @@ public class MainViewModel : ViewModelBase, IFrontendService
             peerService.BootstrapSelfAsync(cancellationToken),
         ];
 
+        int unsentCount = 0, joinCount = 0;
         foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
         {
-            subTasks.Add(Task.Run(() => peerService.SendMessageAsync(message, cancellationToken)));
+            subTasks.Add(Task.Run(async Task? () => 
+            {
+                await Task.Delay(++unsentCount * 300);
+                await peerService.SendMessageAsync(message, cancellationToken); 
+            }));
         }
 
         lock (peerService.CachedPeers)
@@ -120,7 +125,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     DateSignedOn = DateTime.UtcNow,
                 };
 
-                subTasks.Add(Task.Run(() => peerService.SendMessageAsync(message, cancellationToken)));
+                subTasks.Add(Task.Run(async Task? () => 
+                {
+                    await Task.Delay(++joinCount * 300);
+                    await peerService.SendMessageAsync(message, cancellationToken); 
+                }));
             }
         }
 
