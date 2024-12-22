@@ -117,7 +117,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
             );
 
-        wrappedPeerService = new(application);
+        wrappedPeerService = new(serviceManager, application);
         serviceManager.GetOrRegister<IPeerService>(
             (PeerService)wrappedPeerService
             );
@@ -144,7 +144,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
         );
 
-        wrappedPeerService = new(null);
+        wrappedPeerService = new(serviceManager, null);
         serviceManager.GetOrRegister<IPeerService>(
             (PeerService)wrappedPeerService
             );
@@ -243,11 +243,23 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             item: (NSString)content,
             typeIdentifier: "public.utf8-plain-text"
             );
+
         UIActivityItemsConfiguration configuration = new([itemProvider]);
         UIActivityViewController activityViewController = new(configuration)
         {
             Title = title,
         };
+
+        UIViewController? viewController = Window?.RootViewController;
+        UIView? view = viewController?.View;
+
+        UIPopoverPresentationController? popoverPresentationController = activityViewController.PopoverPresentationController;
+        if(UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad && 
+        popoverPresentationController is not null && view is not null)
+        {
+            popoverPresentationController.SourceView = view;
+            activityViewController.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
+        }
 
         return Window?.RootViewController
             ?.PresentViewControllerAsync(
