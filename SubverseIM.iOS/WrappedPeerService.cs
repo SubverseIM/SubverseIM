@@ -45,21 +45,15 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
             Body = message.Content ?? string.Empty,
         };
 
-        content.UserInfo.SetValueForKey(
-            NSObjectWrapper.Wrap(((IEnumerable<SubversePeerId>)
-            [message.Sender, .. message.Recipients])
-            .Select(x => x.ToString()).ToArray()),
-            (NSString)EXTRA_PARTICIPANTS_ID
-            );
-
-        if (message.TopicName is null)
-        {
-            content.UserInfo.SetNilValueForKey((NSString)EXTRA_TOPIC_ID);
-        }
-        else
-        {
-            content.UserInfo.SetValueForKey((NSString)message.TopicName, (NSString)EXTRA_TOPIC_ID);
-        }
+        var extraData = new NSDictionary<NSString, NSString?>(
+            [(NSString)EXTRA_PARTICIPANTS_ID, (NSString)EXTRA_TOPIC_ID],
+            [
+                (NSString)string.Join(';', ((IEnumerable<SubversePeerId>)
+                [message.Sender, .. message.Recipients])
+                .Select(x => x.ToString())), 
+                (NSString?)message.TopicName
+            ]);
+        content.UserInfo = extraData;
 
         UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
         UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);
@@ -92,22 +86,21 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
 
     public override async void DidReceiveNotificationResponse(UNUserNotificationCenter center, UNNotificationResponse response, Action completionHandler)
     {
-        base.DidReceiveNotificationResponse(center, response, completionHandler);
         UNNotificationContent content = response.Notification.Request.Content;
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-        IEnumerable<SubverseContact> participants = 
-            ((string[])((NSObjectWrapper)
+        IEnumerable<SubverseContact> participants =
             content.UserInfo[EXTRA_PARTICIPANTS_ID]
-            ).Context)
+            .ToString().Split(';')
             .Select(SubversePeerId.FromString)
             .Select(dbService.GetContact)
             .Where(x => x is not null)
             .Cast<SubverseContact>();
         string? topicName = content.UserInfo[EXTRA_TOPIC_ID] as NSString;
         frontendService.NavigateMessageView(participants, topicName);
+        completionHandler();
     }
 
     public override void WillPresentNotification(

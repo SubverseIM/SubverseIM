@@ -233,7 +233,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName)
     {
-        CurrentPage = new MessagePageViewModel(serviceManager, contacts) { SendMessageTopicName = topicName };
+        MessagePageViewModel vm = new MessagePageViewModel(serviceManager, contacts);
+        CurrentPage = vm;
+
+        vm.SendMessageTopicName = topicName;
     }
 
     public async void NavigateLaunchedUri()
