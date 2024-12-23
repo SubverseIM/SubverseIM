@@ -73,7 +73,7 @@ namespace SubverseIM.Services.Implementation
                 .ToEnumerable();
         }
 
-        public SubverseMessage GetMessageByCallId(string callId) 
+        public SubverseMessage? GetMessageByCallId(string callId) 
         {
             var messages = db.GetCollection<SubverseMessage>();
 

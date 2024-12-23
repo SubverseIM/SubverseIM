@@ -17,7 +17,7 @@ namespace SubverseIM.Services
 
         IEnumerable<SubverseMessage> GetAllUndeliveredMessages();
 
-        SubverseMessage GetMessageByCallId(string callId);
+        SubverseMessage? GetMessageByCallId(string callId);
 
         bool InsertOrUpdateItem(SubverseContact newItem);
 
