@@ -8,7 +8,6 @@ using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,7 +39,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     private void ScheduleAppRefresh()
     {
         BGAppRefreshTaskRequest request = new BGAppRefreshTaskRequest(BGTASK_BOOTSTRAP_ID);
-        request.EarliestBeginDate = NSDate.Now.AddSeconds(60.0);
+        request.EarliestBeginDate = NSDate.FromTimeIntervalSinceNow(60 * 15);
         BGTaskScheduler.Shared.Submit(request, out NSError? _);
     }
 
