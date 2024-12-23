@@ -37,14 +37,6 @@
 	<string>com.chosenfewsoftware.SubverseIM</string>
 	<key>CFBundleDisplayName</key>
 	<string>SubverseIM</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-	</array>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.chosenfewsoftware.SubverseIM.bootstrap</string>
-	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
