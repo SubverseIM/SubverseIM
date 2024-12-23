@@ -3,9 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleShortVersionString</key>
-	<string>1.5.003</string>
-	<key>CFBundleVersion</key>
-	<string>1.5.003</string>
+	<string>1.5.004</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
@@ -39,14 +37,6 @@
 	<string>com.chosenfewsoftware.SubverseIM</string>
 	<key>CFBundleDisplayName</key>
 	<string>SubverseIM</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-	</array>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.chosenfewsoftware.SubverseIM.bootstrap</string>
-	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -62,5 +52,7 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Media.xcassets/AppIcons.appiconset</string>
+	<key>CFBundleVersion</key>
+	<string>1.5.004</string>
 </dict>
 </plist>

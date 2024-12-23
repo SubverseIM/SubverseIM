@@ -93,7 +93,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         {
             subTasks.Add(Task.Run(async Task? () => 
             {
-                await Task.Delay(++unsentCount * 300);
+                await Task.Delay(++unsentCount * 333);
                 await peerService.SendMessageAsync(message, cancellationToken); 
             }));
         }
@@ -127,7 +127,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                 subTasks.Add(Task.Run(async Task? () => 
                 {
-                    await Task.Delay(++joinCount * 300);
+                    await Task.Delay(++joinCount * 333);
                     await peerService.SendMessageAsync(message, cancellationToken); 
                 }));
             }

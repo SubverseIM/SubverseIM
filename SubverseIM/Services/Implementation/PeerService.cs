@@ -333,10 +333,12 @@ namespace SubverseIM.Services.Implementation
                 }
             }
 
-            SubverseMessage message = DbService.GetMessageByCallId(sipResponse.Header.CallId);
-            message.WasDelivered = true;
-
-            DbService.InsertOrUpdateItem(message);
+            SubverseMessage? message = DbService.GetMessageByCallId(sipResponse.Header.CallId);
+            if(message is not null)
+            {
+                message.WasDelivered = true;
+                DbService.InsertOrUpdateItem(message);
+            }
 
             return Task.CompletedTask;
         }

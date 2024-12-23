@@ -8,7 +8,6 @@ using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,8 +22,6 @@ namespace SubverseIM.iOS;
 [Register("AppDelegate")]
 public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 {
-    private const string BGTASK_BOOTSTRAP_ID = "com.chosenfewsoftware.SubverseIM.bootstrap";
-
     private ServiceManager? serviceManager;
 
     private WrappedPeerService? wrappedPeerService;
@@ -37,17 +34,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public bool IsAccessibilityEnabled => false;
 
-    private void ScheduleAppRefresh()
-    {
-        BGAppRefreshTaskRequest request = new BGAppRefreshTaskRequest(BGTASK_BOOTSTRAP_ID);
-        request.EarliestBeginDate = NSDate.Now.AddSeconds(60.0);
-        BGTaskScheduler.Shared.Submit(request, out NSError? _);
-    }
-
     private void HandleAppDeactivated(object? sender, ActivatedEventArgs e)
     {
         IsInForeground = false;
-        ScheduleAppRefresh();
     }
 
     private async void HandleAppActivated(object? sender, ActivatedEventArgs e)
@@ -100,8 +89,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         base.FinishedLaunching(application, launchOptions);
 
-        BGTaskScheduler.Shared.Register(BGTASK_BOOTSTRAP_ID, null, HandleAppRefresh);
-
         ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
         ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
 
@@ -126,45 +113,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         HandleAppActivated(this, new(ActivationKind.Background));
 
         return true;
-    }
-
-    public async void HandleAppRefresh(BGTask task)
-    {
-        ScheduleAppRefresh();
-
-        serviceManager?.Dispose();
-        serviceManager = new();
-
-        string appDataPath = Environment.GetFolderPath(
-            Environment.SpecialFolder.ApplicationData
-            );
-        Directory.CreateDirectory(appDataPath);
-        string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
-        serviceManager.GetOrRegister<IDbService>(
-            new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
-        );
-
-        wrappedPeerService = new(serviceManager, null);
-        serviceManager.GetOrRegister<IPeerService>(
-            (PeerService)wrappedPeerService
-            );
-        UNUserNotificationCenter.Current.Delegate = wrappedPeerService;
-
-        using CancellationTokenSource cts = new();
-
-        BGAppRefreshTask refreshTask = (BGAppRefreshTask)task;
-        refreshTask.ExpirationHandler += cts.Cancel;
-
-        try
-        {
-            IFrontendService frontendService = new MainViewModel(serviceManager);
-            serviceManager.GetOrRegister(frontendService);
-
-            await frontendService.RunOnceAsync(cts.Token);
-        }
-        catch (OperationCanceledException) { }
-
-        refreshTask.SetTaskCompleted(true);
     }
 
     public async Task<bool> ShowConfirmationDialogAsync(string title, string message)
