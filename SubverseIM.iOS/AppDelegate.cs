@@ -3,16 +3,12 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.iOS;
 using Avalonia.ReactiveUI;
-using Avalonia.VisualTree;
-using BackgroundTasks;
 using CoreGraphics;
 using Foundation;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
-using SubverseIM.ViewModels;
 using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using UIKit;
 using UserNotifications;
@@ -31,6 +27,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     private Uri? launchedUri;
 
+    private string? reminderNotificationId;
+
     public bool IsInForeground { get; private set; }
 
     public bool NotificationsAllowed { get; private set; }
@@ -41,14 +39,16 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     {
         IsInForeground = false;
 
-        UNMutableNotificationContent content = new() 
-        { 
+        UNMutableNotificationContent content = new()
+        {
             Title = "Still There?",
             Body = "SubverseIM has stopped monitoring the network for new messages. Check back with us often!"
         };
 
         UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(30.0, false);
-        UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);
+        UNNotificationRequest request = UNNotificationRequest.FromIdentifier(
+            reminderNotificationId = Guid.NewGuid().ToString(), content, trigger
+            );
 
         await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
     }
@@ -56,6 +56,11 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     private async void HandleAppActivated(object? sender, ActivatedEventArgs e)
     {
         IsInForeground = true;
+
+        if (reminderNotificationId is not null)
+        {
+            UNUserNotificationCenter.Current.RemovePendingNotificationRequests([reminderNotificationId]);
+        }
 
         UNNotificationSettings settings = await UNUserNotificationCenter.Current.GetNotificationSettingsAsync();
         if (settings.AuthorizationStatus != UNAuthorizationStatus.Authorized)
@@ -102,6 +107,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         serviceManager = new();
 
         base.FinishedLaunching(application, launchOptions);
+
+        UNUserNotificationCenter.Current.RemoveAllPendingNotificationRequests();
 
         ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
         ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
@@ -215,7 +222,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         };
 
         UIPopoverPresentationController? popoverPresentationController = activityViewController.PopoverPresentationController;
-        if(topLevel is not null && sender is not null && 
+        if (topLevel is not null && sender is not null &&
             UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
             popoverPresentationController is not null && Window is not null)
         {
