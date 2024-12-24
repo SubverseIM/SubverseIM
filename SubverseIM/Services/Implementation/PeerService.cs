@@ -1,4 +1,5 @@
-﻿using MonoTorrent;
+﻿using Avalonia;
+using MonoTorrent;
 using MonoTorrent.Connections.Dht;
 using MonoTorrent.Dht;
 using MonoTorrent.PortForwarding;
@@ -573,12 +574,12 @@ namespace SubverseIM.Services.Implementation
             await Task.WhenAll(sendTasks);
         }
 
-        public async Task SendInviteAsync(CancellationToken cancellationToken = default)
+        public async Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken)
         {
             SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
             string inviteId = await http.GetFromJsonAsync<string>($"invite?p={thisPeer}") ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
-            await LauncherService.ShareStringToAppAsync("Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
+            await LauncherService.ShareStringToAppAsync(sender, "Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
         }
 
         private bool disposedValue;

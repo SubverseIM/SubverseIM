@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using Avalonia;
+using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
@@ -73,10 +74,10 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task InviteCommandAsync() 
+        public async Task InviteCommandAsync(Visual? sender) 
         {
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
-            await peerService.SendInviteAsync();
+            await peerService.SendInviteAsync(sender);
         }
 
         public async Task MessageCommandAsync() 

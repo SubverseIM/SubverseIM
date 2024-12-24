@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Avalonia;
+using System;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Services
@@ -19,6 +20,6 @@ namespace SubverseIM.Services
 
         Task<string?> ShowInputDialogAsync(string prompt, string? defaultText = null);
 
-        Task ShareStringToAppAsync(string title, string content);
+        Task ShareStringToAppAsync(Visual? sender, string title, string content);
     }
 }

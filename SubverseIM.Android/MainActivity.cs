@@ -16,7 +16,6 @@ using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -255,7 +254,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         return tcs.Task;
     }
 
-    public Task ShareStringToAppAsync(string title, string content)
+    public Task ShareStringToAppAsync(Visual? sender, string title, string content)
     {
         new ShareCompat.IntentBuilder(this)
             .SetType("text/plain")

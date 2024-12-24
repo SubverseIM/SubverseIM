@@ -1,4 +1,5 @@
-﻿using SubverseIM.Models;
+﻿using Avalonia;
+using SubverseIM.Models;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
@@ -20,6 +21,6 @@ namespace SubverseIM.Services
 
         Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default);
 
-        Task SendInviteAsync(CancellationToken cancellationToken = default);
+        Task SendInviteAsync(Visual? sender = null, CancellationToken cancellationToken = default);
     }
 }

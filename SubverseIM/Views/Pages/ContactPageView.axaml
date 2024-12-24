@@ -11,7 +11,7 @@
 	</Design.DataContext>
 
 	<DockPanel>
-		<Button IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}">
+		<Button x:Name="inviteButton" IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}" CommandParameter="{Binding #inviteButton}">
 			<TextBlock FontSize="16" HorizontalAlignment="Center">Invite Friend</TextBlock>
 		</Button>
 		<Button IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding MessageCommandAsync}">

@@ -1,8 +1,11 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.iOS;
 using Avalonia.ReactiveUI;
+using Avalonia.VisualTree;
 using BackgroundTasks;
+using CoreGraphics;
 using Foundation;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
@@ -34,9 +37,20 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public bool IsAccessibilityEnabled => false;
 
-    private void HandleAppDeactivated(object? sender, ActivatedEventArgs e)
+    private async void HandleAppDeactivated(object? sender, ActivatedEventArgs e)
     {
         IsInForeground = false;
+
+        UNMutableNotificationContent content = new() 
+        { 
+            Title = "Still There?",
+            Body = "SubverseIM has stopped monitoring the network for new messages. Check back with us often!"
+        };
+
+        UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(30.0, false);
+        UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);
+
+        await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
     }
 
     private async void HandleAppActivated(object? sender, ActivatedEventArgs e)
@@ -185,8 +199,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         return await tcs.Task;
     }
 
-    public Task ShareStringToAppAsync(string title, string content)
+    public Task ShareStringToAppAsync(Visual? sender, string title, string content)
     {
+        TopLevel? topLevel = TopLevel.GetTopLevel(sender);
+
         NSItemProvider itemProvider = new(
             item: (NSString)content,
             typeIdentifier: "public.utf8-plain-text"
@@ -198,14 +214,19 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             Title = title,
         };
 
-        UIViewController? viewController = Window?.RootViewController;
-        UIView? view = viewController?.View;
-
         UIPopoverPresentationController? popoverPresentationController = activityViewController.PopoverPresentationController;
-        if(UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad && 
-        popoverPresentationController is not null && view is not null)
+        if(topLevel is not null && sender is not null && 
+            UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
+            popoverPresentationController is not null && Window is not null)
         {
-            popoverPresentationController.SourceView = view;
+            PixelPoint topLeft = topLevel.PointToScreen(sender.Bounds.TopLeft);
+            PixelPoint bottomRight = topLevel.PointToScreen(sender.Bounds.BottomRight);
+
+            popoverPresentationController.SourceView = Window;
+            popoverPresentationController.SourceRect = new CGRect(
+                topLeft.X, topLeft.Y, (bottomRight - topLeft).X, (bottomRight - topLeft).Y
+                );
+
             activityViewController.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
         }
 
