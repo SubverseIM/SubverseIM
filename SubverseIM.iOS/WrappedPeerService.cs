@@ -50,7 +50,7 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
             [
                 (NSString)string.Join(';', ((IEnumerable<SubversePeerId>)
                 [message.Sender, .. message.Recipients])
-                .Select(x => x.ToString())), 
+                .Select(x => x.ToString())),
                 (NSString?)message.TopicName
             ]);
         content.UserInfo = extraData;
@@ -89,17 +89,24 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
         UNNotificationContent content = response.Notification.Request.Content;
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+        if (content.UserInfo.Any())
+        {
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            IEnumerable<SubverseContact> participants =
+                content.UserInfo[EXTRA_PARTICIPANTS_ID]
+                .ToString().Split(';')
+                .Select(SubversePeerId.FromString)
+                .Select(dbService.GetContact)
+                .Where(x => x is not null)
+                .Cast<SubverseContact>();
+            string? topicName = content.UserInfo[EXTRA_TOPIC_ID] as NSString;
+            frontendService.NavigateMessageView(participants, topicName);
+        }
+        else
+        {
+            frontendService.NavigateContactView();
+        }
 
-        IEnumerable<SubverseContact> participants =
-            content.UserInfo[EXTRA_PARTICIPANTS_ID]
-            .ToString().Split(';')
-            .Select(SubversePeerId.FromString)
-            .Select(dbService.GetContact)
-            .Where(x => x is not null)
-            .Cast<SubverseContact>();
-        string? topicName = content.UserInfo[EXTRA_TOPIC_ID] as NSString;
-        frontendService.NavigateMessageView(participants, topicName);
         completionHandler();
     }
 
