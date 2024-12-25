@@ -16,6 +16,8 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override string Title => "Contacts View";
 
+        public override bool HasSidebar => false;
+
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
         private bool isNotDialog;

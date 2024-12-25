@@ -34,7 +34,19 @@ public class MainViewModel : ViewModelBase, IFrontendService
         private set
         {
             previousPages.Push(currentPage);
+            HasPreviousView = true;
+
             this.RaiseAndSetIfChanged(ref currentPage, value);
+        }
+    }
+
+    private bool hasPreviousView;
+    public bool HasPreviousView 
+    {
+        get => hasPreviousView;
+        private set 
+        {
+            this.RaiseAndSetIfChanged(ref hasPreviousView, value);
         }
     }
 
@@ -46,7 +58,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         contactPage = new(serviceManager);
         createContactPage = new(serviceManager);
 
-        previousPages = new([contactPage]);
+        previousPages = new();
         currentPage = contactPage;
     }
 
@@ -215,6 +227,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         if (previousPages.TryPop(out PageViewModelBase? previousPage))
         {
             this.RaiseAndSetIfChanged(ref currentPage, previousPage, nameof(CurrentPage));
+            HasPreviousView = previousPages.Count > 0;
             return true;
         }
         else

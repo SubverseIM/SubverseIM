@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using Avalonia.Controls;
+using ReactiveUI;
 using SIPSorcery.SIP;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -19,11 +20,33 @@ namespace SubverseIM.ViewModels.Pages
 
         public override string Title => $"Conversation View";
 
+        public override bool HasSidebar => true;
+
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
         public ObservableCollection<MessageViewModel> MessageList { get; }
 
         public ObservableCollection<string> TopicsList { get; }
+
+        private bool isSidebarOpen;
+        public bool IsSidebarOpen
+        {
+            get => isSidebarOpen;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref isSidebarOpen, value);
+            }
+        }
+
+        private Dock messageTextDock;
+        public Dock MessageTextDock
+        {
+            get => messageTextDock;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref messageTextDock, value);
+            }
+        }
 
         private string? sendMessageText;
         public string? SendMessageText
@@ -61,6 +84,7 @@ namespace SubverseIM.ViewModels.Pages
             ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             MessageList = [];
             TopicsList = [string.Empty];
+            MessageTextDock = Dock.Bottom;
         }
 
         public async Task AddParticipantsCommandAsync()
@@ -209,16 +233,23 @@ namespace SubverseIM.ViewModels.Pages
             MessageList.Insert(0, new(this, null, message));
             dbService.InsertOrUpdateItem(message);
 
+            SendMessageText = null;
+
             foreach (SubverseContact contact in ContactsList.Select(x => x.innerContact))
             {
                 contact.DateLastChattedWith = message.DateSignedOn;
                 dbService.InsertOrUpdateItem(contact);
 
-                SendMessageText = null;
                 _ = nativeService.RunInBackgroundAsync(
                     ct => peerService.SendMessageAsync(message, ct)
                     );
             }
+        }
+
+        public override void ExpandSidebarCommand()
+        {
+            base.ExpandSidebarCommand();
+            IsSidebarOpen = !IsSidebarOpen;
         }
     }
 }

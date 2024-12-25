@@ -4,6 +4,7 @@ using ReactiveUI;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,6 +20,7 @@ public partial class MessagePageView : UserControl
         contacts.SelectionChanged += Contacts_SelectionChanged;
 
         messageBox.GotFocus += TextBoxGotFocus;
+        messageBox.LostFocus += TextBoxLostFocus;
     }
 
     private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -44,7 +46,7 @@ public partial class MessagePageView : UserControl
 
     private async void TextBoxGotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
     {
-        ILauncherService launcherService = await (DataContext as MessagePageViewModel)!
+        ILauncherService launcherService = await ((MessagePageViewModel)DataContext!)
             .ServiceManager.GetWithAwaitAsync<ILauncherService>();
 
         if (launcherService.IsAccessibilityEnabled && sender is TextBox textBox)
@@ -58,6 +60,13 @@ public partial class MessagePageView : UserControl
 
             textBox.IsEnabled = true;
         }
+
+        ((MessagePageViewModel)DataContext!).MessageTextDock = Dock.Top;
+    }
+
+    private void TextBoxLostFocus(object? sender, RoutedEventArgs e)
+    {
+        ((MessagePageViewModel)DataContext!).MessageTextDock = Dock.Bottom;
     }
 
     private async void TopicBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
