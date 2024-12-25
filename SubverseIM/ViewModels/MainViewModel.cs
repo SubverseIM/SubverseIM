@@ -58,7 +58,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         contactPage = new(serviceManager);
         createContactPage = new(serviceManager);
 
-        previousPages = new([contactPage]);
+        previousPages = new();
         currentPage = contactPage;
     }
 
