@@ -13,7 +13,15 @@
 	</Design.DataContext>
 	<DockPanel>
 		<Border Background="{StaticResource AltHigh}" BorderThickness="0" DockPanel.Dock="Top" HorizontalAlignment="Stretch">
-			<TextBlock Margin="10" Text="{Binding CurrentPage.Title}" FontSize="18" FontWeight="Bold" />
+			<DockPanel>
+				<Button DockPanel.Dock="Left" IsVisible="{Binding HasPreviousView}" Command="{Binding NavigatePreviousView}">
+					<PathIcon Data="{StaticResource caret_left_regular}" />
+				</Button>
+				<Button DockPanel.Dock="Right" IsVisible="{Binding CurrentPage.HasSidebar}" Command="{Binding CurrentPage.ExpandSidebarCommand}">
+					<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
+				</Button>
+				<TextBlock Margin="10" Text="{Binding CurrentPage.Title}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" />
+			</DockPanel>
 		</Border>
 		<Grid RowDefinitions="*,Auto">
 			<TransitioningContentControl Content="{Binding CurrentPage}" />

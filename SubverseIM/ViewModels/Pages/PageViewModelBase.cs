@@ -8,9 +8,13 @@ namespace SubverseIM.ViewModels.Pages
 
         public abstract string Title { get; }
 
+        public abstract bool HasSidebar { get; }
+
         public PageViewModelBase(IServiceManager serviceManager)
         {
             ServiceManager = serviceManager;
         }
+
+        public virtual void ExpandSidebarCommand() { }
     }
 }

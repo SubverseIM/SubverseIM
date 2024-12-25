@@ -11,12 +11,14 @@
 	</Design.DataContext>
 
 	<DockPanel>
-		<Button x:Name="inviteButton" IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding InviteCommandAsync}" CommandParameter="{Binding #inviteButton}">
-			<TextBlock FontSize="16" HorizontalAlignment="Center">Invite Friend</TextBlock>
-		</Button>
-		<Button IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding MessageCommandAsync}">
-			<TextBlock FontSize="16" HorizontalAlignment="Center">Start Conversation</TextBlock>
-		</Button>
+		<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
+			<Button Grid.Row="0" Grid.Column="0" x:Name="inviteButton" HorizontalAlignment="Stretch" Command="{Binding InviteCommandAsync}" CommandParameter="{Binding #inviteButton}">
+				<TextBlock FontSize="16" HorizontalAlignment="Center">Invite Friend</TextBlock>
+			</Button>
+			<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommandAsync}">
+				<TextBlock FontSize="16" HorizontalAlignment="Center">Start Conversation</TextBlock>
+			</Button>
+		</UniformGrid>
 		<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommandAsync}">
 			<TextBlock FontSize="16" HorizontalAlignment="Center">Add Selected Contacts</TextBlock>
 		</Button>

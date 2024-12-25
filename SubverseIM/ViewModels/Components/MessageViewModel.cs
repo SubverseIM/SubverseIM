@@ -1,4 +1,6 @@
-﻿using ReactiveUI;
+﻿using Avalonia.Controls;
+using Avalonia.Layout;
+using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
@@ -29,6 +31,8 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
+        public bool IsGroupMessage => innerMessage.RecipientNames.Length > 1;
+
         public string Content => URL_REGEX.Replace(innerMessage.Content ?? string.Empty, "[embed]");
 
         public string DateString => innerMessage
@@ -41,16 +45,20 @@ namespace SubverseIM.ViewModels.Components
             (string.IsNullOrEmpty(innerMessage.TopicName) ? 
             string.Empty : $" ({innerMessage.TopicName})");
 
-        public string CcFooter => innerMessage.RecipientNames.Length > 1 ?
-            $"Cc: {string.Join(", ", innerMessage.RecipientNames)}" : string.Empty;
+        public string CcFooter => $"Cc: {string.Join(", ", innerMessage.RecipientNames)}";
 
         public string ReadoutText => string.IsNullOrEmpty(innerMessage.TopicName) ?
-            $"At {DateString}, {FromName} said: {Content}{(innerMessage.Recipients.Length > 1 ?
+            $"At {DateString}, {FromName} said: {Content}{(IsGroupMessage ?
                 " to " + string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] : 
                 string.Empty)}" : 
-            $"At {DateString}, {FromName} on topic {innerMessage.TopicName} said: {Content}{(innerMessage.Recipients.Length > 1 ?
+            $"At {DateString}, {FromName} on topic {innerMessage.TopicName} said: {Content}{(IsGroupMessage ?
                 " to " + string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] : 
                 string.Empty)}";
+
+        public HorizontalAlignment ContentAlignment => fromContact is null ? 
+            HorizontalAlignment.Left : HorizontalAlignment.Right;
+
+        public Dock OptionsAlignment => fromContact is null ? Dock.Right : Dock.Left;
 
         public SubverseContact[] CcContacts { get; }
 

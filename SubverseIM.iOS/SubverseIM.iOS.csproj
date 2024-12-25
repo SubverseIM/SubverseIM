@@ -3,7 +3,7 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0-ios17.0</TargetFramework>
 		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
-		<RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
+		<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
 		<CodesignKey>Apple Development: Isabelle Santin (QL6ZJ9H5U9)</CodesignKey>
 		<Nullable>enable</Nullable>
 		<ProvisioningType>manual</ProvisioningType>
