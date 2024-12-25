@@ -45,17 +45,15 @@
 								Command="{Binding DeleteCommandAsync}"
 								CommandParameter="True"
 								Background="DarkRed">
-							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">
-								Delete
-							</TextBlock>
+							<PathIcon Data="{StaticResource delete_regular}" 
+											AutomationProperties.HelpText="Delete contact." />
 						</Button>
 						<Button DockPanel.Dock="Right" 
 								VerticalAlignment="Stretch" 
 								IsVisible="{Binding ShouldShowOptions}"
 								Command="{Binding EditCommandAsync}">
-							<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">
-								Edit
-							</TextBlock>
+							<PathIcon Data="{StaticResource edit_regular}" 
+											AutomationProperties.HelpText="Edit contact." />
 						</Button>
 						<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
 					</DockPanel>

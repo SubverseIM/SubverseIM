@@ -15,7 +15,7 @@
            DisplayMode="Overlay"
            OpenPaneLength="300">
 		<SplitView.Pane>
-			<Border BorderThickness="1" BorderBrush="Black">
+			<Border BorderThickness="2" BorderBrush="Black">
 				<DockPanel>
 					<DockPanel DockPanel.Dock="Top">
 						<Button DockPanel.Dock="Right"
@@ -41,17 +41,15 @@
 										Command="{Binding DeleteCommandAsync}"
 										CommandParameter="False"
 										Background="DarkRed">
-										<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">
-											Remove
-										</TextBlock>
+										<PathIcon Data="{StaticResource delete_regular}" 
+											AutomationProperties.HelpText="Remove participant from conversation." />
 									</Button>
 									<Button DockPanel.Dock="Right"
 										VerticalAlignment="Stretch"
 										IsVisible="{Binding ShouldShowOptions}"
 										Command="{Binding EditCommandAsync}">
-										<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">
-											Edit / Save
-										</TextBlock>
+										<PathIcon Data="{StaticResource edit_regular}" 
+											AutomationProperties.HelpText="Edit/Save contact." />
 									</Button>
 									<TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" />
 								</DockPanel>
@@ -111,11 +109,8 @@
 									Margin="2"
 									IsVisible="{Binding IsSelected}"
 									Command="{Binding DeleteCommandAsync}">
-								<TextBlock
-									VerticalAlignment="Center"
-									HorizontalAlignment="Center">
-									Delete
-								</TextBlock>
+								<PathIcon Data="{StaticResource delete_regular}" 
+											AutomationProperties.HelpText="Delete message." />
 							</Button>
 							<DockPanel>
 								<TextBlock TextWrapping="Wrap" DockPanel.Dock="Top"
