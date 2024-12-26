@@ -41,10 +41,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
     }
 
     private bool hasPreviousView;
-    public bool HasPreviousView 
+    public bool HasPreviousView
     {
         get => hasPreviousView;
-        private set 
+        private set
         {
             this.RaiseAndSetIfChanged(ref hasPreviousView, value);
         }
@@ -103,10 +103,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
         int unsentCount = 0, joinCount = 0;
         foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
         {
-            subTasks.Add(Task.Run(async Task? () => 
+            subTasks.Add(Task.Run(async Task? () =>
             {
                 await Task.Delay(++unsentCount * 333);
-                await peerService.SendMessageAsync(message, cancellationToken); 
+                await peerService.SendMessageAsync(message, cancellationToken);
             }));
         }
 
@@ -137,10 +137,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     DateSignedOn = DateTime.UtcNow,
                 };
 
-                subTasks.Add(Task.Run(async Task? () => 
+                subTasks.Add(Task.Run(async Task? () =>
                 {
                     await Task.Delay(++joinCount * 333);
-                    await peerService.SendMessageAsync(message, cancellationToken); 
+                    await peerService.SendMessageAsync(message, cancellationToken);
                 }));
             }
         }
@@ -174,21 +174,17 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
             try
             {
-                if (message.TopicName != "#system")
-                {
-                    dbService.InsertOrUpdateItem(message);
-                }
+                dbService.InsertOrUpdateItem(message);
 
                 bool isCurrentPeer = false;
                 if (contact is not null && currentPage is MessagePageViewModel vm &&
                     (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == contact.OtherPeer) &&
-                    (message.TopicName == vm.SendMessageTopicName ||
-                    (string.IsNullOrEmpty(message.TopicName) && 
-                    string.IsNullOrEmpty(vm.SendMessageTopicName)))))
+                    message.TopicName != "#system" && (message.TopicName == vm.SendMessageTopicName ||
+                    (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(vm.SendMessageTopicName))
+                    )))
                 {
                     if (!string.IsNullOrEmpty(message.TopicName) &&
-                        !vm.TopicsList.Contains(message.TopicName) &&
-                        message.TopicName != "#system")
+                        !vm.TopicsList.Contains(message.TopicName))
                     {
                         vm.TopicsList.Insert(0, message.TopicName);
                     }
@@ -244,7 +240,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public async void NavigateContactView(SubverseContact contact)
     {
-        if (CurrentPage is MessagePageViewModel messagePageViewModel) 
+        if (CurrentPage is MessagePageViewModel messagePageViewModel)
         {
             messagePageViewModel.ShouldRefreshContacts = false;
         }

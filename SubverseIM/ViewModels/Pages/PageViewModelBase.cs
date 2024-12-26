@@ -15,6 +15,6 @@ namespace SubverseIM.ViewModels.Pages
             ServiceManager = serviceManager;
         }
 
-        public virtual void ExpandSidebarCommand() { }
+        public virtual void ToggleSidebarCommand() { }
     }
 }
