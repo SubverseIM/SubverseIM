@@ -50,6 +50,30 @@ public partial class ContactPageView : UserControl
             Timeout.Infinite, Timeout.Infinite);
 
         contacts.SelectionChanged += Contacts_SelectionChanged;
+        contacts.PointerPressed += Contacts_PointerPressed;
+        contacts.PointerReleased += Contacts_PointerReleased;
+    }
+
+    private void Contacts_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        pressTimer.Change(Timeout.Infinite, Timeout.Infinite);
+    }
+
+    private void Contacts_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        lock (pressTimerState) { pressTimerState.HasElapsed = false; }
+        pressTimer.Change(275, Timeout.Infinite);
+
+        bool isFirstTap;
+        lock (tapTimerState)
+        {
+            isFirstTap = tapTimerState.TapCount++ == 0;
+        }
+
+        if (isFirstTap)
+        {
+            tapTimer.Change(300, Timeout.Infinite);
+        }
     }
 
     private void PressTimerElapsed(object? state)
@@ -85,32 +109,6 @@ public partial class ContactPageView : UserControl
         {
             lock (tapTimerState) { tapTimerState.TapCount = 0; }
         }
-    }
-
-    protected override void OnPointerPressed(PointerPressedEventArgs e)
-    {
-        base.OnPointerPressed(e);
-
-        lock (pressTimerState) { pressTimerState.HasElapsed = false; }
-        pressTimer.Change(275, Timeout.Infinite);
-
-        bool isFirstTap;
-        lock (tapTimerState)
-        {
-            isFirstTap = tapTimerState.TapCount++ == 0;
-        }
-
-        if (isFirstTap)
-        {
-            tapTimer.Change(300, Timeout.Infinite);
-        }
-    }
-
-    protected override void OnPointerReleased(PointerReleasedEventArgs e)
-    {
-        base.OnPointerReleased(e);
-
-        pressTimer.Change(Timeout.Infinite, Timeout.Infinite);
     }
 
     private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -165,7 +163,9 @@ public partial class ContactPageView : UserControl
         pressTimerState.DataContext = DataContext;
         tapTimerState.DataContext = DataContext;
 
+        await ((ContactPageViewModel)DataContext!).LoadTopicsAsync();
         await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
+
         ILauncherService launcherService = await ((ContactPageViewModel)DataContext!)
             .ServiceManager.GetWithAwaitAsync<ILauncherService>();
         this.launcherService = launcherService;
