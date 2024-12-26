@@ -161,6 +161,8 @@ namespace SubverseIM.ViewModels.Pages
                 .ToHashSet();
             foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(participantIds, null).Take(250))
             {
+                if (message.TopicName == "#system") continue;
+
                 if (!string.IsNullOrEmpty(message.TopicName) && !TopicsList.Contains(message.TopicName))
                 {
                     string? currentTopicName = SendMessageTopicName;
@@ -246,9 +248,9 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public override void ExpandSidebarCommand()
+        public override void ToggleSidebarCommand()
         {
-            base.ExpandSidebarCommand();
+            base.ToggleSidebarCommand();
             IsSidebarOpen = !IsSidebarOpen;
         }
     }
