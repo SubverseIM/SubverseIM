@@ -45,15 +45,18 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
             Body = message.Content ?? string.Empty,
         };
 
-        var extraData = new NSDictionary<NSString, NSString?>(
-            [(NSString)EXTRA_PARTICIPANTS_ID, (NSString)EXTRA_TOPIC_ID],
-            [
-                (NSString)string.Join(';', ((IEnumerable<SubversePeerId>)
+        if (message.TopicName != "#system")
+        {
+            var extraData = new NSDictionary<NSString, NSString?>(
+                [(NSString)EXTRA_PARTICIPANTS_ID, (NSString)EXTRA_TOPIC_ID],
+                [
+                    (NSString)string.Join(';', ((IEnumerable<SubversePeerId>)
                 [message.Sender, .. message.Recipients])
                 .Select(x => x.ToString())),
                 (NSString?)message.TopicName
-            ]);
-        content.UserInfo = extraData;
+                ]);
+            content.UserInfo = extraData;
+        }
 
         UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
         UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);

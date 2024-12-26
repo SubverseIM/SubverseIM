@@ -151,12 +151,15 @@ namespace SubverseIM.Android
             notifyIntent.SetAction(Intent.ActionMain);
             notifyIntent.AddCategory(Intent.CategoryLauncher);
             notifyIntent.AddFlags(ActivityFlags.NewTask);
-            notifyIntent.PutExtra(EXTRA_TOPIC_ID, message.TopicName);
-            notifyIntent.PutExtra(EXTRA_PARTICIPANTS_ID, 
-                ((IEnumerable<SubversePeerId>)
-                [message.Sender, .. message.Recipients])
-                .Select(x => x.ToString())
-                .ToArray());
+            if (message.TopicName != "#system")
+            {
+                notifyIntent.PutExtra(EXTRA_TOPIC_ID, message.TopicName);
+                notifyIntent.PutExtra(EXTRA_PARTICIPANTS_ID,
+                    ((IEnumerable<SubversePeerId>)
+                    [message.Sender, .. message.Recipients])
+                    .Select(x => x.ToString())
+                    .ToArray());
+            }
 
             PendingIntent? pendingIntent = PendingIntent.GetActivity(
                 this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |

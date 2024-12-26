@@ -10,56 +10,81 @@
 		<vm:ContactPageViewModel />
 	</Design.DataContext>
 
-	<DockPanel>
-		<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
-			<Button Grid.Row="0" Grid.Column="0" x:Name="inviteButton" HorizontalAlignment="Stretch" Command="{Binding InviteCommandAsync}" CommandParameter="{Binding #inviteButton}">
-				<TextBlock FontSize="16" HorizontalAlignment="Center">Invite Friend</TextBlock>
+	<SplitView IsPaneOpen="{Binding IsSidebarOpen}"
+		   PanePlacement="Right"
+           DisplayMode="Overlay"
+           OpenPaneLength="300">
+		<SplitView.Pane>
+			<Border BorderThickness="2" BorderBrush="Black">
+				<DockPanel>
+					<Label DockPanel.Dock="Top">Recent Topics</Label>
+					<ListBox x:Name="topicsList" SelectionMode="Single,Toggle" ItemsSource="{Binding TopicsList}">
+						<ListBox.Styles>
+							<Style Selector="ListBoxItem">
+								<Setter Property="AutomationProperties.Name" Value="Topic"/>
+							</Style>
+						</ListBox.Styles>
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<HyperlinkButton Padding="0" Command="{Binding OpenMessageViewCommandAsync}">
+									<TextBlock Foreground="Aqua" Text="{Binding TopicName}"/>
+								</HyperlinkButton>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+				</DockPanel>
+			</Border>
+		</SplitView.Pane>
+		<DockPanel>
+			<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
+				<Button Grid.Row="0" Grid.Column="0" x:Name="inviteButton" HorizontalAlignment="Stretch" Command="{Binding InviteCommandAsync}" CommandParameter="{Binding #inviteButton}">
+					<TextBlock FontSize="16" HorizontalAlignment="Center">Invite Friend</TextBlock>
+				</Button>
+				<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommandAsync}">
+					<TextBlock FontSize="16" HorizontalAlignment="Center">Start Conversation</TextBlock>
+				</Button>
+			</UniformGrid>
+			<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommandAsync}">
+				<TextBlock FontSize="16" HorizontalAlignment="Center">Add Selected Contacts</TextBlock>
 			</Button>
-			<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommandAsync}">
-				<TextBlock FontSize="16" HorizontalAlignment="Center">Start Conversation</TextBlock>
-			</Button>
-		</UniformGrid>
-		<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommandAsync}">
-			<TextBlock FontSize="16" HorizontalAlignment="Center">Add Selected Contacts</TextBlock>
-		</Button>
-		<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
-			<ListBox.Styles>
-				<Style Selector="ListBoxItem">
-					<Setter Property="AutomationProperties.Name" Value="Contact"/>
-				</Style>
-			</ListBox.Styles>
-			<ListBox.ItemTemplate>
-				<DataTemplate>
-					<DockPanel Height="64"
-							   AutomationProperties.HelpText="{Binding DisplayName}">
-						<Panel DockPanel.Dock="Left" Width="64">
-							<Polygon Points="{Binding HexagonPoints}" Fill="White" />
-							<Image Source="{Binding ContactPhoto}"
-								   Stretch="UniformToFill"
-								   Width="62" Height="62" Clip="{Binding HexagonPath}">
-							</Image>
-						</Panel>
-						<Button DockPanel.Dock="Right"
-								VerticalAlignment="Stretch"
-								IsVisible="{Binding ShouldShowOptions}"
-								Command="{Binding DeleteCommandAsync}"
-								CommandParameter="True"
-								Background="DarkRed">
-							<PathIcon Data="{StaticResource delete_regular}" 
-											AutomationProperties.HelpText="Delete contact." />
-						</Button>
-						<Button DockPanel.Dock="Right" 
-								VerticalAlignment="Stretch" 
-								IsVisible="{Binding ShouldShowOptions}"
-								Command="{Binding EditCommandAsync}">
-							<PathIcon Data="{StaticResource edit_regular}" 
-											AutomationProperties.HelpText="Edit contact." />
-						</Button>
-						<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
-					</DockPanel>
-				</DataTemplate>
-			</ListBox.ItemTemplate>
-		</ListBox>
-	</DockPanel>
-
+			<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
+				<ListBox.Styles>
+					<Style Selector="ListBoxItem">
+						<Setter Property="AutomationProperties.Name" Value="Contact"/>
+					</Style>
+				</ListBox.Styles>
+				<ListBox.ItemTemplate>
+					<DataTemplate>
+						<DockPanel Height="64"
+								   AutomationProperties.HelpText="{Binding DisplayName}">
+							<Panel DockPanel.Dock="Left" Width="64">
+								<Polygon Points="{Binding HexagonPoints}" Fill="White" />
+								<Image Source="{Binding ContactPhoto}"
+									   Stretch="UniformToFill"
+									   Width="62" Height="62" Clip="{Binding HexagonPath}">
+								</Image>
+							</Panel>
+							<Button DockPanel.Dock="Right"
+									VerticalAlignment="Stretch"
+									IsVisible="{Binding ShouldShowOptions}"
+									Command="{Binding DeleteCommandAsync}"
+									CommandParameter="True"
+									Background="DarkRed">
+								<PathIcon Data="{StaticResource delete_regular}"
+												AutomationProperties.HelpText="Delete contact." />
+							</Button>
+							<Button DockPanel.Dock="Right"
+									VerticalAlignment="Stretch"
+									IsVisible="{Binding ShouldShowOptions}"
+									Command="{Binding EditCommandAsync}">
+								<PathIcon Data="{StaticResource edit_regular}"
+												AutomationProperties.HelpText="Edit contact." />
+							</Button>
+							<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
+						</DockPanel>
+					</DataTemplate>
+				</ListBox.ItemTemplate>
+			</ListBox>
+		</DockPanel>
+	</SplitView>
 </UserControl>

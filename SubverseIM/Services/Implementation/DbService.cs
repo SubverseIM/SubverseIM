@@ -73,6 +73,25 @@ namespace SubverseIM.Services.Implementation
                 .ToEnumerable();
         }
 
+        public IReadOnlyDictionary<string, IEnumerable<SubversePeerId>> GetAllMessageTopics()
+        {
+            var messages = db.GetCollection<SubverseMessage>();
+
+            messages.EnsureIndex(x => x.Sender);
+            messages.EnsureIndex(x => x.Recipients);
+
+            messages.EnsureIndex(x => x.CallId, unique: true);
+
+            return messages.Query()
+                .OrderByDescending(x => x.DateSignedOn)
+                .Where(x => !string.IsNullOrEmpty(x.TopicName) && x.TopicName != "#system")
+                .ToEnumerable()
+                .GroupBy(x => x.TopicName!)
+                .ToDictionary(g => g.Key, g => g
+                    .SelectMany(x => x.Recipients)
+                    .Distinct());
+        }
+
         public SubverseMessage? GetMessageByCallId(string callId) 
         {
             var messages = db.GetCollection<SubverseMessage>();

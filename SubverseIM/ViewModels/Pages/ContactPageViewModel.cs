@@ -16,36 +16,49 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override string Title => "Contacts View";
 
-        public override bool HasSidebar => false;
+        public override bool HasSidebar => IsNotDialog;
 
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
-        private bool isNotDialog;
-        public bool IsNotDialog 
-        {
-            get => isNotDialog;
-            private set     
-            {
-                this.RaiseAndSetIfChanged(ref isNotDialog, value);
-            }
-        }
+        public ObservableCollection<TopicViewModel> TopicsList { get; }
 
         private bool isDialog;
-        public bool IsDialog 
+        public bool IsDialog
         {
             get => isDialog;
-            private set     
+            private set
             {
                 IsNotDialog = !value;
                 this.RaiseAndSetIfChanged(ref isDialog, value);
             }
         }
 
+        private bool isNotDialog;
+        public bool IsNotDialog
+        {
+            get => isNotDialog;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref isNotDialog, value);
+                this.RaisePropertyChanged(nameof(HasSidebar));
+            }
+        }
+
+        private bool isSidebarOpen;
+        public bool IsSidebarOpen
+        {
+            get => isSidebarOpen;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref isSidebarOpen, value);
+            }
+        }
+
         private MessagePageViewModel? parent;
-        public MessagePageViewModel? Parent 
+        public MessagePageViewModel? Parent
         {
             get => parent;
-            set 
+            set
             {
                 IsDialog = value is not null;
                 this.RaiseAndSetIfChanged(ref parent, value);
@@ -54,25 +67,45 @@ namespace SubverseIM.ViewModels.Pages
 
         public ContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)
         {
-            ContactsList = new();
             Parent = null;
+
+            ContactsList = new();
+            TopicsList = new();
         }
 
-        public void RemoveContact(ContactViewModel contact) 
+        public void RemoveContact(ContactViewModel contact)
         {
             ContactsList.Remove(contact);
         }
 
-        public async Task LoadContactsAsync(CancellationToken cancellationToken = default) 
+        public async Task LoadContactsAsync(CancellationToken cancellationToken = default)
         {
             ContactsList.Clear();
 
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
-            foreach (SubverseContact contact in dbService.GetContacts()) 
+            foreach (SubverseContact contact in dbService.GetContacts())
             {
                 ContactViewModel vm = new(ServiceManager, this, contact);
                 await vm.LoadPhotoAsync();
                 ContactsList.Add(vm);
+            }
+        }
+
+        public async Task LoadTopicsAsync(CancellationToken cancellationToken = default)
+        {
+            TopicsList.Clear();
+
+            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+            foreach ((string topicName, IEnumerable<SubversePeerId> otherPeers) in dbService.GetAllMessageTopics())
+            {
+                TopicViewModel vm = new(
+                    ServiceManager, topicName, otherPeers
+                    .Select(dbService.GetContact)
+                    .Where(x => x is not null)
+                    .Cast<SubverseContact>()
+                    .ToArray()
+                    );
+                TopicsList.Add(vm);
             }
         }
 
@@ -112,6 +145,12 @@ namespace SubverseIM.ViewModels.Pages
 
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigatePreviousView();
+        }
+
+        public override void ToggleSidebarCommand()
+        {
+            base.ToggleSidebarCommand();
+            IsSidebarOpen = !IsSidebarOpen;
         }
     }
 }
