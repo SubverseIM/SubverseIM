@@ -49,6 +49,8 @@ public partial class ContactPageView : UserControl
         pressTimer = new Timer(PressTimerElapsed, pressTimerState,
             Timeout.Infinite, Timeout.Infinite);
 
+        topics.SelectionChanged += Topics_SelectionChanged;
+
         contacts.SelectionChanged += Contacts_SelectionChanged;
         contacts.PointerPressed += Contacts_PointerPressed;
         contacts.PointerReleased += Contacts_PointerReleased;
@@ -153,6 +155,19 @@ public partial class ContactPageView : UserControl
             item.IsSelected = !isLongPress && 
                 launcherService?.IsAccessibilityEnabled == false &&
                 ((ContactPageViewModel)DataContext!).Parent is null;
+        }
+    }
+
+    private void Topics_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        foreach (var item in e.AddedItems.Cast<TopicViewModel>()) 
+        {
+            item.IsSelected = true;
+        }
+
+        foreach (var item in e.RemovedItems.Cast<TopicViewModel>())
+        {
+            item.IsSelected = false;
         }
     }
 

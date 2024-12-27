@@ -98,14 +98,17 @@ namespace SubverseIM.ViewModels.Pages
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             foreach ((string topicName, IEnumerable<SubversePeerId> otherPeers) in dbService.GetAllMessageTopics())
             {
-                TopicViewModel vm = new(
-                    ServiceManager, topicName, otherPeers
+                SubverseContact[] contacts = otherPeers
                     .Select(dbService.GetContact)
                     .Where(x => x is not null)
                     .Cast<SubverseContact>()
-                    .ToArray()
-                    );
-                TopicsList.Add(vm);
+                    .ToArray();
+
+                if (contacts.Length > 0) 
+                {
+                    TopicViewModel vm = new(this, topicName, contacts);
+                    TopicsList.Add(vm);
+                }
             }
         }
 

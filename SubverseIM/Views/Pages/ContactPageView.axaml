@@ -18,7 +18,7 @@
 			<Border BorderThickness="2" BorderBrush="Black">
 				<DockPanel>
 					<Label DockPanel.Dock="Top">Recent Topics</Label>
-					<ListBox x:Name="topicsList" SelectionMode="Single,Toggle" ItemsSource="{Binding TopicsList}">
+					<ListBox x:Name="topics" SelectionMode="Single,Toggle" ItemsSource="{Binding TopicsList}">
 						<ListBox.Styles>
 							<Style Selector="ListBoxItem">
 								<Setter Property="AutomationProperties.Name" Value="Topic"/>
@@ -26,9 +26,16 @@
 						</ListBox.Styles>
 						<ListBox.ItemTemplate>
 							<DataTemplate>
-								<HyperlinkButton Padding="0" Command="{Binding OpenMessageViewCommandAsync}">
-									<TextBlock Foreground="Aqua" Text="{Binding TopicName}"/>
-								</HyperlinkButton>
+								<DockPanel>
+									<Button IsVisible="{Binding IsSelected}" Background="DarkRed" 
+											DockPanel.Dock="Right" Command="{Binding DeleteTopicCommandAsync}">
+										<PathIcon Data="{StaticResource delete_regular}"
+												  AutomationProperties.HelpText="Delete topic." />
+									</Button>
+									<HyperlinkButton Padding="0" Command="{Binding OpenMessageViewCommandAsync}">
+										<TextBlock Foreground="Aqua" Text="{Binding TopicName}"/>
+									</HyperlinkButton>
+								</DockPanel>
 							</DataTemplate>
 						</ListBox.ItemTemplate>
 					</ListBox>

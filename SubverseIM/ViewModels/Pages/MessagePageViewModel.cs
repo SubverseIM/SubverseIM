@@ -232,6 +232,8 @@ namespace SubverseIM.ViewModels.Pages
                 DateSignedOn = DateTime.UtcNow,
             };
 
+            MessageTextDock = Dock.Bottom;
+
             MessageList.Insert(0, new(this, null, message));
             dbService.InsertOrUpdateItem(message);
 

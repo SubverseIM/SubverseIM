@@ -27,6 +27,8 @@ namespace SubverseIM.Services
 
         bool DeleteItemById<T>(BsonValue id);
 
+        void DeleteAllMessagesOfTopic(string topicName);
+
         bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream);
 
         Stream CreateWriteStream(string path);

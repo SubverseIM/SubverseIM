@@ -43,6 +43,7 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
             Title = message.TopicName is null ? contact?.DisplayName ?? "Anonymous" :
                 $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})",
             Body = message.Content ?? string.Empty,
+            Sound = UNNotificationSound.Default
         };
 
         if (message.TopicName != "#system")

@@ -30,7 +30,7 @@ public partial class MessagePageView : UserControl
         foreach (var contact in e.AddedItems
             .Cast<ContactViewModel?>()
             .Where(x => x is not null)
-            .Cast<ContactViewModel>()) 
+            .Cast<ContactViewModel>())
         {
             contact.ShouldShowOptions = true;
         }
@@ -66,7 +66,10 @@ public partial class MessagePageView : UserControl
 
     private void TextBoxLostFocus(object? sender, RoutedEventArgs e)
     {
-        ((MessagePageViewModel)DataContext!).MessageTextDock = Dock.Bottom;
+        if (string.IsNullOrEmpty(messageBox.Text))
+        {
+            ((MessagePageViewModel)DataContext!).MessageTextDock = Dock.Bottom;
+        }
     }
 
     private async void TopicBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
