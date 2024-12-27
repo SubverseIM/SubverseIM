@@ -26,11 +26,11 @@
 						</ListBox.Styles>
 						<ListBox.ItemTemplate>
 							<DataTemplate>
-								<DockPanel>
+								<DockPanel AutomationProperties.HelpText="{Binding TopicName}">
 									<Button IsVisible="{Binding IsSelected}" Background="DarkRed" 
-											DockPanel.Dock="Right" Command="{Binding DeleteTopicCommandAsync}">
-										<PathIcon Data="{StaticResource delete_regular}"
-												  AutomationProperties.HelpText="Delete topic." />
+											DockPanel.Dock="Right" Command="{Binding DeleteTopicCommandAsync}"
+											AutomationProperties.Name="Delete Topic">
+										<PathIcon Data="{StaticResource delete_regular}" />
 									</Button>
 									<HyperlinkButton Padding="0" Command="{Binding OpenMessageViewCommandAsync}">
 										<TextBlock Foreground="Aqua" Text="{Binding TopicName}"/>
@@ -76,16 +76,16 @@
 									IsVisible="{Binding ShouldShowOptions}"
 									Command="{Binding DeleteCommandAsync}"
 									CommandParameter="True"
-									Background="DarkRed">
-								<PathIcon Data="{StaticResource delete_regular}"
-												AutomationProperties.HelpText="Delete contact." />
+									Background="DarkRed"
+									AutomationProperties.Name="Delete Contact">
+								<PathIcon Data="{StaticResource delete_regular}" />
 							</Button>
 							<Button DockPanel.Dock="Right"
 									VerticalAlignment="Stretch"
 									IsVisible="{Binding ShouldShowOptions}"
-									Command="{Binding EditCommandAsync}">
-								<PathIcon Data="{StaticResource edit_regular}"
-												AutomationProperties.HelpText="Edit contact." />
+									Command="{Binding EditCommandAsync}"
+									AutomationProperties.Name="Edit Contact">
+								<PathIcon Data="{StaticResource edit_regular}" />
 							</Button>
 							<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
 						</DockPanel>
