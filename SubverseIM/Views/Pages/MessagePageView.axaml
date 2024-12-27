@@ -20,9 +20,9 @@
 					<DockPanel DockPanel.Dock="Top">
 						<Button DockPanel.Dock="Right"
 								VerticalAlignment="Stretch"
-								Command="{Binding AddParticipantsCommandAsync}">
-							<PathIcon Data="{StaticResource people_add_regular}"
-								AutomationProperties.HelpText="Add participant." />
+								Command="{Binding AddParticipantsCommandAsync}"
+								AutomationProperties.Name="Add Participants">
+							<PathIcon Data="{StaticResource people_add_regular}" />
 						</Button>
 						<Label>Participants</Label>
 					</DockPanel>
@@ -40,16 +40,16 @@
 										IsVisible="{Binding ShouldShowOptions}"
 										Command="{Binding DeleteCommandAsync}"
 										CommandParameter="False"
-										Background="DarkRed">
-										<PathIcon Data="{StaticResource delete_regular}" 
-											AutomationProperties.HelpText="Remove participant from conversation." />
+										Background="DarkRed"
+										AutomationProperties.Name="Remove Participant">
+										<PathIcon Data="{StaticResource delete_regular}" />
 									</Button>
 									<Button DockPanel.Dock="Right"
 										VerticalAlignment="Stretch"
 										IsVisible="{Binding ShouldShowOptions}"
-										Command="{Binding EditCommandAsync}">
-										<PathIcon Data="{StaticResource edit_regular}" 
-											AutomationProperties.HelpText="Edit/Save contact." />
+										Command="{Binding EditCommandAsync}"
+										AutomationProperties.Name="Save/Edit Contact">
+										<PathIcon Data="{StaticResource edit_regular}" />
 									</Button>
 									<TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" />
 								</DockPanel>
@@ -63,9 +63,9 @@
 			<DockPanel DockPanel.Dock="Top">
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
-						Command="{Binding AddTopicCommandAsync}">
-					<PathIcon Data="{StaticResource comment_add_regular}"
-						AutomationProperties.HelpText="Create new topic." />
+						Command="{Binding AddTopicCommandAsync}"
+						AutomationProperties.Name="New Topic">
+					<PathIcon Data="{StaticResource comment_add_regular}" />
 				</Button>
 				<ComboBox x:Name="topicBox" DockPanel.Dock="Top"
 						HorizontalAlignment="Stretch"
@@ -77,7 +77,8 @@
 			<DockPanel DockPanel.Dock="{Binding MessageTextDock}">
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
-						Command="{Binding SendCommandAsync}">
+						Command="{Binding SendCommandAsync}"
+						AutomationProperties.Name="Send Message">
 					<PathIcon Data="{StaticResource send_regular}" />
 				</Button>
 				<TextBox x:Name="messageBox" HorizontalAlignment="Stretch"
@@ -100,9 +101,9 @@
 									VerticalAlignment="Top"
 									Margin="2"
 									IsVisible="{Binding IsSelected}"
-									Command="{Binding DeleteCommandAsync}">
-								<PathIcon Data="{StaticResource delete_regular}" 
-											AutomationProperties.HelpText="Delete message." />
+									Command="{Binding DeleteCommandAsync}"
+									AutomationProperties.Name="Delete Message">
+								<PathIcon Data="{StaticResource delete_regular}" />
 							</Button>
 							<TextBlock
 								DockPanel.Dock="{Binding OptionsAlignment}"

@@ -10,8 +10,16 @@
 		<vm:CreateContactPageViewModel />
 	</Design.DataContext>
 	<DockPanel>
-		<Button FontSize="16" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom" Command="{Binding Contact.SaveChangesCommandAsync}">Save Changes</Button>
-		<Button FontSize="16" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom" Command="{Binding Contact.ChangePhotoCommandAsync}">Change Photo</Button>
+		<UniformGrid DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Rows="1" Columns="2">
+			<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding Contact.ChangePhotoCommandAsync}"
+					AutomationProperties.Name="Change Photo">
+				<PathIcon Data="{StaticResource camera_edit_regular}" />
+			</Button>
+			<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding Contact.SaveChangesCommandAsync}"
+					AutomationProperties.Name="Save Changes">
+				<PathIcon Data="{StaticResource save_regular}" />
+			</Button>
+		</UniformGrid>
 		<Label HorizontalAlignment="Stretch" DockPanel.Dock="Top">Contact Name:</Label>
 		<TextBox x:Name="nameEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Top"
 				 Watermark="Display Name" Text="{Binding Contact.DisplayName}" />

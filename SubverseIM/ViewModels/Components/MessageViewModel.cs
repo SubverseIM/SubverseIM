@@ -4,8 +4,8 @@ using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
-using System;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -47,13 +47,25 @@ namespace SubverseIM.ViewModels.Components
 
         public string CcFooter => $"Cc: {string.Join(", ", innerMessage.RecipientNames)}";
 
-        public string ReadoutText => string.IsNullOrEmpty(innerMessage.TopicName) ?
-            $"At {DateString}, {FromName} said: {Content}{(IsGroupMessage ?
-                " to " + string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] : 
-                string.Empty)}" : 
-            $"At {DateString}, {FromName} on topic {innerMessage.TopicName} said: {Content}{(IsGroupMessage ?
-                " to " + string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] : 
-                string.Empty)}";
+        public string ReadoutText 
+        { 
+            get
+            {
+                StringBuilder builder = new();
+                builder.AppendLine($"Sent: {innerMessage.DateSignedOn.ToLocalTime()}");
+                builder.AppendLine($"From: {FromName}");
+                builder.AppendLine($"To: {(IsGroupMessage ?
+                    string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] :
+                    innerMessage.RecipientNames[0])}");
+                if (!string.IsNullOrEmpty(innerMessage.TopicName))
+                {
+                    builder.AppendLine($"Topic: {innerMessage.TopicName}");
+                }
+                builder.AppendLine($"Message body:");
+                builder.AppendLine(innerMessage.Content);
+                return builder.ToString();
+            } 
+        }
 
         public HorizontalAlignment ContentAlignment => fromContact is null ? 
             HorizontalAlignment.Left : HorizontalAlignment.Right;
