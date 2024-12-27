@@ -113,7 +113,7 @@ namespace SubverseIM.Services.Implementation
                     pgp.GenerateKey(
                         publicKeyStream,
                         privateKeyStream,
-                        password: "#FreeTheInternet"
+                        password: MAGIC_SECRET_PASSWORD
                         );
                 }
 

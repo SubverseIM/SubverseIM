@@ -1,6 +1,8 @@
 ﻿using LiteDB;
+using Org.BouncyCastle.Asn1.Ocsp;
 using SubverseIM.Models;
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -87,7 +89,7 @@ namespace SubverseIM.Services.Implementation
                 .Where(x => !string.IsNullOrEmpty(x.TopicName) && x.TopicName != "#system")
                 .ToEnumerable()
                 .GroupBy(x => x.TopicName!)
-                .ToDictionary(g => g.Key, g => g
+                .ToFrozenDictionary(g => g.Key, g => g
                     .SelectMany(x => x.Recipients)
                     .Distinct());
         }
@@ -124,6 +126,18 @@ namespace SubverseIM.Services.Implementation
         {
             var collection = db.GetCollection<T>();
             return collection.Delete(id);
+        }
+
+        public void DeleteAllMessagesOfTopic(string topicName) 
+        {
+            var messages = db.GetCollection<SubverseMessage>();
+
+            messages.EnsureIndex(x => x.Sender);
+            messages.EnsureIndex(x => x.Recipients);
+
+            messages.EnsureIndex(x => x.CallId, unique: true);
+
+            messages.DeleteMany(x => x.TopicName == topicName);
         }
 
         public bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream)

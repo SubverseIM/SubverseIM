@@ -95,23 +95,23 @@
 					<DataTemplate>
 						<DockPanel
 							AutomationProperties.HelpText="{Binding ReadoutText}">
-							<TextBlock
-								DockPanel.Dock="Bottom"
-								VerticalAlignment="Top"
-								HorizontalAlignment="{Binding ContentAlignment}"
-								IsVisible="{Binding IsSelected}"
-								Text="{Binding DateString}"
-								FontSize="12"
-								Margin="2" />
 							<Button Background="DarkRed"
 									DockPanel.Dock="{Binding OptionsAlignment}"
-									VerticalAlignment="Stretch"
+									VerticalAlignment="Top"
 									Margin="2"
 									IsVisible="{Binding IsSelected}"
 									Command="{Binding DeleteCommandAsync}">
 								<PathIcon Data="{StaticResource delete_regular}" 
 											AutomationProperties.HelpText="Delete message." />
 							</Button>
+							<TextBlock
+								DockPanel.Dock="{Binding OptionsAlignment}"
+								VerticalAlignment="Top"
+								HorizontalAlignment="{Binding ContentAlignment}"
+								IsVisible="{Binding IsSelected}"
+								Text="{Binding DateString}"
+								FontSize="12"
+								Margin="2" />
 							<DockPanel>
 								<TextBlock TextWrapping="Wrap" DockPanel.Dock="Top"
 										HorizontalAlignment="{Binding ContentAlignment}"
@@ -126,7 +126,7 @@
 										<DataTemplate>
 											<HyperlinkButton Padding="0" IsEnabled="True"
 													NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
-												<TextBlock TextWrapping="Wrap" 
+												<TextBlock Foreground="Aqua" TextWrapping="Wrap" 
 														Text="{Binding HostName, DataType={x:Type vmx:EmbedViewModel}}" />
 											</HyperlinkButton>
 										</DataTemplate>

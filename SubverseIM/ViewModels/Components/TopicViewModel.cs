@@ -1,20 +1,35 @@
-﻿using SubverseIM.Models;
+﻿using ReactiveUI;
+using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.ViewModels.Pages;
 using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Components
 {
     public class TopicViewModel : ViewModelBase
     {
-        private readonly IServiceManager serviceManager;
+        private const string CONFIRM_TITLE = "Delete topic messages?";
+        private const string CONFIRM_MESSAGE = "Warning: all messages labeled with this topic will be permanently deleted! Are you sure you want to proceed?";
+
+        private readonly ContactPageViewModel parent;
 
         public string TopicName { get; }
 
         public SubverseContact[] Contacts { get; }
 
-        public TopicViewModel(IServiceManager serviceManager, string topicName, SubverseContact[] contacts) 
+        private bool isSelected;
+        public bool IsSelected 
+        { 
+            get => isSelected;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref isSelected, value);
+            }
+        }
+
+        public TopicViewModel(ContactPageViewModel parent, string topicName, SubverseContact[] contacts) 
         {
-            this.serviceManager = serviceManager;
+            this.parent = parent;
 
             TopicName = topicName;
             Contacts = contacts;
@@ -22,8 +37,24 @@ namespace SubverseIM.ViewModels.Components
 
         public async Task OpenMessageViewCommandAsync() 
         {
-            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            IFrontendService frontendService = await parent.ServiceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateMessageView(Contacts, TopicName);
+        }
+
+        public async Task DeleteTopicCommandAsync() 
+        {
+            ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
+            if (await launcherService.ShowConfirmationDialogAsync(CONFIRM_TITLE, CONFIRM_MESSAGE))
+            {
+                IDbService dbService = await parent.ServiceManager.GetWithAwaitAsync<IDbService>();
+                dbService.DeleteAllMessagesOfTopic(TopicName);
+
+                parent.TopicsList.Remove(this);
+            }
+            else 
+            {
+                IsSelected = false;
+            }
         }
     }
 }
