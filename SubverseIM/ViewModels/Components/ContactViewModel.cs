@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -161,6 +162,10 @@ namespace SubverseIM.ViewModels.Components
                     );
                 ContactPhoto.Save(dbFileStream);
             }
+
+            innerContact.ChatColor ??= HslColor.FromHsl(
+                RandomNumberGenerator.GetInt32(360), 0.5, 0.25
+                ).ToRgb();
             dbService.InsertOrUpdateItem(innerContact);
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();

@@ -1,4 +1,5 @@
-﻿using LiteDB;
+﻿using Avalonia.Media;
+using LiteDB;
 using System;
 
 namespace SubverseIM.Models
@@ -16,5 +17,7 @@ namespace SubverseIM.Models
         public string? UserNote { get; set; }
 
         public DateTime DateLastChattedWith { get; set; }
+
+        public Color? ChatColor { get; set; }
     }
 }
