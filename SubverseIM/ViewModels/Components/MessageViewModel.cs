@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -30,6 +31,8 @@ namespace SubverseIM.ViewModels.Components
                 this.RaiseAndSetIfChanged(ref isSelected, value);
             }
         }
+
+        public Brush BubbleBrush { get; }
 
         public bool IsGroupMessage => innerMessage.RecipientNames.Length > 1;
 
@@ -81,6 +84,11 @@ namespace SubverseIM.ViewModels.Components
             this.messagePageView = messagePageView;
             this.fromContact = fromContact;
             this.innerMessage = innerMessage;
+
+            BubbleBrush = new SolidColorBrush(
+                fromContact is null ? Colors.MediumPurple : 
+                fromContact.ChatColor ?? Colors.DimGray
+                );
 
             CcContacts = innerMessage.Recipients
                 .Zip(innerMessage.RecipientNames)

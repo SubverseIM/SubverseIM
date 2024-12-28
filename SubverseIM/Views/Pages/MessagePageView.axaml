@@ -133,7 +133,7 @@
 										</DataTemplate>
 									</ItemsControl.ItemTemplate>
 								</ItemsControl>
-								<Border Background="MediumPurple" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignment}">
+								<Border Background="{Binding BubbleBrush}" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignment}">
 									<TextBlock Foreground="White" TextWrapping="Wrap" Text="{Binding Content}" Margin="2" />
 								</Border>
 							</DockPanel>
