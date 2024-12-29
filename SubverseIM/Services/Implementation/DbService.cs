@@ -43,6 +43,33 @@ namespace SubverseIM.Services.Implementation
             return contacts.FindOne(x => x.OtherPeer == otherPeer);
         }
 
+        public IEnumerable<SubverseFile> GetFiles()
+        {
+            var files = db.GetCollection<SubverseFile>();
+            files.EnsureIndex(x => x.MagnetUri, unique: true);
+            files.EnsureIndex(x => x.OwnerPeer);
+
+            return files.FindAll();
+        }
+
+        public IEnumerable<SubverseFile> GetFilesFromPeer(SubversePeerId ownerPeer)
+        {
+            var files = db.GetCollection<SubverseFile>();
+            files.EnsureIndex(x => x.MagnetUri, unique: true);
+            files.EnsureIndex(x => x.OwnerPeer);
+
+            return files.Find(x => x.OwnerPeer == ownerPeer);
+        }
+
+        public SubverseFile? GetFile(string magnetUri)
+        {
+            var files = db.GetCollection<SubverseFile>();
+            files.EnsureIndex(x => x.MagnetUri, unique: true);
+            files.EnsureIndex(x => x.OwnerPeer);
+
+            return files.FindOne(x => x.MagnetUri == magnetUri);
+        }
+
         public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName)
         {
             var messages = db.GetCollection<SubverseMessage>();
@@ -114,6 +141,16 @@ namespace SubverseIM.Services.Implementation
             newItem.Id = storedItem?.Id;
 
             return contacts.Upsert(newItem);
+        }
+
+        public bool InsertOrUpdateItem(SubverseFile newItem)
+        {
+            var files = db.GetCollection<SubverseFile>();
+
+            SubverseFile? storedItem = GetFile(newItem.MagnetUri);
+            newItem.Id = storedItem?.Id;
+
+            return files.Upsert(newItem);
         }
 
         public bool InsertOrUpdateItem(SubverseMessage newItem)

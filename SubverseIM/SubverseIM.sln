@@ -31,6 +31,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.Calculator", "..
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.Bootstrapper", "..\SubverseIM.Bootstrapper\SubverseIM.Bootstrapper.csproj", "{F4DAD3BF-A958-07D9-5365-A948B2D2413B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTorrent.Client", "..\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj", "{A4471C11-A429-0255-FA67-410E1DD1B411}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTorrent.Factories", "..\monotorrent\src\MonoTorrent.Factories\MonoTorrent.Factories.csproj", "{F70B5934-DABA-8E2A-7942-72CDE7C0466D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTorrent.PieceWriter", "..\monotorrent\src\MonoTorrent.PieceWriter\MonoTorrent.PieceWriter.csproj", "{1192E7C8-AF77-CB79-CCF6-92C7DFD16B8A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTorrent.Trackers", "..\monotorrent\src\MonoTorrent.Trackers\MonoTorrent.Trackers.csproj", "{C7414093-9F69-CA67-7FD0-C98282B1EABD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTorrent.PiecePicking", "..\monotorrent\src\MonoTorrent.PiecePicking\MonoTorrent.PiecePicking.csproj", "{0972AD48-5E83-2791-4B70-E863242F557C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +95,26 @@ Global
 		{F4DAD3BF-A958-07D9-5365-A948B2D2413B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4DAD3BF-A958-07D9-5365-A948B2D2413B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4DAD3BF-A958-07D9-5365-A948B2D2413B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4471C11-A429-0255-FA67-410E1DD1B411}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4471C11-A429-0255-FA67-410E1DD1B411}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4471C11-A429-0255-FA67-410E1DD1B411}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4471C11-A429-0255-FA67-410E1DD1B411}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F70B5934-DABA-8E2A-7942-72CDE7C0466D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F70B5934-DABA-8E2A-7942-72CDE7C0466D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F70B5934-DABA-8E2A-7942-72CDE7C0466D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F70B5934-DABA-8E2A-7942-72CDE7C0466D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1192E7C8-AF77-CB79-CCF6-92C7DFD16B8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1192E7C8-AF77-CB79-CCF6-92C7DFD16B8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1192E7C8-AF77-CB79-CCF6-92C7DFD16B8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1192E7C8-AF77-CB79-CCF6-92C7DFD16B8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7414093-9F69-CA67-7FD0-C98282B1EABD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7414093-9F69-CA67-7FD0-C98282B1EABD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7414093-9F69-CA67-7FD0-C98282B1EABD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7414093-9F69-CA67-7FD0-C98282B1EABD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0972AD48-5E83-2791-4B70-E863242F557C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0972AD48-5E83-2791-4B70-E863242F557C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0972AD48-5E83-2791-4B70-E863242F557C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0972AD48-5E83-2791-4B70-E863242F557C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -101,6 +131,11 @@ Global
 		{B43BEA29-DE6E-4256-94EA-A9767908CA0B} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{1301769F-6822-8D47-C74E-C8277AA80D58} = {E88628A0-A007-4C04-A0C3-769CB725B02F}
 		{F4DAD3BF-A958-07D9-5365-A948B2D2413B} = {E88628A0-A007-4C04-A0C3-769CB725B02F}
+		{A4471C11-A429-0255-FA67-410E1DD1B411} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F70B5934-DABA-8E2A-7942-72CDE7C0466D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{1192E7C8-AF77-CB79-CCF6-92C7DFD16B8A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{C7414093-9F69-CA67-7FD0-C98282B1EABD} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{0972AD48-5E83-2791-4B70-E863242F557C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ED9AFDBC-58C4-4923-950B-DC7E362C8C9C}

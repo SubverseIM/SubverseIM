@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using MonoTorrent;
+using MonoTorrent.Client;
 using MonoTorrent.Connections.Dht;
 using MonoTorrent.Dht;
 using MonoTorrent.PortForwarding;
@@ -42,6 +43,8 @@ namespace SubverseIM.Services.Implementation
 
         private readonly IPortForwarder portForwarder;
 
+        private readonly ClientEngine torrentEngine;
+
         private readonly HttpClient http;
 
         private readonly SIPUDPChannel sipChannel;
@@ -76,8 +79,11 @@ namespace SubverseIM.Services.Implementation
             dhtEngine = new DhtEngine();
             dhtListener = new DhtListener(new IPEndPoint(IPAddress.Any, 0));
 
-            http = new() { BaseAddress = new Uri(DEFAULT_BOOTSTRAPPER_ROOT) };
             portForwarder = new MonoNatPortForwarder();
+
+            torrentEngine = new();
+
+            http = new() { BaseAddress = new Uri(DEFAULT_BOOTSTRAPPER_ROOT) };
 
             sipChannel = new SIPUDPChannel(IPAddress.Any, MAGIC_PORT_NUM);
             sipTransport = new SIPTransport(stateless: true);
@@ -234,6 +240,24 @@ namespace SubverseIM.Services.Implementation
             tcs.TrySetResult(e.Peers);
         }
 
+        private async void TorrentManagerStateChanged(object? sender, TorrentStateChangedEventArgs e)
+        {
+            TorrentManager manager = e.TorrentManager;
+            if (manager.Complete)
+            {
+                MagnetLink magnetLink = manager.MagnetLink;
+                foreach (ITorrentManagerFile file in manager.Files)
+                {
+                    using Stream diskFileStream = File.OpenRead(file.DownloadCompleteFullPath);
+                    using Stream dbFileStream = DbService.CreateWriteStream(
+                        $"$/trn/{magnetLink.InfoHashes.V1OrV2.ToHex()}/{file.Path}"
+                        );
+
+                    await diskFileStream.CopyToAsync(dbFileStream);
+                }
+            }
+        }
+
         private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
         {
             SubversePeerId fromPeer = SubversePeerId.FromString(sipRequest.Header.From.FromURI.User);
@@ -282,8 +306,8 @@ namespace SubverseIM.Services.Implementation
                 IEnumerable<string?> localRecipientNames = recipients
                     .Select(x => DbService.GetContact(x)?.DisplayName);
 
-                IEnumerable<string> remoteRecipientNames = 
-                    [toName, ..sipRequest.Header.Contact.Select(x => x.ContactName)];
+                IEnumerable<string> remoteRecipientNames =
+                    [toName, .. sipRequest.Header.Contact.Select(x => x.ContactName)];
 
                 tcs.SetResult(new SubverseMessage
                 {
@@ -335,7 +359,7 @@ namespace SubverseIM.Services.Implementation
             }
 
             SubverseMessage? message = DbService.GetMessageByCallId(sipResponse.Header.CallId);
-            if(message is not null)
+            if (message is not null)
             {
                 message.WasDelivered = true;
                 DbService.InsertOrUpdateItem(message);
@@ -414,12 +438,14 @@ namespace SubverseIM.Services.Implementation
 
         public async Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
         {
+            // Begin listening for SIP traffic
             LocalEndPoint = sipChannel.ListeningEndPoint;
 
             sipTransport.SIPTransportRequestReceived += SIPTransportRequestReceived;
             sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
             sipTransport.AddSIPChannel(sipChannel);
 
+            // (Re)initialize DHT client
             dhtEngine.PeersFound += DhtPeersFound;
             await dhtEngine.SetListenerAsync(dhtListener);
             using (MemoryStream bufferStream = new())
@@ -447,6 +473,8 @@ namespace SubverseIM.Services.Implementation
                 }
             }
 
+
+            // Forward SIP ports
             await portForwarder.StartAsync(cancellationToken);
 
             int portNum, retryCount = 0;
@@ -461,6 +489,23 @@ namespace SubverseIM.Services.Implementation
                 mapping = portForwarder.Mappings.Created.SingleOrDefault();
             }
 
+            // Initialize torrent client
+            foreach (SubverseFile file in DbService.GetFiles())
+            {
+                MagnetLink magnetLink = MagnetLink.Parse(file.MagnetUri);
+                string cachePath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "torrent", file.OwnerPeer.ToString()
+                    );
+
+                TorrentManager manager = await torrentEngine.AddAsync(magnetLink, cachePath,
+                    new TorrentSettingsBuilder { AllowInitialSeeding = true, }
+                    .ToSettings());
+                manager.TorrentStateChanged += TorrentManagerStateChanged;
+            }
+            await torrentEngine.StartAllAsync();
+
+            // Perform synchronization activities
             while (!cancellationToken.IsCancellationRequested)
             {
                 SubversePeerId[] peers;
@@ -482,9 +527,11 @@ namespace SubverseIM.Services.Implementation
 
             }
 
+            // Shutdown all network traffic
+            sipTransport.Shutdown();
             await dhtEngine.StopAsync();
             await portForwarder.StopAsync(default);
-            sipTransport.Shutdown();
+            await torrentEngine.StopAllAsync();
         }
 
         public async Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default)
@@ -517,8 +564,8 @@ namespace SubverseIM.Services.Implementation
                 SIPURI fromURI = SIPURI.ParseSIPURI($"sip:{message.Sender}@subverse.network");
 
                 SIPRequest sipRequest = SIPRequest.GetRequest(
-                    SIPMethodsEnum.MESSAGE, requestUri, 
-                    new(contactName, toURI, null), 
+                    SIPMethodsEnum.MESSAGE, requestUri,
+                    new(contactName, toURI, null),
                     new(message.SenderName, fromURI, null)
                     );
 
@@ -530,7 +577,7 @@ namespace SubverseIM.Services.Implementation
                 sipRequest.Header.SetDateHeader();
 
                 sipRequest.Header.Contact = new();
-                for(int i = 0; i < message.Recipients.Length; i++)
+                for (int i = 0; i < message.Recipients.Length; i++)
                 {
                     if (message.Recipients[i] == recipient) continue;
 
@@ -591,6 +638,7 @@ namespace SubverseIM.Services.Implementation
                 if (disposing)
                 {
                     dhtEngine.Dispose();
+                    torrentEngine.Dispose();
                     http.Dispose();
                     sipChannel.Dispose();
                     sipTransport.Dispose();
