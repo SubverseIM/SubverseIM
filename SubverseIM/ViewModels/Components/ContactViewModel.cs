@@ -165,7 +165,7 @@ namespace SubverseIM.ViewModels.Components
 
             if (innerContact.ChatColor.GetValueOrDefault() == default)
             {
-                innerContact.ChatColor ??= HslColor.FromHsl(
+                innerContact.ChatColor = HslColor.FromHsl(
                     RandomNumberGenerator.GetInt32(360), 0.5, 0.25
                     ).ToRgb();
             }
