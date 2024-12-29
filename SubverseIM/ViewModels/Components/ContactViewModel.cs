@@ -163,10 +163,7 @@ namespace SubverseIM.ViewModels.Components
                 ContactPhoto.Save(dbFileStream);
             }
 
-            if (innerContact.ChatColor.GetValueOrDefault().A == default)
-            {
-                innerContact.ChatColor = HslColor.ToRgb(RandomNumberGenerator.GetInt32(360), 0.5, 0.25);
-            }
+            innerContact.ChatColor ??= HsvColor.ToRgb(RandomNumberGenerator.GetInt32(360), 0.5, 0.25);
             dbService.InsertOrUpdateItem(innerContact);
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
