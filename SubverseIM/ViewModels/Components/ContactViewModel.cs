@@ -50,20 +50,20 @@ namespace SubverseIM.ViewModels.Components
         internal readonly SubverseContact innerContact;
 
         private bool isSelected;
-        public bool IsSelected 
+        public bool IsSelected
         {
             get => isSelected;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref isSelected, value);
             }
         }
 
         private bool shouldShowOptions;
-        public bool ShouldShowOptions 
+        public bool ShouldShowOptions
         {
             get => shouldShowOptions;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref shouldShowOptions, value);
             }
@@ -163,11 +163,14 @@ namespace SubverseIM.ViewModels.Components
                 ContactPhoto.Save(dbFileStream);
             }
 
-            innerContact.ChatColor ??= HsvColor.ToRgb(RandomNumberGenerator.GetInt32(360), 0.5, 0.25);
+            if (innerContact.ChatColorCode == default)
+            {
+                innerContact.ChatColorCode = HsvColor.ToRgb(RandomNumberGenerator.GetInt32(360), 0.5, 0.25).ToUInt32();
+            }
             dbService.InsertOrUpdateItem(innerContact);
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            if(!frontendService.NavigatePreviousView())
+            if (!frontendService.NavigatePreviousView())
             {
                 frontendService.NavigateContactView();
             }
@@ -181,7 +184,7 @@ namespace SubverseIM.ViewModels.Components
             ShouldShowOptions = false;
         }
 
-        public async Task DeleteCommandAsync(bool deleteFromDb) 
+        public async Task DeleteCommandAsync(bool deleteFromDb)
         {
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             if (await launcherService.ShowConfirmationDialogAsync("Remove this Contact?", deleteFromDb ?
@@ -199,10 +202,10 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public async Task CancelCommandAsync() 
+        public async Task CancelCommandAsync()
         {
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            if(!frontendService.NavigatePreviousView())
+            if (!frontendService.NavigatePreviousView())
             {
                 frontendService.NavigateContactView();
             }
