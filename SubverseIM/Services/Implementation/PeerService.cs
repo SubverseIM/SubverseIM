@@ -501,7 +501,7 @@ namespace SubverseIM.Services.Implementation
                     );
 
                 TorrentManager manager;
-                if(file.TorrentBytes is null)
+                if (file.TorrentBytes is null)
                 {
                     manager = await torrentEngine.AddAsync(magnetLink, cachePath,
                         new TorrentSettingsBuilder { AllowInitialSeeding = true, }
@@ -509,7 +509,7 @@ namespace SubverseIM.Services.Implementation
                 }
                 else
                 {
-                    manager = await torrentEngine.AddAsync(Torrent.Load(file.TorrentBytes), 
+                    manager = await torrentEngine.AddAsync(Torrent.Load(file.TorrentBytes),
                         cachePath, new TorrentSettingsBuilder { AllowInitialSeeding = true, }
                         .ToSettings());
                 }
@@ -641,17 +641,27 @@ namespace SubverseIM.Services.Implementation
             await LauncherService.ShareStringToAppAsync(sender, "Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
         }
 
-        public async Task<SubverseFile> AddTorrentAsync(IStorageFile storageFile, CancellationToken cancellationToken)
+        public async Task<SubverseFile?> AddTorrentAsync(IStorageFile storageFile, CancellationToken cancellationToken)
         {
-            TorrentCreator torrentCreator = new (TorrentType.V1V2Hybrid);
-            BEncodedDictionary torrent = await torrentCreator.CreateAsync(new TorrentFileSource(storageFile.Path.AbsolutePath), cancellationToken);
-            string cachePath = Path.Combine(
+            string cacheDirPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                     "torrent", (await GetPeerIdAsync()).ToString()
                     );
-            TorrentManager manager = await torrentEngine.AddAsync(Torrent.Load(torrent), cachePath);
-            return new SubverseFile(manager.MagnetLink.ToString()!, await GetPeerIdAsync()) 
-            { TorrentBytes = torrent.Encode() };
+            string cacheFilePath = Path.Combine(cacheDirPath, storageFile.Name);
+            string? localFilePath = storageFile.TryGetLocalPath();
+            if (localFilePath is not null)
+            {
+                File.Copy(localFilePath, cacheFilePath);
+                TorrentCreator torrentCreator = new(TorrentType.V1V2Hybrid);
+                BEncodedDictionary torrent = await torrentCreator.CreateAsync(new TorrentFileSource(cacheFilePath), cancellationToken);
+                TorrentManager manager = await torrentEngine.AddAsync(Torrent.Load(torrent), cacheDirPath);
+                return new SubverseFile(manager.MagnetLink.ToString()!, await GetPeerIdAsync())
+                { TorrentBytes = torrent.Encode() };
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private bool disposedValue;

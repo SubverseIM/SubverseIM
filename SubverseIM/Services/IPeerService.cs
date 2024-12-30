@@ -25,6 +25,6 @@ namespace SubverseIM.Services
 
         Task SendInviteAsync(Visual? sender = null, CancellationToken cancellationToken = default);
 
-        Task<SubverseFile> AddTorrentAsync(IStorageFile storageFile, CancellationToken cancellationToken = default); 
+        Task<SubverseFile?> AddTorrentAsync(IStorageFile storageFile, CancellationToken cancellationToken = default); 
     }
 }
