@@ -27,6 +27,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
+	  <ProjectReference Include="..\monotorrent\src\MonoTorrent.Factories\MonoTorrent.Factories.csproj" />
 	  <ProjectReference Include="..\monotorrent\src\MonoTorrent.Connections\MonoTorrent.Connections.csproj" />
 	  <ProjectReference Include="..\monotorrent\src\MonoTorrent.Dht\MonoTorrent.Dht.csproj" />
 	  <ProjectReference Include="..\monotorrent\src\MonoTorrent.PortForwarding\MonoTorrent.PortForwarding.csproj" />

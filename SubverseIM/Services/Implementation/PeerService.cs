@@ -1,5 +1,7 @@
 ﻿using Avalonia;
+using Avalonia.Platform.Storage;
 using MonoTorrent;
+using MonoTorrent.BEncoding;
 using MonoTorrent.Client;
 using MonoTorrent.Connections.Dht;
 using MonoTorrent.Dht;
@@ -498,9 +500,19 @@ namespace SubverseIM.Services.Implementation
                     "torrent", file.OwnerPeer.ToString()
                     );
 
-                TorrentManager manager = await torrentEngine.AddAsync(magnetLink, cachePath,
-                    new TorrentSettingsBuilder { AllowInitialSeeding = true, }
-                    .ToSettings());
+                TorrentManager manager;
+                if(file.TorrentBytes is null)
+                {
+                    manager = await torrentEngine.AddAsync(magnetLink, cachePath,
+                        new TorrentSettingsBuilder { AllowInitialSeeding = true, }
+                        .ToSettings());
+                }
+                else
+                {
+                    manager = await torrentEngine.AddAsync(Torrent.Load(file.TorrentBytes), 
+                        cachePath, new TorrentSettingsBuilder { AllowInitialSeeding = true, }
+                        .ToSettings());
+                }
                 manager.TorrentStateChanged += TorrentManagerStateChanged;
             }
             await torrentEngine.StartAllAsync();
@@ -627,6 +639,19 @@ namespace SubverseIM.Services.Implementation
             string inviteId = await http.GetFromJsonAsync<string>($"invite?p={thisPeer}") ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
             await LauncherService.ShareStringToAppAsync(sender, "Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
+        }
+
+        public async Task<SubverseFile> AddTorrentAsync(IStorageFile storageFile, CancellationToken cancellationToken)
+        {
+            TorrentCreator torrentCreator = new (TorrentType.V1V2Hybrid);
+            BEncodedDictionary torrent = await torrentCreator.CreateAsync(new TorrentFileSource(storageFile.Path.AbsolutePath), cancellationToken);
+            string cachePath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "torrent", (await GetPeerIdAsync()).ToString()
+                    );
+            TorrentManager manager = await torrentEngine.AddAsync(Torrent.Load(torrent), cachePath);
+            return new SubverseFile(manager.MagnetLink.ToString()!, await GetPeerIdAsync()) 
+            { TorrentBytes = torrent.Encode() };
         }
 
         private bool disposedValue;

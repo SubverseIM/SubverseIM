@@ -1,4 +1,6 @@
 ﻿using Avalonia;
+using Avalonia.Platform.Storage;
+using MonoTorrent;
 using SubverseIM.Models;
 using System.Collections.Generic;
 using System.Net;
@@ -22,5 +24,7 @@ namespace SubverseIM.Services
         Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default);
 
         Task SendInviteAsync(Visual? sender = null, CancellationToken cancellationToken = default);
+
+        Task<SubverseFile> AddTorrentAsync(IStorageFile storageFile, CancellationToken cancellationToken = default); 
     }
 }
