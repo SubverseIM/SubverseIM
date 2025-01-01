@@ -45,8 +45,6 @@ namespace SubverseIM.Services.Implementation
 
         private readonly IPortForwarder portForwarder;
 
-        private readonly ClientEngine torrentEngine;
-
         private readonly HttpClient http;
 
         private readonly SIPUDPChannel sipChannel;
@@ -82,8 +80,6 @@ namespace SubverseIM.Services.Implementation
             dhtListener = new DhtListener(new IPEndPoint(IPAddress.Any, 0));
 
             portForwarder = new MonoNatPortForwarder();
-
-            torrentEngine = new();
 
             http = new() { BaseAddress = new Uri(DEFAULT_BOOTSTRAPPER_ROOT) };
 
@@ -240,24 +236,6 @@ namespace SubverseIM.Services.Implementation
             }
 
             tcs.TrySetResult(e.Peers);
-        }
-
-        private async void TorrentManagerStateChanged(object? sender, TorrentStateChangedEventArgs e)
-        {
-            TorrentManager manager = e.TorrentManager;
-            if (manager.Complete)
-            {
-                MagnetLink magnetLink = manager.MagnetLink;
-                foreach (ITorrentManagerFile file in manager.Files)
-                {
-                    using Stream diskFileStream = File.OpenRead(file.DownloadCompleteFullPath);
-                    using Stream dbFileStream = DbService.CreateWriteStream(
-                        $"$/trn/{magnetLink.InfoHashes.V1OrV2.ToHex()}/{file.Path}"
-                        );
-
-                    await diskFileStream.CopyToAsync(dbFileStream);
-                }
-            }
         }
 
         private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
@@ -491,32 +469,6 @@ namespace SubverseIM.Services.Implementation
                 mapping = portForwarder.Mappings.Created.SingleOrDefault();
             }
 
-            // Initialize torrent client
-            foreach (SubverseFile file in DbService.GetFiles())
-            {
-                MagnetLink magnetLink = MagnetLink.Parse(file.MagnetUri);
-                string cachePath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "torrent", file.OwnerPeer.ToString()
-                    );
-
-                TorrentManager manager;
-                if (file.TorrentBytes is null)
-                {
-                    manager = await torrentEngine.AddAsync(magnetLink, cachePath,
-                        new TorrentSettingsBuilder { AllowInitialSeeding = true, }
-                        .ToSettings());
-                }
-                else
-                {
-                    manager = await torrentEngine.AddAsync(Torrent.Load(file.TorrentBytes),
-                        cachePath, new TorrentSettingsBuilder { AllowInitialSeeding = true, }
-                        .ToSettings());
-                }
-                manager.TorrentStateChanged += TorrentManagerStateChanged;
-            }
-            await torrentEngine.StartAllAsync();
-
             // Perform synchronization activities
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -543,7 +495,6 @@ namespace SubverseIM.Services.Implementation
             sipTransport.Shutdown();
             await dhtEngine.StopAsync();
             await portForwarder.StopAsync(default);
-            await torrentEngine.StopAllAsync();
         }
 
         public async Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default)
@@ -641,29 +592,6 @@ namespace SubverseIM.Services.Implementation
             await LauncherService.ShareStringToAppAsync(sender, "Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
         }
 
-        public async Task<SubverseFile?> AddTorrentAsync(IStorageFile storageFile, CancellationToken cancellationToken)
-        {
-            string cacheDirPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "torrent", (await GetPeerIdAsync()).ToString()
-                    );
-            string cacheFilePath = Path.Combine(cacheDirPath, storageFile.Name);
-            string? localFilePath = storageFile.TryGetLocalPath();
-            if (localFilePath is not null)
-            {
-                File.Copy(localFilePath, cacheFilePath);
-                TorrentCreator torrentCreator = new(TorrentType.V1V2Hybrid);
-                BEncodedDictionary torrent = await torrentCreator.CreateAsync(new TorrentFileSource(cacheFilePath), cancellationToken);
-                TorrentManager manager = await torrentEngine.AddAsync(Torrent.Load(torrent), cacheDirPath);
-                return new SubverseFile(manager.MagnetLink.ToString()!, await GetPeerIdAsync())
-                { TorrentBytes = torrent.Encode() };
-            }
-            else
-            {
-                return null;
-            }
-        }
-
         private bool disposedValue;
 
         protected virtual void Dispose(bool disposing)
@@ -673,7 +601,6 @@ namespace SubverseIM.Services.Implementation
                 if (disposing)
                 {
                     dhtEngine.Dispose();
-                    torrentEngine.Dispose();
                     http.Dispose();
                     sipChannel.Dispose();
                     sipTransport.Dispose();
