@@ -32,10 +32,4 @@
 	  <ProjectReference Include="..\monotorrent\src\MonoTorrent.Dht\MonoTorrent.Dht.csproj" />
 	  <ProjectReference Include="..\monotorrent\src\MonoTorrent.PortForwarding\MonoTorrent.PortForwarding.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Compile Update="Views\Pages\CreateContactPageView.axaml.cs">
-	    <DependentUpon>CreateContactPageView.axaml</DependentUpon>
-	  </Compile>
-	</ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
 
 namespace SubverseIM.Models
 {
-    public class SubverseFile
+    public class SubverseTorrent
     {
         public ObjectId? Id { get; set; }
 
@@ -12,7 +12,7 @@ namespace SubverseIM.Models
 
         public byte[]? TorrentBytes { get; set; }
 
-        public SubverseFile(string magnetUri, SubversePeerId ownerPeer)
+        public SubverseTorrent(string magnetUri, SubversePeerId ownerPeer)
         {
             MagnetUri = magnetUri;
             OwnerPeer = ownerPeer;

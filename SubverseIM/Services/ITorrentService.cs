@@ -1,6 +1,7 @@
 ﻿using Avalonia.Platform.Storage;
 using SubverseIM.Models;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,18 +9,18 @@ namespace SubverseIM.Services
 {
     public interface ITorrentService
     {
-        Task InitializeAsync();
+        Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync();
 
         Task DeinitializeAsync();
 
-        Task<bool> AddTorrentAsync(SubverseFile file);
+        Task<bool> AddTorrentAsync(SubverseTorrent torrent);
 
-        Task<SubverseFile> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default);
+        Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default);
 
-        Task<bool> RemoveTorrentAsync(SubverseFile file);
+        Task<bool> RemoveTorrentAsync(SubverseTorrent torrent);
 
-        Task<Progress<TorrentStatus>?> StartAsync(SubverseFile file);
+        Task<Progress<TorrentStatus>?> StartAsync(SubverseTorrent torrent);
 
-        Task<bool> StopAsync(SubverseFile file);
+        Task<bool> StopAsync(SubverseTorrent torrent);
     }
 }
