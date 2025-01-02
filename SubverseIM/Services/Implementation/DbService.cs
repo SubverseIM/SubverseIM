@@ -43,7 +43,7 @@ namespace SubverseIM.Services.Implementation
             return contacts.FindOne(x => x.OtherPeer == otherPeer);
         }
 
-        public IEnumerable<SubverseTorrent> GetFiles()
+        public IEnumerable<SubverseTorrent> GetTorrents()
         {
             var files = db.GetCollection<SubverseTorrent>();
             files.EnsureIndex(x => x.MagnetUri, unique: true);
@@ -52,7 +52,7 @@ namespace SubverseIM.Services.Implementation
             return files.FindAll();
         }
 
-        public IEnumerable<SubverseTorrent> GetFilesFromPeer(SubversePeerId ownerPeer)
+        public IEnumerable<SubverseTorrent> GetTorrentsFromPeer(SubversePeerId ownerPeer)
         {
             var files = db.GetCollection<SubverseTorrent>();
             files.EnsureIndex(x => x.MagnetUri, unique: true);
@@ -61,7 +61,7 @@ namespace SubverseIM.Services.Implementation
             return files.Find(x => x.OwnerPeer == ownerPeer);
         }
 
-        public SubverseTorrent? GetFile(string magnetUri)
+        public SubverseTorrent? GetTorrent(string magnetUri)
         {
             var files = db.GetCollection<SubverseTorrent>();
             files.EnsureIndex(x => x.MagnetUri, unique: true);
@@ -147,7 +147,7 @@ namespace SubverseIM.Services.Implementation
         {
             var files = db.GetCollection<SubverseTorrent>();
 
-            SubverseTorrent? storedItem = GetFile(newItem.MagnetUri);
+            SubverseTorrent? storedItem = GetTorrent(newItem.MagnetUri);
             newItem.Id = storedItem?.Id;
 
             return files.Upsert(newItem);

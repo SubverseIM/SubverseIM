@@ -13,11 +13,11 @@ namespace SubverseIM.Services
 
         SubverseContact? GetContact(SubversePeerId otherPeer);
 
-        IEnumerable<SubverseTorrent> GetFiles();
+        IEnumerable<SubverseTorrent> GetTorrents();
 
-        IEnumerable<SubverseTorrent> GetFilesFromPeer(SubversePeerId ownerPeer);
+        IEnumerable<SubverseTorrent> GetTorrentsFromPeer(SubversePeerId ownerPeer);
 
-        SubverseTorrent? GetFile(string magnetUri);
+        SubverseTorrent? GetTorrent(string magnetUri);
 
         IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName);
 

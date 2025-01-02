@@ -46,7 +46,7 @@ namespace SubverseIM.Services.Implementation
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
             // Get all torrents from database
-            IEnumerable<SubverseTorrent> files = dbService.GetFiles();
+            IEnumerable<SubverseTorrent> files = dbService.GetTorrents();
 
             // Add and start all outstanding torrents
             return files.Zip(
@@ -60,7 +60,7 @@ namespace SubverseIM.Services.Implementation
         {
             // Stop all outstanding torrents
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            await Task.WhenAll(dbService.GetFiles().Select(StopAsync));
+            await Task.WhenAll(dbService.GetTorrents().Select(StopAsync));
         }
 
         public async Task<bool> AddTorrentAsync(SubverseTorrent torrent)
