@@ -9,4 +9,20 @@
 	<Design.DataContext>
 		<vm:TorrentPageViewModel />
 	</Design.DataContext>
+	<ListBox ItemsSource="{Binding Torrents}">
+		<ListBox.ItemTemplate>
+			<DataTemplate>
+				<DockPanel>
+					<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" />
+					<Button DockPanel.Dock="Right" Command="{Binding StopCommandAsync}" IsEnabled="{Binding IsStarted}">
+						Stop Download
+					</Button>
+					<Button DockPanel.Dock="Right" Command="{Binding StartCommandAsync}" IsEnabled="{Binding !IsStarted}">
+						Start Download
+					</Button>
+					<ProgressBar Value="{Binding DownloadProgress}" />
+				</DockPanel>
+			</DataTemplate>
+		</ListBox.ItemTemplate>
+	</ListBox>
 </UserControl>

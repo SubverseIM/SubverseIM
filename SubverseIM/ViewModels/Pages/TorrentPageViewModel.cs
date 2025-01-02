@@ -1,10 +1,14 @@
-﻿using SubverseIM.Services;
+﻿using SubverseIM.Models;
+using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
-    internal class TorrentPageViewModel : PageViewModelBase
+    public class TorrentPageViewModel : PageViewModelBase
     {
         public override string Title => "File Manager";
 
@@ -15,6 +19,16 @@ namespace SubverseIM.ViewModels.Pages
         public TorrentPageViewModel(IServiceManager serviceManager) : base(serviceManager)
         {
             Torrents = new();
+        }
+
+        public async Task InitializeAsync()
+        {
+            ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
+            IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>> torrents = await torrentService.InitializeAsync();
+            foreach ((SubverseTorrent torrent, Progress<TorrentStatus> status) in torrents) 
+            {
+                Torrents.Add(new(this, torrent, status));
+            }
         }
     }
 }

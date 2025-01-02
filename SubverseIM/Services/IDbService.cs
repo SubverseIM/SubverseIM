@@ -15,8 +15,6 @@ namespace SubverseIM.Services
 
         IEnumerable<SubverseTorrent> GetTorrents();
 
-        IEnumerable<SubverseTorrent> GetTorrentsFromPeer(SubversePeerId ownerPeer);
-
         SubverseTorrent? GetTorrent(string magnetUri);
 
         IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName);

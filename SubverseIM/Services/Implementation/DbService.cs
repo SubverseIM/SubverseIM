@@ -47,25 +47,14 @@ namespace SubverseIM.Services.Implementation
         {
             var files = db.GetCollection<SubverseTorrent>();
             files.EnsureIndex(x => x.MagnetUri, unique: true);
-            files.EnsureIndex(x => x.OwnerPeer);
 
             return files.FindAll();
-        }
-
-        public IEnumerable<SubverseTorrent> GetTorrentsFromPeer(SubversePeerId ownerPeer)
-        {
-            var files = db.GetCollection<SubverseTorrent>();
-            files.EnsureIndex(x => x.MagnetUri, unique: true);
-            files.EnsureIndex(x => x.OwnerPeer);
-
-            return files.Find(x => x.OwnerPeer == ownerPeer);
         }
 
         public SubverseTorrent? GetTorrent(string magnetUri)
         {
             var files = db.GetCollection<SubverseTorrent>();
             files.EnsureIndex(x => x.MagnetUri, unique: true);
-            files.EnsureIndex(x => x.OwnerPeer);
 
             return files.FindOne(x => x.MagnetUri == magnetUri);
         }

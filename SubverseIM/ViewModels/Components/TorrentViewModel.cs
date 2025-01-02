@@ -3,6 +3,7 @@ using MonoTorrent.Client;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.ViewModels.Pages;
 using System;
 using System.Threading.Tasks;
 
@@ -10,13 +11,26 @@ namespace SubverseIM.ViewModels.Components
 {
     public class TorrentViewModel : ViewModelBase
     {
-        private readonly ITorrentService torrentService;
+        private const string CONFIRM_TITLE = "Delete File?";
+        private const string CONFIRM_MESSAGE = "Warning: this action is semi-permanent and can only be reversed by re-adding the file by clicking a magnet link. Do you want to continue?";
+
+        private readonly TorrentPageViewModel parent;
 
         internal readonly SubverseTorrent innerTorrent;
 
         private Progress<TorrentStatus>? torrentStatus;
 
         public string? DisplayName => MagnetLink.Parse(innerTorrent.MagnetUri).Name;
+
+        private bool downloadComplete;
+        public bool DownloadComplete
+        {
+            get => downloadComplete;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref downloadComplete, value);
+            }
+        }
 
         private double downloadProgress;
         public double DownloadProgress 
@@ -25,16 +39,6 @@ namespace SubverseIM.ViewModels.Components
             private set 
             {
                 this.RaiseAndSetIfChanged(ref downloadProgress, value);
-            }
-        }
-
-        private bool downloadComplete;
-        public bool DownloadComplete
-        {
-            get => downloadComplete;
-            private set 
-            {
-                this.RaiseAndSetIfChanged(ref downloadComplete, value);
             }
         }
 
@@ -48,11 +52,21 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public TorrentViewModel(ITorrentService torrentService, SubverseTorrent innerTorrent, Progress<TorrentStatus>? torrentStatus) 
+        private bool isStarted;
+        public bool IsStarted 
         {
-            this.torrentService = torrentService;
+            get => isStarted;
+            private set 
+            {
+                this.RaiseAndSetIfChanged(ref isStarted, value);
+            }
+        }
+
+        public TorrentViewModel(TorrentPageViewModel parent, SubverseTorrent innerTorrent, Progress<TorrentStatus>? torrentStatus) 
+        {
+            this.parent = parent;
             this.innerTorrent = innerTorrent;
-            RegisterStatus(torrentStatus);
+            IsStarted = RegisterStatus(torrentStatus);
         }
 
         private void TorrentProgressChanged(object? sender, TorrentStatus e)
@@ -62,32 +76,54 @@ namespace SubverseIM.ViewModels.Components
             TorrentState = e.State;
         }
 
-        private void RegisterStatus(Progress<TorrentStatus>? torrentStatus) 
+        private bool RegisterStatus(Progress<TorrentStatus>? torrentStatus) 
         {
             if (this.torrentStatus is not null) 
             {
                 this.torrentStatus.ProgressChanged -= TorrentProgressChanged;
             }
             this.torrentStatus = torrentStatus;
-            if (torrentStatus is not null) 
+            if (torrentStatus is not null)
             {
                 torrentStatus.ProgressChanged += TorrentProgressChanged;
+                return true;
+            }
+            else 
+            {
+                return false;
             }
         }
 
-        public Task StartCommandAsync()
+        public async Task StartCommandAsync()
         {
-            return torrentService.StartAsync(innerTorrent);
+            ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
+            IsStarted = RegisterStatus(await torrentService.StartAsync(innerTorrent));
         }
 
-        public Task StopCommandAsync() 
+        public async Task StopCommandAsync() 
         {
-            return torrentService.StopAsync(innerTorrent);
+            ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
+            await torrentService.StopAsync(innerTorrent);
+            torrentStatus = null;
+            IsStarted = false;
         }
 
-        public Task DeleteCommandAsync() 
+        public async Task DeleteCommandAsync() 
         {
-            return torrentService.RemoveTorrentAsync(innerTorrent);
+            ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
+            ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
+            IDbService dbService = await parent.ServiceManager.GetWithAwaitAsync<IDbService>();
+
+            if (await launcherService.ShowConfirmationDialogAsync(CONFIRM_TITLE, CONFIRM_MESSAGE))
+            {
+                await torrentService.StopAsync(innerTorrent);
+
+                torrentStatus = null;
+                IsStarted = false;
+
+                await torrentService.RemoveTorrentAsync(innerTorrent);
+                dbService.DeleteItemById<SubverseTorrent>(innerTorrent.Id);
+            }
         }
     }
 }

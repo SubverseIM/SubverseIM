@@ -66,9 +66,8 @@ namespace SubverseIM.Services.Implementation
         public async Task<bool> AddTorrentAsync(SubverseTorrent torrent)
         {
             string cacheDirPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "torrent", torrent.OwnerPeer.ToString()
-                    );
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent"
+                );
 
             bool keyExists;
             lock (managerMap)
@@ -88,8 +87,8 @@ namespace SubverseIM.Services.Implementation
             }
             else
             {
-                Torrent torrentMeta = await Torrent.LoadAsync(torrent.TorrentBytes);
-                manager = await engine.AddAsync(torrentMeta, cacheDirPath);
+                Torrent torrentMetaData = await Torrent.LoadAsync(torrent.TorrentBytes);
+                manager = await engine.AddAsync(torrentMetaData, cacheDirPath);
             }
 
             lock (managerMap)
@@ -106,8 +105,7 @@ namespace SubverseIM.Services.Implementation
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync();
 
             string cacheDirPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "torrent", thisPeer.ToString()
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent"
                     );
             string cacheFilePath = Path.Combine(cacheDirPath, file.Name);
 
@@ -140,8 +138,7 @@ namespace SubverseIM.Services.Implementation
                 progressMap.Add(manager, progress);
             }
 
-            return new SubverseTorrent(magnetUri, thisPeer)
-            { TorrentBytes = torrent.Encode() };
+            return new SubverseTorrent(magnetUri) { TorrentBytes = torrent.Encode() };
         }
 
         public async Task<bool> RemoveTorrentAsync(SubverseTorrent torrent)

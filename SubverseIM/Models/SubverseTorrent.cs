@@ -8,14 +8,11 @@ namespace SubverseIM.Models
 
         public string MagnetUri { get; set; }
 
-        public SubversePeerId OwnerPeer { get; set; }
-
         public byte[]? TorrentBytes { get; set; }
 
-        public SubverseTorrent(string magnetUri, SubversePeerId ownerPeer)
+        public SubverseTorrent(string magnetUri)
         {
             MagnetUri = magnetUri;
-            OwnerPeer = ownerPeer;
         }
     }
 }
