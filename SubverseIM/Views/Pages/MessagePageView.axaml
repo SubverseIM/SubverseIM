@@ -77,6 +77,12 @@
 			<DockPanel DockPanel.Dock="{Binding MessageTextDock}">
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
+						Command="{Binding AttachFileCommandAsync}"
+						AutomationProperties.Name="Send File">
+					<PathIcon Data="{StaticResource document_add_regular}" />
+				</Button>
+				<Button DockPanel.Dock="Right"
+						VerticalAlignment="Stretch"
 						Command="{Binding SendCommandAsync}"
 						AutomationProperties.Name="Send Message">
 					<PathIcon Data="{StaticResource send_regular}" />

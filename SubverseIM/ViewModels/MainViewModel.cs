@@ -22,6 +22,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     private readonly CreateContactPageViewModel createContactPage;
 
+    private readonly TorrentPageViewModel torrentPage;
+
     private Stack<PageViewModelBase> previousPages;
 
     private PageViewModelBase currentPage;
@@ -57,6 +59,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
         contactPage = new(serviceManager);
         createContactPage = new(serviceManager);
+        torrentPage = new(serviceManager);
 
         previousPages = new();
         currentPage = contactPage;
@@ -94,6 +97,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
         SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
         SubverseContact? thisContact = dbService.GetContact(thisPeer);
+
+        await torrentPage.InitializeAsync();
 
         List<Task> subTasks =
         [
@@ -145,72 +150,79 @@ public class MainViewModel : ViewModelBase, IFrontendService
             }
         }
 
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            SubverseMessage message = await peerService.ReceiveMessageAsync(cancellationToken);
-            SubverseContact contact = dbService.GetContact(message.Sender) ??
-                new SubverseContact()
-                {
-                    OtherPeer = message.Sender,
-                    DisplayName = message.SenderName,
-                };
-
-            contact.DateLastChattedWith = message.DateSignedOn;
-            dbService.InsertOrUpdateItem(contact);
-
-            await contactPage.LoadContactsAsync(cancellationToken);
-
-            lock (peerService.CachedPeers)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                peerService.CachedPeers.TryAdd(
-                    contact.OtherPeer,
-                    new SubversePeer
+                cancellationToken.ThrowIfCancellationRequested();
+
+                SubverseMessage message = await peerService.ReceiveMessageAsync(cancellationToken);
+                SubverseContact contact = dbService.GetContact(message.Sender) ??
+                    new SubverseContact()
                     {
-                        OtherPeer = contact.OtherPeer
-                    });
-            }
+                        OtherPeer = message.Sender,
+                        DisplayName = message.SenderName,
+                    };
 
-            try
-            {
-                dbService.InsertOrUpdateItem(message);
+                contact.DateLastChattedWith = message.DateSignedOn;
+                dbService.InsertOrUpdateItem(contact);
 
-                bool isCurrentPeer = false;
-                if (contact is not null && currentPage is MessagePageViewModel vm &&
-                    (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == contact.OtherPeer) &&
-                    message.TopicName != "#system" && (message.TopicName == vm.SendMessageTopicName ||
-                    (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(vm.SendMessageTopicName))
-                    )))
+                await contactPage.LoadContactsAsync(cancellationToken);
+
+                lock (peerService.CachedPeers)
                 {
-                    if (!string.IsNullOrEmpty(message.TopicName) &&
-                        !vm.TopicsList.Contains(message.TopicName))
+                    peerService.CachedPeers.TryAdd(
+                        contact.OtherPeer,
+                        new SubversePeer
+                        {
+                            OtherPeer = contact.OtherPeer
+                        });
+                }
+
+                try
+                {
+                    dbService.InsertOrUpdateItem(message);
+
+                    bool isCurrentPeer = false;
+                    if (contact is not null && currentPage is MessagePageViewModel vm &&
+                        (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == contact.OtherPeer) &&
+                        message.TopicName != "#system" && (message.TopicName == vm.SendMessageTopicName ||
+                        (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(vm.SendMessageTopicName))
+                        )))
                     {
-                        vm.TopicsList.Insert(0, message.TopicName);
+                        if (!string.IsNullOrEmpty(message.TopicName) &&
+                            !vm.TopicsList.Contains(message.TopicName))
+                        {
+                            vm.TopicsList.Insert(0, message.TopicName);
+                        }
+
+                        MessageViewModel messageViewModel = new(vm, contact, message);
+                        foreach (SubverseContact participant in messageViewModel.CcContacts)
+                        {
+                            if (participant.OtherPeer == thisPeer) continue;
+                            vm.AddUniqueParticipant(participant, false);
+                        }
+                        vm.MessageList.Insert(0, messageViewModel);
                     }
 
-                    MessageViewModel messageViewModel = new(vm, contact, message);
-                    foreach (SubverseContact participant in messageViewModel.CcContacts)
+                    if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || launcherService.IsAccessibilityEnabled || !isCurrentPeer))
                     {
-                        if (participant.OtherPeer == thisPeer) continue;
-                        vm.AddUniqueParticipant(participant, false);
+                        await nativeService.SendPushNotificationAsync(serviceManager, message);
                     }
-                    vm.MessageList.Insert(0, messageViewModel);
+                    else if (launcherService.NotificationsAllowed)
+                    {
+                        nativeService.ClearNotification(message);
+                    }
                 }
-
-                if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || launcherService.IsAccessibilityEnabled || !isCurrentPeer))
-                {
-                    await nativeService.SendPushNotificationAsync(serviceManager, message);
-                }
-                else if (launcherService.NotificationsAllowed)
-                {
-                    nativeService.ClearNotification(message);
-                }
+                catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
             }
-            catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
+        } 
+        catch (OperationCanceledException) 
+        {
+            await torrentPage.DeinitializeAsync();
+            await Task.WhenAll(subTasks);
+            throw;
         }
-
-        await Task.WhenAll(subTasks);
     }
 
     public void RegisterStorageProvider(IStorageProvider storageProvider)
@@ -229,6 +241,24 @@ public class MainViewModel : ViewModelBase, IFrontendService
         else
         {
             return false;
+        }
+    }
+
+    public async void NavigateLaunchedUri()
+    {
+        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+        Uri? launchedUri = launcherService.GetLaunchedUri();
+
+        switch (launchedUri?.Scheme)
+        {
+            case "sv":
+                await createContactPage.InitializeAsync(launchedUri);
+                CurrentPage = createContactPage;
+                break;
+            case "magnet":
+                await torrentPage.InitializeAsync(launchedUri);
+                CurrentPage = torrentPage;
+                break;
         }
     }
 
@@ -259,15 +289,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
         vm.SendMessageTopicName = topicName;
     }
 
-    public async void NavigateLaunchedUri()
+    public async void NavigateTorrentView(SubverseTorrent torrent)
     {
-        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
-        Uri? launchedUri = launcherService.GetLaunchedUri();
-
-        if (launchedUri is not null)
-        {
-            await createContactPage.InitializeAsync(launchedUri);
-            CurrentPage = createContactPage;
-        }
+        await torrentPage.InitializeAsync(new Uri(torrent.MagnetUri));
+        CurrentPage = torrentPage;
     }
 }

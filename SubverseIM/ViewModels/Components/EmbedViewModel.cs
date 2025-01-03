@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MonoTorrent;
+using System;
 
 namespace SubverseIM.ViewModels.Components
 {
@@ -6,7 +7,8 @@ namespace SubverseIM.ViewModels.Components
     {
         private readonly Uri embeddedUri;
 
-        public string HostName => embeddedUri.Host;
+        public string HostName => MagnetLink.TryParse(embeddedUri.ToString(), 
+            out MagnetLink? magnetLink) ? magnetLink.Name ?? "Untitled" : embeddedUri.Host;
 
         public string AbsoluteUri => embeddedUri.AbsoluteUri;
 

@@ -1,8 +1,11 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SIPSorcery.SIP;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Components;
 using System;
 using System.Collections.Generic;
@@ -205,9 +208,12 @@ namespace SubverseIM.ViewModels.Pages
             frontendService.NavigateContactView();
         }
 
-        public async Task SendCommandAsync()
+        private async Task SendMessageAsync(string? messageText = null, string? messageTopicName = null)
         {
-            if (string.IsNullOrEmpty(SendMessageText)) return;
+            messageText ??= SendMessageText;
+            messageTopicName ??= SendMessageTopicName;
+
+            if (string.IsNullOrEmpty(messageText)) return;
 
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
             INativeService nativeService = await ServiceManager.GetWithAwaitAsync<INativeService>();
@@ -220,7 +226,7 @@ namespace SubverseIM.ViewModels.Pages
             {
                 CallId = CallProperties.CreateNewCallId(),
 
-                TopicName = SendMessageTopicName,
+                TopicName = messageTopicName,
 
                 Sender = thisPeer,
                 SenderName = thisContact?.DisplayName ?? "Anonymous",
@@ -228,18 +234,25 @@ namespace SubverseIM.ViewModels.Pages
                 Recipients = [.. ContactsList.Select(x => x.innerContact.OtherPeer)],
                 RecipientNames = [.. ContactsList.Select(x => x.innerContact.DisplayName ?? "Anonymous")],
 
-                Content = SendMessageText,
+                Content = messageText,
                 DateSignedOn = DateTime.UtcNow,
             };
 
             MessageTextDock = Dock.Bottom;
 
-            MessageList.Insert(0, new(this, null, message));
             dbService.InsertOrUpdateItem(message);
 
-            SendMessageText = null;
+            if (messageText == SendMessageText)
+            {
+                SendMessageText = null;
+            }
 
-            foreach (SubverseContact contact in ContactsList.Select(x => x.innerContact))
+            if (messageTopicName == SendMessageTopicName)
+            {
+                MessageList.Insert(0, new(this, null, message));
+            }
+
+            foreach (SubverseContact contact in permContactsList.Select(x => x.innerContact))
             {
                 contact.DateLastChattedWith = message.DateSignedOn;
                 dbService.InsertOrUpdateItem(contact);
@@ -247,6 +260,36 @@ namespace SubverseIM.ViewModels.Pages
                 _ = nativeService.RunInBackgroundAsync(
                     ct => peerService.SendMessageAsync(message, ct)
                     );
+            }
+        }
+
+        public Task SendCommandAsync() 
+        {
+            return SendMessageAsync();
+        }
+
+        public async Task AttachFileCommandAsync() 
+        {
+            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+            ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
+            IStorageProvider storageProvider = await ServiceManager.GetWithAwaitAsync<IStorageProvider>();
+
+            IStorageFile? selectedFile = (await storageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions { 
+                    AllowMultiple = false, 
+                    Title = "Select file attachment", 
+                    FileTypeFilter = [FilePickerFileTypes.All] 
+                })).SingleOrDefault();
+            if (selectedFile is not null) 
+            {
+                SubverseTorrent torrent = await torrentService.AddTorrentAsync(selectedFile);
+                await torrentService.StartAsync(torrent);
+
+                await SendMessageAsync(torrent.MagnetUri, "#files");
+                dbService.InsertOrUpdateItem(torrent);
+
+                frontendService.NavigateTorrentView(torrent);
             }
         }
 

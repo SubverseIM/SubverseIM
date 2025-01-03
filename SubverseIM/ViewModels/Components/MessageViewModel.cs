@@ -14,7 +14,9 @@ namespace SubverseIM.ViewModels.Components
 {
     public class MessageViewModel : ViewModelBase
     {
-        private static readonly Regex URL_REGEX = new(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)");
+        private static readonly Regex URL_REGEX = new(
+            @"((?:https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b)|(?:magnet:))([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+            );
 
         private readonly MessagePageViewModel messagePageView;
 
@@ -36,7 +38,9 @@ namespace SubverseIM.ViewModels.Components
 
         public bool IsGroupMessage => innerMessage.RecipientNames.Length > 1;
 
-        public string Content => URL_REGEX.Replace(innerMessage.Content ?? string.Empty, "[embed]");
+        public string Content => URL_REGEX.Replace(
+            innerMessage.Content ?? string.Empty, "[embed]"
+            );
 
         public string DateString => innerMessage
             .DateSignedOn.ToLocalTime()

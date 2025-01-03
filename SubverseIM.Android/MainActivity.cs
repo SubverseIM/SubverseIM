@@ -11,6 +11,7 @@ using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
+using MonoTorrent.Client;
 using SubverseIM.Android.Services;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -39,7 +40,7 @@ namespace SubverseIM.Android;
         Intent.CategoryDefault,
         Intent.CategoryBrowsable
         ],
-    DataScheme = "sv")]
+    DataSchemes = ["sv", "magnet"])]
 public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 {
     private const int REQUEST_NOTIFICATION_PERMISSION = 1000;
@@ -110,10 +111,17 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         string appDataPath = System.Environment.GetFolderPath(
             System.Environment.SpecialFolder.ApplicationData
             );
+
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
         serviceManager.GetOrRegister<IDbService>(
             new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
             );
+
+        string cacheDirPath = Path.Combine(appDataPath, "torrent", "cache");
+        serviceManager.GetOrRegister<ITorrentService>(
+            new TorrentService(serviceManager, new EngineSettingsBuilder 
+            { CacheDirectory = cacheDirPath }.ToSettings()
+            ));
 
         if (!peerServiceConn.IsConnected)
         {

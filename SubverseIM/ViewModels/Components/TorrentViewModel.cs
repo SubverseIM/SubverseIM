@@ -1,10 +1,12 @@
-﻿using MonoTorrent;
+﻿using Avalonia.Platform.Storage;
+using MonoTorrent;
 using MonoTorrent.Client;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Components
@@ -120,9 +122,33 @@ namespace SubverseIM.ViewModels.Components
 
                 torrentStatus = null;
                 IsStarted = false;
+                parent.Torrents.Remove(this);
 
                 await torrentService.RemoveTorrentAsync(innerTorrent);
                 dbService.DeleteItemById<SubverseTorrent>(innerTorrent.Id);
+            }
+        }
+
+        public async Task ShareCommandAsync()
+        {
+            IStorageProvider storageProvider = await parent.ServiceManager.GetWithAwaitAsync<IStorageProvider>();
+            IStorageFile? saveAsFile = await storageProvider.SaveFilePickerAsync(
+                new FilePickerSaveOptions { SuggestedFileName = DisplayName }
+                );
+            if (saveAsFile is not null)
+            {
+                string cacheDirPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent"
+                        );
+                string cacheFilePath = Path.Combine(cacheDirPath,
+                    DisplayName ?? throw new InvalidOperationException("No display name was provided for this file!")
+                    );
+
+                using (Stream cacheFileStream = File.OpenRead(cacheFilePath))
+                using (Stream localFileStream = await saveAsFile.OpenWriteAsync())
+                {
+                    await cacheFileStream.CopyToAsync(localFileStream);
+                }
             }
         }
     }

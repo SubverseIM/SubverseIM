@@ -66,8 +66,9 @@ namespace SubverseIM.Services.Implementation
         public async Task<bool> AddTorrentAsync(SubverseTorrent torrent)
         {
             string cacheDirPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent"
-                );
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
+                    );
+            Directory.CreateDirectory(cacheDirPath);
 
             bool keyExists;
             lock (managerMap)
@@ -105,10 +106,11 @@ namespace SubverseIM.Services.Implementation
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync();
 
             string cacheDirPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent"
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
                     );
-            string cacheFilePath = Path.Combine(cacheDirPath, file.Name);
+            Directory.CreateDirectory(cacheDirPath);
 
+            string cacheFilePath = Path.Combine(cacheDirPath, file.Name);
             using (Stream localFileStream = await file.OpenReadAsync())
             using (Stream cacheFileStream = File.Create(cacheFilePath))
             {
@@ -119,7 +121,7 @@ namespace SubverseIM.Services.Implementation
             BEncodedDictionary torrent = await torrentCreator.CreateAsync(new TorrentFileSource(cacheFilePath), cancellationToken);
 
             TorrentManager manager = await engine.AddAsync(Torrent.Load(torrent), cacheDirPath);
-            string magnetUri = manager.MagnetLink.ToString()!;
+            string magnetUri = manager.MagnetLink.ToV1String()!;
             lock (managerMap)
             {
                 managerMap.Add(magnetUri, manager);
@@ -155,7 +157,7 @@ namespace SubverseIM.Services.Implementation
                 wasRemoved = manager is not null && progressMap.Remove(manager);
             }
 
-            return wasRemoved && await engine.RemoveAsync(
+            return await engine.RemoveAsync(
                 MagnetLink.Parse(torrent.MagnetUri),
                 RemoveMode.CacheDataAndDownloadedData
                 );

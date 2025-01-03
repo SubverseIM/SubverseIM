@@ -15,5 +15,7 @@ namespace SubverseIM.Services
         void NavigateContactView(SubverseContact contact);
 
         void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName = null);
+
+        void NavigateTorrentView(SubverseTorrent torrent);
     }
 }

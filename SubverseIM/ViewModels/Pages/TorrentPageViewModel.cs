@@ -21,14 +21,30 @@ namespace SubverseIM.ViewModels.Pages
             Torrents = new();
         }
 
-        public async Task InitializeAsync()
+        public async Task InitializeAsync(Uri? launchedUri = null)
         {
+            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
+
             IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>> torrents = await torrentService.InitializeAsync();
             foreach ((SubverseTorrent torrent, Progress<TorrentStatus> status) in torrents) 
             {
                 Torrents.Add(new(this, torrent, status));
             }
+
+            SubverseTorrent torrentToAdd;
+            if (launchedUri is not null && await torrentService.AddTorrentAsync
+                (torrentToAdd = new(launchedUri.ToString())))
+            {
+                dbService.InsertOrUpdateItem(torrentToAdd);
+                Torrents.Add(new(this, torrentToAdd, null));
+            }
+        }
+
+        public async Task DeinitializeAsync() 
+        {
+            ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
+            await torrentService.DeinitializeAsync();
         }
     }
 }
