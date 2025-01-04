@@ -1,10 +1,13 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
+using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -34,7 +37,7 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public Brush BubbleBrush { get; }
+        public IBrush BubbleBrush { get; }
 
         public bool IsGroupMessage => innerMessage.RecipientNames.Length > 1;
 
@@ -89,10 +92,18 @@ namespace SubverseIM.ViewModels.Components
             this.fromContact = fromContact;
             this.innerMessage = innerMessage;
 
-            BubbleBrush = new SolidColorBrush(
-                fromContact is null ? Colors.MediumPurple : 
-                fromContact.ChatColor ?? Colors.DimGray
-                );
+            if(fromContact is null)
+            {
+                BubbleBrush = new ImmutableSolidColorBrush(Colors.MediumPurple);
+            }
+            else if(fromContact.ChatColorCode == default)
+            {
+                BubbleBrush = new ImmutableSolidColorBrush(Colors.DimGray);
+            }
+            else
+            {
+                BubbleBrush = new ImmutableSolidColorBrush(fromContact.ChatColorCode);
+            }
 
             CcContacts = innerMessage.Recipients
                 .Zip(innerMessage.RecipientNames)

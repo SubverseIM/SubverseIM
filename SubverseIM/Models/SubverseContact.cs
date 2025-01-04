@@ -18,6 +18,6 @@ namespace SubverseIM.Models
 
         public DateTime DateLastChattedWith { get; set; }
 
-        public Color? ChatColor { get; set; }
+        public uint ChatColorCode { get; set; }
     }
 }
