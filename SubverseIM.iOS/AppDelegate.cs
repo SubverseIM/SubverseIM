@@ -5,6 +5,7 @@ using Avalonia.iOS;
 using Avalonia.ReactiveUI;
 using CoreGraphics;
 using Foundation;
+using MonoTorrent.Client;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;

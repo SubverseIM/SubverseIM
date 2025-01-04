@@ -98,11 +98,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
         SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
         SubverseContact? thisContact = dbService.GetContact(thisPeer);
 
-        await torrentPage.InitializeAsync();
-
         List<Task> subTasks =
         [
             peerService.BootstrapSelfAsync(cancellationToken),
+            torrentPage.InitializeAsync(),
         ];
 
         int unsentCount = 0, joinCount = 0;

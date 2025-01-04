@@ -117,12 +117,6 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
             );
 
-        string cacheDirPath = Path.Combine(appDataPath, "torrent", "cache");
-        serviceManager.GetOrRegister<ITorrentService>(
-            new TorrentService(serviceManager, new EngineSettingsBuilder 
-            { CacheDirectory = cacheDirPath }.ToSettings()
-            ));
-
         if (!peerServiceConn.IsConnected)
         {
             Intent serviceIntent = new Intent(this, typeof(WrappedPeerService));

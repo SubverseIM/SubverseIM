@@ -41,6 +41,15 @@ namespace SubverseIM.Services.Implementation
             engine = new(settings);
         }
 
+        public TorrentService(IServiceManager serviceManager, EngineSettings settings, Factories factories)
+        {
+            managerMap = new();
+            progressMap = new();
+
+            this.serviceManager = serviceManager;
+            engine = new(settings, factories);
+        }
+
         public async Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync()
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
