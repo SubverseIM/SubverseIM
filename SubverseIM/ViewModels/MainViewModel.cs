@@ -291,7 +291,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public async void NavigateTorrentView(SubverseTorrent torrent)
     {
-        await torrentPage.InitializeAsync(new Uri(torrent.MagnetUri));
+        await torrentPage.InitializeAsync(new Uri(torrent.MagnetUri), unique: false);
         CurrentPage = torrentPage;
     }
 }

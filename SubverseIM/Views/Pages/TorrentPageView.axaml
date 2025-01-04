@@ -30,10 +30,11 @@
 						<PathIcon Data="{StaticResource dismiss_regular}" />
 					</Button>
 					<Button DockPanel.Dock="Right" Command="{Binding DeleteCommandAsync}"
-							AutomationProperties.Name="Delete File">
+							AutomationProperties.Name="Delete File"
+							Background="DarkRed">
 						<PathIcon Data="{StaticResource delete_regular}" />
 					</Button>
-					<ProgressBar Value="{Binding DownloadProgress}" Padding="5" />
+					<ProgressBar Value="{Binding DownloadProgress}" Margin="5" />
 				</DockPanel>
 			</DataTemplate>
 		</ListBox.ItemTemplate>

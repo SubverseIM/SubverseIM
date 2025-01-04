@@ -21,7 +21,7 @@ namespace SubverseIM.ViewModels.Pages
             Torrents = new();
         }
 
-        public async Task InitializeAsync(Uri? launchedUri = null)
+        public async Task InitializeAsync(Uri? launchedUri = null, bool unique = true)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
@@ -32,11 +32,14 @@ namespace SubverseIM.ViewModels.Pages
                 Torrents.Add(new(this, torrent, status));
             }
 
-            SubverseTorrent torrentToAdd;
-            if (launchedUri is not null && await torrentService.AddTorrentAsync
-                (torrentToAdd = new(launchedUri.ToString())))
+            SubverseTorrent? torrentToAdd = launchedUri is null ? null : new(launchedUri.ToString());
+            if (torrentToAdd is not null && await torrentService.AddTorrentAsync(torrentToAdd))
             {
                 dbService.InsertOrUpdateItem(torrentToAdd);
+                Torrents.Add(new(this, torrentToAdd, null));
+            }
+            else if (torrentToAdd is not null && !unique)
+            {
                 Torrents.Add(new(this, torrentToAdd, null));
             }
         }
