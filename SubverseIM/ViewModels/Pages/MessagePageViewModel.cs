@@ -287,8 +287,6 @@ namespace SubverseIM.ViewModels.Pages
                 await torrentService.StartAsync(torrent);
 
                 await SendMessageAsync(torrent.MagnetUri, "#files");
-                dbService.InsertOrUpdateItem(torrent);
-
                 frontendService.NavigateTorrentView(torrent);
             }
         }
