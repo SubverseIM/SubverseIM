@@ -130,7 +130,7 @@ namespace SubverseIM.Services.Implementation
             BEncodedDictionary torrent = await torrentCreator.CreateAsync(new TorrentFileSource(cacheFilePath), cancellationToken);
 
             TorrentManager manager = await engine.AddAsync(Torrent.Load(torrent), cacheDirPath);
-            string magnetUri = manager.MagnetLink.ToV1String()!;
+            string magnetUri = manager.MagnetLink.ToV1String();
             lock (managerMap)
             {
                 managerMap.Add(magnetUri, manager);
@@ -187,6 +187,8 @@ namespace SubverseIM.Services.Implementation
 
             if (entryExists)
             {
+                await manager!.DhtAnnounceAsync();
+                await manager!.WaitForMetadataAsync();
                 await manager!.StartAsync();
             }
 
