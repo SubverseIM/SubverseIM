@@ -42,7 +42,7 @@ namespace SubverseIM.ViewModels.Components
         public bool IsGroupMessage => innerMessage.RecipientNames.Length > 1;
 
         public string Content => URL_REGEX.Replace(
-            innerMessage.Content ?? "[file]", "[embed]"
+            innerMessage.Content ?? string.Empty, "[embed]"
             );
 
         public string DateString => innerMessage
@@ -114,12 +114,11 @@ namespace SubverseIM.ViewModels.Components
                 })
                 .ToArray();
 
-            Embeds = innerMessage.Content is not null ? URL_REGEX
-                .Matches(innerMessage.Content)
+            Embeds = URL_REGEX
+                .Matches(innerMessage.Content ?? string.Empty)
                 .Where(x => x.Success)
-                .Select(x => new EmbedViewModel(messagePageView.ServiceManager, x.Value))
-                .ToArray() : (innerMessage.ContentBuffer is null ? [] : 
-                [new EmbedViewModel(messagePageView.ServiceManager, innerMessage.ContentBuffer)]);
+                .Select(x => new EmbedViewModel(x.Value))
+                .ToArray();
         }
 
         public async Task DeleteCommandAsync() 

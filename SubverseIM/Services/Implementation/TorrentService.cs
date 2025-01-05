@@ -64,7 +64,7 @@ namespace SubverseIM.Services.Implementation
                 .ToFrozenDictionary(x => x.First, x => x.Second!);
         }
 
-        public async Task DeinitializeAsync()
+        public async Task DestroyAsync()
         {
             // Stop all outstanding torrents
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
@@ -81,52 +81,47 @@ namespace SubverseIM.Services.Implementation
             bool keyExists;
             lock (managerMap)
             {
-                keyExists = torrent.MagnetUri is not null &&
-                    managerMap.ContainsKey(torrent.MagnetUri);
+                keyExists = managerMap.ContainsKey(torrent.MagnetUri);
             }
 
-            TorrentManager? manager = null;
-            try
-            {
-                if (keyExists)
-                {
-                    return false;
-                }
-                else if (torrent.TorrentBytes is not null)
-                {
-                    try
-                    {
-                        Torrent torrentMetaData = await Torrent.LoadAsync(torrent.TorrentBytes);
-                        manager = await engine.AddAsync(torrentMetaData, cacheDirPath);
-
-                        torrent.MagnetUri ??= manager.MagnetLink.ToV1String();
-                    }
-                    catch (TorrentException) { }
-                }
-                else if (torrent.MagnetUri is not null)
-                {
-                    MagnetLink magnetLink = MagnetLink.Parse(torrent.MagnetUri);
-                    manager = await engine.AddAsync(magnetLink, cacheDirPath);
-                }
-            }
-            catch (TorrentException) { }
-
-            if (torrent.MagnetUri is not null && manager is not null)
-            {
-                lock (managerMap)
-                {
-                    managerMap.Add(torrent.MagnetUri, manager);
-                }
-
-                IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-                dbService.InsertOrUpdateItem(torrent);
-
-                return true;
-            }
-            else
+            TorrentManager manager;
+            if (keyExists)
             {
                 return false;
             }
+            else if (torrent.TorrentBytes is not null)
+            {
+                Torrent torrentMetaData = await Torrent.LoadAsync(torrent.TorrentBytes);
+                manager = await engine.AddAsync(torrentMetaData, cacheDirPath);
+            }
+            else
+            {
+                MagnetLink magnetLink = MagnetLink.Parse(torrent.MagnetUri);
+                manager = await engine.AddAsync(magnetLink, cacheDirPath);
+            }
+
+            lock (managerMap)
+            {
+                managerMap.Add(torrent.MagnetUri, manager);
+            }
+
+            Progress<TorrentStatus> progress = new();
+            manager.TorrentStateChanged += (s, ev) =>
+            ((IProgress<TorrentStatus>)progress).Report(
+                new TorrentStatus(
+                    manager.Complete,
+                    manager.PartialProgress,
+                    manager.State
+                    ));
+            lock (progressMap)
+            {
+                progressMap.Add(manager, progress);
+            }
+
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            dbService.InsertOrUpdateItem(torrent);
+
+            return true;
         }
 
         public async Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
@@ -149,8 +144,10 @@ namespace SubverseIM.Services.Implementation
             TorrentCreator torrentCreator = new(TorrentType.V1V2Hybrid);
             BEncodedDictionary metadata = await torrentCreator.CreateAsync(new TorrentFileSource(cacheFilePath), cancellationToken);
 
-            TorrentManager manager = await engine.AddAsync(Torrent.Load(metadata), cacheDirPath, 
-                new TorrentSettingsBuilder { AllowInitialSeeding = true }.ToSettings());
+            TorrentManager manager = await engine.AddAsync(
+                Torrent.Load(metadata), cacheDirPath,
+                new TorrentSettingsBuilder { AllowInitialSeeding = true }
+                .ToSettings());
             string magnetUri = manager.MagnetLink.ToV1String();
             lock (managerMap)
             {
@@ -170,9 +167,7 @@ namespace SubverseIM.Services.Implementation
                 progressMap.Add(manager, progress);
             }
 
-
-            SubverseTorrent torrent = new SubverseTorrent() { MagnetUri = magnetUri, TorrentBytes = metadata.Encode() };
-
+            SubverseTorrent torrent = new SubverseTorrent(magnetUri) { TorrentBytes = metadata.Encode() };
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             dbService.InsertOrUpdateItem(torrent);
 
@@ -181,35 +176,32 @@ namespace SubverseIM.Services.Implementation
 
         public async Task<bool> RemoveTorrentAsync(SubverseTorrent torrent)
         {
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            SubverseTorrent? storedItem = dbService.GetTorrent(torrent.MagnetUri);
+            if (storedItem is not null)
+            {
+                dbService.DeleteItemById<SubverseTorrent>(storedItem.Id);
+            }
+
             TorrentManager? manager;
-            if (torrent.MagnetUri is null)
+            lock (managerMap) 
             {
-                manager = null;
+                managerMap.Remove(torrent.MagnetUri, out manager);
             }
-            else
+
+            if (manager is not null)
             {
-                lock (managerMap)
+                lock (progressMap)
                 {
-                    managerMap.Remove(torrent.MagnetUri, out manager);
+                    progressMap.Remove(manager);
                 }
 
-                IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-                SubverseTorrent? storedItem = dbService.GetTorrent(torrent.MagnetUri);
-                if (storedItem is not null)
-                {
-                    dbService.DeleteItemById<SubverseTorrent>(storedItem.Id);
-                }
+                return await engine.RemoveAsync(manager, RemoveMode.CacheDataAndDownloadedData);
             }
-
-            bool wasRemoved;
-            lock (progressMap)
+            else 
             {
-                wasRemoved = manager is not null && progressMap.Remove(manager);
+                return false;
             }
-
-            return manager is not null && await engine.RemoveAsync(manager,
-                RemoveMode.CacheDataAndDownloadedData
-                );
         }
 
         public async Task<Progress<TorrentStatus>?> StartAsync(SubverseTorrent torrent)
@@ -228,8 +220,6 @@ namespace SubverseIM.Services.Implementation
 
             if (entryExists)
             {
-                await manager!.DhtAnnounceAsync();
-                await manager!.WaitForMetadataAsync();
                 await manager!.StartAsync();
             }
 
@@ -239,12 +229,11 @@ namespace SubverseIM.Services.Implementation
         public async Task<bool> StopAsync(SubverseTorrent torrent)
         {
             bool keyExists;
-            TorrentManager? manager = null;
+            TorrentManager? manager;
 
             lock (managerMap)
             {
-                keyExists = torrent.MagnetUri is not null &&
-                    managerMap.TryGetValue(torrent.MagnetUri, out manager);
+                keyExists = managerMap.TryGetValue(torrent.MagnetUri, out manager);
             }
 
             if (keyExists)

@@ -218,7 +218,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         } 
         catch (OperationCanceledException) 
         {
-            await torrentPage.DeinitializeAsync();
+            await torrentPage.DestroyAsync();
             await Task.WhenAll(subTasks);
             throw;
         }
@@ -246,6 +246,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
     public async void NavigateLaunchedUri()
     {
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+        ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
         Uri? launchedUri = launcherService.GetLaunchedUri();
 
         switch (launchedUri?.Scheme)
@@ -253,6 +254,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
             case "sv":
                 await createContactPage.InitializeAsync(launchedUri);
                 CurrentPage = createContactPage;
+                break;
+            case "magnet":
+                await torrentService.AddTorrentAsync(new SubverseTorrent(launchedUri.ToString()));
+                await torrentPage.InitializeAsync();
+                CurrentPage = torrentPage;
                 break;
         }
     }

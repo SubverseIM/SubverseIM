@@ -22,7 +22,8 @@ namespace SubverseIM.ViewModels.Components
 
         private Progress<TorrentStatus>? torrentStatus;
 
-        public string? DisplayName => MagnetLink.Parse(innerTorrent.MagnetUri).Name;
+        public string? DisplayName => innerTorrent.MagnetUri is null ? null : 
+            MagnetLink.Parse(innerTorrent.MagnetUri).Name;
 
         private bool downloadComplete;
         public bool DownloadComplete
@@ -68,7 +69,7 @@ namespace SubverseIM.ViewModels.Components
         {
             this.parent = parent;
             this.innerTorrent = innerTorrent;
-            IsStarted = RegisterStatus(torrentStatus);
+            RegisterStatus(torrentStatus);
         }
 
         private void TorrentProgressChanged(object? sender, TorrentStatus e)
@@ -107,7 +108,6 @@ namespace SubverseIM.ViewModels.Components
             ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
             await torrentService.StopAsync(innerTorrent);
             torrentStatus = null;
-            IsStarted = false;
         }
 
         public async Task DeleteCommandAsync() 
@@ -121,7 +121,6 @@ namespace SubverseIM.ViewModels.Components
                 await torrentService.StopAsync(innerTorrent);
 
                 torrentStatus = null;
-                IsStarted = false;
                 parent.Torrents.Remove(this);
 
                 await torrentService.RemoveTorrentAsync(innerTorrent);
@@ -137,7 +136,7 @@ namespace SubverseIM.ViewModels.Components
             if (saveAsFile is not null)
             {
                 string cacheDirPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent"
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
                         );
                 string cacheFilePath = Path.Combine(cacheDirPath,
                     DisplayName ?? throw new InvalidOperationException("No display name was provided for this file!")

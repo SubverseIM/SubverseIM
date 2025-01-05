@@ -11,7 +11,7 @@ namespace SubverseIM.Services
     {
         Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync();
 
-        Task DeinitializeAsync();
+        Task DestroyAsync();
 
         Task<bool> AddTorrentAsync(SubverseTorrent torrent);
 

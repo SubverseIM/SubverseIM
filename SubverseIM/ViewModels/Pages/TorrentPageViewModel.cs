@@ -1,5 +1,4 @@
-﻿using Avalonia.Platform.Storage;
-using SubverseIM.Models;
+﻿using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using System;
@@ -33,10 +32,10 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task DeinitializeAsync() 
+        public async Task DestroyAsync() 
         {
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
-            await torrentService.DeinitializeAsync();
+            await torrentService.DestroyAsync();
         }
     }
 }

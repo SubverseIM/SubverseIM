@@ -268,30 +268,13 @@ namespace SubverseIM.Services.Implementation
                 }
                 peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
 
-                byte[]? messageContentBuf;
-                string? messageContentStr;
+                string messageContent;
                 using (PGP pgp = new PGP(await GetPeerKeysAsync(fromPeer)))
                 using (MemoryStream encryptedMessageStream = new(sipRequest.BodyBuffer))
                 using (MemoryStream decryptedMessageStream = new())
                 {
                     await pgp.DecryptAndVerifyAsync(encryptedMessageStream, decryptedMessageStream);
-
-                    string isUtf8 = sipRequest.URI.Parameters.Get("utf-8");
-                    if (isUtf8 == "y")
-                    {
-                        messageContentStr = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
-                        messageContentBuf = null;
-                    }
-                    else if (isUtf8 == "n")
-                    {
-                        messageContentStr = null;
-                        messageContentBuf = decryptedMessageStream.ToArray();
-                    }
-                    else 
-                    {
-                        messageContentStr = null;
-                        messageContentBuf = null;
-                    }
+                    messageContent = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
                 }
 
                 if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
@@ -311,8 +294,7 @@ namespace SubverseIM.Services.Implementation
                 tcs.SetResult(new SubverseMessage
                 {
                     CallId = sipRequest.Header.CallId,
-                    Content = messageContentStr,
-                    ContentBuffer = messageContentBuf,
+                    Content = messageContent,
                     Sender = fromPeer,
                     SenderName = fromName,
                     Recipients = recipients.ToArray(),
@@ -435,7 +417,7 @@ namespace SubverseIM.Services.Implementation
             string cacheDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent");
             serviceManager.GetOrRegister<ITorrentService>(
                 new TorrentService(serviceManager, new EngineSettingsBuilder
-                { CacheDirectory = cacheDirPath }.ToSettings(), factories
+                { CacheDirectory = cacheDirPath, UsePartialFiles = true }.ToSettings(), factories
                 ));
 
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
@@ -571,16 +553,6 @@ namespace SubverseIM.Services.Implementation
             foreach ((SubversePeerId recipient, string contactName) in message.Recipients.Zip(message.RecipientNames))
             {
                 SIPURI requestUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
-
-                if (message.Content is null && message.ContentBuffer is not null)
-                {
-                    requestUri.Parameters.Set("utf-8", "n");
-                }
-                else 
-                {
-                    requestUri.Parameters.Set("utf-8", "y");
-                }
-
                 if (message.TopicName is not null)
                 {
                     requestUri.Parameters.Set("topic", message.TopicName);
@@ -613,19 +585,7 @@ namespace SubverseIM.Services.Implementation
 
                 using (PGP pgp = new(await GetPeerKeysAsync(recipient, cancellationToken)))
                 {
-                    if (message.Content is not null)
-                    {
-                        sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
-                    }
-                    else if (message.ContentBuffer is not null)
-                    {
-                        using MemoryStream inputStream = new(message.ContentBuffer);
-                        using MemoryStream outputStream = new();
-
-                        await pgp.EncryptAndSignAsync(inputStream, outputStream);
-
-                        sipRequest.BodyBuffer = outputStream.ToArray();
-                    }
+                    sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
                 }
 
                 lock (callIdMap)

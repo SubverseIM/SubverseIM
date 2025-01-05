@@ -29,8 +29,6 @@ namespace SubverseIM.Models
 
         public string? Content { get; set; }
 
-        public byte[]? ContentBuffer { get; set; }
-
         public bool WasDelivered { get; set; }
     }
 }
