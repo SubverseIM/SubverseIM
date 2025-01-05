@@ -125,7 +125,6 @@ namespace SubverseIM.ViewModels.Components
                 parent.Torrents.Remove(this);
 
                 await torrentService.RemoveTorrentAsync(innerTorrent);
-                dbService.DeleteItemById<SubverseTorrent>(innerTorrent.Id);
             }
         }
 

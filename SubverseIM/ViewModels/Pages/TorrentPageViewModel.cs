@@ -1,4 +1,5 @@
-﻿using SubverseIM.Models;
+﻿using Avalonia.Platform.Storage;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using System;
@@ -21,26 +22,14 @@ namespace SubverseIM.ViewModels.Pages
             Torrents = new();
         }
 
-        public async Task InitializeAsync(Uri? launchedUri = null, bool unique = true)
+        public async Task InitializeAsync()
         {
-            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
+            Torrents.Clear();
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
-
             IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>> torrents = await torrentService.InitializeAsync();
             foreach ((SubverseTorrent torrent, Progress<TorrentStatus> status) in torrents) 
             {
                 Torrents.Add(new(this, torrent, status));
-            }
-
-            SubverseTorrent? torrentToAdd = launchedUri is null ? null : new(launchedUri.ToString());
-            if (torrentToAdd is not null && await torrentService.AddTorrentAsync(torrentToAdd))
-            {
-                dbService.InsertOrUpdateItem(torrentToAdd);
-                Torrents.Add(new(this, torrentToAdd, null));
-            }
-            else if (torrentToAdd is not null && !unique)
-            {
-                Torrents.Add(new(this, torrentToAdd, null));
             }
         }
 

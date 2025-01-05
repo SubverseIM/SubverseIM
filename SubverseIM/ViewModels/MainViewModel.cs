@@ -254,10 +254,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 await createContactPage.InitializeAsync(launchedUri);
                 CurrentPage = createContactPage;
                 break;
-            case "magnet":
-                await torrentPage.InitializeAsync(launchedUri);
-                CurrentPage = torrentPage;
-                break;
         }
     }
 
@@ -288,9 +284,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
         vm.SendMessageTopicName = topicName;
     }
 
-    public async void NavigateTorrentView(SubverseTorrent torrent)
+    public async void NavigateTorrentView() 
     {
-        await torrentPage.InitializeAsync(new Uri(torrent.MagnetUri), unique: false);
+        await torrentPage.InitializeAsync();
         CurrentPage = torrentPage;
     }
 }

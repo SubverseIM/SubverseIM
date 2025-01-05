@@ -2,12 +2,12 @@
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using MonoTorrent;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -42,7 +42,7 @@ namespace SubverseIM.ViewModels.Components
         public bool IsGroupMessage => innerMessage.RecipientNames.Length > 1;
 
         public string Content => URL_REGEX.Replace(
-            innerMessage.Content ?? string.Empty, "[embed]"
+            innerMessage.Content ?? "[file]", "[embed]"
             );
 
         public string DateString => innerMessage
@@ -114,11 +114,12 @@ namespace SubverseIM.ViewModels.Components
                 })
                 .ToArray();
 
-            Embeds = URL_REGEX.Matches(
-                innerMessage.Content ?? string.Empty
-                ).Where(x => x.Success)
-                .Select(x => new EmbedViewModel(x.Value))
-                .ToArray();
+            Embeds = innerMessage.Content is not null ? URL_REGEX
+                .Matches(innerMessage.Content)
+                .Where(x => x.Success)
+                .Select(x => new EmbedViewModel(messagePageView.ServiceManager, x.Value))
+                .ToArray() : (innerMessage.ContentBuffer is null ? [] : 
+                [new EmbedViewModel(messagePageView.ServiceManager, innerMessage.ContentBuffer)]);
         }
 
         public async Task DeleteCommandAsync() 

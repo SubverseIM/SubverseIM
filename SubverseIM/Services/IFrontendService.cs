@@ -1,6 +1,8 @@
-﻿using SubverseIM.Models;
+﻿using Avalonia.Platform.Storage;
+using SubverseIM.Models;
 using SubverseIM.ViewModels.Pages;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SubverseIM.Services
 {
@@ -16,6 +18,6 @@ namespace SubverseIM.Services
 
         void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName = null);
 
-        void NavigateTorrentView(SubverseTorrent torrent);
+        void NavigateTorrentView();
     }
 }

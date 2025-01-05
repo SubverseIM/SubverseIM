@@ -208,12 +208,14 @@ namespace SubverseIM.ViewModels.Pages
             frontendService.NavigateContactView();
         }
 
-        private async Task SendMessageAsync(string? messageText = null, string? messageTopicName = null)
+        private async Task SendMessageAsync(byte[]? messageBuf = null, string ? messageText = null, string? messageTopicName = null)
         {
-            messageText ??= SendMessageText;
+            if (messageBuf is null)
+            {
+                messageText ??= SendMessageText;
+            }
             messageTopicName ??= SendMessageTopicName;
-
-            if (string.IsNullOrEmpty(messageText)) return;
+            if (messageBuf is null && string.IsNullOrEmpty(messageText)) return;
 
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
             INativeService nativeService = await ServiceManager.GetWithAwaitAsync<INativeService>();
@@ -235,6 +237,8 @@ namespace SubverseIM.ViewModels.Pages
                 RecipientNames = [.. ContactsList.Select(x => x.innerContact.DisplayName ?? "Anonymous")],
 
                 Content = messageText,
+                ContentBuffer = messageBuf,
+
                 DateSignedOn = DateTime.UtcNow,
             };
 
@@ -284,10 +288,7 @@ namespace SubverseIM.ViewModels.Pages
             if (selectedFile is not null) 
             {
                 SubverseTorrent torrent = await torrentService.AddTorrentAsync(selectedFile);
-                await torrentService.StartAsync(torrent);
-
-                await SendMessageAsync(torrent.MagnetUri, "#files");
-                frontendService.NavigateTorrentView(torrent);
+                await SendMessageAsync(messageBuf: torrent.TorrentBytes, messageTopicName: "#files");
             }
         }
 

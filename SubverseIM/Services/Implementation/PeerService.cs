@@ -268,13 +268,30 @@ namespace SubverseIM.Services.Implementation
                 }
                 peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
 
-                string messageContent;
+                byte[]? messageContentBuf;
+                string? messageContentStr;
                 using (PGP pgp = new PGP(await GetPeerKeysAsync(fromPeer)))
                 using (MemoryStream encryptedMessageStream = new(sipRequest.BodyBuffer))
                 using (MemoryStream decryptedMessageStream = new())
                 {
                     await pgp.DecryptAndVerifyAsync(encryptedMessageStream, decryptedMessageStream);
-                    messageContent = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
+
+                    string isUtf8 = sipRequest.URI.Parameters.Get("utf-8");
+                    if (isUtf8 == "y")
+                    {
+                        messageContentStr = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
+                        messageContentBuf = null;
+                    }
+                    else if (isUtf8 == "n")
+                    {
+                        messageContentStr = null;
+                        messageContentBuf = decryptedMessageStream.ToArray();
+                    }
+                    else 
+                    {
+                        messageContentStr = null;
+                        messageContentBuf = null;
+                    }
                 }
 
                 if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
@@ -294,7 +311,8 @@ namespace SubverseIM.Services.Implementation
                 tcs.SetResult(new SubverseMessage
                 {
                     CallId = sipRequest.Header.CallId,
-                    Content = messageContent,
+                    Content = messageContentStr,
+                    ContentBuffer = messageContentBuf,
                     Sender = fromPeer,
                     SenderName = fromName,
                     Recipients = recipients.ToArray(),
@@ -396,7 +414,7 @@ namespace SubverseIM.Services.Implementation
             serviceManager.GetOrRegister(nativeService);
 
             Factories factories = Factories.Default
-                .WithDhtCreator(() => 
+                .WithDhtCreator(() =>
                 {
                     var engine = new DhtEngine();
                     dhtEngineTcs.SetResult(engine);
@@ -408,15 +426,15 @@ namespace SubverseIM.Services.Implementation
                     dhtListenerTcs.SetResult(listener);
                     return listener;
                 })
-                .WithPortForwarderCreator(() => 
+                .WithPortForwarderCreator(() =>
                 {
                     var portForwarder = new MonoNatPortForwarder();
                     portForwarderTcs.SetResult(portForwarder);
                     return portForwarder;
                 });
-            string cacheDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "cache");
+            string cacheDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent");
             serviceManager.GetOrRegister<ITorrentService>(
-                new TorrentService(serviceManager, new EngineSettingsBuilder 
+                new TorrentService(serviceManager, new EngineSettingsBuilder
                 { CacheDirectory = cacheDirPath }.ToSettings(), factories
                 ));
 
@@ -553,6 +571,16 @@ namespace SubverseIM.Services.Implementation
             foreach ((SubversePeerId recipient, string contactName) in message.Recipients.Zip(message.RecipientNames))
             {
                 SIPURI requestUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
+
+                if (message.Content is null && message.ContentBuffer is not null)
+                {
+                    requestUri.Parameters.Set("utf-8", "n");
+                }
+                else 
+                {
+                    requestUri.Parameters.Set("utf-8", "y");
+                }
+
                 if (message.TopicName is not null)
                 {
                     requestUri.Parameters.Set("topic", message.TopicName);
@@ -585,7 +613,19 @@ namespace SubverseIM.Services.Implementation
 
                 using (PGP pgp = new(await GetPeerKeysAsync(recipient, cancellationToken)))
                 {
-                    sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
+                    if (message.Content is not null)
+                    {
+                        sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
+                    }
+                    else if (message.ContentBuffer is not null)
+                    {
+                        using MemoryStream inputStream = new(message.ContentBuffer);
+                        using MemoryStream outputStream = new();
+
+                        await pgp.EncryptAndSignAsync(inputStream, outputStream);
+
+                        sipRequest.BodyBuffer = outputStream.ToArray();
+                    }
                 }
 
                 lock (callIdMap)

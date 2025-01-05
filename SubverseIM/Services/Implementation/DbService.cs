@@ -136,8 +136,11 @@ namespace SubverseIM.Services.Implementation
         {
             var files = db.GetCollection<SubverseTorrent>();
 
-            SubverseTorrent? storedItem = GetTorrent(newItem.MagnetUri);
-            newItem.Id = storedItem?.Id;
+            if (newItem.MagnetUri is not null)
+            {
+                SubverseTorrent? storedItem = GetTorrent(newItem.MagnetUri);
+                newItem.Id = storedItem?.Id;
+            }
 
             return files.Upsert(newItem);
         }

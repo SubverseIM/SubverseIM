@@ -40,7 +40,7 @@ namespace SubverseIM.Android;
         Intent.CategoryDefault,
         Intent.CategoryBrowsable
         ],
-    DataSchemes = ["sv", "magnet"])]
+    DataScheme = "sv")]
 public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 {
     private const int REQUEST_NOTIFICATION_PERMISSION = 1000;

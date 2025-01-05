@@ -132,9 +132,10 @@
 									<ItemsControl.ItemTemplate>
 										<DataTemplate>
 											<HyperlinkButton Padding="0" IsEnabled="True"
-													NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
+													NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}"
+													Command="{Binding OpenCommandAsync, DataType={x:Type vmx:EmbedViewModel}}">
 												<TextBlock Foreground="Aqua" TextWrapping="Wrap" 
-														Text="{Binding HostName, DataType={x:Type vmx:EmbedViewModel}}" />
+														Text="{Binding Name, DataType={x:Type vmx:EmbedViewModel}}" />
 											</HyperlinkButton>
 										</DataTemplate>
 									</ItemsControl.ItemTemplate>
