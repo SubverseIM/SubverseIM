@@ -106,13 +106,20 @@ namespace SubverseIM.Services.Implementation
             }
 
             Progress<TorrentStatus> progress = new();
-            manager.TorrentStateChanged += (s, ev) =>
-            ((IProgress<TorrentStatus>)progress).Report(
-                new TorrentStatus(
-                    manager.Complete,
-                    manager.PartialProgress,
-                    manager.State
-                    ));
+            _ = Task.Run(async () =>
+            {
+                using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(300));
+                while (engine.Torrents.Contains(manager))
+                {
+                    await timer.WaitForNextTickAsync();
+                    ((IProgress<TorrentStatus>)progress).Report(
+                        new TorrentStatus(
+                            manager.Complete,
+                            manager.PartialProgress,
+                            manager.State
+                            ));
+                }
+            });
             lock (progressMap)
             {
                 progressMap.Add(manager, progress);
@@ -155,13 +162,20 @@ namespace SubverseIM.Services.Implementation
             }
 
             Progress<TorrentStatus> progress = new();
-            manager.TorrentStateChanged += (s, ev) =>
-            ((IProgress<TorrentStatus>)progress).Report(
-                new TorrentStatus(
-                    manager.Complete,
-                    manager.PartialProgress,
-                    manager.State
-                    ));
+            _ = Task.Run(async () =>
+            {
+                using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(300));
+                while (engine.Torrents.Contains(manager))
+                {
+                    await timer.WaitForNextTickAsync();
+                    ((IProgress<TorrentStatus>)progress).Report(
+                        new TorrentStatus(
+                            manager.Complete,
+                            manager.PartialProgress,
+                            manager.State
+                            ));
+                }
+            });
             lock (progressMap)
             {
                 progressMap.Add(manager, progress);
@@ -184,7 +198,7 @@ namespace SubverseIM.Services.Implementation
             }
 
             TorrentManager? manager;
-            lock (managerMap) 
+            lock (managerMap)
             {
                 managerMap.Remove(torrent.MagnetUri, out manager);
             }
@@ -198,7 +212,7 @@ namespace SubverseIM.Services.Implementation
 
                 return await engine.RemoveAsync(manager, RemoveMode.CacheDataAndDownloadedData);
             }
-            else 
+            else
             {
                 return false;
             }
