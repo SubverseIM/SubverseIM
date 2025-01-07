@@ -11,7 +11,6 @@ using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
-using MonoTorrent.Client;
 using SubverseIM.Android.Services;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -274,6 +273,11 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             .StartChooser();
 
         return Task.CompletedTask;
+    }
+
+    public Task ShareUriToAppAsync(Visual? sender, string title, System.Uri uri)
+    {
+        return Task.FromException(new PlatformNotSupportedException("This method is not supported on Android!"));
     }
 
     protected override void Dispose(bool disposing)

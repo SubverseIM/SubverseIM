@@ -244,4 +244,37 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
                 activityViewController,
                 animated: true) ?? Task.CompletedTask;
     }
+
+    public Task ShareUriToAppAsync(Visual? sender, string title, Uri uri)
+    {
+        TopLevel? topLevel = TopLevel.GetTopLevel(sender);
+
+        UIActivityItemsConfiguration configuration = new([(NSUrl)uri!]);
+        UIActivityViewController activityViewController = new(configuration)
+        {
+            Title = title,
+        };
+
+        UIPopoverPresentationController? popoverPresentationController = activityViewController.PopoverPresentationController;
+        if (topLevel is not null && sender is not null &&
+            UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
+            popoverPresentationController is not null && Window is not null)
+        {
+            PixelPoint topLeft = topLevel.PointToScreen(sender.Bounds.TopLeft);
+            PixelPoint bottomRight = topLevel.PointToScreen(sender.Bounds.BottomRight);
+
+            popoverPresentationController.SourceView = Window;
+            popoverPresentationController.SourceRect = new CGRect(
+                topLeft.X, topLeft.Y, (bottomRight - topLeft).X, (bottomRight - topLeft).Y
+                );
+
+            activityViewController.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
+        }
+
+        return Window?.RootViewController
+            ?.PresentViewControllerAsync(
+                viewControllerToPresent:
+                activityViewController,
+                animated: true) ?? Task.CompletedTask;   
+    }
 }
