@@ -40,7 +40,15 @@ namespace SubverseIM.Android;
         Intent.CategoryDefault,
         Intent.CategoryBrowsable
         ],
-    DataSchemes = ["sv", "magnet"])]
+    DataScheme = "sv")]
+[IntentFilter(
+    [Intent.ActionView],
+    Label = "Add Torrent (SubverseIM)",
+    Categories = [
+        Intent.CategoryDefault,
+        Intent.CategoryBrowsable
+        ],
+    DataScheme = "magnet")]
 public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 {
     private const int REQUEST_NOTIFICATION_PERMISSION = 1000;

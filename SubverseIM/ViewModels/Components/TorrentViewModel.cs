@@ -107,7 +107,7 @@ namespace SubverseIM.ViewModels.Components
         {
             ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
             await torrentService.StopAsync(innerTorrent);
-            torrentStatus = null;
+            IsStarted = false;
         }
 
         public async Task DeleteCommandAsync() 
@@ -120,7 +120,7 @@ namespace SubverseIM.ViewModels.Components
             {
                 await torrentService.StopAsync(innerTorrent);
 
-                torrentStatus = null;
+                IsStarted = false;
                 parent.Torrents.Remove(this);
 
                 await torrentService.RemoveTorrentAsync(innerTorrent);
@@ -131,8 +131,12 @@ namespace SubverseIM.ViewModels.Components
         {
             IStorageProvider storageProvider = await parent.ServiceManager.GetWithAwaitAsync<IStorageProvider>();
             IStorageFile? saveAsFile = await storageProvider.SaveFilePickerAsync(
-                new FilePickerSaveOptions { SuggestedFileName = DisplayName }
-                );
+                new FilePickerSaveOptions 
+                { 
+                    Title = "Save File As",
+                    FileTypeChoices = [FilePickerFileTypes.All],
+                    SuggestedFileName = DisplayName,
+                });
             if (saveAsFile is not null)
             {
                 string cacheDirPath = Path.Combine(

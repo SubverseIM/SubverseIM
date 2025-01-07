@@ -43,8 +43,8 @@
 			</Border>
 		</SplitView.Pane>
 		<DockPanel>
-			<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding IsNotDialog}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
-				<Button Grid.Row="0" Grid.Column="0" x:Name="inviteButton" HorizontalAlignment="Stretch" Command="{Binding InviteCommandAsync}" CommandParameter="{Binding #inviteButton}">
+			<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding !IsDialog}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
+				<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding InviteCommandAsync}" CommandParameter="{Binding $self}">
 					<TextBlock FontSize="16" HorizontalAlignment="Center">Invite Friend</TextBlock>
 				</Button>
 				<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommandAsync}">

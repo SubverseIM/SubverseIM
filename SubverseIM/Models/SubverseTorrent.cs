@@ -1,4 +1,5 @@
 ﻿using LiteDB;
+using System;
 
 namespace SubverseIM.Models
 {
@@ -9,6 +10,8 @@ namespace SubverseIM.Models
         public string MagnetUri { get; set; }
 
         public byte[]? TorrentBytes { get; set; }
+
+        public DateTime DateLastUpdatedOn { get; set; }
 
         public SubverseTorrent(string magnetUri) 
         {
