@@ -16,7 +16,7 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override string Title => "Contacts View";
 
-        public override bool HasSidebar => IsNotDialog;
+        public override bool HasSidebar => IsDialog;
 
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
@@ -28,19 +28,7 @@ namespace SubverseIM.ViewModels.Pages
             get => isDialog;
             private set
             {
-                IsNotDialog = !value;
                 this.RaiseAndSetIfChanged(ref isDialog, value);
-            }
-        }
-
-        private bool isNotDialog;
-        public bool IsNotDialog
-        {
-            get => isNotDialog;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref isNotDialog, value);
-                this.RaisePropertyChanged(nameof(HasSidebar));
             }
         }
 

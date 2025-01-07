@@ -1,18 +1,19 @@
-﻿using System;
+﻿using MonoTorrent;
+using System;
 
 namespace SubverseIM.ViewModels.Components
 {
     public class EmbedViewModel : ViewModelBase
     {
-        private readonly Uri embeddedUri;
+        public string AbsoluteUri { get; }
 
-        public string HostName => embeddedUri.Host;
+        public string Name => MagnetLink.TryParse(AbsoluteUri,
+            out MagnetLink? magnetLink) ? magnetLink.Name ?? "Untitled" :
+            new Uri(AbsoluteUri).Host;
 
-        public string AbsoluteUri => embeddedUri.AbsoluteUri;
-
-        public EmbedViewModel(string uriString) 
+        public EmbedViewModel(string uriString)
         {
-            embeddedUri = new(uriString);
+            AbsoluteUri = uriString;
         }
     }
 }

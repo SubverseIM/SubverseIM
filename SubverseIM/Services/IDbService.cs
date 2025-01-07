@@ -13,6 +13,10 @@ namespace SubverseIM.Services
 
         SubverseContact? GetContact(SubversePeerId otherPeer);
 
+        IEnumerable<SubverseTorrent> GetTorrents();
+
+        SubverseTorrent? GetTorrent(string magnetUri);
+
         IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName);
 
         IEnumerable<SubverseMessage> GetAllUndeliveredMessages();
@@ -22,6 +26,8 @@ namespace SubverseIM.Services
         SubverseMessage? GetMessageByCallId(string callId);
 
         bool InsertOrUpdateItem(SubverseContact newItem);
+
+        bool InsertOrUpdateItem(SubverseTorrent newItem);
 
         bool InsertOrUpdateItem(SubverseMessage newItem);
 

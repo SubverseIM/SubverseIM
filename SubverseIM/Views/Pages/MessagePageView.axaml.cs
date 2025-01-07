@@ -4,7 +4,6 @@ using ReactiveUI;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 

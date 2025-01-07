@@ -1,12 +1,12 @@
-﻿using SubverseIM.Models;
+﻿using Avalonia.Platform.Storage;
+using SubverseIM.Models;
 using SubverseIM.ViewModels.Pages;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Services
 {
-    public interface IFrontendService
+    public interface IFrontendService : IRunnable, IBackgroundRunnable
     {
         bool NavigatePreviousView();
 
@@ -18,8 +18,6 @@ namespace SubverseIM.Services
 
         void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName = null);
 
-        Task RunOnceBackgroundAsync();
-
-        Task RunOnceAsync(CancellationToken cancellationToken = default);
+        void NavigateTorrentView();
     }
 }

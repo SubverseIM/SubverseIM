@@ -1,4 +1,7 @@
 ﻿using Avalonia;
+using Avalonia.Platform.Storage;
+using MonoTorrent;
+using MonoTorrent.Dht;
 using SubverseIM.Models;
 using System.Collections.Generic;
 using System.Net;

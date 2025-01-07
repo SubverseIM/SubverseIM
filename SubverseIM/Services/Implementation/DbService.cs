@@ -1,5 +1,4 @@
 ﻿using LiteDB;
-using Org.BouncyCastle.Asn1.Ocsp;
 using SubverseIM.Models;
 using System;
 using System.Collections.Frozen;
@@ -43,6 +42,24 @@ namespace SubverseIM.Services.Implementation
             return contacts.FindOne(x => x.OtherPeer == otherPeer);
         }
 
+        public IEnumerable<SubverseTorrent> GetTorrents()
+        {
+            var torrents = db.GetCollection<SubverseTorrent>();
+            torrents.EnsureIndex(x => x.MagnetUri, unique: true);
+
+            return torrents.Query()
+                .OrderByDescending(x => x.DateLastUpdatedOn)
+                .ToEnumerable();
+        }
+
+        public SubverseTorrent? GetTorrent(string magnetUri)
+        {
+            var torrents = db.GetCollection<SubverseTorrent>();
+            torrents.EnsureIndex(x => x.MagnetUri, unique: true);
+
+            return torrents.FindOne(x => x.MagnetUri == magnetUri);
+        }
+
         public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName)
         {
             var messages = db.GetCollection<SubverseMessage>();
@@ -60,7 +77,7 @@ namespace SubverseIM.Services.Implementation
                 .OrderByDescending(x => x.DateSignedOn);
         }
 
-        public IEnumerable<SubverseMessage> GetAllUndeliveredMessages() 
+        public IEnumerable<SubverseMessage> GetAllUndeliveredMessages()
         {
             var messages = db.GetCollection<SubverseMessage>();
 
@@ -94,7 +111,7 @@ namespace SubverseIM.Services.Implementation
                     .Distinct());
         }
 
-        public SubverseMessage? GetMessageByCallId(string callId) 
+        public SubverseMessage? GetMessageByCallId(string callId)
         {
             var messages = db.GetCollection<SubverseMessage>();
 
@@ -116,6 +133,16 @@ namespace SubverseIM.Services.Implementation
             return contacts.Upsert(newItem);
         }
 
+        public bool InsertOrUpdateItem(SubverseTorrent newItem)
+        {
+            var torrents = db.GetCollection<SubverseTorrent>();
+
+            SubverseTorrent? storedItem = GetTorrent(newItem.MagnetUri);
+            newItem.Id = storedItem?.Id;
+
+            return torrents.Upsert(newItem);
+        }
+
         public bool InsertOrUpdateItem(SubverseMessage newItem)
         {
             var messages = db.GetCollection<SubverseMessage>();
@@ -128,7 +155,7 @@ namespace SubverseIM.Services.Implementation
             return collection.Delete(id);
         }
 
-        public void DeleteAllMessagesOfTopic(string topicName) 
+        public void DeleteAllMessagesOfTopic(string topicName)
         {
             var messages = db.GetCollection<SubverseMessage>();
 
