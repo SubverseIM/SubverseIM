@@ -124,6 +124,12 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        public async Task OpenFilesCommandAsync()
+        {
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigateTorrentView();
+        }
+
         public async Task AddParticipantsCommandAsync()
         {
             Debug.Assert(Parent is not null);
