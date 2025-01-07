@@ -103,7 +103,8 @@ public partial class ContactPageView : UserControl
             !isLongPress && 
             !isDoubleTap && 
             dataContext is not null && 
-            dataContext.Parent is null)
+            dataContext.Parent is null &&
+            contacts.SelectedItems?.Count > 0)
         {
             await Dispatcher.UIThread.InvokeAsync(dataContext.MessageCommandAsync);
         }
