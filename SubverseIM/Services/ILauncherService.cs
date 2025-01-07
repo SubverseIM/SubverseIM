@@ -22,6 +22,6 @@ namespace SubverseIM.Services
 
         Task ShareStringToAppAsync(Visual? sender, string title, string content);
 
-        Task ShareUriToAppAsync(Visual? sender, string title, Uri uri);
+        Task ShareFileToAppAsync(Visual? sender, string title, string path);
     }
 }

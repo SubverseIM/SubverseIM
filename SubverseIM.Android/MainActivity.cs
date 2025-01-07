@@ -275,7 +275,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         return Task.CompletedTask;
     }
 
-    public Task ShareUriToAppAsync(Visual? sender, string title, System.Uri uri)
+    public Task ShareFileToAppAsync(Visual? sender, string title, string path)
     {
         return Task.FromException(new PlatformNotSupportedException("This method is not supported on Android!"));
     }

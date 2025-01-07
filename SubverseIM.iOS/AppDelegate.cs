@@ -12,6 +12,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using UIKit;
+using UniformTypeIdentifiers;
 using UserNotifications;
 
 namespace SubverseIM.iOS;
@@ -245,11 +246,13 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
                 animated: true) ?? Task.CompletedTask;
     }
 
-    public Task ShareUriToAppAsync(Visual? sender, string title, Uri uri)
+    public Task ShareFileToAppAsync(Visual? sender, string title, string path)
     {
         TopLevel? topLevel = TopLevel.GetTopLevel(sender);
 
-        UIActivityItemsConfiguration configuration = new([(NSUrl)uri!]);
+        NSItemProvider itemProvider = new(NSUrl.CreateFileUrl(path), UTTypes.Data.Identifier);
+
+        UIActivityItemsConfiguration configuration = new([itemProvider]);
         UIActivityViewController activityViewController = new(configuration)
         {
             Title = title,

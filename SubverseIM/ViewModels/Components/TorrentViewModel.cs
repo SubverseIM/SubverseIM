@@ -139,7 +139,7 @@ namespace SubverseIM.ViewModels.Components
             try
             {
                 ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
-                await launcherService.ShareUriToAppAsync(sender, "Save File As", new Uri($"file://{cacheFilePath}"));
+                await launcherService.ShareFileToAppAsync(sender, "Save File As", cacheFilePath);
             }
             catch (PlatformNotSupportedException)
             {
