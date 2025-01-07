@@ -1,4 +1,5 @@
-﻿using Avalonia.Platform.Storage;
+﻿using Avalonia;
+using Avalonia.Platform.Storage;
 using MonoTorrent;
 using MonoTorrent.Client;
 using ReactiveUI;
@@ -22,7 +23,7 @@ namespace SubverseIM.ViewModels.Components
 
         private Progress<TorrentStatus>? torrentStatus;
 
-        public string? DisplayName => innerTorrent.MagnetUri is null ? null : 
+        public string? DisplayName => innerTorrent.MagnetUri is null ? null :
             MagnetLink.Parse(innerTorrent.MagnetUri).Name;
 
         private bool downloadComplete;
@@ -36,10 +37,10 @@ namespace SubverseIM.ViewModels.Components
         }
 
         private double downloadProgress;
-        public double DownloadProgress 
+        public double DownloadProgress
         {
             get => downloadProgress;
-            private set 
+            private set
             {
                 this.RaiseAndSetIfChanged(ref downloadProgress, value);
             }
@@ -49,23 +50,23 @@ namespace SubverseIM.ViewModels.Components
         public TorrentState TorrentState
         {
             get => torrentState;
-            private set 
+            private set
             {
                 this.RaiseAndSetIfChanged(ref torrentState, value);
             }
         }
 
         private bool isStarted;
-        public bool IsStarted 
+        public bool IsStarted
         {
             get => isStarted;
-            private set 
+            private set
             {
                 this.RaiseAndSetIfChanged(ref isStarted, value);
             }
         }
 
-        public TorrentViewModel(TorrentPageViewModel parent, SubverseTorrent innerTorrent, Progress<TorrentStatus>? torrentStatus) 
+        public TorrentViewModel(TorrentPageViewModel parent, SubverseTorrent innerTorrent, Progress<TorrentStatus>? torrentStatus)
         {
             this.parent = parent;
             this.innerTorrent = innerTorrent;
@@ -79,9 +80,9 @@ namespace SubverseIM.ViewModels.Components
             TorrentState = e.State;
         }
 
-        private bool RegisterStatus(Progress<TorrentStatus>? torrentStatus) 
+        private bool RegisterStatus(Progress<TorrentStatus>? torrentStatus)
         {
-            if (this.torrentStatus is not null) 
+            if (this.torrentStatus is not null)
             {
                 this.torrentStatus.ProgressChanged -= TorrentProgressChanged;
             }
@@ -91,7 +92,7 @@ namespace SubverseIM.ViewModels.Components
                 torrentStatus.ProgressChanged += TorrentProgressChanged;
                 return true;
             }
-            else 
+            else
             {
                 return false;
             }
@@ -103,14 +104,14 @@ namespace SubverseIM.ViewModels.Components
             IsStarted = RegisterStatus(await torrentService.StartAsync(innerTorrent));
         }
 
-        public async Task StopCommandAsync() 
+        public async Task StopCommandAsync()
         {
             ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
             await torrentService.StopAsync(innerTorrent);
             IsStarted = false;
         }
 
-        public async Task DeleteCommandAsync() 
+        public async Task DeleteCommandAsync()
         {
             ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
@@ -127,29 +128,36 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public async Task ShareCommandAsync()
+        public async Task ShareCommandAsync(Visual? sender)
         {
-            IStorageProvider storageProvider = await parent.ServiceManager.GetWithAwaitAsync<IStorageProvider>();
-            IStorageFile? saveAsFile = await storageProvider.SaveFilePickerAsync(
-                new FilePickerSaveOptions 
-                { 
-                    Title = "Save File As",
-                    FileTypeChoices = [FilePickerFileTypes.All],
-                    SuggestedFileName = DisplayName,
-                });
-            if (saveAsFile is not null)
-            {
-                string cacheDirPath = Path.Combine(
+            string cacheDirPath = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
                         );
-                string cacheFilePath = Path.Combine(cacheDirPath,
-                    DisplayName ?? throw new InvalidOperationException("No display name was provided for this file!")
-                    );
-
-                using (Stream cacheFileStream = File.OpenRead(cacheFilePath))
-                using (Stream localFileStream = await saveAsFile.OpenWriteAsync())
+            string cacheFilePath = Path.Combine(cacheDirPath,
+                DisplayName ?? throw new InvalidOperationException("No display name was provided for this file!")
+                );
+            try
+            {
+                ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
+                await launcherService.ShareFileToAppAsync(sender, "Save File As", cacheFilePath);
+            }
+            catch (PlatformNotSupportedException)
+            {
+                IStorageProvider storageProvider = await parent.ServiceManager.GetWithAwaitAsync<IStorageProvider>();
+                IStorageFile? saveAsFile = await storageProvider.SaveFilePickerAsync(
+                    new FilePickerSaveOptions
+                    {
+                        Title = "Save File As",
+                        FileTypeChoices = [FilePickerFileTypes.All],
+                        SuggestedFileName = DisplayName,
+                    });
+                if (saveAsFile is not null)
                 {
-                    await cacheFileStream.CopyToAsync(localFileStream);
+                    using (Stream cacheFileStream = File.OpenRead(cacheFilePath))
+                    using (Stream localFileStream = await saveAsFile.OpenWriteAsync())
+                    {
+                        await cacheFileStream.CopyToAsync(localFileStream);
+                    }
                 }
             }
         }

@@ -21,5 +21,7 @@ namespace SubverseIM.Services
         Task<string?> ShowInputDialogAsync(string prompt, string? defaultText = null);
 
         Task ShareStringToAppAsync(Visual? sender, string title, string content);
+
+        Task ShareFileToAppAsync(Visual? sender, string title, string path);
     }
 }

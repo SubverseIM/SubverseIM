@@ -12,6 +12,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using UIKit;
+using UniformTypeIdentifiers;
 using UserNotifications;
 
 namespace SubverseIM.iOS;
@@ -243,5 +244,40 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
                 viewControllerToPresent:
                 activityViewController,
                 animated: true) ?? Task.CompletedTask;
+    }
+
+    public Task ShareFileToAppAsync(Visual? sender, string title, string path)
+    {
+        TopLevel? topLevel = TopLevel.GetTopLevel(sender);
+
+        NSItemProvider itemProvider = new(NSUrl.CreateFileUrl(path), UTTypes.Data.Identifier);
+
+        UIActivityItemsConfiguration configuration = new([itemProvider]);
+        UIActivityViewController activityViewController = new(configuration)
+        {
+            Title = title,
+        };
+
+        UIPopoverPresentationController? popoverPresentationController = activityViewController.PopoverPresentationController;
+        if (topLevel is not null && sender is not null &&
+            UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
+            popoverPresentationController is not null && Window is not null)
+        {
+            PixelPoint topLeft = topLevel.PointToScreen(sender.Bounds.TopLeft);
+            PixelPoint bottomRight = topLevel.PointToScreen(sender.Bounds.BottomRight);
+
+            popoverPresentationController.SourceView = Window;
+            popoverPresentationController.SourceRect = new CGRect(
+                topLeft.X, topLeft.Y, (bottomRight - topLeft).X, (bottomRight - topLeft).Y
+                );
+
+            activityViewController.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
+        }
+
+        return Window?.RootViewController
+            ?.PresentViewControllerAsync(
+                viewControllerToPresent:
+                activityViewController,
+                animated: true) ?? Task.CompletedTask;   
     }
 }
