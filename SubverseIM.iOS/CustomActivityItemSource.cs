@@ -6,23 +6,25 @@ namespace SubverseIM.iOS
 {
     internal class CustomActivityItemSource : UIActivityItemSource
     {
-        private readonly string title, urlString, typeIdentifier;
+        private readonly string title, typeIdentifier;
+        private readonly NSObject item;
 
-        public CustomActivityItemSource(string title, string urlString, string typeIdentifier) 
+        public CustomActivityItemSource(string title, NSObject item, string typeIdentifier) 
         {
             this.title = title;
-            this.urlString = urlString;
+
+            this.item = item;
             this.typeIdentifier = typeIdentifier;
         }
 
         public override NSObject GetPlaceholderData(UIActivityViewController activityViewController)
         {
-            return (NSString)urlString;
+            return item;
         }
 
         public override NSObject GetItemForActivity(UIActivityViewController activityViewController, NSString? activityType)
         {
-            return (NSString)urlString;
+            return item;
         }
 
         public override string GetSubjectForActivity(UIActivityViewController activityViewController, NSString? activityType)
@@ -40,7 +42,7 @@ namespace SubverseIM.iOS
             return new LPLinkMetadata
             {
                 Title = title,
-                OriginalUrl = new NSUrl(urlString),
+                OriginalUrl = item as NSUrl,
             };
         }
     }
