@@ -92,61 +92,71 @@
 						Watermark="Write a message..."
 						Text="{Binding SendMessageText}" />
 			</DockPanel>
-			<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
-				<ListBox.Styles>
-					<Style Selector="ListBoxItem">
-						<Setter Property="AutomationProperties.Name" Value="Message"/>
-					</Style>
-				</ListBox.Styles>
-				<ListBox.ItemTemplate>
-					<DataTemplate>
-						<DockPanel
-							AutomationProperties.HelpText="{Binding ReadoutText}">
-							<Button Background="DarkRed"
+			<Panel>
+				<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
+					<ListBox.Styles>
+						<Style Selector="ListBoxItem">
+							<Setter Property="AutomationProperties.Name" Value="Message"/>
+						</Style>
+					</ListBox.Styles>
+					<ListBox.ItemTemplate>
+						<DataTemplate>
+							<DockPanel
+								AutomationProperties.HelpText="{Binding ReadoutText}">
+								<Button Background="DarkRed"
+										DockPanel.Dock="{Binding OptionsAlignment}"
+										VerticalAlignment="Top"
+										Margin="2"
+										IsVisible="{Binding IsSelected}"
+										Command="{Binding DeleteCommandAsync}"
+										AutomationProperties.Name="Delete Message">
+									<PathIcon Data="{StaticResource delete_regular}" />
+								</Button>
+								<TextBlock
 									DockPanel.Dock="{Binding OptionsAlignment}"
 									VerticalAlignment="Top"
-									Margin="2"
-									IsVisible="{Binding IsSelected}"
-									Command="{Binding DeleteCommandAsync}"
-									AutomationProperties.Name="Delete Message">
-								<PathIcon Data="{StaticResource delete_regular}" />
-							</Button>
-							<TextBlock
-								DockPanel.Dock="{Binding OptionsAlignment}"
-								VerticalAlignment="Top"
-								HorizontalAlignment="{Binding ContentAlignment}"
-								IsVisible="{Binding IsSelected}"
-								Text="{Binding DateString}"
-								FontSize="12"
-								Margin="2" />
-							<DockPanel>
-								<TextBlock TextWrapping="Wrap" DockPanel.Dock="Top"
-										HorizontalAlignment="{Binding ContentAlignment}"
-										Text="{Binding FromHeading}"
-										Margin="2"/>
-								<TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap" 
-									IsVisible="{Binding IsGroupMessage}"
 									HorizontalAlignment="{Binding ContentAlignment}"
-									Text="{Binding CcFooter}" Margin="2" FontSize="12" FontStyle="Italic" />
-								<ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Embeds}" HorizontalAlignment="{Binding ContentAlignment}">
-									<ItemsControl.ItemTemplate>
-										<DataTemplate>
-											<HyperlinkButton Padding="0" IsEnabled="True"
-													NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
-												<TextBlock Foreground="Aqua" TextWrapping="Wrap" 
-														Text="{Binding Name, DataType={x:Type vmx:EmbedViewModel}}" />
-											</HyperlinkButton>
-										</DataTemplate>
-									</ItemsControl.ItemTemplate>
-								</ItemsControl>
-								<Border Background="{Binding BubbleBrush}" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignment}">
-									<TextBlock Foreground="White" TextWrapping="Wrap" Text="{Binding Content}" Margin="2" />
-								</Border>
+									IsVisible="{Binding IsSelected}"
+									Text="{Binding DateString}"
+									FontSize="12"
+									Margin="2" />
+								<DockPanel>
+									<TextBlock TextWrapping="Wrap" DockPanel.Dock="Top"
+											HorizontalAlignment="{Binding ContentAlignment}"
+											Text="{Binding FromHeading}"
+											Margin="2"/>
+									<TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap"
+										IsVisible="{Binding IsGroupMessage}"
+										HorizontalAlignment="{Binding ContentAlignment}"
+										Text="{Binding CcFooter}" Margin="2" FontSize="12" FontStyle="Italic" />
+									<ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Embeds}" HorizontalAlignment="{Binding ContentAlignment}">
+										<ItemsControl.ItemTemplate>
+											<DataTemplate>
+												<HyperlinkButton Padding="0" IsEnabled="True"
+														NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
+													<TextBlock Foreground="Aqua" TextWrapping="Wrap"
+															Text="{Binding Name, DataType={x:Type vmx:EmbedViewModel}}" />
+												</HyperlinkButton>
+											</DataTemplate>
+										</ItemsControl.ItemTemplate>
+									</ItemsControl>
+									<Border Background="{Binding BubbleBrush}" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignment}">
+										<TextBlock Foreground="White" TextWrapping="Wrap" Text="{Binding Content}" Margin="2" />
+									</Border>
+								</DockPanel>
 							</DockPanel>
-						</DockPanel>
-					</DataTemplate>
-				</ListBox.ItemTemplate>
-			</ListBox>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+				<TextBlock IsVisible="{Binding !MessageList.Count}" 
+						   HorizontalAlignment="Center"
+						   VerticalAlignment="Center"
+						   TextWrapping="Wrap"
+						   TextAlignment="Center"
+						   Margin="5" FontSize="16">
+					This topic is empty. Send a message to get started!
+				</TextBlock>
+			</Panel>
 		</DockPanel>
 	</SplitView>
 </UserControl>
