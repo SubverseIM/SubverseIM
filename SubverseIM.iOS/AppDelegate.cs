@@ -208,22 +208,19 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         return await tcs.Task;
     }
 
-    public Task ShareStringToAppAsync(Visual? sender, string title, string content)
+    public Task ShareUrlToAppAsync(Visual? sender, string title, string contentUrl)
     {
         TopLevel? topLevel = TopLevel.GetTopLevel(sender);
 
-        NSItemProvider itemProvider = new(
-            item: (NSString)content,
-            typeIdentifier: "public.utf8-plain-text"
+        UIActivityItemSource itemSource = new CustomActivityItemSource(
+            title: title,
+            urlString: contentUrl,
+            typeIdentifier: UTTypes.Utf8PlainText.Identifier
             );
+        UIActivityViewController activityViewController = new([itemSource], null);
 
-        UIActivityItemsConfiguration configuration = new([itemProvider]);
-        UIActivityViewController activityViewController = new(configuration)
-        {
-            Title = title,
-        };
-
-        UIPopoverPresentationController? popoverPresentationController = activityViewController.PopoverPresentationController;
+        UIPopoverPresentationController? popoverPresentationController = 
+            activityViewController.PopoverPresentationController;
         if (topLevel is not null && sender is not null &&
             UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
             popoverPresentationController is not null && Window is not null)
@@ -246,19 +243,19 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
                 animated: true) ?? Task.CompletedTask;
     }
 
-    public Task ShareFileToAppAsync(Visual? sender, string title, string path)
+    public Task ShareFileToAppAsync(Visual? sender, string title, string contentPath)
     {
         TopLevel? topLevel = TopLevel.GetTopLevel(sender);
 
-        NSItemProvider itemProvider = new(NSUrl.CreateFileUrl(path), UTTypes.Data.Identifier);
+        UIActivityItemSource itemSource = new CustomActivityItemSource(
+            title: title,
+            urlString: contentPath,
+            typeIdentifier: UTTypes.Data.Identifier
+            );
+        UIActivityViewController activityViewController = new([itemSource], null);
 
-        UIActivityItemsConfiguration configuration = new([itemProvider]);
-        UIActivityViewController activityViewController = new(configuration)
-        {
-            Title = title,
-        };
-
-        UIPopoverPresentationController? popoverPresentationController = activityViewController.PopoverPresentationController;
+        UIPopoverPresentationController? popoverPresentationController = 
+            activityViewController.PopoverPresentationController;
         if (topLevel is not null && sender is not null &&
             UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
             popoverPresentationController is not null && Window is not null)

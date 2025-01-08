@@ -628,7 +628,7 @@ namespace SubverseIM.Services.Implementation
             string inviteId = await http.GetFromJsonAsync<string>($"invite?p={thisPeer}") ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
 
-            await launcherService.ShareStringToAppAsync(sender, "Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
+            await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
         }
 
         private bool disposedValue;

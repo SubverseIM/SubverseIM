@@ -264,7 +264,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         return tcs.Task;
     }
 
-    public Task ShareStringToAppAsync(Visual? sender, string title, string content)
+    public Task ShareUrlToAppAsync(Visual? sender, string title, string content)
     {
         new ShareCompat.IntentBuilder(this)
             .SetType("text/plain")
