@@ -14,6 +14,8 @@ namespace SubverseIM.Services
         
         bool IsLandscape { get; }
 
+        event EventHandler? OrientationChanged;
+
         Uri? GetLaunchedUri();
 
         Task<bool> ShowConfirmationDialogAsync(string title, string message);

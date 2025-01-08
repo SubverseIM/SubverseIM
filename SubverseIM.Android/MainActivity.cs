@@ -75,6 +75,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     private readonly ActivityBackPressedCallback backPressedCallback;
 
+
     public bool NotificationsAllowed { get; private set; }
 
     public bool IsInForeground { get; private set; }
@@ -89,6 +90,8 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     }
 
     public bool IsLandscape { get; private set; }
+
+    public event EventHandler? OrientationChanged;
 
     public MainActivity()
     {
@@ -172,7 +175,9 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     public override void OnConfigurationChanged(Configuration newConfig)
     {
         base.OnConfigurationChanged(newConfig);
+
         IsLandscape = newConfig.Orientation == Orientation.Landscape;
+        OnOrientationChanged(this, new());
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
@@ -291,6 +296,11 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     public Task ShareFileToAppAsync(Visual? sender, string title, string path)
     {
         return Task.FromException(new PlatformNotSupportedException("This method is not supported on Android!"));
+    }
+
+    protected virtual void OnOrientationChanged(object? sender, EventArgs e) 
+    {
+        OrientationChanged?.Invoke(sender, e);
     }
 
     protected override void Dispose(bool disposing)

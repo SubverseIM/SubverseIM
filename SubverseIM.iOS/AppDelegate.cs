@@ -35,9 +35,11 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public bool NotificationsAllowed { get; private set; }
 
+    public bool IsAccessibilityEnabled => false;
+
     public bool IsLandscape { get; private set; }
 
-    public bool IsAccessibilityEnabled => false;
+    public event EventHandler? OrientationChanged;
 
     private async void HandleAppDeactivated(object? sender, ActivatedEventArgs e)
     {
@@ -99,6 +101,11 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .UseReactiveUI();
     }
 
+    protected virtual void OnOrientationChanged(object? sender, EventArgs e)
+    {
+        OrientationChanged?.Invoke(sender, e);
+    }
+
     public Uri? GetLaunchedUri()
     {
         return launchedUri;
@@ -121,10 +128,13 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         IsLandscape = 
             orientation == UIInterfaceOrientation.LandscapeLeft || 
             orientation == UIInterfaceOrientation.LandscapeRight;
-        UIApplication.Notifications.ObserveDidChangeStatusBarOrientation((s, ev) => IsLandscape = 
-            ev.StatusBarOrientation == UIInterfaceOrientation.LandscapeLeft || 
-            ev.StatusBarOrientation == UIInterfaceOrientation.LandscapeRight
-            );
+        UIApplication.Notifications.ObserveDidChangeStatusBarOrientation((s, ev) =>
+        {
+            IsLandscape =
+                ev.StatusBarOrientation == UIInterfaceOrientation.LandscapeLeft ||
+                ev.StatusBarOrientation == UIInterfaceOrientation.LandscapeRight;
+            OnOrientationChanged(this, new());
+        });
 
         launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
         serviceManager.GetOrRegister<ILauncherService>(this);

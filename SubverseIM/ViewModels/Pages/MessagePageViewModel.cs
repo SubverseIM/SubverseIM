@@ -100,6 +100,18 @@ namespace SubverseIM.ViewModels.Pages
             MessageTextDock = Dock.Bottom;
         }
 
+        private async void OrientationChanged(object? sender, EventArgs e)
+        {
+            await UpdateOrientationAsync();
+        }
+
+        private async Task UpdateOrientationAsync() 
+        {
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
+            SidebarMode = launcherService.IsLandscape ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
+            IsSidebarOpen = launcherService.IsLandscape;
+        }
+
         public async Task AddParticipantsCommandAsync()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
@@ -149,8 +161,8 @@ namespace SubverseIM.ViewModels.Pages
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
 
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
-            SidebarMode = launcherService.IsLandscape ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
-            IsSidebarOpen = launcherService.IsLandscape;
+            launcherService.OrientationChanged += OrientationChanged;
+            await UpdateOrientationAsync();
 
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
