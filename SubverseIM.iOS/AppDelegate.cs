@@ -103,6 +103,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     protected virtual void OnOrientationChanged(object? sender, EventArgs e)
     {
+        IsLandscape =
+                UIDevice.CurrentDevice.Orientation == UIDeviceOrientation.LandscapeLeft ||
+                UIDevice.CurrentDevice.Orientation == UIDeviceOrientation.LandscapeRight;
         OrientationChanged?.Invoke(sender, e);
     }
 
@@ -124,17 +127,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
         ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
 
-        UIInterfaceOrientation orientation = UIApplication.SharedApplication.StatusBarOrientation;
-        IsLandscape = 
-            orientation == UIInterfaceOrientation.LandscapeLeft || 
-            orientation == UIInterfaceOrientation.LandscapeRight;
-        UIApplication.Notifications.ObserveDidChangeStatusBarOrientation((s, ev) =>
-        {
-            IsLandscape =
-                ev.StatusBarOrientation == UIInterfaceOrientation.LandscapeLeft ||
-                ev.StatusBarOrientation == UIInterfaceOrientation.LandscapeRight;
-            OnOrientationChanged(this, new());
-        });
+        UIDevice.Notifications.ObserveOrientationDidChange(OnOrientationChanged);
+        OnOrientationChanged(this, new());
 
         launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
         serviceManager.GetOrRegister<ILauncherService>(this);
