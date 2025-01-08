@@ -248,8 +248,49 @@ namespace SubverseIM.Services.Implementation
             SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
             string toName = sipRequest.Header.To.ToName;
 
+            string messageContent;
+            using (PGP pgp = new PGP(await GetPeerKeysAsync(fromPeer)))
+            using (MemoryStream encryptedMessageStream = new(sipRequest.BodyBuffer))
+            using (MemoryStream decryptedMessageStream = new())
+            {
+                await pgp.DecryptAndVerifyAsync(encryptedMessageStream, decryptedMessageStream);
+                messageContent = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
+            }
+
+            if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
+            {
+                messagesBag.Add(tcs = new());
+            }
+
+            IEnumerable<SubversePeerId> recipients = [toPeer, ..sipRequest.Header.Contact
+                        .Select(x => SubversePeerId.FromString(x.ContactURI.User))];
+
+            IEnumerable<string?> localRecipientNames = recipients
+                .Select(x => dbService.GetContact(x)?.DisplayName);
+
+            IEnumerable<string> remoteRecipientNames =
+                [toName, .. sipRequest.Header.Contact.Select(x => x.ContactName)];
+
+            SubverseMessage message = new SubverseMessage
+            {
+                CallId = sipRequest.Header.CallId,
+                Content = messageContent,
+                Sender = fromPeer,
+                SenderName = fromName,
+                Recipients = recipients.ToArray(),
+                RecipientNames = localRecipientNames
+                    .Zip(remoteRecipientNames)
+                    .Select(x => x.First ?? x.Second)
+                    .ToArray(),
+                DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
+                TopicName = sipRequest.URI.Parameters.Get("topic"),
+            };
+
             if (toPeer != await GetPeerIdAsync())
             {
+                message.WasDelivered = false;
+                dbService.InsertOrUpdateItem(message);
+
                 await SendSIPRequestAsync(sipRequest);
                 SIPResponse sipResponse = SIPResponse.GetResponse(
                     sipRequest, SIPResponseStatusCodesEnum.Accepted, "Message was forwarded."
@@ -258,6 +299,9 @@ namespace SubverseIM.Services.Implementation
             }
             else
             {
+                message.WasDelivered = true;
+                tcs.SetResult(message);
+
                 SubversePeer? peer;
                 lock (CachedPeers)
                 {
@@ -267,45 +311,6 @@ namespace SubverseIM.Services.Implementation
                     }
                 }
                 peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
-
-                string messageContent;
-                using (PGP pgp = new PGP(await GetPeerKeysAsync(fromPeer)))
-                using (MemoryStream encryptedMessageStream = new(sipRequest.BodyBuffer))
-                using (MemoryStream decryptedMessageStream = new())
-                {
-                    await pgp.DecryptAndVerifyAsync(encryptedMessageStream, decryptedMessageStream);
-                    messageContent = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
-                }
-
-                if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
-                {
-                    messagesBag.Add(tcs = new());
-                }
-
-                IEnumerable<SubversePeerId> recipients = [toPeer, ..sipRequest.Header.Contact
-                        .Select(x => SubversePeerId.FromString(x.ContactURI.User))];
-
-                IEnumerable<string?> localRecipientNames = recipients
-                    .Select(x => dbService.GetContact(x)?.DisplayName);
-
-                IEnumerable<string> remoteRecipientNames =
-                    [toName, .. sipRequest.Header.Contact.Select(x => x.ContactName)];
-
-                tcs.SetResult(new SubverseMessage
-                {
-                    CallId = sipRequest.Header.CallId,
-                    Content = messageContent,
-                    Sender = fromPeer,
-                    SenderName = fromName,
-                    Recipients = recipients.ToArray(),
-                    RecipientNames = localRecipientNames
-                        .Zip(remoteRecipientNames)
-                        .Select(x => x.First ?? x.Second)
-                        .ToArray(),
-                    DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
-                    TopicName = sipRequest.URI.Parameters.Get("topic"),
-                    WasDelivered = true,
-                });
 
                 SIPResponse sipResponse = SIPResponse.GetResponse(
                     sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
