@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -53,6 +54,16 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        private SplitViewDisplayMode sidebarMode;
+        public SplitViewDisplayMode SidebarMode
+        {
+            get => sidebarMode;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref sidebarMode, value);
+            }
+        }
+
         public ContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)
         {
             Parent = null;
@@ -68,6 +79,10 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task LoadContactsAsync(CancellationToken cancellationToken = default)
         {
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
+            SidebarMode = launcherService.IsLandscape ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
+            IsSidebarOpen = launcherService.IsLandscape;
+
             ContactsList.Clear();
 
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);

@@ -81,6 +81,16 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        private SplitViewDisplayMode sidebarMode;
+        public SplitViewDisplayMode SidebarMode
+        {
+            get => sidebarMode;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref sidebarMode, value);
+            }
+        }
+
         public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
             permContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
@@ -137,7 +147,10 @@ namespace SubverseIM.ViewModels.Pages
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
+            SidebarMode = launcherService.IsLandscape ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
+            IsSidebarOpen = launcherService.IsLandscape;
 
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);

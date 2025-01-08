@@ -11,6 +11,8 @@ namespace SubverseIM.Services
         bool IsInForeground { get; }
 
         bool IsAccessibilityEnabled { get; }
+        
+        bool IsLandscape { get; }
 
         Uri? GetLaunchedUri();
 

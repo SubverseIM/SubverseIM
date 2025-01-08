@@ -35,6 +35,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public bool NotificationsAllowed { get; private set; }
 
+    public bool IsLandscape { get; private set; }
+
     public bool IsAccessibilityEnabled => false;
 
     private async void HandleAppDeactivated(object? sender, ActivatedEventArgs e)
@@ -114,6 +116,15 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
         ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
+
+        UIInterfaceOrientation orientation = UIApplication.SharedApplication.StatusBarOrientation;
+        IsLandscape = 
+            orientation == UIInterfaceOrientation.LandscapeLeft || 
+            orientation == UIInterfaceOrientation.LandscapeRight;
+        UIApplication.Notifications.ObserveDidChangeStatusBarOrientation((s, ev) => IsLandscape = 
+            ev.StatusBarOrientation == UIInterfaceOrientation.LandscapeLeft || 
+            ev.StatusBarOrientation == UIInterfaceOrientation.LandscapeRight
+            );
 
         launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
         serviceManager.GetOrRegister<ILauncherService>(this);

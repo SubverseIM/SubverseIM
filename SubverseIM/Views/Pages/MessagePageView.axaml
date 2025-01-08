@@ -11,8 +11,8 @@
 		<vm:MessagePageViewModel />
 	</Design.DataContext>
 	<SplitView IsPaneOpen="{Binding IsSidebarOpen}"
+		   DisplayMode="{Binding SidebarMode}"
 		   PanePlacement="Right"
-           DisplayMode="Overlay"
            OpenPaneLength="300">
 		<SplitView.Pane>
 			<Border BorderThickness="2" BorderBrush="Black">
