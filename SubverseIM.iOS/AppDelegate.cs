@@ -228,20 +228,15 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         return await tcs.Task;
     }
-
-    public Task ShareUrlToAppAsync(Visual? sender, string title, string contentUrl)
+    
+    private Task ShowShareSheetAsync(Visual? sender, UIActivityItemSource activityItemSource)
     {
         TopLevel? topLevel = TopLevel.GetTopLevel(sender);
 
-        UIActivityItemSource itemSource = new CustomActivityItemSource(
-            title: title,
-            urlString: contentUrl,
-            typeIdentifier: UTTypes.Utf8PlainText.Identifier
-            );
-        UIActivityViewController activityViewController = new([itemSource], null);
-
+        UIActivityViewController activityViewController = new([activityItemSource], null);
         UIPopoverPresentationController? popoverPresentationController = 
             activityViewController.PopoverPresentationController;
+
         if (topLevel is not null && sender is not null &&
             UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
             popoverPresentationController is not null && Window is not null)
@@ -264,38 +259,15 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
                 animated: true) ?? Task.CompletedTask;
     }
 
+    public Task ShareUrlToAppAsync(Visual? sender, string title, string contentUrl)
+    {
+        return ShowShareSheetAsync(sender, new CustomActivityItemSource(
+            title, new NSUrl(contentUrl), UTTypes.Url.Identifier));
+    }
+
     public Task ShareFileToAppAsync(Visual? sender, string title, string contentPath)
     {
-        TopLevel? topLevel = TopLevel.GetTopLevel(sender);
-
-        UIActivityItemSource itemSource = new CustomActivityItemSource(
-            title: title,
-            urlString: contentPath,
-            typeIdentifier: UTTypes.Data.Identifier
-            );
-        UIActivityViewController activityViewController = new([itemSource], null);
-
-        UIPopoverPresentationController? popoverPresentationController = 
-            activityViewController.PopoverPresentationController;
-        if (topLevel is not null && sender is not null &&
-            UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Pad &&
-            popoverPresentationController is not null && Window is not null)
-        {
-            PixelPoint topLeft = topLevel.PointToScreen(sender.Bounds.TopLeft);
-            PixelPoint bottomRight = topLevel.PointToScreen(sender.Bounds.BottomRight);
-
-            popoverPresentationController.SourceView = Window;
-            popoverPresentationController.SourceRect = new CGRect(
-                topLeft.X, topLeft.Y, (bottomRight - topLeft).X, (bottomRight - topLeft).Y
-                );
-
-            activityViewController.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
-        }
-
-        return Window?.RootViewController
-            ?.PresentViewControllerAsync(
-                viewControllerToPresent:
-                activityViewController,
-                animated: true) ?? Task.CompletedTask;   
+        return ShowShareSheetAsync(sender, new CustomActivityItemSource(
+            title, NSUrl.CreateFileUrl(contentPath), UTTypes.Data.Identifier));  
     }
 }
