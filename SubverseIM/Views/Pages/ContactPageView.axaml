@@ -21,27 +21,37 @@
 						<TextBlock FontSize="16" HorizontalAlignment="Center">File Manager</TextBlock>
 					</Button>
 					<Label DockPanel.Dock="Top">Recent Topics</Label>
-					<ListBox x:Name="topics" SelectionMode="Single,Toggle" ItemsSource="{Binding TopicsList}">
-						<ListBox.Styles>
-							<Style Selector="ListBoxItem">
-								<Setter Property="AutomationProperties.Name" Value="Topic"/>
-							</Style>
-						</ListBox.Styles>
-						<ListBox.ItemTemplate>
-							<DataTemplate>
-								<DockPanel AutomationProperties.HelpText="{Binding TopicName}">
-									<Button IsVisible="{Binding IsSelected}" Background="DarkRed" 
-											DockPanel.Dock="Right" Command="{Binding DeleteTopicCommandAsync}"
-											AutomationProperties.Name="Delete Topic">
-										<PathIcon Data="{StaticResource delete_regular}" />
-									</Button>
-									<HyperlinkButton Padding="0" Command="{Binding OpenMessageViewCommandAsync}">
-										<TextBlock Foreground="Aqua" Text="{Binding TopicName}"/>
-									</HyperlinkButton>
-								</DockPanel>
-							</DataTemplate>
-						</ListBox.ItemTemplate>
-					</ListBox>
+					<Panel>
+						<ListBox x:Name="topics" SelectionMode="Single,Toggle" ItemsSource="{Binding TopicsList}">
+							<ListBox.Styles>
+								<Style Selector="ListBoxItem">
+									<Setter Property="AutomationProperties.Name" Value="Topic"/>
+								</Style>
+							</ListBox.Styles>
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<DockPanel AutomationProperties.HelpText="{Binding TopicName}">
+										<Button IsVisible="{Binding IsSelected}" Background="DarkRed"
+												DockPanel.Dock="Right" Command="{Binding DeleteTopicCommandAsync}"
+												AutomationProperties.Name="Delete Topic">
+											<PathIcon Data="{StaticResource delete_regular}" />
+										</Button>
+										<HyperlinkButton Padding="0" Command="{Binding OpenMessageViewCommandAsync}">
+											<TextBlock Foreground="Aqua" Text="{Binding TopicName}"/>
+										</HyperlinkButton>
+									</DockPanel>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+						<TextBlock IsVisible="{Binding !TopicsList.Count}"
+								   HorizontalAlignment="Center"
+								   VerticalAlignment="Center"
+								   TextWrapping="Wrap"
+								   TextAlignment="Center"
+								   Margin="5" FontSize="16">
+							No topics found! Maybe start one?
+						</TextBlock>
+					</Panel>
 				</DockPanel>
 			</Border>
 		</SplitView.Pane>
@@ -57,44 +67,54 @@
 			<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommandAsync}">
 				<TextBlock FontSize="16" HorizontalAlignment="Center">Add Selected Contacts</TextBlock>
 			</Button>
-			<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
-				<ListBox.Styles>
-					<Style Selector="ListBoxItem">
-						<Setter Property="AutomationProperties.Name" Value="Contact"/>
-					</Style>
-				</ListBox.Styles>
-				<ListBox.ItemTemplate>
-					<DataTemplate>
-						<DockPanel Height="64"
-								   AutomationProperties.HelpText="{Binding DisplayName}">
-							<Panel DockPanel.Dock="Left" Width="64">
-								<Polygon Points="{Binding HexagonPoints}" Fill="White" />
-								<Image Source="{Binding ContactPhoto}"
-									   Stretch="UniformToFill"
-									   Width="62" Height="62" Clip="{Binding HexagonPath}">
-								</Image>
-							</Panel>
-							<Button DockPanel.Dock="Right"
-									VerticalAlignment="Stretch"
-									IsVisible="{Binding ShouldShowOptions}"
-									Command="{Binding DeleteCommandAsync}"
-									CommandParameter="True"
-									Background="DarkRed"
-									AutomationProperties.Name="Delete Contact">
-								<PathIcon Data="{StaticResource delete_regular}" />
-							</Button>
-							<Button DockPanel.Dock="Right"
-									VerticalAlignment="Stretch"
-									IsVisible="{Binding ShouldShowOptions}"
-									Command="{Binding EditCommandAsync}"
-									AutomationProperties.Name="Edit Contact">
-								<PathIcon Data="{StaticResource edit_regular}" />
-							</Button>
-							<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
-						</DockPanel>
-					</DataTemplate>
-				</ListBox.ItemTemplate>
-			</ListBox>
+			<Panel>
+				<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
+					<ListBox.Styles>
+						<Style Selector="ListBoxItem">
+							<Setter Property="AutomationProperties.Name" Value="Contact"/>
+						</Style>
+					</ListBox.Styles>
+					<ListBox.ItemTemplate>
+						<DataTemplate>
+							<DockPanel Height="64"
+									   AutomationProperties.HelpText="{Binding DisplayName}">
+								<Panel DockPanel.Dock="Left" Width="64">
+									<Polygon Points="{Binding HexagonPoints}" Fill="White" />
+									<Image Source="{Binding ContactPhoto}"
+										   Stretch="UniformToFill"
+										   Width="62" Height="62" Clip="{Binding HexagonPath}">
+									</Image>
+								</Panel>
+								<Button DockPanel.Dock="Right"
+										VerticalAlignment="Stretch"
+										IsVisible="{Binding ShouldShowOptions}"
+										Command="{Binding DeleteCommandAsync}"
+										CommandParameter="True"
+										Background="DarkRed"
+										AutomationProperties.Name="Delete Contact">
+									<PathIcon Data="{StaticResource delete_regular}" />
+								</Button>
+								<Button DockPanel.Dock="Right"
+										VerticalAlignment="Stretch"
+										IsVisible="{Binding ShouldShowOptions}"
+										Command="{Binding EditCommandAsync}"
+										AutomationProperties.Name="Edit Contact">
+									<PathIcon Data="{StaticResource edit_regular}" />
+								</Button>
+								<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
+							</DockPanel>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+				<TextBlock IsVisible="{Binding !ContactsList.Count}"
+						   HorizontalAlignment="Center"
+						   VerticalAlignment="Center"
+						   TextWrapping="Wrap"
+						   TextAlignment="Center"
+						   Margin="5" FontSize="16">
+					No contacts found. Click "Invite Friend" to get started!
+				</TextBlock>
+			</Panel>
 		</DockPanel>
 	</SplitView>
 </UserControl>

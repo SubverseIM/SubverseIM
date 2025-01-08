@@ -9,34 +9,44 @@
 	<Design.DataContext>
 		<vm:TorrentPageViewModel />
 	</Design.DataContext>
-	<ListBox ItemsSource="{Binding Torrents}">
-		<ListBox.ItemTemplate>
-			<DataTemplate>
-				<DockPanel>
-					<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" />
-					<Button DockPanel.Dock="Right" Command="{Binding ShareCommandAsync}"
-							IsVisible="{Binding DownloadComplete}"
-							AutomationProperties.Name="Save File As">
-						<PathIcon Data="{StaticResource save_regular}" />
-					</Button>
-					<Button DockPanel.Dock="Right" Command="{Binding StopCommandAsync}" 
-							IsVisible="{Binding IsStarted}"
-							AutomationProperties.Name="Start Download">
-						<PathIcon Data="{StaticResource arrow_download_regular}" />
-					</Button>
-					<Button DockPanel.Dock="Right" Command="{Binding StartCommandAsync}" 
-							IsVisible="{Binding !IsStarted}"
-							AutomationProperties.Name="Stop Download">
-						<PathIcon Data="{StaticResource dismiss_regular}" />
-					</Button>
-					<Button DockPanel.Dock="Right" Command="{Binding DeleteCommandAsync}"
-							AutomationProperties.Name="Delete File"
-							Background="DarkRed">
-						<PathIcon Data="{StaticResource delete_regular}" />
-					</Button>
-					<ProgressBar Value="{Binding DownloadProgress}" Margin="5" />
-				</DockPanel>
-			</DataTemplate>
-		</ListBox.ItemTemplate>
-	</ListBox>
+	<Panel>
+		<ListBox ItemsSource="{Binding Torrents}">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<DockPanel>
+						<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" />
+						<Button DockPanel.Dock="Right" Command="{Binding ShareCommandAsync}"
+								IsVisible="{Binding DownloadComplete}"
+								AutomationProperties.Name="Save File As">
+							<PathIcon Data="{StaticResource save_regular}" />
+						</Button>
+						<Button DockPanel.Dock="Right" Command="{Binding StopCommandAsync}"
+								IsVisible="{Binding IsStarted}"
+								AutomationProperties.Name="Start Download">
+							<PathIcon Data="{StaticResource arrow_download_regular}" />
+						</Button>
+						<Button DockPanel.Dock="Right" Command="{Binding StartCommandAsync}"
+								IsVisible="{Binding !IsStarted}"
+								AutomationProperties.Name="Stop Download">
+							<PathIcon Data="{StaticResource dismiss_regular}" />
+						</Button>
+						<Button DockPanel.Dock="Right" Command="{Binding DeleteCommandAsync}"
+								AutomationProperties.Name="Delete File"
+								Background="DarkRed">
+							<PathIcon Data="{StaticResource delete_regular}" />
+						</Button>
+						<ProgressBar Value="{Binding DownloadProgress}" Margin="5" />
+					</DockPanel>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+		<TextBlock IsVisible="{Binding !Torrents.Count}"
+				   HorizontalAlignment="Center"
+				   VerticalAlignment="Center"
+				   TextWrapping="Wrap"
+				   TextAlignment="Center"
+				   Margin="5" FontSize="16">
+			No files found! Try sending one to a friend?
+		</TextBlock>
+	</Panel>
 </UserControl>
