@@ -2,6 +2,7 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
+using Android.Content.Res;
 using Android.OS;
 using Android.Text;
 using Android.Views.Accessibility;
@@ -21,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Orientation = Android.Content.Res.Orientation;
 
 namespace SubverseIM.Android;
 
@@ -73,7 +75,9 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     private readonly ActivityBackPressedCallback backPressedCallback;
 
+
     public bool NotificationsAllowed { get; private set; }
+
     public bool IsInForeground { get; private set; }
 
     public bool IsAccessibilityEnabled 
@@ -84,6 +88,10 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             return am.IsTouchExplorationEnabled;
         } 
     }
+
+    public bool IsLandscape { get; private set; }
+
+    public event EventHandler? OrientationChanged;
 
     public MainActivity()
     {
@@ -150,7 +158,9 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     protected override async void OnStart()
     {
         base.OnStart();
+        
         IsInForeground = true;
+        IsLandscape = Resources?.Configuration?.Orientation == Orientation.Landscape;
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         await frontendService.RunOnceAsync(cancellationTokenSource.Token);
@@ -160,6 +170,14 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     {
         base.OnStop();
         IsInForeground = false;
+    }
+
+    public override void OnConfigurationChanged(Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+
+        IsLandscape = newConfig.Orientation == Orientation.Landscape;
+        OnOrientationChanged(this, new());
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
@@ -278,6 +296,11 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     public Task ShareFileToAppAsync(Visual? sender, string title, string path)
     {
         return Task.FromException(new PlatformNotSupportedException("This method is not supported on Android!"));
+    }
+
+    protected virtual void OnOrientationChanged(object? sender, EventArgs e) 
+    {
+        OrientationChanged?.Invoke(sender, e);
     }
 
     protected override void Dispose(bool disposing)

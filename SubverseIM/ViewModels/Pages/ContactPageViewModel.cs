@@ -1,8 +1,10 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -53,6 +55,16 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        private SplitViewDisplayMode sidebarMode;
+        public SplitViewDisplayMode SidebarMode
+        {
+            get => sidebarMode;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref sidebarMode, value);
+            }
+        }
+
         public ContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)
         {
             Parent = null;
@@ -61,13 +73,24 @@ namespace SubverseIM.ViewModels.Pages
             TopicsList = new();
         }
 
-        public void RemoveContact(ContactViewModel contact)
+        private async void OrientationChanged(object? sender, EventArgs e)
         {
-            ContactsList.Remove(contact);
+            await UpdateOrientationAsync();
+        }
+
+        private async Task UpdateOrientationAsync()
+        {
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
+            SidebarMode = launcherService.IsLandscape ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
+            IsSidebarOpen = launcherService.IsLandscape;
         }
 
         public async Task LoadContactsAsync(CancellationToken cancellationToken = default)
         {
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
+            launcherService.OrientationChanged += OrientationChanged;
+            await UpdateOrientationAsync();
+
             ContactsList.Clear();
 
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
@@ -144,6 +167,10 @@ namespace SubverseIM.ViewModels.Pages
             frontendService.NavigatePreviousView();
         }
 
+        public void RemoveContact(ContactViewModel contact)
+        {
+            ContactsList.Remove(contact);
+        }
         public override void ToggleSidebarCommand()
         {
             base.ToggleSidebarCommand();
