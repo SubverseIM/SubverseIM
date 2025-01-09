@@ -46,35 +46,21 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public AppDelegate() 
     {
-        NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.DidBecomeActiveNotification, 
-            x => HandleAppActivated(this, new ActivatedEventArgs(ActivationKind.Background)));
+        NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.DidBecomeActiveNotification, HandleAppActivated);
     }
 
     private bool ScheduleAppRefresh(out NSError? error)
     {
-        BGAppRefreshTaskRequest request = new(BG_TASK_ID);
-        request.EarliestBeginDate = NSDate.FromTimeIntervalSinceNow(15 * 60);
-
+        BGAppRefreshTaskRequest request = new(BG_TASK_ID)
+        { 
+            EarliestBeginDate = NSDate.FromTimeIntervalSinceNow(15 * 60),
+        };
         return BGTaskScheduler.Shared.Submit(request, out error);
     }
 
-    private async void HandleAppDeactivated(object? sender, ActivatedEventArgs ev)
+    private void HandleAppActivated(NSNotification notification)
     {
-        IsInForeground = false;
-        ScheduleAppRefresh(out NSError? _);
-
-        UNMutableNotificationContent content = new()
-        {
-            Title = "Still There?",
-            Body = "SubverseIM has stopped monitoring the network for new messages. Check back with us often!"
-        };
-
-        UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(30.0, false);
-        UNNotificationRequest request = UNNotificationRequest.FromIdentifier(
-            reminderNotificationId = Guid.NewGuid().ToString(), content, trigger
-            );
-
-        await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
+        HandleAppActivated(this, new ActivatedEventArgs(ActivationKind.Background));
     }
 
     private async void HandleAppActivated(object? sender, ActivatedEventArgs ev)
@@ -119,9 +105,30 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             }
             catch (Exception ex)
             {
-                ev_.RefreshTask.SetTaskCompleted(success: ex is OperationCanceledException);
+                bool success = ex is OperationCanceledException;
+                ev_.RefreshTask.SetTaskCompleted(success);
+                if(!success) { throw; }
             }
         }
+    }
+
+    private async void HandleAppDeactivated(object? sender, ActivatedEventArgs ev)
+    {
+        IsInForeground = false;
+        ScheduleAppRefresh(out NSError? _);
+
+        UNMutableNotificationContent content = new()
+        {
+            Title = "Still There?",
+            Body = "SubverseIM has stopped monitoring the network for new messages. We'll try our best to keep you posted!",
+        };
+
+        UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(30.0, false);
+        UNNotificationRequest request = UNNotificationRequest.FromIdentifier(
+            reminderNotificationId = Guid.NewGuid().ToString(), content, trigger
+            );
+
+        await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
     }
 
     protected override AppBuilder CreateAppBuilder()
