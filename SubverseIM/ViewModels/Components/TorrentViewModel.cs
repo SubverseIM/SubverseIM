@@ -75,7 +75,7 @@ namespace SubverseIM.ViewModels.Components
 
         private void TorrentProgressChanged(object? sender, TorrentStatus e)
         {
-            DownloadComplete = e.Complete;
+            DownloadComplete = e.Complete || e.Progress == 100.0;
             DownloadProgress = e.Progress;
             TorrentState = e.State;
         }
