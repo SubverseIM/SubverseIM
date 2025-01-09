@@ -41,16 +41,6 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        private Dock messageTextDock;
-        public Dock MessageTextDock
-        {
-            get => messageTextDock;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref messageTextDock, value);
-            }
-        }
-
         private string? sendMessageText;
         public string? SendMessageText
         {
@@ -97,7 +87,6 @@ namespace SubverseIM.ViewModels.Pages
             ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             MessageList = [];
             TopicsList = [string.Empty];
-            MessageTextDock = Dock.Bottom;
         }
 
         private async void OrientationChanged(object? sender, EventArgs e)
@@ -264,8 +253,6 @@ namespace SubverseIM.ViewModels.Pages
                 DateSignedOn = DateTime.UtcNow,
             };
 
-            MessageTextDock = Dock.Bottom;
-
             dbService.InsertOrUpdateItem(message);
 
             if (messageText == SendMessageText)
@@ -296,8 +283,6 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task AttachFileCommandAsync() 
         {
-            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
             IStorageProvider storageProvider = await ServiceManager.GetWithAwaitAsync<IStorageProvider>();
 

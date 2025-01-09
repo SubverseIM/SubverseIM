@@ -74,7 +74,7 @@
 						SelectedItem="{Binding SendMessageTopicName}"
 						AutomationProperties.HelpText="Choose conversation topic." />
 			</DockPanel>
-			<DockPanel DockPanel.Dock="{Binding MessageTextDock}">
+			<DockPanel DockPanel.Dock="Top">
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
 						Command="{Binding AttachFileCommandAsync}"
