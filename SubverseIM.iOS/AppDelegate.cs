@@ -3,13 +3,14 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.iOS;
 using Avalonia.ReactiveUI;
+using BackgroundTasks;
 using CoreGraphics;
 using Foundation;
-using MonoTorrent.Client;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using UIKit;
 using UniformTypeIdentifiers;
@@ -23,6 +24,8 @@ namespace SubverseIM.iOS;
 [Register("AppDelegate")]
 public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 {
+    private const string BG_TASK_ID = "com.chosenfewsoftware.SubverseIM.AppRefresh";
+
     private ServiceManager? serviceManager;
 
     private WrappedPeerService? wrappedPeerService;
@@ -41,9 +44,24 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public event EventHandler? OrientationChanged;
 
-    private async void HandleAppDeactivated(object? sender, ActivatedEventArgs e)
+    public AppDelegate() 
+    {
+        NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.DidBecomeActiveNotification, 
+            x => HandleAppActivated(this, new ActivatedEventArgs(ActivationKind.Background)));
+    }
+
+    private bool ScheduleAppRefresh(out NSError? error)
+    {
+        BGAppRefreshTaskRequest request = new(BG_TASK_ID);
+        request.EarliestBeginDate = NSDate.FromTimeIntervalSinceNow(15 * 60);
+
+        return BGTaskScheduler.Shared.Submit(request, out error);
+    }
+
+    private async void HandleAppDeactivated(object? sender, ActivatedEventArgs ev)
     {
         IsInForeground = false;
+        ScheduleAppRefresh(out NSError? _);
 
         UNMutableNotificationContent content = new()
         {
@@ -59,9 +77,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
     }
 
-    private async void HandleAppActivated(object? sender, ActivatedEventArgs e)
+    private async void HandleAppActivated(object? sender, ActivatedEventArgs ev)
     {
-        IsInForeground = true;
+        IsInForeground = ev is not AppRefreshActivatedEventArgs;
 
         if (reminderNotificationId is not null)
         {
@@ -82,11 +100,28 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         Task<IFrontendService>? resolveServiceTask = serviceManager?.GetWithAwaitAsync<IFrontendService>();
         IFrontendService? frontendService = resolveServiceTask is null ? null : await resolveServiceTask;
-        if ((launchedUri = (e as ProtocolActivatedEventArgs)?.Uri) is not null)
+        if ((launchedUri = (ev as ProtocolActivatedEventArgs)?.Uri) is not null)
         {
             frontendService?.NavigateLaunchedUri();
         }
-        await (frontendService?.RunOnceBackgroundAsync() ?? Task.CompletedTask);
+
+        if (IsInForeground && frontendService is not null)
+        {
+            await frontendService.RunOnceBackgroundAsync();
+        }
+        else if (ev is AppRefreshActivatedEventArgs ev_ && frontendService is not null)
+        {
+            try
+            {
+                using CancellationTokenSource cts = new();
+                ev_.RefreshTask.ExpirationHandler += cts.Cancel;
+                await frontendService.RunOnceAsync(cts.Token);
+            }
+            catch (Exception ex)
+            {
+                ev_.RefreshTask.SetTaskCompleted(success: ex is OperationCanceledException);
+            }
+        }
     }
 
     protected override AppBuilder CreateAppBuilder()
@@ -148,7 +183,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             );
         UNUserNotificationCenter.Current.Delegate = wrappedPeerService;
 
-        HandleAppActivated(this, new(ActivationKind.Background));
+        BGTaskScheduler.Shared.Register(BG_TASK_ID, null, task =>
+        {
+            HandleAppActivated(this, new AppRefreshActivatedEventArgs((BGAppRefreshTask)task));
+        });
 
         return true;
     }
@@ -222,13 +260,13 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         return await tcs.Task;
     }
-    
+
     private Task ShowShareSheetAsync(Visual? sender, UIActivityItemSource activityItemSource)
     {
         TopLevel? topLevel = TopLevel.GetTopLevel(sender);
 
         UIActivityViewController activityViewController = new([activityItemSource], null);
-        UIPopoverPresentationController? popoverPresentationController = 
+        UIPopoverPresentationController? popoverPresentationController =
             activityViewController.PopoverPresentationController;
 
         if (topLevel is not null && sender is not null &&
@@ -262,6 +300,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     public Task ShareFileToAppAsync(Visual? sender, string title, string contentPath)
     {
         return ShowShareSheetAsync(sender, new CustomActivityItemSource(
-            title, NSUrl.CreateFileUrl(contentPath), UTTypes.Data.Identifier));  
+            title, NSUrl.CreateFileUrl(contentPath), UTTypes.Data.Identifier));
     }
 }
