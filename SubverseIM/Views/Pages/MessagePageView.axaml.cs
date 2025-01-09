@@ -19,7 +19,6 @@ public partial class MessagePageView : UserControl
         contacts.SelectionChanged += Contacts_SelectionChanged;
 
         messageBox.GotFocus += TextBoxGotFocus;
-        messageBox.LostFocus += TextBoxLostFocus;
     }
 
     private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -58,16 +57,6 @@ public partial class MessagePageView : UserControl
             textBox.Text = messageText;
 
             textBox.IsEnabled = true;
-        }
-
-        ((MessagePageViewModel)DataContext!).MessageTextDock = Dock.Top;
-    }
-
-    private void TextBoxLostFocus(object? sender, RoutedEventArgs e)
-    {
-        if (string.IsNullOrEmpty(messageBox.Text))
-        {
-            ((MessagePageViewModel)DataContext!).MessageTextDock = Dock.Bottom;
         }
     }
 
