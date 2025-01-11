@@ -26,6 +26,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 {
     private const string BG_TASK_ID = "com.chosenfewsoftware.SubverseIM.AppRefresh";
 
+    private UIApplication? application;
+
+    private NSDictionary? launchOptions;
+
     private ServiceManager? serviceManager;
 
     private WrappedPeerService? wrappedPeerService;
@@ -44,22 +48,25 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public event EventHandler? OrientationChanged;
 
-    public AppDelegate() 
+    public AppDelegate()
     {
-        NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.DidBecomeActiveNotification, HandleAppActivated);
+        UIApplication.Notifications.ObserveDidBecomeActive(HandleAppActivated);
     }
 
     private bool ScheduleAppRefresh(out NSError? error)
     {
         BGAppRefreshTaskRequest request = new(BG_TASK_ID)
-        { 
+        {
             EarliestBeginDate = NSDate.FromTimeIntervalSinceNow(15 * 60),
         };
         return BGTaskScheduler.Shared.Submit(request, out error);
     }
 
-    private void HandleAppActivated(NSNotification notification)
+    private void HandleAppActivated(object? sender, EventArgs ev)
     {
+        if (Window is not null) return;
+        
+        base.FinishedLaunching(application!, launchOptions!);
         HandleAppActivated(this, new ActivatedEventArgs(ActivationKind.Background));
     }
 
@@ -107,7 +114,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             {
                 bool success = ex is OperationCanceledException;
                 ev_.RefreshTask.SetTaskCompleted(success);
-                if(!success) { throw; }
+                if (!success) { throw; }
             }
         }
     }
@@ -162,7 +169,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         serviceManager?.Dispose();
         serviceManager = new();
 
-        base.FinishedLaunching(application, launchOptions);
+        this.application = application;
+        this.launchOptions = launchOptions;
 
         UNUserNotificationCenter.Current.RemoveAllPendingNotificationRequests();
 
