@@ -70,7 +70,8 @@ namespace SubverseIM.ViewModels.Components
         {
             this.parent = parent;
             this.innerTorrent = innerTorrent;
-            RegisterStatus(torrentStatus);
+
+            IsStarted = RegisterStatus(torrentStatus);
         }
 
         private void TorrentProgressChanged(object? sender, TorrentStatus e)
