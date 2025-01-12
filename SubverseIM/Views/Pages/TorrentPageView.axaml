@@ -21,12 +21,12 @@
 							<PathIcon Data="{StaticResource save_regular}" />
 						</Button>
 						<Button DockPanel.Dock="Right" Command="{Binding StartCommandAsync}"
-								IsVisible="{Binding IsStarted}"
+								IsVisible="{Binding !IsStarted}"
 								AutomationProperties.Name="Start Download">
 							<PathIcon Data="{StaticResource arrow_download_regular}" />
 						</Button>
 						<Button DockPanel.Dock="Right" Command="{Binding StopCommandAsync}"
-								IsVisible="{Binding !IsStarted}"
+								IsVisible="{Binding IsStarted}"
 								AutomationProperties.Name="Stop Download">
 							<PathIcon Data="{StaticResource dismiss_regular}" />
 						</Button>
