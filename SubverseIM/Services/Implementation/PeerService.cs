@@ -248,18 +248,20 @@ namespace SubverseIM.Services.Implementation
             SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
             string toName = sipRequest.Header.To.ToName;
 
-            string messageContent;
-            using (PGP pgp = new PGP(await GetPeerKeysAsync(fromPeer)))
-            using (MemoryStream encryptedMessageStream = new(sipRequest.BodyBuffer))
-            using (MemoryStream decryptedMessageStream = new())
+            string? messageContent;
+            try
             {
-                await pgp.DecryptAndVerifyAsync(encryptedMessageStream, decryptedMessageStream);
-                messageContent = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
+                using (PGP pgp = new PGP(await GetPeerKeysAsync(fromPeer)))
+                using (MemoryStream encryptedMessageStream = new(sipRequest.BodyBuffer))
+                using (MemoryStream decryptedMessageStream = new())
+                {
+                    await pgp.DecryptAndVerifyAsync(encryptedMessageStream, decryptedMessageStream);
+                    messageContent = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
+                }
             }
-
-            if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
+            catch
             {
-                messagesBag.Add(tcs = new());
+                messageContent = sipRequest.Body;
             }
 
             IEnumerable<SubversePeerId> recipients = [toPeer, ..sipRequest.Header.Contact
@@ -286,6 +288,16 @@ namespace SubverseIM.Services.Implementation
                 TopicName = sipRequest.URI.Parameters.Get("topic"),
             };
 
+            SubversePeer? peer;
+            lock (CachedPeers)
+            {
+                if (!CachedPeers.TryGetValue(fromPeer, out peer))
+                {
+                    CachedPeers.Add(fromPeer, peer = new() { OtherPeer = fromPeer });
+                }
+            }
+            peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
+
             if (toPeer != await GetPeerIdAsync())
             {
                 message.WasDelivered = false;
@@ -300,17 +312,12 @@ namespace SubverseIM.Services.Implementation
             else
             {
                 message.WasDelivered = true;
-                tcs.SetResult(message);
 
-                SubversePeer? peer;
-                lock (CachedPeers)
+                if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
                 {
-                    if (!CachedPeers.TryGetValue(fromPeer, out peer))
-                    {
-                        CachedPeers.Add(fromPeer, peer = new() { OtherPeer = fromPeer });
-                    }
+                    messagesBag.Add(tcs = new());
                 }
-                peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
+                tcs.SetResult(message);
 
                 SIPResponse sipResponse = SIPResponse.GetResponse(
                     sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
@@ -588,9 +595,16 @@ namespace SubverseIM.Services.Implementation
                     sipRequest.Header.Contact.Add(new(message.RecipientNames[i], contactUri));
                 }
 
-                using (PGP pgp = new(await GetPeerKeysAsync(recipient, cancellationToken)))
+                if (message.Sender == await GetPeerIdAsync())
                 {
-                    sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
+                    using (PGP pgp = new(await GetPeerKeysAsync(recipient, cancellationToken)))
+                    {
+                        sipRequest.Body = await pgp.EncryptAndSignAsync(message.Content);
+                    }
+                }
+                else
+                {
+                    sipRequest.Body = message.Content;
                 }
 
                 lock (callIdMap)
