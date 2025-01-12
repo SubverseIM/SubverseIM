@@ -250,9 +250,9 @@ namespace SubverseIM.Services.Implementation
 
             if (entryExists)
             {
+                await manager!.StartAsync();
                 await manager!.WaitForMetadataAsync();
                 await manager!.DhtAnnounceAsync();
-                await manager!.StartAsync();
             }
 
             return progress;
