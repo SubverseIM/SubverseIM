@@ -70,6 +70,7 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.CallId, unique: true);
 
             return otherPeers.SelectMany(otherPeer => messages.Query()
+                .Where(x => x.WasDecrypted ?? true)
                 .Where(x => otherPeer == x.Sender || x.Recipients.Contains(otherPeer))
                 .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
                 .ToEnumerable())
