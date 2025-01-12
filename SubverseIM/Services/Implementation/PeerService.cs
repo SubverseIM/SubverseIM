@@ -298,21 +298,10 @@ namespace SubverseIM.Services.Implementation
             }
             peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
 
-            if (toPeer != await GetPeerIdAsync())
+            bool hasReachedDestination = toPeer == await GetPeerIdAsync();
+            message.WasDecrypted = message.WasDelivered = hasReachedDestination;
+            if (hasReachedDestination)
             {
-                message.WasDelivered = false;
-                dbService.InsertOrUpdateItem(message);
-
-                await SendSIPRequestAsync(sipRequest);
-                SIPResponse sipResponse = SIPResponse.GetResponse(
-                    sipRequest, SIPResponseStatusCodesEnum.Accepted, "Message was forwarded."
-                    );
-                await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
-            }
-            else
-            {
-                message.WasDelivered = true;
-
                 if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
                 {
                     messagesBag.Add(tcs = new());
@@ -321,6 +310,16 @@ namespace SubverseIM.Services.Implementation
 
                 SIPResponse sipResponse = SIPResponse.GetResponse(
                     sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
+                    );
+                await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
+            }
+            else
+            {
+                dbService.InsertOrUpdateItem(message);
+                await SendSIPRequestAsync(sipRequest);
+
+                SIPResponse sipResponse = SIPResponse.GetResponse(
+                    sipRequest, SIPResponseStatusCodesEnum.Accepted, "Message was forwarded."
                     );
                 await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
             }

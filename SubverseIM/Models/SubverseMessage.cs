@@ -29,6 +29,8 @@ namespace SubverseIM.Models
 
         public string? Content { get; set; }
 
+        public bool? WasDecrypted { get; set; }
+
         public bool WasDelivered { get; set; }
     }
 }
