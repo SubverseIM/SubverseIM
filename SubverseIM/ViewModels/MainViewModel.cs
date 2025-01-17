@@ -31,6 +31,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     private Task? mainTask;
 
+    public Action? ScreenOrientationChangedDelegate { get; set; }
+
     public PageViewModelBase CurrentPage
     {
         get { return currentPage; }
@@ -40,6 +42,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
             HasPreviousView = true;
 
             this.RaiseAndSetIfChanged(ref currentPage, value);
+            ScreenOrientationChangedDelegate?.Invoke();
         }
     }
 

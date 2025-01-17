@@ -17,18 +17,22 @@ public partial class MainView : UserControl
     {
         base.OnLoaded(e);
 
-        TopLevel topLevel = TopLevel.GetTopLevel(this) ?? 
+        TopLevel topLevel = TopLevel.GetTopLevel(this) ??
            throw new InvalidOperationException("Could not resolve TopLevel instance from control");
         ((MainViewModel)DataContext!).RegisterTopLevel(topLevel);
 
-        topLevel.SizeChanged += RootLayoutUpdated;
-        RootLayoutUpdated(topLevel, new EventArgs());
+        ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
+        if (topLevel.Screens is not null)
+        {
+            topLevel.Screens.Changed += (s, ev) => ScreenOrientationChanged();
+        }
 
         ((MainViewModel)DataContext!).NavigateLaunchedUri();
     }
 
-    private void RootLayoutUpdated(object? sender, EventArgs e)
+    public void ScreenOrientationChanged()
     {
-        ((MainViewModel)DataContext!).CurrentPage.OnOrientationChanged(sender as TopLevel);
+        ((MainViewModel)DataContext!).CurrentPage
+            .OnOrientationChanged(TopLevel.GetTopLevel(this));
     }
 }
