@@ -40,14 +40,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public bool IsAccessibilityEnabled => false;
 
-    public bool IsLandscape { get; private set; }
-
-    public event EventHandler? OrientationChanged;
-
     public AppDelegate()
     {
         UIApplication.Notifications.ObserveDidBecomeActive(HandleAppActivated);
-        UIDevice.Notifications.ObserveOrientationDidChange(OnOrientationChanged);
     }
 
     private bool ScheduleAppRefresh(out NSError? error)
@@ -62,12 +57,14 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     private void HandleAppActivated(object? sender, EventArgs ev)
     {
         HandleAppActivated(this, new ActivatedEventArgs(ActivationKind.Background));
-        OnOrientationChanged(this, new());
     }
 
     private async void HandleAppActivated(object? sender, ActivatedEventArgs ev)
     {
-        IsInForeground = ev is not AppRefreshActivatedEventArgs;
+        if (IsInForeground = ev is not AppRefreshActivatedEventArgs)
+        {
+            Window!.MakeKeyAndVisible();
+        }
 
         if (reminderNotificationId is not null)
         {
@@ -145,14 +142,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .UseReactiveUI();
     }
 
-    protected virtual void OnOrientationChanged(object? sender, EventArgs e)
-    {
-        IsLandscape =
-                UIDevice.CurrentDevice.Orientation != UIDeviceOrientation.Portrait &&
-                UIDevice.CurrentDevice.Orientation != UIDeviceOrientation.PortraitUpsideDown;
-        OrientationChanged?.Invoke(sender, e);
-    }
-
     public Uri? GetLaunchedUri()
     {
         return launchedUri;
@@ -161,10 +150,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     [Export("application:didFinishLaunchingWithOptions:")]
     new public bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
     {
-        base.FinishedLaunching(application, launchOptions);
-
         serviceManager?.Dispose();
         serviceManager = new();
+
+        base.FinishedLaunching(application, launchOptions);
 
         UNUserNotificationCenter.Current.RemoveAllPendingNotificationRequests();
 
