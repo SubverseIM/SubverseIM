@@ -1,10 +1,12 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using MonoTorrent;
 using MonoTorrent.Client;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Pages;
 using System;
 using System.IO;
@@ -144,8 +146,8 @@ namespace SubverseIM.ViewModels.Components
             }
             catch (PlatformNotSupportedException)
             {
-                IStorageProvider storageProvider = await parent.ServiceManager.GetWithAwaitAsync<IStorageProvider>();
-                IStorageFile? saveAsFile = await storageProvider.SaveFilePickerAsync(
+                TopLevel topLevel = await parent.ServiceManager.GetWithAwaitAsync<TopLevel>();
+                IStorageFile? saveAsFile = await topLevel.StorageProvider.SaveFilePickerAsync(
                     new FilePickerSaveOptions
                     {
                         Title = "Save File As",

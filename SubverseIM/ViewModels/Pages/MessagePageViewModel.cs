@@ -248,9 +248,9 @@ namespace SubverseIM.ViewModels.Pages
         public async Task AttachFileCommandAsync() 
         {
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
-            IStorageProvider storageProvider = await ServiceManager.GetWithAwaitAsync<IStorageProvider>();
 
-            IStorageFile? selectedFile = (await storageProvider.OpenFilePickerAsync(
+            TopLevel topLevel = await ServiceManager.GetWithAwaitAsync<TopLevel>();
+            IStorageFile? selectedFile = (await topLevel.StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions { 
                     AllowMultiple = false, 
                     Title = "Select file attachment", 

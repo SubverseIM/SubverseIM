@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -134,8 +135,8 @@ namespace SubverseIM.ViewModels.Components
 
         public async Task ChangePhotoCommandAsync()
         {
-            IStorageProvider storageProvider = await serviceManager.GetWithAwaitAsync<IStorageProvider>();
-            IReadOnlyList<IStorageFile> files = await storageProvider.OpenFilePickerAsync(
+            TopLevel topLevel = await serviceManager.GetWithAwaitAsync<TopLevel>();
+            IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(
                 new FilePickerOpenOptions
                 {
                     AllowMultiple = false,
