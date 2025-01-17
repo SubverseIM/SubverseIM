@@ -1,4 +1,5 @@
-﻿using Avalonia.Platform.Storage;
+﻿using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using LiteDB;
 using ReactiveUI;
 using SIPSorcery.SIP;
@@ -294,5 +295,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
     {
         await torrentPage.InitializeAsync();
         CurrentPage = torrentPage;
+    }
+
+    public void RegisterTopLevel(TopLevel topLevel)
+    {
+        serviceManager.GetOrRegister(topLevel);
     }
 }

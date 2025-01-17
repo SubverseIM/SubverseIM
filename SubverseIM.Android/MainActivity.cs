@@ -89,10 +89,6 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         } 
     }
 
-    public bool IsLandscape { get; private set; }
-
-    public event EventHandler? OrientationChanged;
-
     public MainActivity()
     {
         serviceManager = new();
@@ -160,7 +156,6 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         base.OnStart();
         
         IsInForeground = true;
-        IsLandscape = Resources?.Configuration?.Orientation == Orientation.Landscape;
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         await frontendService.RunOnceAsync(cancellationTokenSource.Token);
@@ -170,14 +165,6 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     {
         base.OnStop();
         IsInForeground = false;
-    }
-
-    public override void OnConfigurationChanged(Configuration newConfig)
-    {
-        base.OnConfigurationChanged(newConfig);
-
-        IsLandscape = newConfig.Orientation == Orientation.Landscape;
-        OnOrientationChanged(this, new());
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
@@ -296,11 +283,6 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     public Task ShareFileToAppAsync(Visual? sender, string title, string path)
     {
         return Task.FromException(new PlatformNotSupportedException("This method is not supported on Android!"));
-    }
-
-    protected virtual void OnOrientationChanged(object? sender, EventArgs e) 
-    {
-        OrientationChanged?.Invoke(sender, e);
     }
 
     protected override void Dispose(bool disposing)

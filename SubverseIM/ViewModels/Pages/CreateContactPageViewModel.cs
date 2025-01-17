@@ -1,4 +1,6 @@
-﻿using SubverseIM.Models;
+﻿using Avalonia.Controls;
+using ReactiveUI;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using System;
@@ -7,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
-    public class CreateContactPageViewModel : PageViewModelBase
+    public class CreateContactPageViewModel : PageViewModelBase<CreateContactPageViewModel>
     {
         public override string Title => "Edit Contact";
 

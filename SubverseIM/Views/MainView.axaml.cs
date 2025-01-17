@@ -17,10 +17,18 @@ public partial class MainView : UserControl
     {
         base.OnLoaded(e);
 
-        IStorageProvider storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider ?? 
-            throw new InvalidOperationException("StorageProvider could not be fetched.");
-        (DataContext as MainViewModel)?.RegisterStorageProvider(storageProvider);
+        TopLevel topLevel = TopLevel.GetTopLevel(this) ?? 
+           throw new InvalidOperationException("Could not resolve TopLevel instance from control");
+        ((MainViewModel)DataContext!).RegisterTopLevel(topLevel);
 
-        (DataContext as MainViewModel)?.NavigateLaunchedUri();
+        topLevel.SizeChanged += RootLayoutUpdated;
+        RootLayoutUpdated(topLevel, new EventArgs());
+
+        ((MainViewModel)DataContext!).NavigateLaunchedUri();
+    }
+
+    private void RootLayoutUpdated(object? sender, EventArgs e)
+    {
+        ((MainViewModel)DataContext!).CurrentPage.OnOrientationChanged(sender as TopLevel);
     }
 }

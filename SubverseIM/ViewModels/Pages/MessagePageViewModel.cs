@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
-    public class MessagePageViewModel : PageViewModelBase, IContactContainer
+    public class MessagePageViewModel : PageViewModelBase<MessagePageViewModel>, IContactContainer
     {
         private readonly List<ContactViewModel> permContactsList;
 
@@ -30,16 +30,6 @@ namespace SubverseIM.ViewModels.Pages
         public ObservableCollection<MessageViewModel> MessageList { get; }
 
         public ObservableCollection<string> TopicsList { get; }
-
-        private bool isSidebarOpen;
-        public bool IsSidebarOpen
-        {
-            get => isSidebarOpen;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref isSidebarOpen, value);
-            }
-        }
 
         private string? sendMessageText;
         public string? SendMessageText
@@ -71,34 +61,12 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        private SplitViewDisplayMode sidebarMode;
-        public SplitViewDisplayMode SidebarMode
-        {
-            get => sidebarMode;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref sidebarMode, value);
-            }
-        }
-
         public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
             permContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             MessageList = [];
             TopicsList = [string.Empty];
-        }
-
-        private async void OrientationChanged(object? sender, EventArgs e)
-        {
-            await UpdateOrientationAsync();
-        }
-
-        private async Task UpdateOrientationAsync() 
-        {
-            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
-            SidebarMode = launcherService.IsLandscape ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
-            IsSidebarOpen = launcherService.IsLandscape;
         }
 
         public async Task AddParticipantsCommandAsync()
@@ -148,12 +116,8 @@ namespace SubverseIM.ViewModels.Pages
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
-
-            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
-            launcherService.OrientationChanged += OrientationChanged;
-            await UpdateOrientationAsync();
-
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
+
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
 
             MessageList.Clear();
@@ -297,12 +261,6 @@ namespace SubverseIM.ViewModels.Pages
                 SubverseTorrent torrent = await torrentService.AddTorrentAsync(selectedFile);
                 await SendMessageAsync(torrent.MagnetUri);
             }
-        }
-
-        public override void ToggleSidebarCommand()
-        {
-            base.ToggleSidebarCommand();
-            IsSidebarOpen = !IsSidebarOpen;
         }
     }
 }
