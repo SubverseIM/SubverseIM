@@ -55,7 +55,7 @@ namespace SubverseIM.ViewModels.Components
 
         private async void TorrentProgressChanged(object? sender, TorrentStatus newStatus)
         {
-            if (CurrentStatus is not null && newStatus.Complete != CurrentStatus?.Complete)
+            if (CurrentStatus is not null && newStatus.Complete != CurrentStatus.Complete)
             {
                 INativeService nativeService = await parent.ServiceManager.GetWithAwaitAsync<INativeService>();
                 await nativeService.SendPushNotificationAsync(parent.ServiceManager, innerTorrent);
