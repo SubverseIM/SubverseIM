@@ -17,10 +17,22 @@ public partial class MainView : UserControl
     {
         base.OnLoaded(e);
 
-        IStorageProvider storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider ?? 
-            throw new InvalidOperationException("StorageProvider could not be fetched.");
-        (DataContext as MainViewModel)?.RegisterStorageProvider(storageProvider);
+        TopLevel topLevel = TopLevel.GetTopLevel(this) ??
+           throw new InvalidOperationException("Could not resolve TopLevel instance from control");
+        ((MainViewModel)DataContext!).RegisterTopLevel(topLevel);
 
-        (DataContext as MainViewModel)?.NavigateLaunchedUri();
+        ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
+        if (topLevel.Screens is not null)
+        {
+            topLevel.Screens.Changed += (s, ev) => ScreenOrientationChanged();
+        }
+
+        ((MainViewModel)DataContext!).NavigateLaunchedUri();
+    }
+
+    public void ScreenOrientationChanged()
+    {
+        ((MainViewModel)DataContext!).CurrentPage
+            .OnOrientationChanged(TopLevel.GetTopLevel(this));
     }
 }

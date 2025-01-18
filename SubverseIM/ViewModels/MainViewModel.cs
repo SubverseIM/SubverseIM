@@ -1,4 +1,5 @@
-﻿using Avalonia.Platform.Storage;
+﻿using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using LiteDB;
 using ReactiveUI;
 using SIPSorcery.SIP;
@@ -30,6 +31,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     private Task? mainTask;
 
+    public Action? ScreenOrientationChangedDelegate { get; set; }
+
     public PageViewModelBase CurrentPage
     {
         get { return currentPage; }
@@ -39,6 +42,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
             HasPreviousView = true;
 
             this.RaiseAndSetIfChanged(ref currentPage, value);
+            ScreenOrientationChangedDelegate?.Invoke();
         }
     }
 
@@ -294,5 +298,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
     {
         await torrentPage.InitializeAsync();
         CurrentPage = torrentPage;
+    }
+
+    public void RegisterTopLevel(TopLevel topLevel)
+    {
+        serviceManager.GetOrRegister(topLevel);
     }
 }

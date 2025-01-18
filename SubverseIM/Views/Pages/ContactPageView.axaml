@@ -10,8 +10,8 @@
 		<vm:ContactPageViewModel />
 	</Design.DataContext>
 
-	<SplitView IsPaneOpen="{Binding IsSidebarOpen}"
-	       DisplayMode="{Binding SidebarMode}"
+	<SplitView IsPaneOpen="{Binding IsSidebarOpen, Mode=OneWay}"
+	       DisplayMode="{Binding SidebarMode, Mode=OneWay}"
 		   PanePlacement="Right"
            OpenPaneLength="300">
 		<SplitView.Pane>

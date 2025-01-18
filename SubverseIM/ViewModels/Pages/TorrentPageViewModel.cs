@@ -1,4 +1,6 @@
-﻿using SubverseIM.Models;
+﻿using Avalonia.Controls;
+using ReactiveUI;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using System;
@@ -8,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
-    public class TorrentPageViewModel : PageViewModelBase
+    public class TorrentPageViewModel : PageViewModelBase<TorrentPageViewModel>
     {
         public override string Title => "File Manager";
 

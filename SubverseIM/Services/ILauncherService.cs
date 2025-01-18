@@ -11,10 +11,6 @@ namespace SubverseIM.Services
         bool IsInForeground { get; }
 
         bool IsAccessibilityEnabled { get; }
-        
-        bool IsLandscape { get; }
-
-        event EventHandler? OrientationChanged;
 
         Uri? GetLaunchedUri();
 

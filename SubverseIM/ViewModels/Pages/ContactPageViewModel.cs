@@ -1,10 +1,10 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Platform;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
-    public class ContactPageViewModel : PageViewModelBase, IContactContainer
+    public class ContactPageViewModel : PageViewModelBase<ContactPageViewModel>, IContactContainer
     {
         public override string Title => "Contacts View";
 
@@ -34,16 +34,6 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        private bool isSidebarOpen;
-        public bool IsSidebarOpen
-        {
-            get => isSidebarOpen;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref isSidebarOpen, value);
-            }
-        }
-
         private MessagePageViewModel? parent;
         public MessagePageViewModel? Parent
         {
@@ -55,16 +45,6 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        private SplitViewDisplayMode sidebarMode;
-        public SplitViewDisplayMode SidebarMode
-        {
-            get => sidebarMode;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref sidebarMode, value);
-            }
-        }
-
         public ContactPageViewModel(IServiceManager serviceManager) : base(serviceManager)
         {
             Parent = null;
@@ -73,24 +53,8 @@ namespace SubverseIM.ViewModels.Pages
             TopicsList = new();
         }
 
-        private async void OrientationChanged(object? sender, EventArgs e)
-        {
-            await UpdateOrientationAsync();
-        }
-
-        private async Task UpdateOrientationAsync()
-        {
-            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
-            SidebarMode = launcherService.IsLandscape ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
-            IsSidebarOpen = launcherService.IsLandscape;
-        }
-
         public async Task LoadContactsAsync(CancellationToken cancellationToken = default)
         {
-            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
-            launcherService.OrientationChanged += OrientationChanged;
-            await UpdateOrientationAsync();
-
             ContactsList.Clear();
 
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
@@ -170,11 +134,6 @@ namespace SubverseIM.ViewModels.Pages
         public void RemoveContact(ContactViewModel contact)
         {
             ContactsList.Remove(contact);
-        }
-        public override void ToggleSidebarCommand()
-        {
-            base.ToggleSidebarCommand();
-            IsSidebarOpen = !IsSidebarOpen;
         }
     }
 }
