@@ -228,11 +228,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
         }
     }
 
-    public void RegisterStorageProvider(IStorageProvider storageProvider)
-    {
-        serviceManager.GetOrRegister(storageProvider);
-    }
-
     public bool NavigatePreviousView()
     {
         if (previousPages.TryPop(out PageViewModelBase? previousPage))
