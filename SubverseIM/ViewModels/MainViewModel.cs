@@ -247,11 +247,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
         }
     }
 
-    public async void NavigateLaunchedUri()
+    public async void NavigateLaunchedUri(Uri? overrideUri)
     {
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
-        Uri? launchedUri = launcherService.GetLaunchedUri();
+        Uri? launchedUri = overrideUri ?? launcherService.GetLaunchedUri();
 
         switch (launchedUri?.Scheme)
         {

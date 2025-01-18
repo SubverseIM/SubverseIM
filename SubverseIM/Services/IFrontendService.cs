@@ -1,6 +1,7 @@
 ﻿using Avalonia.Platform.Storage;
 using SubverseIM.Models;
 using SubverseIM.ViewModels.Pages;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,7 +11,7 @@ namespace SubverseIM.Services
     {
         bool NavigatePreviousView();
 
-        void NavigateLaunchedUri();
+        void NavigateLaunchedUri(Uri? overrideUri = null);
 
         void NavigateContactView(MessagePageViewModel? parentOrNull = null);
 
