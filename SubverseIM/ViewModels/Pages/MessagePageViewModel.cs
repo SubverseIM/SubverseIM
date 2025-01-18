@@ -1,11 +1,9 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SIPSorcery.SIP;
 using SubverseIM.Models;
 using SubverseIM.Services;
-using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Components;
 using System;
 using System.Collections.Generic;
