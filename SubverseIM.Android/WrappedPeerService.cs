@@ -6,6 +6,7 @@ using Android.Net;
 using Android.OS;
 using Android.Runtime;
 using AndroidX.Core.App;
+using MonoTorrent;
 using SubverseIM.Android.Services;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -22,6 +23,8 @@ namespace SubverseIM.Android
     public class WrappedPeerService : Service, INativeService
     {
         private const string MSG_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.UserMessage";
+
+        private const string TRN_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.TorrentService";
 
         private const string SRV_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.ForegroundService";
 
@@ -92,11 +95,17 @@ namespace SubverseIM.Android
                 NotificationImportance.Low);
             serviceChannel.Description = "Ongoing background tasks from SubverseIM";
 
+            NotificationChannel torrentChannel = new NotificationChannel(
+                TRN_CHANNEL_ID, new Java.Lang.String("File Services"),
+                NotificationImportance.High);
+            messageChannel.Description = "Status updates for active file downloads";
+
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this.
             NotificationManager? manager = NotificationManager.FromContext(this);
             manager?.CreateNotificationChannel(messageChannel);
             manager?.CreateNotificationChannel(serviceChannel);
+            manager?.CreateNotificationChannel(torrentChannel);
         }
 
         public void ClearNotification(SubverseMessage message)
@@ -177,6 +186,37 @@ namespace SubverseIM.Android
 
             NotificationManager? manager = NotificationManager.FromContext(this);
             manager?.Notify(notificationId, notif);
+        }
+
+        public Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseTorrent torrent)
+        {
+            int notificationId = torrent.MagnetUri.GetHashCode();
+            Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);
+
+            Intent notifyIntent = new Intent(this, typeof(MainActivity));
+            notifyIntent.SetAction(Intent.ActionMain);
+            notifyIntent.AddCategory(Intent.CategoryLauncher);
+            notifyIntent.AddFlags(ActivityFlags.NewTask);
+            notifyIntent.SetData(Uri.Parse(torrent.MagnetUri));
+
+            PendingIntent? pendingIntent = PendingIntent.GetActivity(
+                this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
+                PendingIntentFlags.Immutable);
+
+            Notification notif = new NotificationCompat.Builder(this, MSG_CHANNEL_ID)
+                .SetContentTitle(MagnetLink.Parse(torrent.MagnetUri).Name)
+                .SetContentText("File was downloaded successfully.")
+                .SetPriority(NotificationCompat.PriorityHigh)
+                .SetAutoCancel(true)
+                .SetContentIntent(pendingIntent)
+                .SetSmallIcon(Resource.Drawable.Icon)
+                .SetSound(soundUri)
+                .Build();
+
+            NotificationManager? manager = NotificationManager.FromContext(this);
+            manager?.Notify(notificationId, notif);
+
+            return Task.CompletedTask;
         }
 
         public Task RunInBackgroundAsync(System.Func<CancellationToken, Task> taskFactory, CancellationToken cancellationToken)

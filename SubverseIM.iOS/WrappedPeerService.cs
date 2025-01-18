@@ -9,6 +9,7 @@ using UIKit;
 using UserNotifications;
 using System.Linq;
 using Foundation;
+using MonoTorrent;
 
 namespace SubverseIM.iOS;
 
@@ -58,6 +59,21 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
                 ]);
             content.UserInfo = extraData;
         }
+
+        UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
+        UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);
+
+        await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
+    }
+
+    public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseTorrent torrent)
+    {
+        UNMutableNotificationContent content = new()
+        {
+            Title = MagnetLink.Parse(torrent.MagnetUri).Name ?? "Untitled",
+            Body = "File was downloaded successfully",
+            Sound = UNNotificationSound.Default
+        };
 
         UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
         UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);

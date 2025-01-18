@@ -11,6 +11,8 @@ namespace SubverseIM.Services
 
         Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message);
 
+        Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseTorrent torrent);
+
         Task RunInBackgroundAsync(Func<CancellationToken, Task> taskFactory, CancellationToken cancellationToken = default);
     }
 }

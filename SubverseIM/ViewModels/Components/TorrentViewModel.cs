@@ -76,8 +76,14 @@ namespace SubverseIM.ViewModels.Components
             IsStarted = RegisterStatus(torrentStatus);
         }
 
-        private void TorrentProgressChanged(object? sender, TorrentStatus e)
+        private async void TorrentProgressChanged(object? sender, TorrentStatus e)
         {
+            if (!e.Complete && e.Progress == 100.0) 
+            {
+                INativeService nativeService = await parent.ServiceManager.GetWithAwaitAsync<INativeService>();
+                await nativeService.SendPushNotificationAsync(parent.ServiceManager, innerTorrent);
+            }
+
             DownloadComplete = e.Complete || e.Progress == 100.0;
             DownloadProgress = e.Progress;
             TorrentState = e.State;
