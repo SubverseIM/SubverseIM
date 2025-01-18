@@ -26,10 +26,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 {
     private const string BG_TASK_ID = "com.chosenfewsoftware.SubverseIM.AppRefresh";
 
-    private UIApplication? application;
-
-    private NSDictionary? launchOptions;
-
     private ServiceManager? serviceManager;
 
     private WrappedPeerService? wrappedPeerService;
@@ -43,10 +39,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     public bool NotificationsAllowed { get; private set; }
 
     public bool IsAccessibilityEnabled => false;
-
-    public bool IsLandscape { get; private set; }
-
-    public event EventHandler? OrientationChanged;
 
     public AppDelegate()
     {
@@ -64,15 +56,15 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     private void HandleAppActivated(object? sender, EventArgs ev)
     {
-        if (Window is not null) return;
-        
-        base.FinishedLaunching(application!, launchOptions!);
         HandleAppActivated(this, new ActivatedEventArgs(ActivationKind.Background));
     }
 
     private async void HandleAppActivated(object? sender, ActivatedEventArgs ev)
     {
-        IsInForeground = ev is not AppRefreshActivatedEventArgs;
+        if (IsInForeground = ev is not AppRefreshActivatedEventArgs)
+        {
+            Window!.MakeKeyAndVisible();
+        }
 
         if (reminderNotificationId is not null)
         {
@@ -150,14 +142,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .UseReactiveUI();
     }
 
-    protected virtual void OnOrientationChanged(object? sender, EventArgs e)
-    {
-        IsLandscape =
-                UIDevice.CurrentDevice.Orientation == UIDeviceOrientation.LandscapeLeft ||
-                UIDevice.CurrentDevice.Orientation == UIDeviceOrientation.LandscapeRight;
-        OrientationChanged?.Invoke(sender, e);
-    }
-
     public Uri? GetLaunchedUri()
     {
         return launchedUri;
@@ -169,16 +153,12 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         serviceManager?.Dispose();
         serviceManager = new();
 
-        this.application = application;
-        this.launchOptions = launchOptions;
+        base.FinishedLaunching(application, launchOptions);
 
         UNUserNotificationCenter.Current.RemoveAllPendingNotificationRequests();
 
         ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
         ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
-
-        UIDevice.Notifications.ObserveOrientationDidChange(OnOrientationChanged);
-        OnOrientationChanged(this, new());
 
         launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
         serviceManager.GetOrRegister<ILauncherService>(this);
