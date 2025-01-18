@@ -247,7 +247,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         }
     }
 
-    public async void NavigateLaunchedUri(Uri? overrideUri)
+    public async void NavigateLaunchedUri(Uri? overrideUri = null)
     {
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
