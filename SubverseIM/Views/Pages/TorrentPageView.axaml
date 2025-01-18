@@ -16,7 +16,7 @@
 					<DockPanel>
 						<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" />
 						<Button DockPanel.Dock="Right" Command="{Binding ShareCommandAsync}"
-								IsVisible="{Binding DownloadComplete}"
+								IsVisible="{Binding CurrentStatus.Complete}"
 								AutomationProperties.Name="Save File As">
 							<PathIcon Data="{StaticResource save_regular}" />
 						</Button>
@@ -33,9 +33,15 @@
 						<Button DockPanel.Dock="Right" Command="{Binding DeleteCommandAsync}"
 								AutomationProperties.Name="Delete File"
 								Background="DarkRed">
+							<Button.IsVisible>
+								<MultiBinding Converter="{x:Static BoolConverters.And}" Mode="OneWay">
+									<Binding Path="!CurrentStatus.Complete" />
+									<Binding Path="!IsStarted" />
+								</MultiBinding>
+							</Button.IsVisible>
 							<PathIcon Data="{StaticResource delete_regular}" />
 						</Button>
-						<ProgressBar Value="{Binding DownloadProgress}" Margin="5" />
+						<ProgressBar Value="{Binding CurrentStatus.Progress}" Margin="5" />
 					</DockPanel>
 				</DataTemplate>
 			</ListBox.ItemTemplate>

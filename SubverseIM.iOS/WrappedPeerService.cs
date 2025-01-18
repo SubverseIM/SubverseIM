@@ -9,6 +9,8 @@ using UIKit;
 using UserNotifications;
 using System.Linq;
 using Foundation;
+using MonoTorrent;
+using System.Collections.Immutable;
 
 namespace SubverseIM.iOS;
 
@@ -17,6 +19,8 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
     public const string EXTRA_PARTICIPANTS_ID = "com.ChosenFewSoftware.SubverseIM.ConversationParticipants";
 
     public const string EXTRA_TOPIC_ID = "com.ChosenFewSoftware.SubverseIM.MessageTopic";
+
+    public const string EXTRA_URI_ID = "com.ChosenFewSoftware.SubverseIM.LaunchUri";
 
     private readonly IServiceManager serviceManager;
 
@@ -65,6 +69,26 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
         await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
     }
 
+    public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseTorrent torrent)
+    {
+        UNMutableNotificationContent content = new()
+        {
+            Title = MagnetLink.Parse(torrent.MagnetUri).Name ?? "Untitled",
+            Body = "File was downloaded successfully.",
+            Sound = UNNotificationSound.Default,
+        };
+        var extraData = new NSDictionary<NSString, NSString?>(
+                [(NSString)EXTRA_URI_ID],
+                [(NSString)torrent.MagnetUri]
+                );
+        content.UserInfo = extraData;
+
+        UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
+        UNNotificationRequest request = UNNotificationRequest.FromIdentifier(Guid.NewGuid().ToString(), content, trigger);
+
+        await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
+    }
+
     public async Task RunInBackgroundAsync(Func<CancellationToken, Task> taskFactory, CancellationToken cancellationToken)
     {
         if (appInstance is null)
@@ -90,25 +114,31 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
 
     public override async void DidReceiveNotificationResponse(UNUserNotificationCenter center, UNNotificationResponse response, Action completionHandler)
     {
-        UNNotificationContent content = response.Notification.Request.Content;
-
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        if (content.UserInfo.Any())
+
+        UNNotificationContent content = response.Notification.Request.Content;
+        HashSet<string> extraDataKeys = (from kv in content.UserInfo
+                                         where kv.Key is NSString
+                                         select (string)(NSString)kv.Key)
+                                         .ToHashSet();
+
+        if (extraDataKeys.Contains(EXTRA_URI_ID))
         {
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            IEnumerable<SubverseContact> participants =
-                content.UserInfo[EXTRA_PARTICIPANTS_ID]
-                .ToString().Split(';')
+            string uriString = (string)(NSString)content.UserInfo[EXTRA_URI_ID];
+            frontendService.NavigateLaunchedUri(new (uriString));
+        }
+        else if (extraDataKeys.Contains(EXTRA_PARTICIPANTS_ID))
+        {
+            IEnumerable<SubverseContact>? participants = 
+                ((string)(NSString)content.UserInfo
+                [EXTRA_PARTICIPANTS_ID]).Split(';')
                 .Select(SubversePeerId.FromString)
                 .Select(dbService.GetContact)
                 .Where(x => x is not null)
                 .Cast<SubverseContact>();
             string? topicName = content.UserInfo[EXTRA_TOPIC_ID] as NSString;
             frontendService.NavigateMessageView(participants, topicName);
-        }
-        else
-        {
-            frontendService.NavigateContactView();
         }
 
         completionHandler();

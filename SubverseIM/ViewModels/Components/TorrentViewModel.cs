@@ -2,11 +2,9 @@
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using MonoTorrent;
-using MonoTorrent.Client;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
-using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Pages;
 using System;
 using System.IO;
@@ -23,38 +21,18 @@ namespace SubverseIM.ViewModels.Components
 
         internal readonly SubverseTorrent innerTorrent;
 
-        private Progress<TorrentStatus>? torrentStatus;
+        private Progress<TorrentStatus>? torrentProgress;
 
         public string? DisplayName => innerTorrent.MagnetUri is null ? null :
             MagnetLink.Parse(innerTorrent.MagnetUri).Name;
 
-        private bool downloadComplete;
-        public bool DownloadComplete
+        private TorrentStatus? torrentStatus;
+        public TorrentStatus? CurrentStatus 
         {
-            get => downloadComplete;
-            private set
+            get => torrentStatus;
+            set 
             {
-                this.RaiseAndSetIfChanged(ref downloadComplete, value);
-            }
-        }
-
-        private double downloadProgress;
-        public double DownloadProgress
-        {
-            get => downloadProgress;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref downloadProgress, value);
-            }
-        }
-
-        private TorrentState torrentState;
-        public TorrentState TorrentState
-        {
-            get => torrentState;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref torrentState, value);
+                this.RaiseAndSetIfChanged(ref torrentStatus, value);
             }
         }
 
@@ -68,28 +46,31 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public TorrentViewModel(TorrentPageViewModel parent, SubverseTorrent innerTorrent, Progress<TorrentStatus>? torrentStatus)
+        public TorrentViewModel(TorrentPageViewModel parent, SubverseTorrent innerTorrent, Progress<TorrentStatus>? torrentProgress)
         {
             this.parent = parent;
             this.innerTorrent = innerTorrent;
-
-            IsStarted = RegisterStatus(torrentStatus);
+            IsStarted = RegisterStatus(torrentProgress);
         }
 
-        private void TorrentProgressChanged(object? sender, TorrentStatus e)
+        private async void TorrentProgressChanged(object? sender, TorrentStatus newStatus)
         {
-            DownloadComplete = e.Complete || e.Progress == 100.0;
-            DownloadProgress = e.Progress;
-            TorrentState = e.State;
+            if (CurrentStatus is not null && newStatus.Complete != CurrentStatus.Complete)
+            {
+                INativeService nativeService = await parent.ServiceManager.GetWithAwaitAsync<INativeService>();
+                await nativeService.SendPushNotificationAsync(parent.ServiceManager, innerTorrent);
+            }
+
+            CurrentStatus = newStatus;
         }
 
         private bool RegisterStatus(Progress<TorrentStatus>? torrentStatus)
         {
-            if (this.torrentStatus is not null)
+            if (this.torrentProgress is not null)
             {
-                this.torrentStatus.ProgressChanged -= TorrentProgressChanged;
+                this.torrentProgress.ProgressChanged -= TorrentProgressChanged;
             }
-            this.torrentStatus = torrentStatus;
+            this.torrentProgress = torrentStatus;
             if (torrentStatus is not null)
             {
                 torrentStatus.ProgressChanged += TorrentProgressChanged;
@@ -163,6 +144,8 @@ namespace SubverseIM.ViewModels.Components
                     }
                 }
             }
+
+            await DeleteCommandAsync();
         }
     }
 }

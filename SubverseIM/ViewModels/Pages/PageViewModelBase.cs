@@ -2,14 +2,22 @@
 using Avalonia.Platform;
 using ReactiveUI;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 
 namespace SubverseIM.ViewModels.Pages
 {
     public abstract class PageViewModelBase : ViewModelBase
     {
+        public abstract bool HasSidebar { get; }
+
         public abstract string Title { get; }
 
-        public abstract bool HasSidebar { get; }
+        public IServiceManager ServiceManager { get; }
+
+        protected PageViewModelBase(IServiceManager serviceManager)
+        {
+            ServiceManager = serviceManager;
+        }
 
         public abstract void OnOrientationChanged(TopLevel? topLevel);
 
@@ -19,8 +27,6 @@ namespace SubverseIM.ViewModels.Pages
     public abstract class PageViewModelBase<TSelf> : PageViewModelBase
         where TSelf : PageViewModelBase<TSelf>
     {
-        public IServiceManager ServiceManager { get; }
-
         private bool isSidebarOpen;
         public bool IsSidebarOpen
         {
@@ -41,9 +47,8 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public PageViewModelBase(IServiceManager serviceManager)
+        protected PageViewModelBase(IServiceManager serviceManager) : base(serviceManager)
         {
-            ServiceManager = serviceManager;
         }
 
         public override void OnOrientationChanged(TopLevel? topLevel)
