@@ -81,11 +81,10 @@ namespace SubverseIM.Services.Implementation
                 while (engine.Torrents.Contains(manager))
                 {
                     await timer.WaitForNextTickAsync();
-                    ((IProgress<TorrentStatus>)progress).Report(
-                        new TorrentStatus(
+                    ((IProgress<TorrentStatus>)progress)
+                    .Report(new TorrentStatus(
                             manager.Complete,
-                            manager.PartialProgress,
-                            manager.State
+                            manager.PartialProgress
                             ));
                 }
             });
@@ -95,7 +94,7 @@ namespace SubverseIM.Services.Implementation
         public async Task<bool> AddTorrentAsync(string magnetUri)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            SubverseTorrent? torrent = dbService.GetTorrent(magnetUri) ?? 
+            SubverseTorrent? torrent = dbService.GetTorrent(magnetUri) ??
                 new SubverseTorrent(magnetUri) { DateLastUpdatedOn = DateTime.UtcNow };
             dbService.InsertOrUpdateItem(torrent);
 
@@ -178,9 +177,9 @@ namespace SubverseIM.Services.Implementation
             }
 
             string magnetUri = manager.MagnetLink.ToV1String();
-            SubverseTorrent torrent = new SubverseTorrent(magnetUri) 
-            { 
-                TorrentBytes = metadataDict.Encode(), 
+            SubverseTorrent torrent = new SubverseTorrent(magnetUri)
+            {
+                TorrentBytes = metadataDict.Encode(),
                 DateLastUpdatedOn = DateTime.UtcNow,
             };
             dbService.InsertOrUpdateItem(torrent);
@@ -267,7 +266,8 @@ namespace SubverseIM.Services.Implementation
                 keyExists = managerMap.TryGetValue(torrent.MagnetUri, out manager);
             }
 
-            if (keyExists)
+            HashSet<TorrentState> invalidStates = [TorrentState.Stopping, TorrentState.Stopped];
+            if (keyExists && !invalidStates.Contains(manager!.State))
             {
                 await manager!.StopAsync();
                 return true;
