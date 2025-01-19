@@ -1,8 +1,6 @@
 ﻿using SubverseIM.Models;
 using SubverseIM.Services;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,7 +11,7 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override bool HasSidebar => false;
 
-        public override string Title => "Configuration View";
+        public override string Title => "Settings View";
 
         public ObservableCollection<string> BootstrapperUriList { get; }
 
