@@ -40,8 +40,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
         get { return currentPage; }
         private set
         {
-            previousPages.Push(currentPage);
-            HasPreviousView = true;
+            if (HasPreviousView || value != contactPage)
+            {
+                previousPages.Push(currentPage);
+                HasPreviousView = true;
+            }
 
             this.RaiseAndSetIfChanged(ref currentPage, value);
             ScreenOrientationChangedDelegate?.Invoke();
@@ -261,6 +264,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 await torrentService.AddTorrentAsync(launchedUri.ToString());
                 await torrentPage.InitializeAsync();
                 CurrentPage = torrentPage;
+                break;
+            case null:
+                CurrentPage = contactPage;
                 break;
         }
     }
