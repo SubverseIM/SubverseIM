@@ -533,7 +533,7 @@ namespace SubverseIM.Services.Implementation
                     using (StreamContent pkStreamContent = new(pkStream)
                     { Headers = { ContentType = new("application/pgp-keys") } })
                     {
-                        await http.PostAsync("pk", pkStreamContent, cancellationToken);
+                        await http.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent, cancellationToken);
                     }
                 }
             }
