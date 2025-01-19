@@ -64,16 +64,16 @@ namespace SubverseIM.ViewModels.Components
             CurrentStatus = newStatus;
         }
 
-        private bool RegisterStatus(Progress<TorrentStatus>? torrentStatus)
+        private bool RegisterStatus(Progress<TorrentStatus>? torrentProgress)
         {
             if (this.torrentProgress is not null)
             {
                 this.torrentProgress.ProgressChanged -= TorrentProgressChanged;
             }
-            this.torrentProgress = torrentStatus;
-            if (torrentStatus is not null)
+            this.torrentProgress = torrentProgress;
+            if (torrentProgress is not null)
             {
-                torrentStatus.ProgressChanged += TorrentProgressChanged;
+                torrentProgress.ProgressChanged += TorrentProgressChanged;
                 return true;
             }
             else
@@ -99,8 +99,6 @@ namespace SubverseIM.ViewModels.Components
         {
             ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
-            IDbService dbService = await parent.ServiceManager.GetWithAwaitAsync<IDbService>();
-
             if (await launcherService.ShowConfirmationDialogAsync(CONFIRM_TITLE, CONFIRM_MESSAGE))
             {
                 await torrentService.StopAsync(innerTorrent);
@@ -144,8 +142,6 @@ namespace SubverseIM.ViewModels.Components
                     }
                 }
             }
-
-            await DeleteCommand();
         }
     }
 }
