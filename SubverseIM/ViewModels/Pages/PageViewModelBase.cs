@@ -60,8 +60,15 @@ namespace SubverseIM.ViewModels.Pages
                 _ => false
             };
 
-            SidebarMode = isLandscape ? SplitViewDisplayMode.Inline : SplitViewDisplayMode.Overlay;
-            IsSidebarOpen = isLandscape;
+            if (isLandscape)
+            {
+                SidebarMode = SplitViewDisplayMode.Inline;
+                IsSidebarOpen = true;
+            }
+            else 
+            {
+                SidebarMode = SplitViewDisplayMode.Overlay;
+            }
         }
 
         public override void ToggleSidebarCommand()
