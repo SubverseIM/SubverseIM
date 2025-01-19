@@ -133,7 +133,7 @@ namespace SubverseIM.ViewModels.Components
                 64);
         }
 
-        public async Task ChangePhotoCommandAsync()
+        public async Task ChangePhotoCommand()
         {
             TopLevel topLevel = await serviceManager.GetWithAwaitAsync<TopLevel>();
             IReadOnlyList<IStorageFile> files = await topLevel.StorageProvider.OpenFilePickerAsync(
@@ -153,7 +153,7 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public async Task SaveChangesCommandAsync()
+        public async Task SaveChangesCommand()
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             if (ContactPhoto is not null)
@@ -177,7 +177,7 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public async Task EditCommandAsync()
+        public async Task EditCommand()
         {
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateContactView(innerContact);
@@ -185,7 +185,7 @@ namespace SubverseIM.ViewModels.Components
             ShouldShowOptions = false;
         }
 
-        public async Task DeleteCommandAsync(bool deleteFromDb)
+        public async Task DeleteCommand(bool deleteFromDb)
         {
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             if (await launcherService.ShowConfirmationDialogAsync("Remove this Contact?", deleteFromDb ?
@@ -203,7 +203,7 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public async Task CancelCommandAsync()
+        public async Task CancelCommand()
         {
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             if (!frontendService.NavigatePreviousView())

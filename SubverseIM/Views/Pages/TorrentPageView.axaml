@@ -15,22 +15,22 @@
 				<DataTemplate>
 					<DockPanel>
 						<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" />
-						<Button DockPanel.Dock="Right" Command="{Binding ShareCommandAsync}"
+						<Button DockPanel.Dock="Right" Command="{Binding ShareCommand}"
 								IsVisible="{Binding CurrentStatus.Complete}"
 								AutomationProperties.Name="Save File As">
 							<PathIcon Data="{StaticResource save_regular}" />
 						</Button>
-						<Button DockPanel.Dock="Right" Command="{Binding StartCommandAsync}"
+						<Button DockPanel.Dock="Right" Command="{Binding StartCommand}"
 								IsVisible="{Binding !IsStarted}"
 								AutomationProperties.Name="Start Download">
 							<PathIcon Data="{StaticResource arrow_download_regular}" />
 						</Button>
-						<Button DockPanel.Dock="Right" Command="{Binding StopCommandAsync}"
+						<Button DockPanel.Dock="Right" Command="{Binding StopCommand}"
 								IsVisible="{Binding IsStarted}"
 								AutomationProperties.Name="Stop Download">
 							<PathIcon Data="{StaticResource dismiss_regular}" />
 						</Button>
-						<Button DockPanel.Dock="Right" Command="{Binding DeleteCommandAsync}"
+						<Button DockPanel.Dock="Right" Command="{Binding DeleteCommand}"
 								AutomationProperties.Name="Delete File"
 								Background="DarkRed">
 							<Button.IsVisible>

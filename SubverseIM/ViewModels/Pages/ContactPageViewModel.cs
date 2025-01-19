@@ -87,13 +87,13 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task InviteCommandAsync(Visual? sender) 
+        public async Task InviteCommand(Visual? sender) 
         {
             IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
             await peerService.SendInviteAsync(sender);
         }
 
-        public async Task MessageCommandAsync() 
+        public async Task MessageCommand() 
         {
             IEnumerable<SubverseContact> contacts = ContactsList
                 .Where(x => x.IsSelected)
@@ -111,13 +111,13 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task OpenFilesCommandAsync()
+        public async Task OpenFilesCommand()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateTorrentView();
         }
 
-        public async Task AddParticipantsCommandAsync()
+        public async Task AddParticipantsCommand()
         {
             Debug.Assert(Parent is not null);
             foreach (SubverseContact contact in ContactsList

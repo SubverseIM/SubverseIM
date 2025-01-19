@@ -35,13 +35,13 @@ namespace SubverseIM.ViewModels.Components
             Contacts = contacts;
         }
 
-        public async Task OpenMessageViewCommandAsync() 
+        public async Task OpenMessageViewCommand() 
         {
             IFrontendService frontendService = await parent.ServiceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateMessageView(Contacts, TopicName);
         }
 
-        public async Task DeleteTopicCommandAsync() 
+        public async Task DeleteTopicCommand() 
         {
             ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             if (await launcherService.ShowConfirmationDialogAsync(CONFIRM_TITLE, CONFIRM_MESSAGE))

@@ -17,7 +17,7 @@
 		<SplitView.Pane>
 			<Border BorderThickness="2" BorderBrush="Black">
 				<DockPanel>
-					<Button DockPanel.Dock="Top" HorizontalAlignment="Stretch" Command="{Binding OpenFilesCommandAsync}">
+					<Button DockPanel.Dock="Top" HorizontalAlignment="Stretch" Command="{Binding OpenFilesCommand}">
 						<TextBlock FontSize="16" HorizontalAlignment="Center">File Manager</TextBlock>
 					</Button>
 					<Label DockPanel.Dock="Top">Recent Topics</Label>
@@ -32,11 +32,11 @@
 								<DataTemplate>
 									<DockPanel AutomationProperties.HelpText="{Binding TopicName}">
 										<Button IsVisible="{Binding IsSelected}" Background="DarkRed"
-												DockPanel.Dock="Right" Command="{Binding DeleteTopicCommandAsync}"
+												DockPanel.Dock="Right" Command="{Binding DeleteTopicCommand}"
 												AutomationProperties.Name="Delete Topic">
 											<PathIcon Data="{StaticResource delete_regular}" />
 										</Button>
-										<HyperlinkButton Padding="0" Command="{Binding OpenMessageViewCommandAsync}">
+										<HyperlinkButton Padding="0" Command="{Binding OpenMessageViewCommand}">
 											<TextBlock Foreground="Aqua" Text="{Binding TopicName}"/>
 										</HyperlinkButton>
 									</DockPanel>
@@ -57,14 +57,14 @@
 		</SplitView.Pane>
 		<DockPanel>
 			<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding !IsDialog}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
-				<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding InviteCommandAsync}" CommandParameter="{Binding $self}">
+				<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding InviteCommand}" CommandParameter="{Binding $self}">
 					<TextBlock FontSize="16" HorizontalAlignment="Center">Invite Friend</TextBlock>
 				</Button>
-				<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommandAsync}">
+				<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommand}">
 					<TextBlock FontSize="16" HorizontalAlignment="Center">Start Conversation</TextBlock>
 				</Button>
 			</UniformGrid>
-			<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommandAsync}">
+			<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommand}">
 				<TextBlock FontSize="16" HorizontalAlignment="Center">Add Selected Contacts</TextBlock>
 			</Button>
 			<Panel>
@@ -88,7 +88,7 @@
 								<Button DockPanel.Dock="Right"
 										VerticalAlignment="Stretch"
 										IsVisible="{Binding ShouldShowOptions}"
-										Command="{Binding DeleteCommandAsync}"
+										Command="{Binding DeleteCommand}"
 										CommandParameter="True"
 										Background="DarkRed"
 										AutomationProperties.Name="Delete Contact">
@@ -97,7 +97,7 @@
 								<Button DockPanel.Dock="Right"
 										VerticalAlignment="Stretch"
 										IsVisible="{Binding ShouldShowOptions}"
-										Command="{Binding EditCommandAsync}"
+										Command="{Binding EditCommand}"
 										AutomationProperties.Name="Edit Contact">
 									<PathIcon Data="{StaticResource edit_regular}" />
 								</Button>

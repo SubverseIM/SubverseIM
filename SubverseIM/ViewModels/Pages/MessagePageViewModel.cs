@@ -67,13 +67,13 @@ namespace SubverseIM.ViewModels.Pages
             TopicsList = [string.Empty];
         }
 
-        public async Task AddParticipantsCommandAsync()
+        public async Task AddParticipantsCommand()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateContactView(this);
         }
 
-        public async Task AddTopicCommandAsync()
+        public async Task AddTopicCommand()
         {
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
 
@@ -178,7 +178,7 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task BackCommandAsync()
+        public async Task BackCommand()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
             frontendService.NavigateContactView();
@@ -238,12 +238,12 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public Task SendCommandAsync() 
+        public Task SendCommand() 
         {
             return SendMessageAsync();
         }
 
-        public async Task AttachFileCommandAsync() 
+        public async Task AttachFileCommand() 
         {
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
 

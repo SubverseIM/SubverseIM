@@ -106,7 +106,7 @@ public partial class ContactPageView : UserControl
             dataContext.Parent is null &&
             contacts.SelectedItems?.Count > 0)
         {
-            await Dispatcher.UIThread.InvokeAsync(dataContext.MessageCommandAsync);
+            await Dispatcher.UIThread.InvokeAsync(dataContext.MessageCommand);
         }
         else
         {

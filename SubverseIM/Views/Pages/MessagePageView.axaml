@@ -20,7 +20,7 @@
 					<DockPanel DockPanel.Dock="Top">
 						<Button DockPanel.Dock="Right"
 								VerticalAlignment="Stretch"
-								Command="{Binding AddParticipantsCommandAsync}"
+								Command="{Binding AddParticipantsCommand}"
 								AutomationProperties.Name="Add Participants">
 							<PathIcon Data="{StaticResource people_add_regular}" />
 						</Button>
@@ -38,7 +38,7 @@
 									<Button DockPanel.Dock="Right"
 										VerticalAlignment="Stretch"
 										IsVisible="{Binding ShouldShowOptions}"
-										Command="{Binding DeleteCommandAsync}"
+										Command="{Binding DeleteCommand}"
 										CommandParameter="False"
 										Background="DarkRed"
 										AutomationProperties.Name="Remove Participant">
@@ -47,7 +47,7 @@
 									<Button DockPanel.Dock="Right"
 										VerticalAlignment="Stretch"
 										IsVisible="{Binding ShouldShowOptions}"
-										Command="{Binding EditCommandAsync}"
+										Command="{Binding EditCommand}"
 										AutomationProperties.Name="Save/Edit Contact">
 										<PathIcon Data="{StaticResource edit_regular}" />
 									</Button>
@@ -63,7 +63,7 @@
 			<DockPanel DockPanel.Dock="Top">
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
-						Command="{Binding AddTopicCommandAsync}"
+						Command="{Binding AddTopicCommand}"
 						AutomationProperties.Name="New Topic">
 					<PathIcon Data="{StaticResource comment_add_regular}" />
 				</Button>
@@ -77,13 +77,13 @@
 			<DockPanel DockPanel.Dock="Top">
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
-						Command="{Binding AttachFileCommandAsync}"
+						Command="{Binding AttachFileCommand}"
 						AutomationProperties.Name="Send File">
 					<PathIcon Data="{StaticResource document_add_regular}" />
 				</Button>
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
-						Command="{Binding SendCommandAsync}"
+						Command="{Binding SendCommand}"
 						AutomationProperties.Name="Send Message">
 					<PathIcon Data="{StaticResource send_regular}" />
 				</Button>
@@ -108,7 +108,7 @@
 										VerticalAlignment="Top"
 										Margin="2"
 										IsVisible="{Binding IsSelected}"
-										Command="{Binding DeleteCommandAsync}"
+										Command="{Binding DeleteCommand}"
 										AutomationProperties.Name="Delete Message">
 									<PathIcon Data="{StaticResource delete_regular}" />
 								</Button>
