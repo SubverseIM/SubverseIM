@@ -26,6 +26,17 @@ namespace SubverseIM.Services.Implementation
             db = new(dbConnectionString, mapper);
         }
 
+        public SubverseConfig? GetConfig()
+        {
+            return db.GetCollection<SubverseConfig>()
+                .FindAll().SingleOrDefault();
+        }
+
+        public bool UpdateConfig(SubverseConfig config) 
+        {
+            return db.GetCollection<SubverseConfig>().Upsert(config);
+        }
+
         public IEnumerable<SubverseContact> GetContacts()
         {
             var contacts = db.GetCollection<SubverseContact>();

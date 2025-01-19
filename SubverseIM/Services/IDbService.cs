@@ -9,6 +9,10 @@ namespace SubverseIM.Services
 {
     public interface IDbService : IDisposable
     {
+        SubverseConfig? GetConfig();
+
+        bool UpdateConfig(SubverseConfig config);
+
         IEnumerable<SubverseContact> GetContacts();
 
         SubverseContact? GetContact(SubversePeerId otherPeer);

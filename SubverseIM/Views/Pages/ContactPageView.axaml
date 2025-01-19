@@ -17,6 +17,9 @@
 		<SplitView.Pane>
 			<Border BorderThickness="2" BorderBrush="Black">
 				<DockPanel>
+					<Button DockPanel.Dock="Top" HorizontalAlignment="Stretch" Command="{Binding OpenSettingsCommand}">
+						<TextBlock FontSize="16" HorizontalAlignment="Center">Settings</TextBlock>
+					</Button>
 					<Button DockPanel.Dock="Top" HorizontalAlignment="Stretch" Command="{Binding OpenFilesCommand}">
 						<TextBlock FontSize="16" HorizontalAlignment="Center">File Manager</TextBlock>
 					</Button>
