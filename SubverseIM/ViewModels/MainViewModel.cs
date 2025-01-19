@@ -25,6 +25,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     private readonly TorrentPageViewModel torrentPage;
 
+    private readonly ConfigPageViewModel configPage;
+
     private Stack<PageViewModelBase> previousPages;
 
     private PageViewModelBase currentPage;
@@ -64,6 +66,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         contactPage = new(serviceManager);
         createContactPage = new(serviceManager);
         torrentPage = new(serviceManager);
+        configPage = new (serviceManager);
 
         previousPages = new();
         currentPage = contactPage;
@@ -293,6 +296,12 @@ public class MainViewModel : ViewModelBase, IFrontendService
     {
         await torrentPage.InitializeAsync();
         CurrentPage = torrentPage;
+    }
+
+    public async void NavigateConfigView()
+    {
+        await configPage.InitializeAsync();
+        CurrentPage = configPage;
     }
 
     public void RegisterTopLevel(TopLevel topLevel)

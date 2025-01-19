@@ -597,6 +597,22 @@ namespace SubverseIM.Services.Implementation
             return await thisPeerTcs.Task.WaitAsync(cancellationToken);
         }
 
+        public async Task<SubverseConfig> GetConfigAsync(CancellationToken cancellationToken = default)
+        {
+            return await configTcs.Task.WaitAsync(cancellationToken);
+        }
+
+        public async Task<bool> PersistConfigAsync(CancellationToken cancellationToken = default) 
+        {
+            IServiceManager serviceManager = await serviceManagerTcs.Task;
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+
+            SubverseConfig config = await GetConfigAsync(cancellationToken);
+            dbService.UpdateConfig(config);
+
+            return true;
+        }
+
         public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
             if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
