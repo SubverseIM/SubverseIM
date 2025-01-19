@@ -11,11 +11,11 @@
 	</Design.DataContext>
 	<DockPanel>
 		<UniformGrid DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Rows="1" Columns="2">
-			<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding Contact.ChangePhotoCommandAsync}"
+			<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding Contact.ChangePhotoCommand}"
 					AutomationProperties.Name="Change Photo">
 				<PathIcon Data="{StaticResource camera_edit_regular}" />
 			</Button>
-			<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding Contact.SaveChangesCommandAsync}"
+			<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding Contact.SaveChangesCommand}"
 					AutomationProperties.Name="Save Changes">
 				<PathIcon Data="{StaticResource save_regular}" />
 			</Button>

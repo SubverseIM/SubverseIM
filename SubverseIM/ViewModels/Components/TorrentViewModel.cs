@@ -82,20 +82,20 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public async Task StartCommandAsync()
+        public async Task StartCommand()
         {
             ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
             IsStarted = RegisterStatus(await torrentService.StartAsync(innerTorrent));
         }
 
-        public async Task StopCommandAsync()
+        public async Task StopCommand()
         {
             ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
             await torrentService.StopAsync(innerTorrent);
             IsStarted = false;
         }
 
-        public async Task DeleteCommandAsync()
+        public async Task DeleteCommand()
         {
             ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             ITorrentService torrentService = await parent.ServiceManager.GetWithAwaitAsync<ITorrentService>();
@@ -112,7 +112,7 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public async Task ShareCommandAsync(Visual? sender)
+        public async Task ShareCommand(Visual? sender)
         {
             string cacheDirPath = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
@@ -145,7 +145,7 @@ namespace SubverseIM.ViewModels.Components
                 }
             }
 
-            await DeleteCommandAsync();
+            await DeleteCommand();
         }
     }
 }

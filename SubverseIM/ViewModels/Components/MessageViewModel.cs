@@ -121,7 +121,7 @@ namespace SubverseIM.ViewModels.Components
                 .ToArray();
         }
 
-        public async Task DeleteCommandAsync() 
+        public async Task DeleteCommand() 
         {
             ILauncherService launcherService = await messagePageView.ServiceManager
                 .GetWithAwaitAsync<ILauncherService>();
