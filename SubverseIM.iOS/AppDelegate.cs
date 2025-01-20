@@ -63,6 +63,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     {
         if (IsInForeground = ev is not AppRefreshActivatedEventArgs)
         {
+            await Task.Yield();
             Window!.MakeKeyAndVisible();
         }
 
