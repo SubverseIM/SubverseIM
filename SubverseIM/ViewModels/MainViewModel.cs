@@ -110,8 +110,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
         List<Task> subTasks =
         [
-            peerService.BootstrapSelfAsync(cancellationToken),
-            torrentPage.InitializeAsync(),
+            Task.Run(Task? () => peerService.BootstrapSelfAsync(cancellationToken)),
+            Task.Run(torrentPage.InitializeAsync),
         ];
 
         int unsentCount = 0, joinCount = 0;
