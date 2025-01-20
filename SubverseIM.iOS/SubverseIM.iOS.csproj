@@ -7,7 +7,7 @@
 		<CodesignKey>Apple Development: Isabelle Santin (QL6ZJ9H5U9)</CodesignKey>
 		<Nullable>enable</Nullable>
 		<ProvisioningType>manual</ProvisioningType>
-		<AvaloniaVersion>11.3.999-cibuild0054087-alpha</AvaloniaVersion>
+		<AvaloniaVersion>11.3.999-cibuild0054357-alpha</AvaloniaVersion>
 		<UseInterpreter>true</UseInterpreter>
 		<LinkMode>SdkOnly</LinkMode>
 	</PropertyGroup>
