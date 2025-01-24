@@ -38,7 +38,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public bool NotificationsAllowed { get; private set; }
 
-    public bool IsAccessibilityEnabled => false;
+    public bool IsAccessibilityEnabled => UIAccessibility.IsVoiceOverRunning;
 
     public AppDelegate()
     {
