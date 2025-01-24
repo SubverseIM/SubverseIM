@@ -5,7 +5,7 @@
 		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
 		<RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
 		<Nullable>enable</Nullable>
-		<AvaloniaVersion>11.3.999-cibuild0054524-alpha</AvaloniaVersion>
+		<AvaloniaVersion>11.3.999-cibuild0054548-alpha</AvaloniaVersion>
 		<UseInterpreter>true</UseInterpreter>
 		<LinkMode>SdkOnly</LinkMode>
 	</PropertyGroup>
