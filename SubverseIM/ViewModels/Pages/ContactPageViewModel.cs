@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Platform;
 using ReactiveUI;
@@ -42,6 +43,16 @@ namespace SubverseIM.ViewModels.Pages
             {
                 IsDialog = value is not null;
                 this.RaiseAndSetIfChanged(ref parent, value);
+            }
+        }
+
+        private IsOffscreenBehavior contentOffscreen;
+        public IsOffscreenBehavior ContentOffscreen 
+        {
+            get => contentOffscreen;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref contentOffscreen, value);
             }
         }
 

@@ -1,3 +1,4 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -49,33 +50,11 @@ public partial class ContactPageView : UserControl
         pressTimer = new Timer(PressTimerElapsed, pressTimerState,
             Timeout.Infinite, Timeout.Infinite);
 
-        topics.SelectionChanged += Topics_SelectionChanged;
-
-        contacts.SelectionChanged += Contacts_SelectionChanged;
         contacts.PointerPressed += Contacts_PointerPressed;
         contacts.PointerReleased += Contacts_PointerReleased;
-    }
 
-    private void Contacts_PointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        pressTimer.Change(Timeout.Infinite, Timeout.Infinite);
-    }
-
-    private void Contacts_PointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        lock (pressTimerState) { pressTimerState.HasElapsed = false; }
-        pressTimer.Change(275, Timeout.Infinite);
-
-        bool isFirstTap;
-        lock (tapTimerState)
-        {
-            isFirstTap = tapTimerState.TapCount++ == 0;
-        }
-
-        if (isFirstTap)
-        {
-            tapTimer.Change(300, Timeout.Infinite);
-        }
+        contacts.SelectionChanged += Contacts_SelectionChanged;
+        topics.SelectionChanged += Topics_SelectionChanged;
     }
 
     private void PressTimerElapsed(object? state)
@@ -112,6 +91,28 @@ public partial class ContactPageView : UserControl
         {
             lock (tapTimerState) { tapTimerState.TapCount = 0; }
         }
+    }
+
+    private void Contacts_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        lock (pressTimerState) { pressTimerState.HasElapsed = false; }
+        pressTimer.Change(275, Timeout.Infinite);
+
+        bool isFirstTap;
+        lock (tapTimerState)
+        {
+            isFirstTap = tapTimerState.TapCount++ == 0;
+        }
+
+        if (isFirstTap)
+        {
+            tapTimer.Change(300, Timeout.Infinite);
+        }
+    }
+
+    private void Contacts_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        pressTimer.Change(Timeout.Infinite, Timeout.Infinite);
     }
 
     private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)

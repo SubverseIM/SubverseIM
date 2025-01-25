@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia.Automation;
+using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SIPSorcery.SIP;
@@ -56,6 +57,26 @@ namespace SubverseIM.ViewModels.Pages
             set
             {
                 this.RaiseAndSetIfChanged(ref shouldRefreshContacts, value);
+            }
+        }
+
+        private IsOffscreenBehavior messageBoxOffscreen;
+        public IsOffscreenBehavior MessageBoxOffscreen 
+        {
+            get => messageBoxOffscreen;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref messageBoxOffscreen, value);
+            }
+        }
+
+        private IsOffscreenBehavior messageListOffscreen;
+        public IsOffscreenBehavior MessageListOffscreen
+        {
+            get => messageListOffscreen;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref messageListOffscreen, value);
             }
         }
 

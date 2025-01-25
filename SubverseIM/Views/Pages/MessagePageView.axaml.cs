@@ -1,3 +1,4 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ReactiveUI;
@@ -5,7 +6,6 @@ using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
@@ -14,14 +14,15 @@ public partial class MessagePageView : UserControl
     public MessagePageView()
     {
         InitializeComponent();
-        messages.SelectionChanged += Messages_SelectionChanged;
-        topicBox.SelectionChanged += TopicBox_SelectionChanged;
-        contacts.SelectionChanged += Contacts_SelectionChanged;
+
+        contacts.SelectionChanged += ContactsSelectionChanged;
+        messages.SelectionChanged += MessagesSelectionChanged;
+        topicBox.SelectionChanged += TopicBoxSelectionChanged;
 
         messageBox.GotFocus += TextBoxGotFocus;
     }
 
-    private void Contacts_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void ContactsSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (contacts.ItemCount == 1) return;
 
@@ -42,6 +43,24 @@ public partial class MessagePageView : UserControl
         }
     }
 
+    private async void TopicBoxSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        await ((MessagePageViewModel)DataContext!).InitializeAsync();
+    }
+
+    private void MessagesSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        foreach (var item in e.AddedItems.Cast<MessageViewModel>())
+        {
+            item.IsSelected = true;
+        }
+
+        foreach (var item in e.RemovedItems.Cast<MessageViewModel>())
+        {
+            item.IsSelected = false;
+        }
+    }
+
     private async void TextBoxGotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
     {
         ILauncherService launcherService = await ((MessagePageViewModel)DataContext!)
@@ -57,24 +76,6 @@ public partial class MessagePageView : UserControl
             textBox.Text = messageText;
 
             textBox.IsEnabled = true;
-        }
-    }
-
-    private async void TopicBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        await ((DataContext as MessagePageViewModel)?.InitializeAsync() ?? Task.CompletedTask);
-    }
-
-    private void Messages_SelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        foreach (var item in e.AddedItems.Cast<MessageViewModel>())
-        {
-            item.IsSelected = true;
-        }
-
-        foreach (var item in e.RemovedItems.Cast<MessageViewModel>())
-        {
-            item.IsSelected = false;
         }
     }
 
