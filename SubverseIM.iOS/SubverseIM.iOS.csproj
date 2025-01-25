@@ -3,7 +3,6 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0-ios17.0</TargetFramework>
 		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
-		<RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
 		<Nullable>enable</Nullable>
 		<AvaloniaVersion>11.3.999-cibuild0054550-alpha</AvaloniaVersion>
 		<UseInterpreter>true</UseInterpreter>
