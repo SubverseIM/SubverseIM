@@ -15,31 +15,11 @@ public partial class MessagePageView : UserControl
     {
         InitializeComponent();
 
-        splitView.PaneOpening += SplitViewPaneOpening;
-        splitView.PaneClosing += SplitViewPaneClosing;
-
         contacts.SelectionChanged += ContactsSelectionChanged;
         messages.SelectionChanged += MessagesSelectionChanged;
         topicBox.SelectionChanged += TopicBoxSelectionChanged;
 
-        topicBox.DropDownOpened += TopicBoxDropDownOpened;
-        topicBox.DropDownClosed += TopicBoxDropDownClosed;
-
         messageBox.GotFocus += TextBoxGotFocus;
-    }
-
-
-    private void SplitViewPaneOpening(object? sender, CancelRoutedEventArgs e)
-    {
-        if (((MessagePageViewModel)DataContext!).SidebarMode != SplitViewDisplayMode.Inline)
-        {
-            ((MessagePageViewModel)DataContext!).MessageListOffscreen = IsOffscreenBehavior.Offscreen;
-        }
-    }
-
-    private void SplitViewPaneClosing(object? sender, CancelRoutedEventArgs e)
-    {
-        ((MessagePageViewModel)DataContext!).MessageListOffscreen = IsOffscreenBehavior.Default;
     }
 
     private void ContactsSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -79,16 +59,6 @@ public partial class MessagePageView : UserControl
         {
             item.IsSelected = false;
         }
-    }
-
-    private void TopicBoxDropDownOpened(object? sender, System.EventArgs e)
-    {
-        ((MessagePageViewModel)DataContext!).MessageBoxOffscreen = IsOffscreenBehavior.Offscreen;
-    }
-
-    private void TopicBoxDropDownClosed(object? sender, System.EventArgs e)
-    {
-        ((MessagePageViewModel)DataContext!).MessageBoxOffscreen = IsOffscreenBehavior.Default;
     }
 
     private async void TextBoxGotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)

@@ -50,9 +50,6 @@ public partial class ContactPageView : UserControl
         pressTimer = new Timer(PressTimerElapsed, pressTimerState,
             Timeout.Infinite, Timeout.Infinite);
 
-        splitView.PaneOpening += SplitView_PaneOpening;
-        splitView.PaneClosing += SplitView_PaneClosing;
-
         contacts.PointerPressed += Contacts_PointerPressed;
         contacts.PointerReleased += Contacts_PointerReleased;
 
@@ -94,19 +91,6 @@ public partial class ContactPageView : UserControl
         {
             lock (tapTimerState) { tapTimerState.TapCount = 0; }
         }
-    }
-
-    private void SplitView_PaneOpening(object? sender, CancelRoutedEventArgs e)
-    {
-        if (((ContactPageViewModel)DataContext!).SidebarMode != SplitViewDisplayMode.Inline)
-        {
-            ((ContactPageViewModel)DataContext!).ContentOffscreen = IsOffscreenBehavior.Offscreen;
-        }
-    }
-
-    private void SplitView_PaneClosing(object? sender, CancelRoutedEventArgs e)
-    {
-        ((ContactPageViewModel)DataContext!).ContentOffscreen = IsOffscreenBehavior.Default;
     }
 
     private void Contacts_PointerPressed(object? sender, PointerPressedEventArgs e)

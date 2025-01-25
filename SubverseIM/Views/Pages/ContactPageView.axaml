@@ -9,12 +9,23 @@
 	<Design.DataContext>
 		<vm:ContactPageViewModel />
 	</Design.DataContext>
-
+	<UserControl.Styles>
+		<Style Selector="ListBoxItem.offscreen,TextBlock.offscreen,Button.offscreen">
+			<Setter Property="AutomationProperties.IsOffscreenBehavior" Value="Offscreen"/>
+		</Style>
+		<Style Selector="SplitView.overlay">
+			<Setter Property="DisplayMode" Value="Overlay"/>
+		</Style>
+		<Style Selector="SplitView.inline">
+			<Setter Property="DisplayMode" Value="Inline"/>
+		</Style>
+	</UserControl.Styles>
 	<SplitView x:Name="splitView" 
 			   IsPaneOpen="{Binding IsSidebarOpen}"
-			   DisplayMode="{Binding SidebarMode}"
 			   PanePlacement="Right"
-			   OpenPaneLength="300">
+			   OpenPaneLength="300"
+			   Classes.overlay="{Binding IsSidebarOverlay}"
+		   	   Classes.inline="{Binding !IsSidebarOverlay}">
 		<SplitView.Pane>
 			<Border BorderThickness="2" BorderBrush="Black">
 				<DockPanel>
@@ -61,17 +72,37 @@
 		</SplitView.Pane>
 		<DockPanel>
 			<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding !IsDialog}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
-				<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding InviteCommand}" CommandParameter="{Binding $self}"
-						AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
-					<TextBlock FontSize="16" HorizontalAlignment="Center"
-							   AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
+				<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding InviteCommand}" CommandParameter="{Binding $self}">
+					<Classes.offscreen>
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
+							<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+							<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+						</MultiBinding>
+					</Classes.offscreen>
+					<TextBlock FontSize="16" HorizontalAlignment="Center">
+						<Classes.offscreen>
+							<MultiBinding Converter="{x:Static BoolConverters.And}">
+								<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+								<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+							</MultiBinding>
+						</Classes.offscreen>
 						Invite Friend
 					</TextBlock>
 				</Button>
-				<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommand}"
-						AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
-					<TextBlock FontSize="16" HorizontalAlignment="Center"
-							   AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
+				<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommand}">
+					<Classes.offscreen>
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
+							<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+							<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+						</MultiBinding>
+					</Classes.offscreen>
+					<TextBlock FontSize="16" HorizontalAlignment="Center">
+						<Classes.offscreen>
+							<MultiBinding Converter="{x:Static BoolConverters.And}">
+								<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+								<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+							</MultiBinding>
+						</Classes.offscreen>
 						Start Conversation
 					</TextBlock>
 				</Button>
@@ -83,8 +114,15 @@
 				<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
 					<ListBox.Styles>
 						<Style Selector="ListBoxItem">
-							<Setter Property="AutomationProperties.Name" Value="Contact"/>
-							<Setter Property="AutomationProperties.IsOffscreenBehavior" Value="{Binding ContentOffscreen}"/>
+							<Setter Property="AutomationProperties.Name" Value="Contact" />
+							<Setter Property="Classes.offscreen">
+								<Setter.Value>
+									<MultiBinding Converter="{x:Static BoolConverters.And}">
+										<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+										<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+									</MultiBinding>
+								</Setter.Value>
+							</Setter>
 						</Style>
 					</ListBox.Styles>
 					<ListBox.ItemTemplate>
@@ -114,7 +152,14 @@
 										AutomationProperties.Name="Edit Contact">
 									<PathIcon Data="{StaticResource edit_regular}" />
 								</Button>
-								<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}" />
+								<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}">
+									<Classes.offscreen>
+										<MultiBinding Converter="{x:Static BoolConverters.And}">
+											<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+											<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+										</MultiBinding>
+									</Classes.offscreen>
+								</TextBlock>
 							</DockPanel>
 						</DataTemplate>
 					</ListBox.ItemTemplate>
@@ -124,8 +169,13 @@
 						   VerticalAlignment="Center"
 						   TextWrapping="Wrap"
 						   TextAlignment="Center"
-						   Margin="5" FontSize="16"
-						   AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
+						   Margin="5" FontSize="16">
+					<Classes.offscreen>
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
+							<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+							<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+						</MultiBinding>
+					</Classes.offscreen>
 					No contacts found. Click "Invite Friend" to get started!
 				</TextBlock>
 			</Panel>

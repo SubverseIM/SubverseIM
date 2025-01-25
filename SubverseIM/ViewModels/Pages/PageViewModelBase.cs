@@ -2,7 +2,6 @@
 using Avalonia.Platform;
 using ReactiveUI;
 using SubverseIM.Services;
-using SubverseIM.Services.Implementation;
 
 namespace SubverseIM.ViewModels.Pages
 {
@@ -37,13 +36,13 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        private SplitViewDisplayMode sidebarMode;
-        public SplitViewDisplayMode SidebarMode
+        private bool isSidebarOverlay;
+        public bool IsSidebarOverlay
         {
-            get => sidebarMode;
+            get => isSidebarOverlay;
             set
             {
-                ((TSelf)this).RaiseAndSetIfChanged(ref sidebarMode, value);
+                ((TSelf)this).RaiseAndSetIfChanged(ref isSidebarOverlay, value);
             }
         }
 
@@ -60,14 +59,10 @@ namespace SubverseIM.ViewModels.Pages
                 _ => false
             };
 
+            IsSidebarOverlay = !isLandscape;
             if (isLandscape)
             {
-                SidebarMode = SplitViewDisplayMode.Inline;
                 IsSidebarOpen = true;
-            }
-            else 
-            {
-                SidebarMode = SplitViewDisplayMode.Overlay;
             }
         }
 
