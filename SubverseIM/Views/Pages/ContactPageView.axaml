@@ -10,10 +10,11 @@
 		<vm:ContactPageViewModel />
 	</Design.DataContext>
 
-	<SplitView IsPaneOpen="{Binding IsSidebarOpen}"
-	       DisplayMode="{Binding SidebarMode}"
-		   PanePlacement="Right"
-           OpenPaneLength="300">
+	<SplitView x:Name="splitView" 
+			   IsPaneOpen="{Binding IsSidebarOpen}"
+			   DisplayMode="{Binding SidebarMode}"
+			   PanePlacement="Right"
+			   OpenPaneLength="300">
 		<SplitView.Pane>
 			<Border BorderThickness="2" BorderBrush="Black">
 				<DockPanel>
@@ -60,11 +61,19 @@
 		</SplitView.Pane>
 		<DockPanel>
 			<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding !IsDialog}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
-				<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding InviteCommand}" CommandParameter="{Binding $self}">
-					<TextBlock FontSize="16" HorizontalAlignment="Center">Invite Friend</TextBlock>
+				<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding InviteCommand}" CommandParameter="{Binding $self}"
+						AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
+					<TextBlock FontSize="16" HorizontalAlignment="Center"
+							   AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
+						Invite Friend
+					</TextBlock>
 				</Button>
-				<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommand}">
-					<TextBlock FontSize="16" HorizontalAlignment="Center">Start Conversation</TextBlock>
+				<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding MessageCommand}"
+						AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
+					<TextBlock FontSize="16" HorizontalAlignment="Center"
+							   AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
+						Start Conversation
+					</TextBlock>
 				</Button>
 			</UniformGrid>
 			<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommand}">
@@ -75,6 +84,7 @@
 					<ListBox.Styles>
 						<Style Selector="ListBoxItem">
 							<Setter Property="AutomationProperties.Name" Value="Contact"/>
+							<Setter Property="AutomationProperties.IsOffscreenBehavior" Value="{Binding ContentOffscreen}"/>
 						</Style>
 					</ListBox.Styles>
 					<ListBox.ItemTemplate>
@@ -114,7 +124,8 @@
 						   VerticalAlignment="Center"
 						   TextWrapping="Wrap"
 						   TextAlignment="Center"
-						   Margin="5" FontSize="16">
+						   Margin="5" FontSize="16"
+						   AutomationProperties.IsOffscreenBehavior="{Binding ContentOffscreen}">
 					No contacts found. Click "Invite Friend" to get started!
 				</TextBlock>
 			</Panel>

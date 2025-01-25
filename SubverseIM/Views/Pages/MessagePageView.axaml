@@ -10,7 +10,7 @@
 	<Design.DataContext>
 		<vm:MessagePageViewModel />
 	</Design.DataContext>
-	<SplitView IsPaneOpen="{Binding IsSidebarOpen}"
+	<SplitView x:Name="splitView" IsPaneOpen="{Binding IsSidebarOpen}"
 		   DisplayMode="{Binding SidebarMode}"
 		   PanePlacement="Right"
            OpenPaneLength="300">
@@ -78,25 +78,33 @@
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
 						Command="{Binding AttachFileCommand}"
-						AutomationProperties.Name="Send File">
+						AutomationProperties.Name="Send File"
+						AutomationProperties.IsOffscreenBehavior="{Binding MessageBoxOffscreen}">
 					<PathIcon Data="{StaticResource document_add_regular}" />
 				</Button>
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
 						Command="{Binding SendCommand}"
-						AutomationProperties.Name="Send Message">
+						AutomationProperties.Name="Send Message"
+						AutomationProperties.IsOffscreenBehavior="{Binding MessageBoxOffscreen}">
 					<PathIcon Data="{StaticResource send_regular}" />
 				</Button>
-				<TextBox x:Name="messageBox" HorizontalAlignment="Stretch"
-						VerticalAlignment="Stretch"
-						Watermark="Write a message..."
-						Text="{Binding SendMessageText}" />
+				<TextBox x:Name="messageBox"
+						 HorizontalAlignment="Stretch"
+						 VerticalAlignment="Stretch"
+						 Watermark="Write a message..."
+						 Text="{Binding SendMessageText}"
+						 AutomationProperties.IsOffscreenBehavior="{Binding MessageBoxOffscreen}"/>
 			</DockPanel>
 			<Panel>
 				<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
 					<ListBox.Styles>
 						<Style Selector="ListBoxItem">
 							<Setter Property="AutomationProperties.Name" Value="Message"/>
+							<Setter Property="AutomationProperties.IsOffscreenBehavior" Value="{Binding MessageListOffscreen}"/>
+						</Style>
+						<Style Selector="TextBlock">
+							<Setter Property="AutomationProperties.IsOffscreenBehavior" Value="{Binding MessageListOffscreen}"/>
 						</Style>
 					</ListBox.Styles>
 					<ListBox.ItemTemplate>
@@ -135,25 +143,26 @@
 												<HyperlinkButton Padding="0" IsEnabled="True"
 														NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
 													<TextBlock Foreground="Aqua" TextWrapping="Wrap"
-															Text="{Binding Name, DataType={x:Type vmx:EmbedViewModel}}" />
+															Text="{Binding Name, DataType={x:Type vmx:EmbedViewModel}}"/>
 												</HyperlinkButton>
 											</DataTemplate>
 										</ItemsControl.ItemTemplate>
 									</ItemsControl>
 									<Border Background="{Binding BubbleBrush}" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignment}">
-										<TextBlock Foreground="White" TextWrapping="Wrap" Text="{Binding Content}" Margin="2" />
+										<TextBlock Foreground="White" TextWrapping="Wrap" Text="{Binding Content}" Margin="2"/>
 									</Border>
 								</DockPanel>
 							</DockPanel>
 						</DataTemplate>
 					</ListBox.ItemTemplate>
 				</ListBox>
-				<TextBlock IsVisible="{Binding !MessageList.Count}" 
+				<TextBlock IsVisible="{Binding !MessageList.Count}"
 						   HorizontalAlignment="Center"
 						   VerticalAlignment="Center"
 						   TextWrapping="Wrap"
 						   TextAlignment="Center"
-						   Margin="5" FontSize="16">
+						   Margin="5" FontSize="16"
+						   AutomationProperties.IsOffscreenBehavior="{Binding MessageListOffscreen}">
 					This topic is empty. Send a message to get started!
 				</TextBlock>
 			</Panel>
