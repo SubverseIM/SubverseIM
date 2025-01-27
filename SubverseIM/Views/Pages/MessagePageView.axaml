@@ -20,6 +20,12 @@
 		<Style Selector="SplitView.inline">
 			<Setter Property="DisplayMode" Value="Inline"/>
 		</Style>
+		<Style Selector="DockPanel.dockTop">
+			<Setter Property="DockPanel.Dock" Value="Top"/>
+		</Style>
+		<Style Selector="DockPanel.dockBottom">
+			<Setter Property="DockPanel.Dock" Value="Bottom"/>
+		</Style>
 	</UserControl.Styles>
 	<SplitView x:Name="splitView" 
 		   IsPaneOpen="{Binding IsSidebarOpen}"
@@ -28,7 +34,7 @@
 		   Classes.overlay="{Binding IsSidebarOverlay}"
 		   Classes.inline="{Binding !IsSidebarOverlay}">
 		<SplitView.Pane>
-			<Border BorderThickness="2" BorderBrush="Black">
+			<Border BorderThickness="2" BorderBrush="Black" IsVisible="{Binding IsSidebarOpen}">
 				<DockPanel>
 					<DockPanel DockPanel.Dock="Top">
 						<Button DockPanel.Dock="Right"
@@ -100,7 +106,8 @@
 					</Classes.offscreen>
 				</ComboBox>
 			</DockPanel>
-			<DockPanel DockPanel.Dock="Top">
+			<DockPanel Classes.dockTop="{Binding !IsAccessibilityEnabledAsync^, FallbackValue=True}"
+					   Classes.dockBottom="{Binding IsAccessibilityEnabledAsync^, FallbackValue=False}">
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
 						Command="{Binding AttachFileCommand}"
@@ -135,7 +142,9 @@
 						 HorizontalAlignment="Stretch"
 						 VerticalAlignment="Stretch"
 						 Watermark="Write a message..."
-						 Text="{Binding SendMessageText}">
+						 Text="{Binding SendMessageText}"
+						 AutomationProperties.Name="Message edit box"
+						 AutomationProperties.HelpText="Write a message...">
 					<TextBox.Styles>
 						<Style Selector="TextBlock">
 							<Setter Property="AutomationProperties.IsOffscreenBehavior" Value="Offscreen" />
@@ -156,7 +165,7 @@
 				<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
 					<ListBox.Styles>
 						<Style Selector="ListBoxItem">
-							<Setter Property="AutomationProperties.Name" Value="Message"/>
+							<Setter Property="AutomationProperties.Name" Value="Message" />
 							<Setter Property="Classes.offscreen">
 								<Setter.Value>
 									<MultiBinding Converter="{x:Static BoolConverters.Or}">

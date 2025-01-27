@@ -27,7 +27,7 @@
 			   Classes.overlay="{Binding IsSidebarOverlay}"
 		   	   Classes.inline="{Binding !IsSidebarOverlay}">
 		<SplitView.Pane>
-			<Border BorderThickness="2" BorderBrush="Black">
+			<Border BorderThickness="2" BorderBrush="Black" IsVisible="{Binding IsSidebarOpen}">
 				<DockPanel>
 					<Button DockPanel.Dock="Top" HorizontalAlignment="Stretch" Command="{Binding OpenSettingsCommand}">
 						<TextBlock FontSize="16" HorizontalAlignment="Center">Settings</TextBlock>
@@ -133,7 +133,9 @@
 									<Polygon Points="{Binding HexagonPoints}" Fill="White" />
 									<Image Source="{Binding ContactPhoto}"
 										   Stretch="UniformToFill"
-										   Width="62" Height="62" Clip="{Binding HexagonPath}">
+										   Width="62" Height="62" Clip="{Binding HexagonPath}"
+										   AutomationProperties.Name="Contact photo"
+										   AutomationProperties.HelpText="{Binding UserNote}">
 									</Image>
 								</Panel>
 								<Button DockPanel.Dock="Right"
