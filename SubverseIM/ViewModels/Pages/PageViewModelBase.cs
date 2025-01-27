@@ -2,6 +2,7 @@
 using Avalonia.Platform;
 using ReactiveUI;
 using SubverseIM.Services;
+using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
 {
@@ -12,6 +13,13 @@ namespace SubverseIM.ViewModels.Pages
         public abstract string Title { get; }
 
         public IServiceManager ServiceManager { get; }
+
+        public Task<bool> IsAccessibilityEnabledAsync => GetIsAccessibilityEnabledAsync();
+        private async Task<bool> GetIsAccessibilityEnabledAsync()
+        {
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
+            return launcherService.IsAccessibilityEnabled;
+        }
 
         protected PageViewModelBase(IServiceManager serviceManager)
         {

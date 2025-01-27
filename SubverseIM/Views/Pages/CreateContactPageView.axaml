@@ -20,11 +20,15 @@
 				<PathIcon Data="{StaticResource save_regular}" />
 			</Button>
 		</UniformGrid>
-		<Label HorizontalAlignment="Stretch" DockPanel.Dock="Top">Contact Name:</Label>
+		<Label x:Name="nameEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Top">Contact Name</Label>
 		<TextBox x:Name="nameEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Top"
-				 Watermark="Display Name" Text="{Binding Contact.DisplayName}" />
-		<Label HorizontalAlignment="Stretch" DockPanel.Dock="Top">Notes:</Label>
-		<TextBox x:Name="noteEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Text="{Binding Contact.UserNote}" />
-		<Image Source="{Binding Contact.ContactPhoto}" />
+				 Watermark="Write contact name..." Text="{Binding Contact.DisplayName}" 
+				 AutomationProperties.LabeledBy="{Binding #nameEditLabel}" />
+		<Label x:Name="noteEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Top">Notes</Label>
+		<TextBox x:Name="noteEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Top" 
+				 Watermark="Write contact note..." Text="{Binding Contact.UserNote}"
+				 AutomationProperties.LabeledBy="{Binding #noteEditLabel}" />
+		<Image Source="{Binding Contact.ContactPhoto}"
+			   AutomationProperties.Name="Contact photo" />
 	</DockPanel>
 </UserControl>
