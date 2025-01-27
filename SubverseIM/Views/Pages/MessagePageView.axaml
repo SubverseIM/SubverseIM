@@ -165,6 +165,7 @@
 				<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
 					<ListBox.Styles>
 						<Style Selector="ListBoxItem">
+							<Setter Property="AutomationProperties.Name" Value="Message" />
 							<Setter Property="Classes.offscreen">
 								<Setter.Value>
 									<MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -181,7 +182,6 @@
 					<ListBox.ItemTemplate>
 						<DataTemplate>
 							<DockPanel
-								AutomationProperties.Name="Message"
 								AutomationProperties.HelpText="{Binding ReadoutText}">
 								<Button Background="DarkRed"
 										DockPanel.Dock="{Binding OptionsAlignment}"
