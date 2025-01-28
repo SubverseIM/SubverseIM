@@ -14,7 +14,7 @@ using SubverseIM.Models;
 
 namespace SubverseIM.Services.Implementation;
 
-public class MessageService : IMessageService, IDisposable, IInjectable
+public class MessageService : IMessageService, IDisposable
 {
     private readonly Dictionary<string, SIPRequest> callIdMap;
 
@@ -24,21 +24,21 @@ public class MessageService : IMessageService, IDisposable, IInjectable
 
     private readonly SIPTransport sipTransport;
 
-    private readonly TaskCompletionSource<IServiceManager> serviceManagerTcs;
+    private readonly IServiceManager serviceManager;
 
     public IPEndPoint LocalEndPoint { get; }
 
     public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
-    public MessageService()
+    public MessageService(IServiceManager serviceManager)
     {
         callIdMap = new();
         messagesBag = new();
 
-        sipChannel = new SIPUDPChannel(IPAddress.Any, BootstrapperService.DEFAULT_PORT_NUM);
+        sipChannel = new SIPUDPChannel(IPAddress.Any, BootstrapperService.DEFAULT_PORT_NUMBER);
         sipTransport = new SIPTransport(stateless: true);
 
-        serviceManagerTcs = new();
+        this.serviceManager = serviceManager;
 
         sipTransport.SIPTransportRequestReceived += SIPTransportRequestReceived;
         sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
@@ -50,8 +50,6 @@ public class MessageService : IMessageService, IDisposable, IInjectable
 
     private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
     {
-        IServiceManager serviceManager = await serviceManagerTcs.Task;
-
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
@@ -140,7 +138,6 @@ public class MessageService : IMessageService, IDisposable, IInjectable
 
     private async Task SIPTransportResponseReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPResponse sipResponse)
     {
-        IServiceManager serviceManager = await serviceManagerTcs.Task;
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
         SubversePeerId peerId;
@@ -177,7 +174,6 @@ public class MessageService : IMessageService, IDisposable, IInjectable
 
     private async Task SendSIPRequestAsync(SIPRequest sipRequest)
     {
-        IServiceManager serviceManager = await serviceManagerTcs.Task;
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
 
         SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
@@ -218,7 +214,6 @@ public class MessageService : IMessageService, IDisposable, IInjectable
 
     public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
     {
-        IServiceManager serviceManager = await serviceManagerTcs.Task;
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
 
         List<Task> sendTasks = new();
@@ -298,15 +293,6 @@ public class MessageService : IMessageService, IDisposable, IInjectable
         await Task.WhenAll(sendTasks);
     }
 
-    public Task InjectAsync(IServiceManager serviceManager)
-    {
-        serviceManagerTcs.SetResult(serviceManager);
-        return Task.CompletedTask;
-    }
-
-
-    #region IDisposable API
-
     private bool disposedValue;
 
     protected virtual void Dispose(bool disposing)
@@ -328,6 +314,4 @@ public class MessageService : IMessageService, IDisposable, IInjectable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
-
-    #endregion
 }

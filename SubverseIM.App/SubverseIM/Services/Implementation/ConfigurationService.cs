@@ -4,28 +4,26 @@ using SubverseIM.Models;
 
 namespace SubverseIM.Services.Implementation;
 
-public class ConfigurationService : IConfigurationService, IInjectable
+public class ConfigurationService : IConfigurationService
 {
-    private readonly TaskCompletionSource<SubverseConfig> configTcs;
-    
-    private readonly TaskCompletionSource<IServiceManager> serviceManagerTcs;
+    private readonly IServiceManager serviceManager;
 
-    public ConfigurationService()
+    private SubverseConfig? config;
+
+    public ConfigurationService(IServiceManager serviceManager)
     {
-        configTcs = new();
-        serviceManagerTcs = new();
+        this.serviceManager = serviceManager;
     }
-
-    #region IConfigurationService API
 
     public async Task<SubverseConfig> GetConfigAsync(CancellationToken cancellationToken)
     {
-        return await configTcs.Task.WaitAsync(cancellationToken);
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+        return config ??= dbService.GetConfig() ?? new SubverseConfig
+        { BootstrapperUriList = [BootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT] };
     }
 
     public async Task<bool> PersistConfigAsync(CancellationToken cancellationToken = default)
     {
-        IServiceManager serviceManager = await serviceManagerTcs.Task;
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
         SubverseConfig config = await GetConfigAsync(cancellationToken);
@@ -33,19 +31,4 @@ public class ConfigurationService : IConfigurationService, IInjectable
 
         return true;
     }
-
-    #endregion
-
-    #region IInjectable API
-
-    public async Task InjectAsync(IServiceManager serviceManager)
-    {
-        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-
-        SubverseConfig config = dbService.GetConfig() ?? new SubverseConfig
-        { BootstrapperUriList = [BootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT] };
-        configTcs.SetResult(config);
-    }
-
-    #endregion
 }

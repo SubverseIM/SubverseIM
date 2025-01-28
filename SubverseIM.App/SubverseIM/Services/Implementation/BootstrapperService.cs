@@ -22,7 +22,7 @@ namespace SubverseIM.Services.Implementation
     {
         public const string DEFAULT_BOOTSTRAPPER_ROOT = "https://subverse.network";
 
-        public const int DEFAULT_PORT_NUM = 6_03_03;
+        public const int DEFAULT_PORT_NUMBER = 6_03_03;
 
         private const string SECRET_PASSWORD = "#FreeTheInternet";
 
@@ -230,7 +230,7 @@ namespace SubverseIM.Services.Implementation
 
             int portNum, retryCount = 0;
             Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
-            for (portNum = DEFAULT_PORT_NUM; retryCount++ < 3 && mapping is null; portNum++)
+            for (portNum = DEFAULT_PORT_NUMBER; retryCount++ < 3 && mapping is null; portNum++)
             {
                 if (!portForwarder.Active) break;
 
@@ -389,15 +389,17 @@ namespace SubverseIM.Services.Implementation
 
             // Configuration service init
 
-            serviceManager.GetOrRegister<ConfigurationService, IConfigurationService>();
+            serviceManager.GetOrRegister<IConfigurationService>(
+                new ConfigurationService(serviceManager)
+                );
 
             // Message service init
 
             SubversePeerId thisPeer = new(myKeys.PublicKey.GetFingerprint());
             thisPeerTcs.SetResult(thisPeer);
 
-            IMessageService messageService = serviceManager
-                .GetOrRegister<MessageService, IMessageService>();
+            IMessageService messageService = serviceManager.GetOrRegister
+                <IMessageService>(new MessageService(serviceManager));
             lock (messageService.CachedPeers)
             {
                 messageService.CachedPeers.Add(thisPeer, new SubversePeer
