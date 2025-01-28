@@ -28,10 +28,13 @@ namespace SubverseIM.Headless.Services
 
         public bool UpdateConfig(SubverseConfig config)
         {
-            bool flag = this.config.Id is not null;
-            this.config.Id ??= ObjectId.NewObjectId();
-            this.config.BootstrapperUriList = config.BootstrapperUriList;
-            return flag;
+            lock (config)
+            {
+                bool flag = this.config.Id is not null;
+                this.config.Id ??= ObjectId.NewObjectId();
+                this.config.BootstrapperUriList = config.BootstrapperUriList;
+                return flag;
+            }
         }
 
         public IEnumerable<SubverseContact> GetContacts()
@@ -265,7 +268,7 @@ namespace SubverseIM.Headless.Services
                     stream.Position = 0;
                     return true;
                 }
-                else 
+                else
                 {
                     return false;
                 }
@@ -314,9 +317,9 @@ namespace SubverseIM.Headless.Services
                         torrents.Clear();
                     }
 
-                    lock (fileStreams) 
+                    lock (fileStreams)
                     {
-                        foreach ((string _, Stream s) in fileStreams) 
+                        foreach ((string _, Stream s) in fileStreams)
                         {
                             s.Dispose();
                         }
