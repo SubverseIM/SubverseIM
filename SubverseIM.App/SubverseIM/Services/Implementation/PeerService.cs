@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Implementation
 {
-    public class PeerService : IPeerService, IInjectable, IDisposable
+    public class PeerService : IConfigurationService, IMessageService, IPeerService, IInjectable, IDisposable
     {
         private const int MAGIC_PORT_NUM = 6_03_03;
 
@@ -93,43 +93,7 @@ namespace SubverseIM.Services.Implementation
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
         }
 
-        private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
-        {
-            if (dbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? publicKeyStream) &&
-                dbService.TryGetReadStream(PRIVATE_KEY_PATH, out Stream? privateKeyStream))
-            {
-                return (publicKeyStream, privateKeyStream);
-            }
-            else
-            {
-                publicKeyStream = new MemoryStream();
-                privateKeyStream = new MemoryStream();
-
-                using (PGP pgp = new())
-                {
-                    pgp.GenerateKey(
-                        publicKeyStream,
-                        privateKeyStream,
-                        password: MAGIC_SECRET_PASSWORD
-                        );
-                }
-
-                using (Stream publicKeyStoreStream = dbService.CreateWriteStream(PUBLIC_KEY_PATH))
-                using (Stream privateKeyStoreStream = dbService.CreateWriteStream(PRIVATE_KEY_PATH))
-                {
-                    publicKeyStream.Position = 0;
-                    publicKeyStream.CopyTo(publicKeyStoreStream);
-
-                    privateKeyStream.Position = 0;
-                    privateKeyStream.CopyTo(privateKeyStoreStream);
-                }
-
-                publicKeyStream.Position = 0;
-                privateKeyStream.Position = 0;
-
-                return (publicKeyStream, privateKeyStream);
-            }
-        }
+        #region Bootstrapper client methods
 
         private async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer, CancellationToken cancellationToken = default)
         {
@@ -247,6 +211,22 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
+        public async Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken)
+        {
+            IServiceManager serviceManager = await serviceManagerTcs.Task;
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+
+            SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
+            string inviteId = await http.GetFromJsonAsync<string>(new Uri($"{DEFAULT_BOOTSTRAPPER_ROOT}/invite?p={thisPeer}")) ??
+                throw new InvalidOperationException("Failed to resolve inviteUri!");
+
+            await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
+        }
+
+        #endregion
+
+        #region DHT client methods
+
         private void DhtPeersFound(object? sender, PeersFoundEventArgs e)
         {
             TaskCompletionSource<IList<PeerInfo>>? tcs;
@@ -257,6 +237,10 @@ namespace SubverseIM.Services.Implementation
 
             tcs.TrySetResult(e.Peers);
         }
+
+        #endregion
+
+        #region SIP client methods
 
         private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
         {
@@ -421,181 +405,9 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
-        public async Task InjectAsync(IServiceManager serviceManager)
-        {
-            // DI container init
+        #endregion
 
-            serviceManagerTcs.SetResult(serviceManager);
-            serviceManager.GetOrRegister(nativeService);
-
-            // Torrent init
-
-            Factories factories = Factories.Default
-                .WithDhtCreator(() =>
-                {
-                    var engine = new DhtEngine();
-                    dhtEngineTcs.SetResult(engine);
-                    return engine;
-                })
-                .WithDhtListenerCreator(endPoint =>
-                {
-                    var listener = new DhtListener(endPoint);
-                    dhtListenerTcs.SetResult(listener);
-                    return listener;
-                })
-                .WithPortForwarderCreator(() =>
-                {
-                    var portForwarder = new MonoNatPortForwarder();
-                    portForwarderTcs.SetResult(portForwarder);
-                    return portForwarder;
-                });
-            string cacheDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent");
-            serviceManager.GetOrRegister<ITorrentService>(
-                new TorrentService(serviceManager, new EngineSettingsBuilder
-                { CacheDirectory = cacheDirPath, UsePartialFiles = true }.ToSettings(), factories
-                ));
-
-            // DB init
-
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-
-            SubverseConfig config = dbService.GetConfig() ?? new SubverseConfig
-            { BootstrapperUriList = [DEFAULT_BOOTSTRAPPER_ROOT] };
-            configTcs.SetResult(config);
-
-            (Stream publicKeyStream, Stream privateKeyStream) =
-                GenerateKeysIfNone(dbService);
-            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, MAGIC_SECRET_PASSWORD);
-
-            publicKeyStream.Dispose();
-            privateKeyStream.Dispose();
-
-            // Routing init
-
-            SubversePeerId thisPeer = new(myKeys.PublicKey.GetFingerprint());
-            thisPeerTcs.SetResult(thisPeer);
-
-            lock (CachedPeers)
-            {
-                CachedPeers.Add(thisPeer, new SubversePeer
-                {
-                    OtherPeer = thisPeer,
-                    KeyContainer = myKeys
-                });
-            }
-
-            // DB final init
-
-            dbService.GetMessagesWithPeersOnTopic([thisPeer], null);
-        }
-
-        public async Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
-        {
-            SubverseConfig config = await configTcs.Task;
-
-            IDhtEngine dhtEngine = await dhtEngineTcs.Task;
-            IDhtListener dhtListener = await dhtListenerTcs.Task;
-            IPortForwarder portForwarder = await portForwarderTcs.Task;
-
-            IServiceManager serviceManager = await serviceManagerTcs.Task;
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-
-            // Begin listening for SIP traffic
-            LocalEndPoint = sipChannel.ListeningEndPoint;
-
-            sipTransport.SIPTransportRequestReceived += SIPTransportRequestReceived;
-            sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
-            sipTransport.AddSIPChannel(sipChannel);
-
-            // (Re)initialize DHT client
-            dhtEngine.PeersFound += DhtPeersFound;
-            await dhtEngine.SetListenerAsync(dhtListener);
-            using (MemoryStream bufferStream = new())
-            {
-                if (dbService.TryGetReadStream(NODES_LIST_PATH, out Stream? cacheStream))
-                {
-                    await cacheStream.CopyToAsync(bufferStream);
-                    await dhtEngine.StartAsync(bufferStream.ToArray());
-                }
-                else
-                {
-                    await dhtEngine.StartAsync();
-                }
-
-                cacheStream?.Dispose();
-            }
-
-            if (dbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? pkStream))
-            {
-                foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
-                {
-                    using (pkStream)
-                    using (StreamContent pkStreamContent = new(pkStream)
-                    { Headers = { ContentType = new("application/pgp-keys") } })
-                    {
-                        await http.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent, cancellationToken);
-                    }
-                }
-            }
-
-
-            // Forward SIP ports
-            await portForwarder.StartAsync(cancellationToken);
-
-            int portNum, retryCount = 0;
-            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
-            for (portNum = MAGIC_PORT_NUM; retryCount++ < 3 && mapping is null; portNum++)
-            {
-                if (!portForwarder.Active) break;
-
-                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, portNum));
-                await timer.WaitForNextTickAsync();
-
-                mapping = portForwarder.Mappings.Created.SingleOrDefault();
-            }
-
-            // Perform synchronization activities
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                SubversePeerId[] peers;
-                lock (CachedPeers)
-                {
-                    peers = CachedPeers.Keys.ToArray();
-                }
-
-                foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
-                {
-                    if (await SynchronizePeersAsync(bootstrapperUri, cancellationToken))
-                    {
-                        await timer.WaitForNextTickAsync(cancellationToken);
-                    }
-
-                    foreach (SubversePeerId otherPeer in peers)
-                    {
-                        if (await SynchronizePeersAsync(bootstrapperUri, otherPeer, cancellationToken))
-                        {
-                            await timer.WaitForNextTickAsync(cancellationToken);
-                        }
-                    }
-                }
-
-                foreach (SubversePeerId otherPeer in peers)
-                {
-                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()),
-                        mapping?.PublicPort ?? portNum);
-                }
-            }
-
-            // Shutdown all network traffic
-            sipTransport.Shutdown();
-            await dhtEngine.StopAsync();
-            await portForwarder.StopAsync(default);
-        }
-
-        public async Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default)
-        {
-            return await thisPeerTcs.Task.WaitAsync(cancellationToken);
-        }
+        #region IConfigurationService API
 
         public async Task<SubverseConfig> GetConfigAsync(CancellationToken cancellationToken = default)
         {
@@ -612,6 +424,10 @@ namespace SubverseIM.Services.Implementation
 
             return true;
         }
+
+        #endregion
+
+        #region IMessageService API
 
         public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
@@ -702,17 +518,230 @@ namespace SubverseIM.Services.Implementation
             await Task.WhenAll(sendTasks);
         }
 
-        public async Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken)
+        #endregion
+
+        #region IPeerService API
+
+        public async Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default)
         {
-            IServiceManager serviceManager = await serviceManagerTcs.Task;
-            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
-
-            SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
-            string inviteId = await http.GetFromJsonAsync<string>(new Uri($"{DEFAULT_BOOTSTRAPPER_ROOT}/invite?p={thisPeer}")) ??
-                throw new InvalidOperationException("Failed to resolve inviteUri!");
-
-            await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
+            return await thisPeerTcs.Task.WaitAsync(cancellationToken);
         }
+
+        public async Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
+        {
+            SubverseConfig config = await configTcs.Task;
+
+            IDhtEngine dhtEngine = await dhtEngineTcs.Task;
+            IDhtListener dhtListener = await dhtListenerTcs.Task;
+            IPortForwarder portForwarder = await portForwarderTcs.Task;
+
+            IServiceManager serviceManager = await serviceManagerTcs.Task;
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+
+            // Begin listening for SIP traffic
+            LocalEndPoint = sipChannel.ListeningEndPoint;
+            sipTransport.SIPTransportRequestReceived += SIPTransportRequestReceived;
+            sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
+            sipTransport.AddSIPChannel(sipChannel);
+
+            // (Re)initialize DHT client
+            dhtEngine.PeersFound += DhtPeersFound;
+            await dhtEngine.SetListenerAsync(dhtListener);
+            using (MemoryStream bufferStream = new())
+            {
+                if (dbService.TryGetReadStream(NODES_LIST_PATH, out Stream? cacheStream))
+                {
+                    await cacheStream.CopyToAsync(bufferStream);
+                    await dhtEngine.StartAsync(bufferStream.ToArray());
+                }
+                else
+                {
+                    await dhtEngine.StartAsync();
+                }
+
+                cacheStream?.Dispose();
+            }
+
+            // Announce public key on bootstrapper
+            if (dbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? pkStream))
+            {
+                foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
+                {
+                    using (pkStream)
+                    using (StreamContent pkStreamContent = new(pkStream)
+                    { Headers = { ContentType = new("application/pgp-keys") } })
+                    {
+                        await http.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent, cancellationToken);
+                    }
+                }
+            }
+
+            // Forward SIP ports
+            await portForwarder.StartAsync(cancellationToken);
+
+            int portNum, retryCount = 0;
+            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
+            for (portNum = MAGIC_PORT_NUM; retryCount++ < 3 && mapping is null; portNum++)
+            {
+                if (!portForwarder.Active) break;
+
+                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, LocalEndPoint.Port, portNum));
+                await timer.WaitForNextTickAsync();
+
+                mapping = portForwarder.Mappings.Created.SingleOrDefault();
+            }
+
+            // Perform synchronization activities
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                SubversePeerId[] peers;
+                lock (CachedPeers)
+                {
+                    peers = CachedPeers.Keys.ToArray();
+                }
+
+                foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
+                {
+                    if (await SynchronizePeersAsync(bootstrapperUri, cancellationToken))
+                    {
+                        await timer.WaitForNextTickAsync(cancellationToken);
+                    }
+
+                    foreach (SubversePeerId otherPeer in peers)
+                    {
+                        if (await SynchronizePeersAsync(bootstrapperUri, otherPeer, cancellationToken))
+                        {
+                            await timer.WaitForNextTickAsync(cancellationToken);
+                        }
+                    }
+                }
+
+                foreach (SubversePeerId otherPeer in peers)
+                {
+                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()),
+                        mapping?.PublicPort ?? portNum);
+                }
+            }
+
+            // Shutdown all network traffic
+            sipTransport.Shutdown();
+            await dhtEngine.StopAsync();
+            await portForwarder.StopAsync(default);
+        }
+
+        #endregion
+
+        #region IInjectable API
+
+        private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
+        {
+            if (dbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? publicKeyStream) &&
+                dbService.TryGetReadStream(PRIVATE_KEY_PATH, out Stream? privateKeyStream))
+            {
+                return (publicKeyStream, privateKeyStream);
+            }
+            else
+            {
+                publicKeyStream = new MemoryStream();
+                privateKeyStream = new MemoryStream();
+
+                using (PGP pgp = new())
+                {
+                    pgp.GenerateKey(
+                        publicKeyStream,
+                        privateKeyStream,
+                        password: MAGIC_SECRET_PASSWORD
+                        );
+                }
+
+                using (Stream publicKeyStoreStream = dbService.CreateWriteStream(PUBLIC_KEY_PATH))
+                using (Stream privateKeyStoreStream = dbService.CreateWriteStream(PRIVATE_KEY_PATH))
+                {
+                    publicKeyStream.Position = 0;
+                    publicKeyStream.CopyTo(publicKeyStoreStream);
+
+                    privateKeyStream.Position = 0;
+                    privateKeyStream.CopyTo(privateKeyStoreStream);
+                }
+
+                publicKeyStream.Position = 0;
+                privateKeyStream.Position = 0;
+
+                return (publicKeyStream, privateKeyStream);
+            }
+        }
+
+        public async Task InjectAsync(IServiceManager serviceManager)
+        {
+            // DI container init
+
+            serviceManagerTcs.SetResult(serviceManager);
+            serviceManager.GetOrRegister(nativeService);
+
+            // Torrent init
+
+            Factories factories = Factories.Default
+                .WithDhtCreator(() =>
+                {
+                    var engine = new DhtEngine();
+                    dhtEngineTcs.SetResult(engine);
+                    return engine;
+                })
+                .WithDhtListenerCreator(endPoint =>
+                {
+                    var listener = new DhtListener(endPoint);
+                    dhtListenerTcs.SetResult(listener);
+                    return listener;
+                })
+                .WithPortForwarderCreator(() =>
+                {
+                    var portForwarder = new MonoNatPortForwarder();
+                    portForwarderTcs.SetResult(portForwarder);
+                    return portForwarder;
+                });
+            string cacheDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent");
+            serviceManager.GetOrRegister<ITorrentService>(
+                new TorrentService(serviceManager, new EngineSettingsBuilder
+                { CacheDirectory = cacheDirPath, UsePartialFiles = true }.ToSettings(), factories
+                ));
+
+            // DB init
+
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+
+            SubverseConfig config = dbService.GetConfig() ?? new SubverseConfig
+            { BootstrapperUriList = [DEFAULT_BOOTSTRAPPER_ROOT] };
+            configTcs.SetResult(config);
+
+            (Stream publicKeyStream, Stream privateKeyStream) =
+                GenerateKeysIfNone(dbService);
+            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, MAGIC_SECRET_PASSWORD);
+
+            publicKeyStream.Dispose();
+            privateKeyStream.Dispose();
+
+            // Routing init
+
+            SubversePeerId thisPeer = new(myKeys.PublicKey.GetFingerprint());
+            thisPeerTcs.SetResult(thisPeer);
+
+            lock (CachedPeers)
+            {
+                CachedPeers.Add(thisPeer, new SubversePeer
+                {
+                    OtherPeer = thisPeer,
+                    KeyContainer = myKeys
+                });
+            }
+
+            // DB final init
+
+            dbService.GetMessagesWithPeersOnTopic([thisPeer], null);
+        }
+
+        #endregion
+
+        #region IDisposable API
 
         private bool disposedValue;
 
@@ -740,5 +769,7 @@ namespace SubverseIM.Services.Implementation
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+
+        #endregion
     }
 }

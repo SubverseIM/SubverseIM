@@ -20,14 +20,6 @@ namespace SubverseIM.Services
 
         Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default);
 
-        Task<SubverseConfig> GetConfigAsync(CancellationToken cancellationToken = default);
-
-        Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default);
-
-        Task<bool> PersistConfigAsync(CancellationToken cancellationToken = default);
-
-        Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default);
-
         Task SendInviteAsync(Visual? sender = null, CancellationToken cancellationToken = default);
     }
 }
