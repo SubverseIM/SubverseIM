@@ -175,7 +175,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         wrappedPeerService = new(serviceManager, application);
         serviceManager.GetOrRegister<IPeerService>(
-            (PeerService)wrappedPeerService
+            (BootstrapperService)wrappedPeerService
             );
         UNUserNotificationCenter.Current.Delegate = wrappedPeerService;
 

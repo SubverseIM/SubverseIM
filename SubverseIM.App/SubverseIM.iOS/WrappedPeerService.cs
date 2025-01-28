@@ -26,13 +26,13 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
 
     private readonly UIApplication? appInstance;
 
-    private readonly PeerService peerService;
+    private readonly BootstrapperService peerService;
 
     public WrappedPeerService(IServiceManager serviceManager, UIApplication? appInstance)
     {
         this.serviceManager = serviceManager;
         this.appInstance = appInstance;
-        peerService = new PeerService(this);
+        peerService = new BootstrapperService(this);
     }
 
     public void ClearNotification(SubverseMessage message) { }
@@ -155,7 +155,7 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
             UNNotificationPresentationOptions.Sound);
     }
 
-    public static implicit operator PeerService(WrappedPeerService instance)
+    public static implicit operator BootstrapperService(WrappedPeerService instance)
     {
         return instance.peerService;
     }

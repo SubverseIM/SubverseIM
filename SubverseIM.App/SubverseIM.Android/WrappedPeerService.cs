@@ -38,7 +38,7 @@ namespace SubverseIM.Android
 
         public WrappedPeerService()
         {
-            peerService = new PeerService(this);
+            peerService = new BootstrapperService(this);
             notificationMap = new();
         }
 
