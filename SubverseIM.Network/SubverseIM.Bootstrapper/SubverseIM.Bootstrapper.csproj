@@ -15,7 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\SubverseIM\SubverseIM.csproj" />
+	  <ProjectReference Include="..\..\SubverseIM.App\SubverseIM\SubverseIM.csproj" />
 	</ItemGroup>
 
 </Project>
