@@ -117,7 +117,7 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
-        private async Task<bool> SynchronizePeersAsync(Uri bootstrapperUri, CancellationToken cancellationToken = default)
+        private async Task<bool> SynchronizePeersAsync(Uri bootstrapperUri, CancellationToken cancellationToken)
         {
             IDhtEngine dhtEngine = await dhtEngineTcs.Task;
             IServiceManager serviceManager = await serviceManagerTcs.Task;
@@ -162,7 +162,7 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
-        private async Task<bool> SynchronizePeersAsync(Uri bootstrapperUri, SubversePeerId peerId, CancellationToken cancellationToken = default)
+        private async Task<bool> SynchronizePeersAsync(Uri bootstrapperUri, SubversePeerId peerId, CancellationToken cancellationToken)
         {
             IDhtEngine dhtEngine = await dhtEngineTcs.Task;
             try
@@ -352,7 +352,7 @@ namespace SubverseIM.Services.Implementation
             return peerKeys;
         }
 
-        public async Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken = default)
+        public async Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken)
         {
             IServiceManager serviceManager = await serviceManagerTcs.Task;
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();

@@ -100,8 +100,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task InviteCommand(Visual? sender) 
         {
-            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
-            await peerService.SendInviteAsync(sender);
+            IBootstrapperService bootstrapperService = await ServiceManager.GetWithAwaitAsync<IBootstrapperService>();
+            await bootstrapperService.SendInviteAsync(sender);
         }
 
         public async Task MessageCommand() 

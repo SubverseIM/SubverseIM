@@ -25,7 +25,7 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task InitializeAsync()
         {
-            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
+            IConfigurationService peerService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>();
             SubverseConfig config = await peerService.GetConfigAsync();
 
             BootstrapperUriList.Clear();
@@ -58,7 +58,7 @@ namespace SubverseIM.ViewModels.Pages
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
 
-            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
+            IConfigurationService peerService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>();
             SubverseConfig config = await peerService.GetConfigAsync();
 
             try

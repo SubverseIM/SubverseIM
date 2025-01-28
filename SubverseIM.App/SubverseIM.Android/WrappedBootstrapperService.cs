@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 namespace SubverseIM.Android
 {
     [Service(ForegroundServiceType = ForegroundService.TypeSpecialUse)]
-    public class WrappedPeerService : Service, INativeService
+    public class WrappedBootstrapperService : Service, INativeService
     {
         private const string MSG_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.UserMessage";
 
@@ -32,19 +32,19 @@ namespace SubverseIM.Android
 
         public const string EXTRA_TOPIC_ID = "com.ChosenFewSoftware.SubverseIM.MessageTopic";
 
-        private readonly IPeerService peerService;
+        private readonly IBootstrapperService bootstrapperService;
 
         private readonly Dictionary<int, NotificationCompat.MessagingStyle> notificationMap;
 
-        public WrappedPeerService()
+        public WrappedBootstrapperService()
         {
-            peerService = new BootstrapperService(this);
+            bootstrapperService = new BootstrapperService(this);
             notificationMap = new();
         }
 
         public override IBinder? OnBind(Intent? intent)
         {
-            return new ServiceBinder<IPeerService>(peerService);
+            return new ServiceBinder<IBootstrapperService>(bootstrapperService);
         }
 
         public override bool OnUnbind(Intent? intent)
