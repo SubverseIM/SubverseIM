@@ -1,6 +1,6 @@
 ﻿using SubverseIM.Models;
 using SubverseIM.Services;
-using SubverseIM.Tests;
+using SubverseIM.Services.Faux;
 
 namespace SubverseIM.Headless
 {

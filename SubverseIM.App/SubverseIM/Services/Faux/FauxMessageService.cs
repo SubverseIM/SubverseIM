@@ -1,6 +1,5 @@
 ﻿using SIPSorcery.SIP;
 using SubverseIM.Models;
-using SubverseIM.Services;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +7,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SubverseIM.Tests
+namespace SubverseIM.Services.Faux
 {
     internal class FauxMessageService : IMessageService, IDisposable
     {

@@ -2,7 +2,6 @@
 using MonoTorrent;
 using PgpCore;
 using SubverseIM.Models;
-using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SubverseIM.Tests
+namespace SubverseIM.Services.Faux
 {
     public class FauxBootstrapperService : IBootstrapperService, IInjectable, IDisposable
     {
