@@ -1,5 +1,4 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Platform.Storage;
 using LiteDB;
 using ReactiveUI;
 using SIPSorcery.SIP;
@@ -195,7 +194,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     bool isCurrentPeer = false;
                     if (contact is not null && currentPage is MessagePageViewModel vm &&
                         (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == contact.OtherPeer) &&
-                        message.TopicName != "#system" && (message.TopicName == vm.SendMessageTopicName ||
+                        message.TopicName != "#system" && (message.WasDecrypted ?? true) && (message.TopicName == vm.SendMessageTopicName ||
                         (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(vm.SendMessageTopicName))
                         )))
                     {
@@ -214,7 +213,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         vm.MessageList.Insert(0, messageViewModel);
                     }
 
-                    if (launcherService.NotificationsAllowed && (!launcherService.IsInForeground || launcherService.IsAccessibilityEnabled || !isCurrentPeer))
+                    if (launcherService.NotificationsAllowed && 
+                        (!launcherService.IsInForeground || 
+                        launcherService.IsAccessibilityEnabled || 
+                        !isCurrentPeer) && (message.WasDecrypted ?? true))
                     {
                         await nativeService.SendPushNotificationAsync(serviceManager, message);
                     }
