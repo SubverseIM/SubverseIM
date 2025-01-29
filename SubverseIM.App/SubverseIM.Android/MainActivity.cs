@@ -69,7 +69,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     private readonly ServiceManager serviceManager;
 
-    private readonly ServiceConnection<IPeerService> peerServiceConn;
+    private readonly ServiceConnection<IBootstrapperService> peerServiceConn;
 
     private readonly CancellationTokenSource cancellationTokenSource;
 
