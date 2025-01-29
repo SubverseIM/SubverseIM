@@ -143,7 +143,6 @@ namespace SubverseIM.Services.Implementation
         public async Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            IPeerService peerService = await serviceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
 
             string cacheDirPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"

@@ -134,10 +134,11 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
+            IBootstrapperService bootstrapperService = await ServiceManager.GetWithAwaitAsync<IBootstrapperService>(cancellationToken);
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
-            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
+            IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>(cancellationToken);
 
-            SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
+            SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
 
             MessageList.Clear();
 
@@ -212,10 +213,11 @@ namespace SubverseIM.ViewModels.Pages
 
             if (string.IsNullOrEmpty(messageText)) return;
 
+            IBootstrapperService peerService = await ServiceManager.GetWithAwaitAsync<IBootstrapperService>();
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
             INativeService nativeService = await ServiceManager.GetWithAwaitAsync<INativeService>();
+            IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>();
 
-            IPeerService peerService = await ServiceManager.GetWithAwaitAsync<IPeerService>();
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync();
             SubverseContact? thisContact = dbService.GetContact(thisPeer);
 
@@ -254,7 +256,7 @@ namespace SubverseIM.ViewModels.Pages
                 dbService.InsertOrUpdateItem(contact);
 
                 _ = nativeService.RunInBackgroundAsync(
-                    ct => peerService.SendMessageAsync(message, ct)
+                    ct => messageService.SendMessageAsync(message, ct)
                     );
             }
         }

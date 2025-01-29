@@ -69,7 +69,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     private readonly ServiceManager serviceManager;
 
-    private readonly ServiceConnection<IPeerService> peerServiceConn;
+    private readonly ServiceConnection<IBootstrapperService> peerServiceConn;
 
     private readonly CancellationTokenSource cancellationTokenSource;
 
@@ -127,7 +127,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
         if (!peerServiceConn.IsConnected)
         {
-            Intent serviceIntent = new Intent(this, typeof(WrappedPeerService));
+            Intent serviceIntent = new Intent(this, typeof(WrappedBootstrapperService));
 
             BindService(serviceIntent, peerServiceConn, Bind.AutoCreate);
             StartService(serviceIntent);
@@ -145,7 +145,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         if (peerServiceConn.IsConnected)
         {
             UnbindService(peerServiceConn);
-            StopService(new Intent(this, typeof(WrappedPeerService)));
+            StopService(new Intent(this, typeof(WrappedBootstrapperService)));
         }
 
         System.Environment.Exit(0);
@@ -195,11 +195,11 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
         IEnumerable<SubverseContact>? contacts = Intent?
-                .GetStringArrayExtra(WrappedPeerService.EXTRA_PARTICIPANTS_ID)?
+                .GetStringArrayExtra(WrappedBootstrapperService.EXTRA_PARTICIPANTS_ID)?
                 .Select(x => dbService.GetContact(SubversePeerId.FromString(x)))
                 .Where(x => x is not null)
                 .Cast<SubverseContact>();
-        string? topicName = Intent?.GetStringExtra(WrappedPeerService.EXTRA_TOPIC_ID);
+        string? topicName = Intent?.GetStringExtra(WrappedBootstrapperService.EXTRA_TOPIC_ID);
 
         if (Intent?.DataString is not null)
         {
