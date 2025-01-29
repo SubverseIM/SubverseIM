@@ -99,17 +99,18 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     private async Task RunAsync(CancellationToken cancellationToken)
     {
+        IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
-        IPeerService peerService = await serviceManager.GetWithAwaitAsync<IPeerService>(cancellationToken);
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
+        IMessageService messageService = await serviceManager.GetWithAwaitAsync<IMessageService>(cancellationToken);
         INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>(cancellationToken);
 
-        SubversePeerId thisPeer = await peerService.GetPeerIdAsync(cancellationToken);
+        SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
         SubverseContact? thisContact = dbService.GetContact(thisPeer);
 
         List<Task> subTasks =
         [
-            Task.Run(Task? () => peerService.BootstrapSelfAsync(cancellationToken)),
+            Task.Run(Task? () => bootstrapperService.BootstrapSelfAsync(cancellationToken)),
             Task.Run(torrentPage.InitializeAsync),
         ];
 
@@ -119,15 +120,15 @@ public class MainViewModel : ViewModelBase, IFrontendService
             subTasks.Add(Task.Run(async Task? () =>
             {
                 await Task.Delay(++unsentCount * 333);
-                await peerService.SendMessageAsync(message, cancellationToken);
+                await messageService.SendMessageAsync(message, cancellationToken);
             }));
         }
 
-        lock (peerService.CachedPeers)
+        lock (messageService.CachedPeers)
         {
             foreach (SubverseContact contact in dbService.GetContacts())
             {
-                peerService.CachedPeers.TryAdd(
+                messageService.CachedPeers.TryAdd(
                     contact.OtherPeer,
                     new SubversePeer
                     {
@@ -153,7 +154,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 subTasks.Add(Task.Run(async Task? () =>
                 {
                     await Task.Delay(++joinCount * 333);
-                    await peerService.SendMessageAsync(message, cancellationToken);
+                    await messageService.SendMessageAsync(message, cancellationToken);
                 }));
             }
         }
@@ -164,7 +165,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                SubverseMessage message = await peerService.ReceiveMessageAsync(cancellationToken);
+                SubverseMessage message = await messageService.ReceiveMessageAsync(cancellationToken);
                 SubverseContact contact = dbService.GetContact(message.Sender) ??
                     new SubverseContact()
                     {
@@ -177,9 +178,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                 await contactPage.LoadContactsAsync(cancellationToken);
 
-                lock (peerService.CachedPeers)
+                lock (messageService.CachedPeers)
                 {
-                    peerService.CachedPeers.TryAdd(
+                    messageService.CachedPeers.TryAdd(
                         contact.OtherPeer,
                         new SubversePeer
                         {

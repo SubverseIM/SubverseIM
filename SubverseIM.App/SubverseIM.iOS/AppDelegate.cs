@@ -28,7 +28,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     private ServiceManager? serviceManager;
 
-    private WrappedPeerService? wrappedPeerService;
+    private WrappedBootstrapperService? wrappedBootstrapperService;
 
     private Uri? launchedUri;
 
@@ -173,11 +173,11 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
             );
 
-        wrappedPeerService = new(serviceManager, application);
-        serviceManager.GetOrRegister<IPeerService>(
-            (PeerService)wrappedPeerService
+        wrappedBootstrapperService = new(serviceManager, application);
+        serviceManager.GetOrRegister<IBootstrapperService>(
+            (BootstrapperService)wrappedBootstrapperService
             );
-        UNUserNotificationCenter.Current.Delegate = wrappedPeerService;
+        UNUserNotificationCenter.Current.Delegate = wrappedBootstrapperService;
 
         BGTaskScheduler.Shared.Register(BG_TASK_ID, null, task =>
         {

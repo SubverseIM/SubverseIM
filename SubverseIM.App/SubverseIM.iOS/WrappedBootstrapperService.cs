@@ -14,7 +14,7 @@ using System.Collections.Immutable;
 
 namespace SubverseIM.iOS;
 
-public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeService
+public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INativeService
 {
     public const string EXTRA_PARTICIPANTS_ID = "com.ChosenFewSoftware.SubverseIM.ConversationParticipants";
 
@@ -26,13 +26,13 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
 
     private readonly UIApplication? appInstance;
 
-    private readonly PeerService peerService;
+    private readonly BootstrapperService bootstrapperService;
 
-    public WrappedPeerService(IServiceManager serviceManager, UIApplication? appInstance)
+    public WrappedBootstrapperService(IServiceManager serviceManager, UIApplication? appInstance)
     {
         this.serviceManager = serviceManager;
         this.appInstance = appInstance;
-        peerService = new PeerService(this);
+        bootstrapperService = new BootstrapperService(this);
     }
 
     public void ClearNotification(SubverseMessage message) { }
@@ -155,8 +155,8 @@ public class WrappedPeerService : UNUserNotificationCenterDelegate, INativeServi
             UNNotificationPresentationOptions.Sound);
     }
 
-    public static implicit operator PeerService(WrappedPeerService instance)
+    public static implicit operator BootstrapperService(WrappedBootstrapperService instance)
     {
-        return instance.peerService;
+        return instance.bootstrapperService;
     }
 }
