@@ -35,7 +35,7 @@ public class MessageService : IMessageService, IDisposable
         callIdMap = new();
         messagesBag = new();
 
-        sipChannel = new SIPUDPChannel(IPAddress.Any, BootstrapperService.DEFAULT_PORT_NUMBER);
+        sipChannel = new SIPUDPChannel(IPAddress.Any, IBootstrapperService.DEFAULT_PORT_NUMBER);
         sipTransport = new SIPTransport(stateless: true);
 
         this.serviceManager = serviceManager;

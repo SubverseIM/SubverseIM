@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Headless;
-using SubverseIM.Headless.Services;
 using SubverseIM.Services;
+using SubverseIM.Services.Faux;
 using SubverseIM.Services.Implementation;
 using SubverseIM.Tests;
 
@@ -14,6 +14,7 @@ namespace SubverseIM.Tests
         {
             IServiceManager serviceManager = new ServiceManager();
             serviceManager.GetOrRegister<FauxDbService, IDbService>();
+            serviceManager.GetOrRegister<FauxBootstrapperService, IBootstrapperService>();
             return serviceManager;
         }
 

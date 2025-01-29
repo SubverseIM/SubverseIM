@@ -1,10 +1,13 @@
 ﻿using LiteDB;
 using SubverseIM.Models;
-using SubverseIM.Services;
+using System;
 using System.Collections.Frozen;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
 
-namespace SubverseIM.Headless.Services
+namespace SubverseIM.Services.Faux
 {
     public class FauxDbService : IDbService
     {
