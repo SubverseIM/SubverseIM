@@ -60,6 +60,7 @@ public class MessageService : IMessageService, IDisposable
         string toName = sipRequest.Header.To.ToName;
 
         string? messageContent;
+        bool wasDecrypted = false;
         try
         {
             using (PGP pgp = new PGP(await bootstrapperService.GetPeerKeysAsync(fromPeer)))
@@ -68,6 +69,7 @@ public class MessageService : IMessageService, IDisposable
             {
                 await pgp.DecryptAndVerifyAsync(encryptedMessageStream, decryptedMessageStream);
                 messageContent = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
+                wasDecrypted = true;
             }
         }
         catch
@@ -110,7 +112,7 @@ public class MessageService : IMessageService, IDisposable
         peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
 
         bool hasReachedDestination = toPeer == await bootstrapperService.GetPeerIdAsync();
-        message.WasDecrypted = message.WasDelivered = hasReachedDestination;
+        message.WasDecrypted = (message.WasDelivered = hasReachedDestination) && wasDecrypted;
         if (hasReachedDestination)
         {
             if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
