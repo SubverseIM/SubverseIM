@@ -270,6 +270,7 @@ namespace SubverseIM.Services.Implementation
             string toName = sipRequest.Header.To.ToName;
 
             string? messageContent;
+            bool didDecryptMessage = false;
             try
             {
                 using (PGP pgp = new PGP(await GetPeerKeysAsync(fromPeer)))
@@ -278,6 +279,7 @@ namespace SubverseIM.Services.Implementation
                 {
                     await pgp.DecryptAndVerifyAsync(encryptedMessageStream, decryptedMessageStream);
                     messageContent = Encoding.UTF8.GetString(decryptedMessageStream.ToArray());
+                    didDecryptMessage = true;
                 }
             }
             catch
@@ -320,7 +322,7 @@ namespace SubverseIM.Services.Implementation
             peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
 
             bool hasReachedDestination = toPeer == await GetPeerIdAsync();
-            message.WasDecrypted = message.WasDelivered = hasReachedDestination;
+            message.WasDecrypted = (message.WasDelivered = hasReachedDestination) && didDecryptMessage;
             if (hasReachedDestination)
             {
                 if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
