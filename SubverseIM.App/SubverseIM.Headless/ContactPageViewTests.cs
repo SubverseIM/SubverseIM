@@ -136,7 +136,7 @@ namespace SubverseIM.Headless
             await contactPageViewModel.OpenSettingsCommand();
 
             PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
-            Assert.IsType<ConfigPageView>(currentPageViewModel);
+            Assert.IsType<ConfigPageViewModel>(currentPageViewModel);
         }
 
         [AvaloniaFact]
@@ -149,7 +149,7 @@ namespace SubverseIM.Headless
             await contactPageViewModel.OpenFilesCommand();
 
             PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
-            Assert.IsType<TorrentPageView>(currentPageViewModel);
+            Assert.IsType<TorrentPageViewModel>(currentPageViewModel);
         }
     }
 }
