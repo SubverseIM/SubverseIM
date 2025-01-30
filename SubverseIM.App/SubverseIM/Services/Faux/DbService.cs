@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace SubverseIM.Services.Faux
 {
-    public class FauxDbService : IDbService
+    public class DbService : IDbService
     {
         private readonly SubverseConfig config = new();
 
@@ -257,7 +257,7 @@ namespace SubverseIM.Services.Faux
                         break;
                     }
                 default:
-                    throw new ArgumentException($"{nameof(FauxDbService)} does not manage a collection of type: \"{typeof(T).FullName}\"", nameof(T));
+                    throw new ArgumentException($"{nameof(DbService)} does not manage a collection of type: \"{typeof(T).FullName}\"", nameof(T));
             }
             return removedFlag;
         }

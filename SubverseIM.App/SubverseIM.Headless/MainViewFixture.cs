@@ -1,7 +1,6 @@
 using Avalonia.Controls;
 using SubverseIM.Services;
 using SubverseIM.Services.Faux;
-using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels;
 using SubverseIM.Views;
 
@@ -23,16 +22,14 @@ public class MainViewFixture : IDisposable
     {
         cts = new();
 
-        serviceManager = new ServiceManager();
-        serviceManager.GetOrRegister<FauxDbService, IDbService>();
+        serviceManager = new Services.Implementation.ServiceManager();
+        serviceManager.GetOrRegister<DbService, IDbService>();
 
-        FauxBootstrapperService bootstrapperService = new WrappedFauxBootstrapperService();
+        BootstrapperService bootstrapperService = new WrappedBootstrapperService();
         serviceManager.GetOrRegister<IBootstrapperService>(bootstrapperService);
 
         mainViewModel = new(serviceManager);
         mainView = new() { DataContext = mainViewModel };
-
-        _ = mainViewModel.RunOnceAsync(cts.Token);
     }
 
     public IServiceManager GetServiceManager() => serviceManager;
@@ -60,6 +57,7 @@ public class MainViewFixture : IDisposable
             {
                 cts.Dispose();
                 serviceManager.Dispose();
+                window?.Close();
             }
             disposedValue = true;
         }

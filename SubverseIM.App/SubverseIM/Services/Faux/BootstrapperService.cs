@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Faux
 {
-    public class FauxBootstrapperService : IBootstrapperService, IInjectable, IDisposable
+    public class BootstrapperService : IBootstrapperService, IInjectable
     {
         private readonly INativeService nativeService;
 
@@ -19,7 +19,7 @@ namespace SubverseIM.Services.Faux
 
         private readonly TaskCompletionSource<IServiceManager> serviceManagerTcs;
 
-        public FauxBootstrapperService(INativeService nativeService)
+        public BootstrapperService(INativeService nativeService)
         {
             this.nativeService = nativeService;
 
@@ -58,35 +58,11 @@ namespace SubverseIM.Services.Faux
             serviceManagerTcs.SetResult(serviceManager);
 
             serviceManager.GetOrRegister(nativeService);
-
             serviceManager.GetOrRegister<IConfigurationService>(new ConfigurationService(serviceManager));
-            serviceManager.GetOrRegister<IMessageService>(new FauxMessageService(serviceManager));
-            serviceManager.GetOrRegister<ITorrentService>(new FauxTorrentService(serviceManager));
+            serviceManager.GetOrRegister<IMessageService>(new MessageService(serviceManager));
+            serviceManager.GetOrRegister<ITorrentService>(new TorrentService(serviceManager));
 
             return Task.CompletedTask;
-        }
-
-        private bool disposedValue;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects)
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
     }
 }

@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Faux
 {
-    public class FauxTorrentService : ITorrentService
+    public class TorrentService : ITorrentService // TODO: Implement basic torrent manager with DbService as backing store
     {
         private readonly IServiceManager serviceManager;
 
-        public FauxTorrentService(IServiceManager serviceManager) 
+        public TorrentService(IServiceManager serviceManager) 
         {
             this.serviceManager = serviceManager;
         }

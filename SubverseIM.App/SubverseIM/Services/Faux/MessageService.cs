@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Faux
 {
-    internal class FauxMessageService : IMessageService, IDisposable
+    internal class MessageService : IMessageService, IDisposable
     {
         private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messageBag;
 
@@ -19,7 +19,7 @@ namespace SubverseIM.Services.Faux
 
         public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
-        public FauxMessageService(IServiceManager serviceManager)
+        public MessageService(IServiceManager serviceManager)
         {
             messageBag = new();
             this.serviceManager = serviceManager;

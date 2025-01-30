@@ -4,13 +4,13 @@ using SubverseIM.Services.Faux;
 
 namespace SubverseIM.Headless
 {
-    public class WrappedFauxBootstrapperService : INativeService
+    public class WrappedBootstrapperService : INativeService
     {
-        private readonly FauxBootstrapperService instance;
+        private readonly BootstrapperService instance;
 
-        public WrappedFauxBootstrapperService() 
+        public WrappedBootstrapperService() 
         {
-            instance = new FauxBootstrapperService(this);
+            instance = new BootstrapperService(this);
         }
 
         public async Task RunInBackgroundAsync(Func<CancellationToken, Task> taskFactory, CancellationToken cancellationToken = default)
@@ -28,7 +28,7 @@ namespace SubverseIM.Headless
 
         public void ClearNotification(SubverseMessage message) { }
 
-        public static implicit operator FauxBootstrapperService(WrappedFauxBootstrapperService wrapper) 
+        public static implicit operator BootstrapperService(WrappedBootstrapperService wrapper) 
         {
             return wrapper.instance;
         }
