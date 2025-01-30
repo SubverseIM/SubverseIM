@@ -1,7 +1,11 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 using SubverseIM.ViewModels;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Views;
@@ -40,5 +44,11 @@ public partial class MainView : UserControl
     {
         ((MainViewModel)DataContext!).CurrentPage
             .OnOrientationChanged(TopLevel.GetTopLevel(this));
+    }
+
+    public T? GetContentAs<T>()
+        where T : class
+    {
+        return contentControl.Presenter?.Child as T;
     }
 }
