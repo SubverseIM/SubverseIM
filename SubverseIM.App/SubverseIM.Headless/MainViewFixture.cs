@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using SubverseIM.Services;
 using SubverseIM.Services.Faux;
 using SubverseIM.Services.Implementation;
@@ -16,6 +17,8 @@ public class MainViewFixture : IDisposable
 
     private readonly MainView mainView;
 
+    private Window? window;
+
     public MainViewFixture()
     {
         cts = new();
@@ -32,9 +35,20 @@ public class MainViewFixture : IDisposable
         _ = mainViewModel.RunOnceAsync(cts.Token);
     }
 
+    public IServiceManager GetServiceManager() => serviceManager;
+
     public MainViewModel GetViewModel() => mainViewModel;
 
     public MainView GetView() => mainView;
+
+    public void EnsureWindowShown() 
+    {
+        if (window is null)
+        {
+            window = new() { Content = mainView };
+            window.Show();
+        }
+    }
 
     private bool disposedValue;
 

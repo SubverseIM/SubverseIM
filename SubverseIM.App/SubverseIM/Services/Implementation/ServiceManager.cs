@@ -19,6 +19,16 @@ namespace SubverseIM.Services.Implementation
             awaitMap = new();
         }
 
+        public TService? Get<TService>()
+            where TService : class
+        {
+            lock (serviceMap) 
+            {
+                serviceMap.TryGetValue(typeof(TService), out object? instance);
+                return instance as TService;
+            }
+        }
+
         public TService GetOrRegister<TImplementation, TService>(TImplementation? instance)
             where TImplementation : class, TService, new()
             where TService : class

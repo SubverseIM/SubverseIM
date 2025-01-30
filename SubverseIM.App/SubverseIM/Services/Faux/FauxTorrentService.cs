@@ -18,37 +18,39 @@ namespace SubverseIM.Services.Faux
 
         public Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync()
         {
-            throw new NotImplementedException();
+            return Task.FromResult<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>>(
+                new Dictionary<SubverseTorrent, Progress<TorrentStatus>>()
+                );
         }
 
         public Task DestroyAsync()
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public Task<bool> AddTorrentAsync(string magnetUri)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new SubverseTorrent(string.Empty));
         }
 
         public Task<bool> RemoveTorrentAsync(SubverseTorrent torrent)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
 
         public Task<Progress<TorrentStatus>?> StartAsync(SubverseTorrent torrent)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<Progress<TorrentStatus>?>(null);
         }
 
         public Task<bool> StopAsync(SubverseTorrent torrent)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(false);
         }
     }
 }

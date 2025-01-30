@@ -1,21 +1,27 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
 using SubverseIM.ViewModels;
 using System;
+using System.Threading.Tasks;
 
 namespace SubverseIM.Views;
 
 public partial class MainView : UserControl
 {
+    private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
+
+    public Task LoadTask => loadTaskSource.Task;
+
     public MainView()
     {
         InitializeComponent();
+        loadTaskSource = new();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
+        loadTaskSource.SetResult(e);
 
         TopLevel topLevel = TopLevel.GetTopLevel(this) ??
            throw new InvalidOperationException("Could not resolve TopLevel instance from control");

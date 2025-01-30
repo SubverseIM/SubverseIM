@@ -6,6 +6,9 @@ namespace SubverseIM.Services
 {
     public interface IServiceManager : IDisposable
     {
+        TService? Get<TService>()
+            where TService : class;
+
         TService GetOrRegister<TImplementation, TService>(TImplementation? instance = null) 
             where TImplementation : class, TService, new()
             where TService : class;
