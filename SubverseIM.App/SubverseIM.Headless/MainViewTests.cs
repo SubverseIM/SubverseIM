@@ -45,27 +45,36 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     }
 
     [AvaloniaFact]
-    public void ShouldStartInContactsView()
+    public async Task ShouldStartInContactsView()
     {
         fixture.EnsureWindowShown();
+
+        MainView mainView = fixture.GetView();
+        await mainView.LoadTask;
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         Assert.IsType<ContactPageViewModel>(mainViewModel.CurrentPage);
     }
 
     [AvaloniaFact]
-    public void ShouldStartWithNoPreviousView()
+    public async Task ShouldStartWithNoPreviousView()
     {
         fixture.EnsureWindowShown();
+
+        MainView mainView = fixture.GetView();
+        await mainView.LoadTask;
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         Assert.False(mainViewModel.HasPreviousView);
     }
 
     [AvaloniaFact]
-    public void ShouldNavigateToConfigView() 
+    public async Task ShouldNavigateToConfigView() 
     {
         fixture.EnsureWindowShown();
+
+        MainView mainView = fixture.GetView();
+        await mainView.LoadTask;
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         mainViewModel.NavigateConfigView();
@@ -74,9 +83,12 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     }
 
     [AvaloniaFact]
-    public void ShouldNavigateToTorrentView()
+    public async Task ShouldNavigateToTorrentView()
     {
         fixture.EnsureWindowShown();
+
+        MainView mainView = fixture.GetView();
+        await mainView.LoadTask;
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         mainViewModel.NavigateTorrentView();
