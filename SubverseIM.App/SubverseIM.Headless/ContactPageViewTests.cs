@@ -16,6 +16,8 @@ namespace SubverseIM.Headless
             this.fixture = fixture;
         }
 
+        /* TODO: Write tests for topics list */
+
         private async Task<(ContactPageView, ContactPageViewModel)> EnsureIsOnContactPageView(MessagePageViewModel? parentOrNull = null)
         {
             fixture.EnsureWindowShown();
@@ -122,6 +124,32 @@ namespace SubverseIM.Headless
             PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
 
             Assert.IsNotType<MessagePageViewModel>(currentPageViewModel);
+        }
+
+        [AvaloniaFact]
+        public async Task ShouldOpenSettingsView()
+        {
+            (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+                await EnsureIsOnContactPageView();
+            await contactPageView.LoadTask;
+
+            await contactPageViewModel.OpenSettingsCommand();
+
+            PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+            Assert.IsType<ConfigPageView>(currentPageViewModel);
+        }
+
+        [AvaloniaFact]
+        public async Task ShouldOpenFilesView()
+        {
+            (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+                await EnsureIsOnContactPageView();
+            await contactPageView.LoadTask;
+
+            await contactPageViewModel.OpenFilesCommand();
+
+            PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+            Assert.IsType<TorrentPageView>(currentPageViewModel);
         }
     }
 }
