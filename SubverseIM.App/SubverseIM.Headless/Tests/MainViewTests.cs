@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using SubverseIM.Headless.Fixtures;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels;
@@ -7,7 +8,7 @@ using SubverseIM.ViewModels.Pages;
 using SubverseIM.Views;
 using System.Security.Cryptography;
 
-namespace SubverseIM.Headless;
+namespace SubverseIM.Headless.Tests;
 
 public class MainViewTests : IClassFixture<MainViewFixture>
 {

@@ -1,14 +1,13 @@
 using Avalonia.Headless.XUnit;
-using SubverseIM.ViewModels.Pages;
+using SubverseIM.Headless.Fixtures;
+using SubverseIM.Services;
 using SubverseIM.ViewModels;
+using SubverseIM.ViewModels.Pages;
 using SubverseIM.Views;
 using SubverseIM.Views.Pages;
-using SubverseIM.Services;
 using System.Diagnostics;
-using Avalonia.Headless;
-using Avalonia.Threading;
 
-namespace SubverseIM.Headless;
+namespace SubverseIM.Headless.Tests;
 
 public class ConfigPageViewTests : IClassFixture<MainViewFixture>
 {

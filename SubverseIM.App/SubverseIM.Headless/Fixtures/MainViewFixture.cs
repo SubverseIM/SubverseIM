@@ -1,15 +1,15 @@
 using Avalonia.Controls;
 using LiteDB;
 using SIPSorcery.SIP;
+using SubverseIM.Headless.Services;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Faux;
 using SubverseIM.ViewModels;
 using SubverseIM.Views;
-using System.Diagnostics;
 using System.Security.Cryptography;
 
-namespace SubverseIM.Headless;
+namespace SubverseIM.Headless.Fixtures;
 
 public class MainViewFixture : IDisposable
 {
@@ -31,7 +31,7 @@ public class MainViewFixture : IDisposable
     {
         cts = new();
 
-        serviceManager = new Services.Implementation.ServiceManager();
+        serviceManager = new SubverseIM.Services.Implementation.ServiceManager();
 
         RegisterBootstrapperService();
         RegisterDbService();
