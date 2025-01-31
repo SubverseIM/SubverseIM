@@ -18,13 +18,20 @@ public class MainViewTests : IClassFixture<MainViewFixture>
         this.fixture = fixture;
     }
 
-    [AvaloniaFact]
-    public async Task ShouldRegisterTopLevelService() 
+    private async Task<MainView> EnsureMainViewLoaded()
     {
         fixture.EnsureWindowShown();
 
         MainView mainView = fixture.GetView();
         await mainView.LoadTask;
+
+        return mainView;
+    }
+
+    [AvaloniaFact]
+    public async Task ShouldRegisterTopLevelService() 
+    {
+        await EnsureMainViewLoaded();
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         TopLevel? topLevel = serviceManager.Get<TopLevel>();
@@ -35,10 +42,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldRegisterFrontendService()
     {
-        fixture.EnsureWindowShown();
-
-        MainView mainView = fixture.GetView();
-        await mainView.LoadTask;
+        await EnsureMainViewLoaded();
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IFrontendService? frontendService = serviceManager.Get<IFrontendService>();
@@ -49,10 +53,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldStartInContactView()
     {
-        fixture.EnsureWindowShown();
-
-        MainView mainView = fixture.GetView();
-        await mainView.LoadTask;
+        await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
@@ -63,10 +64,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldNavigateToConfigView() 
     {
-        fixture.EnsureWindowShown();
-
-        MainView mainView = fixture.GetView();
-        await mainView.LoadTask;
+        await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         mainViewModel.NavigateConfigView();
@@ -77,10 +75,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldNavigateToContactView()
     {
-        fixture.EnsureWindowShown();
-
-        MainView mainView = fixture.GetView();
-        await mainView.LoadTask;
+        await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         mainViewModel.NavigateContactView(parentOrNull: null);
@@ -91,10 +86,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldNavigateToCreateContactView()
     {
-        fixture.EnsureWindowShown();
-
-        MainView mainView = fixture.GetView();
-        await mainView.LoadTask;
+        await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         mainViewModel.NavigateContactView(new SubverseContact 
@@ -108,10 +100,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldNavigateToMessageView()
     {
-        fixture.EnsureWindowShown();
-
-        MainView mainView = fixture.GetView();
-        await mainView.LoadTask;
+        await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         mainViewModel.NavigateMessageView([], null);
@@ -122,10 +111,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldNavigateToTorrentView()
     {
-        fixture.EnsureWindowShown();
-
-        MainView mainView = fixture.GetView();
-        await mainView.LoadTask;
+        await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         mainViewModel.NavigateTorrentView();

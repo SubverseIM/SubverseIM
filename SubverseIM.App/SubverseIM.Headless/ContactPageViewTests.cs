@@ -16,46 +16,77 @@ namespace SubverseIM.Headless
             this.fixture = fixture;
         }
 
-        /* TODO: Write tests for topics list */
-
-        private async Task<(ContactPageView, ContactPageViewModel)> EnsureIsOnContactPageView(MessagePageViewModel? parentOrNull = null)
+        private async Task<MainView> EnsureMainViewLoaded()
         {
             fixture.EnsureWindowShown();
 
             MainView mainView = fixture.GetView();
             await mainView.LoadTask;
 
+            return mainView;
+        }
+
+        private async Task<(ContactPageView, ContactPageViewModel)> EnsureIsOnContactPageView(MessagePageViewModel? parentOrNull = null)
+        {
+            MainView mainView = await EnsureMainViewLoaded();
+
             MainViewModel mainViewModel = fixture.GetViewModel();
             while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
 
             mainViewModel.NavigateContactView(parentOrNull);
 
+            ContactPageViewModel? contactPageViewModel = mainViewModel.CurrentPage as ContactPageViewModel;
+            Assert.NotNull(contactPageViewModel);
+
             ContactPageView? contactPageView = mainView.GetContentAs<ContactPageView>();
             Assert.NotNull(contactPageView);
 
-            ContactPageViewModel? contactPageViewModel = mainViewModel.CurrentPage as ContactPageViewModel;
-            Assert.NotNull(contactPageViewModel);
+            await contactPageView.LoadTask;
 
             return (contactPageView, contactPageViewModel);
         }
 
         [AvaloniaFact]
-        public async Task ShouldNotBeDialogWithoutParent()
+        public async Task ShouldNotSetParentIfNull()
         {
-            (ContactPageView _, ContactPageViewModel contactPageViewModel) =
+            (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
                 await EnsureIsOnContactPageView();
 
-            Assert.False(contactPageViewModel.IsDialog);
+            Assert.Null(contactPageViewModel.Parent);
         }
 
         [AvaloniaFact]
-        public async Task ShouldBeDialogWithParent()
+        public async Task ShouldSetParentIfNotNull()
         {
             MessagePageViewModel messagePageViewModel = new(fixture.GetServiceManager(), []);
-            (ContactPageView _, ContactPageViewModel contactPageViewModel) =
+            (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
                 await EnsureIsOnContactPageView(messagePageViewModel);
 
-            Assert.True(contactPageViewModel.IsDialog);
+            Assert.NotNull(contactPageViewModel.Parent);
+        }
+
+        [AvaloniaFact]
+        public async Task ShouldOpenSettingsView()
+        {
+            (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+                await EnsureIsOnContactPageView();
+
+            await contactPageViewModel.OpenSettingsCommand();
+
+            PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+            Assert.IsType<ConfigPageViewModel>(currentPageViewModel);
+        }
+
+        [AvaloniaFact]
+        public async Task ShouldOpenFilesView()
+        {
+            (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+                await EnsureIsOnContactPageView();
+
+            await contactPageViewModel.OpenFilesCommand();
+
+            PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+            Assert.IsType<TorrentPageViewModel>(currentPageViewModel);
         }
 
         [AvaloniaFact]
@@ -63,7 +94,6 @@ namespace SubverseIM.Headless
         {
             (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
                 await EnsureIsOnContactPageView();
-            await contactPageView.LoadTask;
 
             Assert.Equal(
                 MainViewFixture.EXPECTED_NUM_CONTACTS, 
@@ -72,11 +102,23 @@ namespace SubverseIM.Headless
         }
 
         [AvaloniaFact]
+        public async Task ShouldLoadTopics()
+        {
+            (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+                await EnsureIsOnContactPageView();
+
+            Assert.Contains(
+                MainViewFixture.EXPECTED_TOPIC_NAME, 
+                contactPageViewModel.TopicsList
+                .Select(x => x.TopicName)
+                );
+        }
+
+        [AvaloniaFact]
         public async Task ShouldOpenConversationViewWithContactsSelected()
         {
             (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
                 await EnsureIsOnContactPageView();
-            await contactPageView.LoadTask;
 
             foreach (ContactViewModel contactViewModel in contactPageViewModel.ContactsList)
             {
@@ -93,7 +135,6 @@ namespace SubverseIM.Headless
         {
             (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
                 await EnsureIsOnContactPageView();
-            await contactPageView.LoadTask;
 
             foreach (ContactViewModel contactViewModel in contactPageViewModel.ContactsList)
             {
@@ -102,7 +143,7 @@ namespace SubverseIM.Headless
             await contactPageViewModel.MessageCommand();
 
             PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
-            Assert.IsNotType<MessagePageViewModel>(currentPageViewModel);
+            Assert.IsType<ContactPageViewModel>(currentPageViewModel);
         }
 
         [AvaloniaFact]
@@ -110,8 +151,6 @@ namespace SubverseIM.Headless
         {
             (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
                 await EnsureIsOnContactPageView();
-
-            await contactPageView.LoadTask;
 
             ContactViewModel contactViewModel = new(
                 fixture.GetServiceManager(), 
@@ -124,32 +163,6 @@ namespace SubverseIM.Headless
             PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
 
             Assert.IsNotType<MessagePageViewModel>(currentPageViewModel);
-        }
-
-        [AvaloniaFact]
-        public async Task ShouldOpenSettingsView()
-        {
-            (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
-                await EnsureIsOnContactPageView();
-            await contactPageView.LoadTask;
-
-            await contactPageViewModel.OpenSettingsCommand();
-
-            PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
-            Assert.IsType<ConfigPageViewModel>(currentPageViewModel);
-        }
-
-        [AvaloniaFact]
-        public async Task ShouldOpenFilesView()
-        {
-            (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
-                await EnsureIsOnContactPageView();
-            await contactPageView.LoadTask;
-
-            await contactPageViewModel.OpenFilesCommand();
-
-            PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
-            Assert.IsType<TorrentPageViewModel>(currentPageViewModel);
         }
     }
 }

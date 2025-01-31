@@ -1,10 +1,12 @@
 using Avalonia.Controls;
 using LiteDB;
+using SIPSorcery.SIP;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Faux;
 using SubverseIM.ViewModels;
 using SubverseIM.Views;
+using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace SubverseIM.Headless;
@@ -12,6 +14,8 @@ namespace SubverseIM.Headless;
 public class MainViewFixture : IDisposable
 {
     public const int EXPECTED_NUM_CONTACTS = 5;
+
+    public const string EXPECTED_TOPIC_NAME = "#xunit-testing";
 
     private readonly CancellationTokenSource cts;
 
@@ -37,15 +41,20 @@ public class MainViewFixture : IDisposable
         mainView = new() { DataContext = mainViewModel };
     }
 
-    private void RegisterBootstrapperService() 
+    private IBootstrapperService RegisterBootstrapperService() 
     {
         BootstrapperService bootstrapperService = new WrappedBootstrapperService();
         serviceManager.GetOrRegister<IBootstrapperService>(bootstrapperService);
+
+        return bootstrapperService;
     }
 
-    private void RegisterDbService()
+    private IDbService RegisterDbService()
     {
         IDbService dbService = serviceManager.GetOrRegister<DbService, IDbService>();
+
+        // Initialize contacts
+        List<SubverseContact> contacts = new();
         for (int i = 0; i < EXPECTED_NUM_CONTACTS; i++)
         {
             SubverseContact contact = new SubverseContact
@@ -53,13 +62,38 @@ public class MainViewFixture : IDisposable
                 OtherPeer = new(RandomNumberGenerator.GetBytes(20)),
                 DisplayName = "Anonymous",
             };
+            contacts.Add(contact);
+
             dbService.InsertOrUpdateItem(contact);
         }
+
+        // Initialize messages
+        SubverseMessage message = new SubverseMessage
+        {
+            CallId = CallProperties.CreateNewCallId(),
+
+            Sender = new(RandomNumberGenerator.GetBytes(20)),
+            SenderName = "Anonymous",
+
+            Recipients = contacts.Select(x => x.OtherPeer).ToArray(),
+            RecipientNames = contacts.Select(x => x.DisplayName!).ToArray(),
+
+            Content = "This is a test message for the xUnit test suite.",
+            TopicName = EXPECTED_TOPIC_NAME,
+
+            DateSignedOn = DateTime.UtcNow,
+
+            WasDecrypted = true,
+            WasDelivered = true,
+        };
+        dbService.InsertOrUpdateItem(message);
+
+        return dbService;
     }
 
-    private void RegisterLauncherService()
+    private ILauncherService RegisterLauncherService()
     {
-        serviceManager.GetOrRegister<DefaultLauncherService, ILauncherService>();
+        return serviceManager.GetOrRegister<DefaultLauncherService, ILauncherService>();
     }
 
     public IServiceManager GetServiceManager() => serviceManager;
