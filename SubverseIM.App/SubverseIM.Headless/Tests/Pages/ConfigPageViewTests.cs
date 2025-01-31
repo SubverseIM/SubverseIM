@@ -7,7 +7,7 @@ using SubverseIM.Views;
 using SubverseIM.Views.Pages;
 using System.Diagnostics;
 
-namespace SubverseIM.Headless.Tests;
+namespace SubverseIM.Headless.Tests.Pages;
 
 public class ConfigPageViewTests : IClassFixture<MainViewFixture>
 {

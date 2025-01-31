@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using LiteDB;
+using MonoTorrent;
 using SIPSorcery.SIP;
 using SubverseIM.Headless.Services;
 using SubverseIM.Models;
@@ -14,6 +15,8 @@ namespace SubverseIM.Headless.Fixtures;
 public class MainViewFixture : IDisposable
 {
     public const int EXPECTED_NUM_CONTACTS = 5;
+
+    public const int EXPECTED_NUM_TORRENTS = 5;
 
     public const string EXPECTED_TOPIC_NAME = "#xunit-testing";
 
@@ -87,6 +90,16 @@ public class MainViewFixture : IDisposable
             WasDelivered = true,
         };
         dbService.InsertOrUpdateItem(message);
+
+        // Initialize torrents
+        for (int i = 0; i < EXPECTED_NUM_TORRENTS; i++) 
+        {
+            InfoHash infoHash = new (RandomNumberGenerator.GetBytes(20));
+            MagnetLink magnetLink = new (infoHash, name: "Untitled");
+
+            SubverseTorrent torrent = new (magnetLink.ToV1String());
+            dbService.InsertOrUpdateItem(torrent);
+        }
 
         return dbService;
     }

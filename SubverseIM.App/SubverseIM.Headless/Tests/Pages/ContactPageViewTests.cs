@@ -6,7 +6,7 @@ using SubverseIM.ViewModels.Pages;
 using SubverseIM.Views;
 using SubverseIM.Views.Pages;
 
-namespace SubverseIM.Headless.Tests;
+namespace SubverseIM.Headless.Tests.Pages;
 
 public class ContactPageViewTests : IClassFixture<MainViewFixture>
 {
