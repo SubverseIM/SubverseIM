@@ -49,6 +49,6 @@ public partial class MainView : UserControl
     public T? GetContentAs<T>()
         where T : class
     {
-        return contentControl.Presenter?.Child as T;
+        return contentControl.FindDescendantOfType<T>();
     }
 }

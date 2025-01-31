@@ -1,4 +1,5 @@
-﻿using Avalonia.Headless.XUnit;
+﻿using Avalonia.Headless;
+using Avalonia.Headless.XUnit;
 using SubverseIM.ViewModels;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;

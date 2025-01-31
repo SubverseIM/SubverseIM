@@ -301,15 +301,13 @@ public class MainViewModel : ViewModelBase, IFrontendService
         vm.SendMessageTopicName = topicName;
     }
 
-    public async void NavigateTorrentView() 
+    public void NavigateTorrentView() 
     {
-        await torrentPage.InitializeAsync();
         CurrentPage = torrentPage;
     }
 
-    public async void NavigateConfigView()
+    public void NavigateConfigView()
     {
-        await configPage.InitializeAsync();
         CurrentPage = configPage;
     }
 
