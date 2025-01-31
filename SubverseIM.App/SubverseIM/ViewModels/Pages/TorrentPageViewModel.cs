@@ -1,6 +1,4 @@
-﻿using Avalonia.Controls;
-using ReactiveUI;
-using SubverseIM.Models;
+﻿using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using System;

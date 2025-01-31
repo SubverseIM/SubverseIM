@@ -121,7 +121,6 @@ public class MainViewFixture : IDisposable
             {
                 cts.Dispose();
                 serviceManager.Dispose();
-                window?.Close();
             }
             disposedValue = true;
         }
