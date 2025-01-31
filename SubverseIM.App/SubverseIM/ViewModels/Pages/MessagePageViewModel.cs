@@ -1,5 +1,4 @@
-﻿using Avalonia.Automation;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SIPSorcery.SIP;
@@ -60,26 +59,6 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        private IsOffscreenBehavior messageBoxOffscreen;
-        public IsOffscreenBehavior MessageBoxOffscreen 
-        {
-            get => messageBoxOffscreen;
-            set 
-            {
-                this.RaiseAndSetIfChanged(ref messageBoxOffscreen, value);
-            }
-        }
-
-        private IsOffscreenBehavior messageListOffscreen;
-        public IsOffscreenBehavior MessageListOffscreen
-        {
-            get => messageListOffscreen;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref messageListOffscreen, value);
-            }
-        }
-
         public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
             permContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
@@ -94,11 +73,11 @@ namespace SubverseIM.ViewModels.Pages
             frontendService.NavigateContactView(this);
         }
 
-        public async Task AddTopicCommand()
+        public async Task AddTopicCommand(string? defaultTopicName = null)
         {
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
 
-            string filteredText = await launcherService.ShowInputDialogAsync("New topic") ?? string.Empty;
+            string filteredText = await launcherService.ShowInputDialogAsync("New topic", defaultTopicName) ?? string.Empty;
             filteredText = Regex.Replace(filteredText, @"\s+", "-");
             filteredText = Regex.Replace(filteredText, @"[^\w\-]", string.Empty);
             filteredText = Regex.Match(filteredText, @"\#?(\w[\w\-]*\w)").Value;
@@ -198,12 +177,6 @@ namespace SubverseIM.ViewModels.Pages
                     MessageList.Add(new(this, isSentByMe ? null : sender, message));
                 }
             }
-        }
-
-        public async Task BackCommand()
-        {
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateContactView();
         }
 
         private async Task SendMessageAsync(string? messageText = null, string? messageTopicName = null)

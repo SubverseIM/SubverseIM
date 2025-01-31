@@ -83,6 +83,7 @@
 				<Button DockPanel.Dock="Right"
 						VerticalAlignment="Stretch"
 						Command="{Binding AddTopicCommand}"
+						CommandParameter="{x:Null}"
 						AutomationProperties.Name="New Topic">
 					<PathIcon Data="{StaticResource comment_add_regular}" />
 					<Classes.offscreen>

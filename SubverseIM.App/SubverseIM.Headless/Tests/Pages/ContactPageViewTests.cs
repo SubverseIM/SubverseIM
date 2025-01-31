@@ -161,8 +161,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         contactPageViewModel.ContactsList.Add(contactViewModel);
 
         contactPageViewModel.RemoveContact(contactViewModel);
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
 
-        Assert.IsNotType<MessagePageViewModel>(currentPageViewModel);
+        Assert.DoesNotContain(contactViewModel, contactPageViewModel.ContactsList);
     }
 }
