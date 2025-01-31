@@ -268,8 +268,16 @@ namespace SubverseIM.Services.Faux
             {
                 if (fileStreams.TryGetValue(path, out stream))
                 {
-                    stream.Position = 0;
-                    return true;
+                    try
+                    {
+                        stream.Position = 0;
+                        return true;
+                    }
+                    catch (ObjectDisposedException) 
+                    {
+                        stream = new MemoryStream();
+                        return true;
+                    }
                 }
                 else
                 {
@@ -284,9 +292,16 @@ namespace SubverseIM.Services.Faux
             {
                 if (fileStreams.TryGetValue(path, out Stream? fileStream))
                 {
-                    fileStream.Position = 0;
-                    fileStream.SetLength(0);
-                    return fileStream;
+                    try
+                    {
+                        fileStream.Position = 0;
+                        fileStream.SetLength(0);
+                        return fileStream;
+                    }
+                    catch (ObjectDisposedException) 
+                    {
+                        return fileStream = new MemoryStream();
+                    }
                 }
                 else
                 {

@@ -1,4 +1,3 @@
-using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ReactiveUI;
@@ -6,14 +5,20 @@ using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
 public partial class MessagePageView : UserControl
 {
+    private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
+
+    public Task LoadTask => loadTaskSource.Task;
+
     public MessagePageView()
     {
         InitializeComponent();
+        loadTaskSource = new();
 
         contacts.SelectionChanged += ContactsSelectionChanged;
         messages.SelectionChanged += MessagesSelectionChanged;
@@ -82,6 +87,8 @@ public partial class MessagePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
+        loadTaskSource.SetResult(e);
+
         await ((MessagePageViewModel)DataContext!).InitializeAsync();
         ((MessagePageViewModel)DataContext!).RaisePropertyChanged(
             nameof(MessagePageViewModel.SendMessageTopicName)
