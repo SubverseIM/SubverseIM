@@ -51,12 +51,12 @@ namespace SubverseIM.Services.Faux
 
         public Task<Progress<TorrentStatus>?> StartAsync(SubverseTorrent torrent)
         {
-            return Task.FromResult<Progress<TorrentStatus>?>(null);
+            return Task.FromResult<Progress<TorrentStatus>?>(new Progress<TorrentStatus>());
         }
 
         public Task<bool> StopAsync(SubverseTorrent torrent)
         {
-            return Task.FromResult(false);
+            return Task.FromResult(true);
         }
     }
 }
