@@ -3,7 +3,6 @@ using System.Security.Cryptography;
 using Avalonia.Headless.XUnit;
 using MonoTorrent;
 using SubverseIM.Headless.Fixtures;
-using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels;
 using SubverseIM.ViewModels.Components;
@@ -47,7 +46,7 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         TorrentPageView? torrentPageView = mainView.GetContentAs<TorrentPageView>();
         Assert.NotNull(torrentPageView);
 
-        await torrentPageView.LoadTask;
+        await torrentPageViewModel.InitializeAsync();
 
         return (torrentPageView, torrentPageViewModel);
     }
