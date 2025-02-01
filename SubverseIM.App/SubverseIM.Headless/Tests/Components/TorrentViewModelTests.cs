@@ -87,14 +87,14 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
         
         InfoHash infoHash = new(RandomNumberGenerator.GetBytes(20));
-        MagnetLink magnetLink = new(infoHash, name: "Untitled");
+        MagnetLink magnetLink = new(infoHash, name: "UnitTest");
         string checkToken = magnetLink.ToV1String();
         await torrentService.AddTorrentAsync(checkToken);
         
         (TorrentPageView torrentPageView, TorrentPageViewModel torrentPageViewModel) =
             await EnsureIsOnTorrentPageView();
 
-        TorrentViewModel? torrentViewModel = torrentPageViewModel.Torrents.LastOrDefault();
+        TorrentViewModel? torrentViewModel = torrentPageViewModel.Torrents.FirstOrDefault(x => x.DisplayName == "UnitTest");
         Debug.Assert(torrentViewModel is not null); // should always be non-null, test should be rewritten otherwise.
 
         await torrentViewModel.DeleteCommand();

@@ -64,7 +64,7 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
         messagePageViewModel.SendMessageText = checkToken;
         await messagePageViewModel.SendCommand();
 
-        MessageViewModel? messageViewModel = messagePageViewModel.MessageList.FirstOrDefault();
+        MessageViewModel? messageViewModel = messagePageViewModel.MessageList.FirstOrDefault(x => x.Content == checkToken);
         Debug.Assert(messageViewModel is not null); // should always be non-null, test should be rewritten otherwise.
 
         await messageViewModel.DeleteCommand();
@@ -83,7 +83,7 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
         messagePageViewModel.SendMessageText = checkToken;
         await messagePageViewModel.SendCommand();
 
-        MessageViewModel? messageViewModel = messagePageViewModel.MessageList.FirstOrDefault();
+        MessageViewModel? messageViewModel = messagePageViewModel.MessageList.FirstOrDefault(x => x.Content == checkToken);
         Debug.Assert(messageViewModel is not null); // should always be non-null, test should be rewritten otherwise.
 
         await messageViewModel.DeleteCommand();
