@@ -37,7 +37,7 @@ namespace SubverseIM.Services.Faux
             else
             {
                 messageBag.Add(tcs = new());
-                return tcs.Task;
+                return tcs.Task.WaitAsync(cancellationToken);
             }
         }
 

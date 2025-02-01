@@ -28,6 +28,8 @@ public class MainViewFixture : IDisposable
 
     private readonly MainView mainView;
 
+    private readonly Task mainTask;
+
     private Window? window;
 
     public MainViewFixture()
@@ -42,9 +44,11 @@ public class MainViewFixture : IDisposable
 
         mainViewModel = new(serviceManager);
         mainView = new() { DataContext = mainViewModel };
+
+        mainTask = mainViewModel.RunOnceAsync(cts.Token);
     }
 
-    private IBootstrapperService RegisterBootstrapperService() 
+    private IBootstrapperService RegisterBootstrapperService()
     {
         BootstrapperService bootstrapperService = new WrappedBootstrapperService();
         serviceManager.GetOrRegister<IBootstrapperService>(bootstrapperService);
@@ -92,12 +96,12 @@ public class MainViewFixture : IDisposable
         dbService.InsertOrUpdateItem(message);
 
         // Initialize torrents
-        for (int i = 0; i < EXPECTED_NUM_TORRENTS; i++) 
+        for (int i = 0; i < EXPECTED_NUM_TORRENTS; i++)
         {
-            InfoHash infoHash = new (RandomNumberGenerator.GetBytes(20));
-            MagnetLink magnetLink = new (infoHash, name: "Untitled");
+            InfoHash infoHash = new(RandomNumberGenerator.GetBytes(20));
+            MagnetLink magnetLink = new(infoHash, name: "Untitled");
 
-            SubverseTorrent torrent = new (magnetLink.ToV1String());
+            SubverseTorrent torrent = new(magnetLink.ToV1String());
             dbService.InsertOrUpdateItem(torrent);
         }
 
@@ -115,7 +119,7 @@ public class MainViewFixture : IDisposable
 
     public MainView GetView() => mainView;
 
-    public void EnsureWindowShown() 
+    public void EnsureWindowShown()
     {
         if (window is null)
         {
@@ -126,13 +130,18 @@ public class MainViewFixture : IDisposable
 
     private bool disposedValue;
 
-    protected virtual void Dispose(bool disposing)
+    protected virtual async void Dispose(bool disposing)
     {
         if (!disposedValue)
         {
             if (disposing)
             {
-                cts.Dispose();
+                try
+                {
+                    cts.Dispose();
+                    await mainTask;
+                }
+                catch (OperationCanceledException) { }
                 serviceManager.Dispose();
             }
             disposedValue = true;

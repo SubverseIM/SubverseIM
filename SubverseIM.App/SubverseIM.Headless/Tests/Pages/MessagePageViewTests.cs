@@ -7,6 +7,7 @@ using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using SubverseIM.Views;
 using SubverseIM.Views.Pages;
+using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace SubverseIM.Headless.Tests.Pages;
@@ -89,7 +90,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
     [AvaloniaTheory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ShouldAddUniqueParticipant(bool permanent)
+    public async Task ShouldAddParticipantIfUnique(bool permanent)
     {
         (MessagePageView messagePageView, MessagePageViewModel messagePageViewModel) =
             await EnsureIsOnMessagePageView();
@@ -112,6 +113,31 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
             .Contains(checkToken), permanent);
     }
 
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldNotAddParticipantIfRedundant(bool permanent)
+    {
+        (MessagePageView messagePageView, MessagePageViewModel messagePageViewModel) =
+            await EnsureIsOnMessagePageView();
+
+        messagePageViewModel.SendMessageTopicName = null;
+
+        IServiceManager serviceManager = fixture.GetServiceManager();
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+
+        SubverseContact? contact = dbService.GetContacts().FirstOrDefault();
+        Debug.Assert(contact is not null); // should always be non-null, test should be rewritten otherwise.
+
+        int countBefore = messagePageViewModel.ContactsList.Count;
+        messagePageViewModel.AddUniqueParticipant(contact, permanent);
+        int countAfter = messagePageViewModel.ContactsList.Count;
+
+        messagePageViewModel.SendMessageTopicName = MainViewFixture.EXPECTED_TOPIC_NAME;
+
+        Assert.Equal(countBefore, countAfter);
+    }
+
     [AvaloniaFact]
     public async Task ShouldRemoveContactAsParticipant() 
     {
@@ -121,7 +147,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
         ContactViewModel contactViewModel = new(
             fixture.GetServiceManager(),
             messagePageViewModel,
-            new Models.SubverseContact()
+            new SubverseContact()
             );
         messagePageViewModel.ContactsList.Add(contactViewModel);
 

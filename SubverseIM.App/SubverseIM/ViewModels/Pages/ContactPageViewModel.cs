@@ -115,7 +115,8 @@ namespace SubverseIM.ViewModels.Pages
             Debug.Assert(Parent is not null);
             foreach (SubverseContact contact in ContactsList
                 .Where(x => x.IsSelected)
-                .Select(x => x.innerContact)) 
+                .Select(x => x.innerContact)
+                .ToArray()) 
             {
                 Parent.AddUniqueParticipant(contact, true);
             }

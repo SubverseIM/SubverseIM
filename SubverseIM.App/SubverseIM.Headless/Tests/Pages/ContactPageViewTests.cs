@@ -1,5 +1,6 @@
 ﻿using Avalonia.Headless.XUnit;
 using SubverseIM.Headless.Fixtures;
+using SubverseIM.Services;
 using SubverseIM.ViewModels;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
@@ -163,5 +164,28 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         contactPageViewModel.RemoveContact(contactViewModel);
 
         Assert.DoesNotContain(contactViewModel, contactPageViewModel.ContactsList);
+    }
+
+    [AvaloniaFact]
+    public async Task ShouldAddParticipantsWithParent()
+    {
+        IServiceManager serviceManager = fixture.GetServiceManager();
+        MessagePageViewModel messagePageViewModel = new (serviceManager, []);
+        (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+            await EnsureIsOnContactPageView(messagePageViewModel);
+
+        foreach(ContactViewModel contactViewModel in contactPageViewModel.ContactsList)
+        {
+            contactViewModel.IsSelected = true;
+        }
+        await contactPageViewModel.AddParticipantsCommand();
+
+        messagePageViewModel.ShouldRefreshContacts = true;
+        await messagePageViewModel.InitializeAsync();
+
+        Assert.Equal(
+            contactPageViewModel.ContactsList.Count, 
+            messagePageViewModel.ContactsList.Count
+            );
     }
 }

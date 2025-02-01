@@ -29,7 +29,7 @@ namespace SubverseIM.Services.Faux
 
         public Task BootstrapSelfAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromCanceled(cancellationToken);
+            return Task.FromException(new PlatformNotSupportedException());
         }
 
         public Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default)
@@ -40,17 +40,17 @@ namespace SubverseIM.Services.Faux
 
         public Task<IList<PeerInfo>> GetPeerInfoAsync(SubversePeerId toPeer, CancellationToken cancellationToken = default)
         {
-            throw new PlatformNotSupportedException();
+            return Task.FromException<IList<PeerInfo>>(new PlatformNotSupportedException());
         }
 
         public Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer, CancellationToken cancellationToken = default)
         {
-            throw new PlatformNotSupportedException();
+            return Task.FromException<EncryptionKeys>(new PlatformNotSupportedException());
         }
 
         public Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken = default)
         {
-            throw new PlatformNotSupportedException();
+            return Task.FromException(new PlatformNotSupportedException());
         }
 
         public Task InjectAsync(IServiceManager serviceManager)
