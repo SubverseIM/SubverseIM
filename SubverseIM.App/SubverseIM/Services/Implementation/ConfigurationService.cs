@@ -19,7 +19,7 @@ public class ConfigurationService : IConfigurationService
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         return config ??= dbService.GetConfig() ?? new SubverseConfig
-        { BootstrapperUriList = [BootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT] };
+        { BootstrapperUriList = [IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT] };
     }
 
     public async Task<bool> PersistConfigAsync(CancellationToken cancellationToken = default)

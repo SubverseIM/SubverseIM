@@ -41,7 +41,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTorrent.Trackers", "mon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoTorrent.PiecePicking", "monotorrent\src\MonoTorrent.PiecePicking\MonoTorrent.PiecePicking.csproj", "{0972AD48-5E83-2791-4B70-E863242F557C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SubverseIM.Tests", "SubverseIM.Tests", "{9DFDDB2E-1B36-4055-B0E3-CF082B621CF7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.Headless", "SubverseIM.App\SubverseIM.Headless\SubverseIM.Headless.csproj", "{18FE281B-3509-E680-1559-3AAE4791D835}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -117,6 +117,10 @@ Global
 		{0972AD48-5E83-2791-4B70-E863242F557C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0972AD48-5E83-2791-4B70-E863242F557C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0972AD48-5E83-2791-4B70-E863242F557C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18FE281B-3509-E680-1559-3AAE4791D835}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18FE281B-3509-E680-1559-3AAE4791D835}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18FE281B-3509-E680-1559-3AAE4791D835}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18FE281B-3509-E680-1559-3AAE4791D835}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -138,6 +142,7 @@ Global
 		{1192E7C8-AF77-CB79-CCF6-92C7DFD16B8A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{C7414093-9F69-CA67-7FD0-C98282B1EABD} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{0972AD48-5E83-2791-4B70-E863242F557C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{18FE281B-3509-E680-1559-3AAE4791D835} = {4343168E-E066-4F17-8C65-AD4A7F88F002}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ED9AFDBC-58C4-4923-950B-DC7E362C8C9C}

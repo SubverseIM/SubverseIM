@@ -20,10 +20,6 @@ namespace SubverseIM.Services.Implementation
 {
     public class BootstrapperService : IBootstrapperService, IDisposable, IInjectable
     {
-        public const string DEFAULT_BOOTSTRAPPER_ROOT = "https://subverse.network";
-
-        public const int DEFAULT_PORT_NUMBER = 6_03_03;
-
         private const string SECRET_PASSWORD = "#FreeTheInternet";
 
         private const string PUBLIC_KEY_PATH = "$/pkx/public.key";
@@ -220,17 +216,17 @@ namespace SubverseIM.Services.Implementation
                     using (StreamContent pkStreamContent = new(pkStream)
                     { Headers = { ContentType = new("application/pgp-keys") } })
                     {
-                        await http.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent, cancellationToken);
+                        await http.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent);
                     }
                 }
             }
 
             // Forward SIP ports
-            await portForwarder.StartAsync(cancellationToken);
+            await portForwarder.StartAsync(default);
 
             int portNum, retryCount = 0;
             Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
-            for (portNum = DEFAULT_PORT_NUMBER; retryCount++ < 3 && mapping is null; portNum++)
+            for (portNum = IBootstrapperService.DEFAULT_PORT_NUMBER; retryCount++ < 3 && mapping is null; portNum++)
             {
                 if (!portForwarder.Active) break;
 
@@ -275,6 +271,7 @@ namespace SubverseIM.Services.Implementation
             // Shutdown all bootstrapping traffic
             await dhtEngine.StopAsync();
             await portForwarder.StopAsync(default);
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         public async Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken)
@@ -358,10 +355,10 @@ namespace SubverseIM.Services.Implementation
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
 
             SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
-            string inviteId = await http.GetFromJsonAsync<string>(new Uri($"{DEFAULT_BOOTSTRAPPER_ROOT}/invite?p={thisPeer}")) ??
+            string inviteId = await http.GetFromJsonAsync<string>(new Uri($"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite?p={thisPeer}")) ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
 
-            await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
+            await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
         }
 
         #endregion

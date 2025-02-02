@@ -29,7 +29,7 @@
 			</Panel>
 		</Border>
 		<Grid RowDefinitions="*,Auto">
-			<TransitioningContentControl Content="{Binding CurrentPage}" />
+			<TransitioningContentControl x:Name="contentControl" Content="{Binding CurrentPage}" />
 		</Grid>
 	</DockPanel>
 </UserControl>

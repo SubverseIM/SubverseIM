@@ -6,10 +6,12 @@ using Avalonia.Threading;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
@@ -30,6 +32,8 @@ public partial class ContactPageView : UserControl
         public int TapCount { get; set; }
     }
 
+    private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
+
     private readonly Timer pressTimer, tapTimer;
 
     private readonly PressTimerState pressTimerState;
@@ -38,9 +42,12 @@ public partial class ContactPageView : UserControl
 
     private ILauncherService? launcherService;
 
+    public Task LoadTask => loadTaskSource.Task;
+
     public ContactPageView()
     {
         InitializeComponent();
+        loadTaskSource = new();
 
         tapTimerState = new();
         tapTimer = new Timer(TapTimerElapsed, tapTimerState,
@@ -176,6 +183,7 @@ public partial class ContactPageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
+        loadTaskSource.SetResult(e);
 
         pressTimerState.DataContext = DataContext;
         tapTimerState.DataContext = DataContext;

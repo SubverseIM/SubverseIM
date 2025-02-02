@@ -71,7 +71,7 @@
 			</Border>
 		</SplitView.Pane>
 		<DockPanel>
-			<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding !IsDialog}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
+			<UniformGrid DockPanel.Dock="Top" IsVisible="{Binding Parent, Converter={x:Static ObjectConverters.IsNull}}" HorizontalAlignment="Stretch" Rows="1" Columns="2">
 				<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding InviteCommand}" CommandParameter="{Binding $self}">
 					<Classes.offscreen>
 						<MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -107,7 +107,7 @@
 					</TextBlock>
 				</Button>
 			</UniformGrid>
-			<Button IsVisible="{Binding IsDialog}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommand}">
+			<Button IsVisible="{Binding Parent, Converter={x:Static ObjectConverters.IsNotNull}}" HorizontalAlignment="Stretch" DockPanel.Dock="Top" Command="{Binding AddParticipantsCommand}">
 				<TextBlock FontSize="16" HorizontalAlignment="Center">Add Selected Contacts</TextBlock>
 			</Button>
 			<Panel>

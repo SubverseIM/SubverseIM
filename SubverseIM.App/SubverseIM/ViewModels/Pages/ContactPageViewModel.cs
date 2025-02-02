@@ -1,7 +1,4 @@
 ﻿using Avalonia;
-using Avalonia.Automation;
-using Avalonia.Controls;
-using Avalonia.Platform;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -19,21 +16,11 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override string Title => "Contacts View";
 
-        public override bool HasSidebar => !IsDialog;
+        public override bool HasSidebar => Parent is null;
 
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
         public ObservableCollection<TopicViewModel> TopicsList { get; }
-
-        private bool isDialog;
-        public bool IsDialog
-        {
-            get => isDialog;
-            private set
-            {
-                this.RaiseAndSetIfChanged(ref isDialog, value);
-            }
-        }
 
         private MessagePageViewModel? parent;
         public MessagePageViewModel? Parent
@@ -41,18 +28,7 @@ namespace SubverseIM.ViewModels.Pages
             get => parent;
             set
             {
-                IsDialog = value is not null;
                 this.RaiseAndSetIfChanged(ref parent, value);
-            }
-        }
-
-        private IsOffscreenBehavior contentOffscreen;
-        public IsOffscreenBehavior ContentOffscreen 
-        {
-            get => contentOffscreen;
-            set 
-            {
-                this.RaiseAndSetIfChanged(ref contentOffscreen, value);
             }
         }
 
@@ -139,7 +115,8 @@ namespace SubverseIM.ViewModels.Pages
             Debug.Assert(Parent is not null);
             foreach (SubverseContact contact in ContactsList
                 .Where(x => x.IsSelected)
-                .Select(x => x.innerContact)) 
+                .Select(x => x.innerContact)
+                .ToArray()) 
             {
                 Parent.AddUniqueParticipant(contact, true);
             }

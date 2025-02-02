@@ -35,10 +35,10 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task AddBootstrapperUriCommand()
+        public async Task AddBootstrapperUriCommand(string? defaultText = null)
         {
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
-            string? newBootstrapperUri = await launcherService.ShowInputDialogAsync("New Bootstrapper URI", "https://subverse.network/");
+            string? newBootstrapperUri = await launcherService.ShowInputDialogAsync("New Bootstrapper URI", defaultText ?? "https://subverse.network/");
             if (newBootstrapperUri is not null)
             {
                 BootstrapperUriList.Add(newBootstrapperUri);
