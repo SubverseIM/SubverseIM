@@ -22,8 +22,8 @@ jobs:
       with: 
         submodules: 'recursive'
     - name: Restore dependencies
-      run: dotnet restore SubverseIM.App/SubverseIM.Headless.csproj
+      run: dotnet restore SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
     - name: Build
-      run: dotnet build SubverseIM.App/SubverseIM.Headless.csproj --no-restore
+      run: dotnet build SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj --no-restore
     - name: Test
-      run: dotnet test SubverseIM.App/SubverseIM.Headless.csproj --no-build --verbosity normal
+      run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj --no-build --verbosity normal
