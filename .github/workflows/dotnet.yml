@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-
+    name: SubverseIM.App (Build)
     runs-on: self-hosted
 
     container: 
