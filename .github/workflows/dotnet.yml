@@ -1,0 +1,24 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: self-hosted
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Restore dependencies
+      run: dotnet restore ./SubverseIM.sln
+    - name: Build
+      run: dotnet build ./SubverseIM.sln --no-restore
+    - name: Test
+      run: dotnet test ./SubverseIM.sln --no-build --verbosity normal
