@@ -21,11 +21,9 @@ jobs:
     - uses: actions/checkout@v4
       with: 
         submodules: 'recursive'
-    - name: Restore workloads
-      run: dotnet workload restore ./SubverseIM.sln
     - name: Restore dependencies
-      run: dotnet restore ./SubverseIM.sln
+      run: dotnet restore SubverseIM.App/SubverseIM.Headless.csproj
     - name: Build
-      run: dotnet build ./SubverseIM.sln --no-restore
+      run: dotnet build SubverseIM.App/SubverseIM.Headless.csproj --no-restore
     - name: Test
-      run: dotnet test ./SubverseIM.sln --no-build --verbosity normal
+      run: dotnet test SubverseIM.App/SubverseIM.Headless.csproj --no-build --verbosity normal
