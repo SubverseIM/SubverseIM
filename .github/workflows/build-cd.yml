@@ -23,7 +23,7 @@ jobs:
     - name: Restore workloads
       run: dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
     - name: Install Android SDK
-      run: dotnet build -t:InstallAndroidDependencies -f:net8.0-android -p:JavaSdkDirectory="/home/tc/java-sdk" -p:AndroidSdkDirectory="/home/tc/android-sdk" -p:AcceptAndroidSDKLicenses=True
+      run: dotnet build SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj -t:InstallAndroidDependencies -f:net8.0-android -p:JavaSdkDirectory="/home/tc/java-sdk" -p:AndroidSdkDirectory="/home/tc/android-sdk" -p:AcceptAndroidSDKLicenses=True
     - name: Restore dependencies
       run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
     - name: Build SubverseIM.Android
