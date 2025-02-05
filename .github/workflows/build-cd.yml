@@ -1,0 +1,39 @@
+name: .NET CI/CD Publish
+
+on: 
+  push:
+    tags:
+    - '*'
+
+jobs:
+  publish:
+    name: SubverseIM.Android
+    runs-on: self-hosted
+    permissions:
+      contents: write
+
+    container: 
+      image: mobiledevops/android-sdk-image
+      
+    steps:
+    - uses: actions/checkout@v4
+      with: 
+        submodules: 'recursive'
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    - name: Add Avalonia Nuget feed
+      run: dotnet nuget add source https://nuget-feed-nightly.avaloniaui.net/v3/index.json
+    - name: Test SubverseIM
+      run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
+    - name: Restore workloads
+      run: dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
+    - name: Restore dependencies
+      run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
+    - name: Build & publish SubverseIM.Android
+      run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1
+    - name: Create new release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM.apk"
+        generateReleaseNotes: true
