@@ -23,7 +23,7 @@ jobs:
       with:
         dotnet-version: '8.0.x'
     - name: Add Avalonia Nuget feed
-      run: dotnet nuget add source https://nuget-feed-nightly.avaloniaui.net/v3/index.json
+      run: dotnet nuget add source https://nuget-feed-all.avaloniaui.net/v3/index.json
     - name: Test SubverseIM
       run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
     - name: Restore workloads
