@@ -12,19 +12,15 @@ jobs:
     runs-on: self-hosted
 
     container: 
-      image: mcr.microsoft.com/dotnet/sdk:8.0
+      image: mobiledevops/android-sdk-image
       
     steps:
     - uses: actions/checkout@v4
       with: 
         submodules: 'recursive'
-    - name: Install JDK 17
-      uses: actions/setup-java@v3
+    - uses: actions/setup-dotnet@4.3.0
       with:
-        java-version: '17'
-        distribution: 'temurin'
-    - name: Install Android SDK
-      uses: android-actions/setup-android@v3.2.1
+        dotnet-version: '8.0.x'
     - name: Add Avalonia Nuget feed
       run: dotnet nuget add source https://nuget-feed-nightly.avaloniaui.net/v3/index.json
     - name: Restore workloads
