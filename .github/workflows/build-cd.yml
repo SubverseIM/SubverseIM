@@ -18,12 +18,17 @@ jobs:
     - uses: actions/checkout@v4
       with: 
         submodules: 'recursive'
+    - name: Install JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    - name: Install Android SDK
+      uses: android-actions/setup-android@v3.2.1
     - name: Add Avalonia Nuget feed
       run: dotnet nuget add source https://nuget-feed-nightly.avaloniaui.net/v3/index.json
     - name: Restore workloads
       run: dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
-    - name: Install Android SDK
-      run: dotnet build SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj -t:InstallAndroidDependencies -f:net8.0-android -p:JavaSdkDirectory="/home/tc/java-sdk" -p:AndroidSdkDirectory="/home/tc/android-sdk" -p:AcceptAndroidSDKLicenses=True
     - name: Restore dependencies
       run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
     - name: Build SubverseIM.Android
