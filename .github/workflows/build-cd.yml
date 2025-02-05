@@ -1,4 +1,4 @@
-name: .NET CI/CD Publish
+name: .NET CI Publish
 
 on: 
   push:
