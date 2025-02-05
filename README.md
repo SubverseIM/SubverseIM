@@ -1,3 +1,5 @@
+[![.NET CI Build](https://github.com/SubverseIM/SubverseIM/actions/workflows/build-ci.yml/badge.svg)](https://github.com/SubverseIM/SubverseIM/actions/workflows/build-ci.yml) [![.NET CI Publish](https://github.com/SubverseIM/SubverseIM/actions/workflows/build-cd.yml/badge.svg)](https://github.com/SubverseIM/SubverseIM/actions/workflows/build-cd.yml)
+
 # Introducing SubverseIM
 
 SubverseIM is OUR Network, a peer-to-peer, end-to-end encrypted, fully anonymous and private instant messaging app for Android and iOS mobile devices. Currently in early-access, open-enrollment testing, this app places the means of communication in the palm of your hand, and your data solely under your control. 
