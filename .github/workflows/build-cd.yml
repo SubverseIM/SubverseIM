@@ -1,0 +1,37 @@
+name: .NET CI/CD Publish
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  publish:
+    name: SubverseIM.Android
+    runs-on: self-hosted
+
+    container: 
+      image: mcr.microsoft.com/dotnet/sdk:8.0
+      
+    steps:
+    - uses: actions/checkout@v4
+      with: 
+        submodules: 'recursive'
+    - name: Add Avalonia Nuget feed
+      run: dotnet nuget add source https://nuget-feed-nightly.avaloniaui.net/v3/index.json
+    - name: Install Android SDK
+      run: dotnet build -t:InstallAndroidDependencies -f:net8.0-android -p:JavaSdkDirectory="/home/tc/java-sdk" -p:AndroidSdkDirectory="/home/tc/android-sdk" -p:AcceptAndroidSDKLicenses=True
+    - name: Restore dependencies
+      run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
+    - name: Build SubverseIM.Android
+      run: dotnet build SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --no-restore
+    - name: Publish SubverseIM.Android
+      run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --no-build --output /home/tc/publish/android
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.6.0
+      with:
+        # Artifact name
+        name: SubverseIM.Android.apk
+        # A file, directory or wildcard pattern that describes what to upload
+        path: /home/tc/publish/android/com.ChosenFewSoftware.SubverseIM.apk
