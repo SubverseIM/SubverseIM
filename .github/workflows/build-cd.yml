@@ -28,9 +28,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
     - name: Build SubverseIM.Android
-      run: dotnet build SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --no-restore
+      run: dotnet build SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --no-restore -m:1
     - name: Publish SubverseIM.Android
-      run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --no-build --output /home/tc/publish/android
+      run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --no-build --output /home/tc/publish/android -m:1
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.6.0
       with:
