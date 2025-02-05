@@ -20,6 +20,8 @@ jobs:
         submodules: 'recursive'
     - name: Add Avalonia Nuget feed
       run: dotnet nuget add source https://nuget-feed-nightly.avaloniaui.net/v3/index.json
+    - name: Restore workloads
+      run: dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
     - name: Install Android SDK
       run: dotnet build -t:InstallAndroidDependencies -f:net8.0-android -p:JavaSdkDirectory="/home/tc/java-sdk" -p:AndroidSdkDirectory="/home/tc/android-sdk" -p:AcceptAndroidSDKLicenses=True
     - name: Restore dependencies
@@ -32,6 +34,6 @@ jobs:
       uses: actions/upload-artifact@v4.6.0
       with:
         # Artifact name
-        name: SubverseIM.Android.apk
+        name: com.ChosenFewSoftware.SubverseIM.apk
         # A file, directory or wildcard pattern that describes what to upload
         path: /home/tc/publish/android/com.ChosenFewSoftware.SubverseIM.apk
