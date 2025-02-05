@@ -19,7 +19,7 @@ jobs:
       with: 
         submodules: 'recursive'
     - name: Add Avalonia Nuget feed
-      run: dotnet nuget add source https://nuget-feed-nightly.avaloniaui.net/v3/index.json
+      run: dotnet nuget add source https://nuget-feed-all.avaloniaui.net/v3/index.json
     - name: Restore dependencies
       run: dotnet restore SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
     - name: Build SubverseIM
