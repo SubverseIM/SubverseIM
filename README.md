@@ -10,7 +10,7 @@ SubverseIM is for anyone who is tired of prying eyes and the oppression of the s
 
 ## How to use?
 
-Users of Android devices can enroll in our open testing program using [this link](/#) to help our team build bigger, better messaging experience for all. iOS users may contact us via email at: [root@subverse.network](mailto:root@subverse.network). This website hosts what is known as a "bootstrapper node" to help jumpstart direct connections between users of SubverseIM. Simply use this web address to configure your client, and you'll be all set! 
+Users of Android devices can enroll in our open testing program using [this link](https://play.google.com/apps/testing/com.ChosenFewSoftware.SubverseIM) to help our team build bigger, better messaging experience for all. iOS users may contact us via email at: [root@subverse.network](mailto:root@subverse.network). This website hosts what is known as a "bootstrapper node" to help jumpstart direct connections between users of SubverseIM. Simply use this web address to configure your client, and you'll be all set! 
 
 ## I don't trust you, what next?
 
