@@ -47,6 +47,6 @@ jobs:
       with:
         serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
         packageName: com.ChosenFewSoftware.SubverseIM
-        releaseFiles: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM-signed.aab"
+        releaseFiles: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM-Signed.aab"
         whatsNewDirectory: "/home/tc/publish/android/whatsnew"
         track: qa
