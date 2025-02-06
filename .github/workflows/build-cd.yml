@@ -30,10 +30,23 @@ jobs:
       run: dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
     - name: Restore dependencies
       run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
+    - name: Restore Android signing keys
+      run: (echo ${{ secrets.KEYSTORE }} | base64 --decode) > SubverseIM.App/SubverseIM.Android/ChosenFewKey.keystore
     - name: Build & publish SubverseIM.Android
-      run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1
+      run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1 -p:AndroidPackageFormat=aab -p:AndroidKeyStore=true -p:AndroidSigningKeyStore=ChosenFewKey.keystore -p:AndroidSigningKeyAlias=ChosenFewKey -p:AndroidSigningStorePass=${{ secrets.KEYSTORE_PASSWORD }} -p:AndroidSigningKeyPass=${{ secrets.KEYSTORE_PASSWORD }}
     - name: Create new release
+      id: gh_release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM.apk"
+        artifacts: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM-Signed.apk"
         generateReleaseNotes: true
+    - name: Create release notes for Google Play
+      run: "(echo Full release notes are avaliable at the link listed below: && echo ${{ steps.gh_release.html_url }}) > /home/tc/publish/android/whatsnew/whatsnew-en-US"
+    - name: Publish to Google Play
+      uses: r0adkll/upload-google-play@v1
+      with:
+        serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+        packageName: com.ChosenFewSoftware.SubverseIM
+        releaseFiles: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM-signed.aab"
+        whatsNewDirectory: "/home/tc/publish/android/whatsnew"
+        track: qa
