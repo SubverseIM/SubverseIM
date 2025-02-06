@@ -41,7 +41,7 @@ jobs:
         artifacts: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM-Signed.apk"
         generateReleaseNotes: true
     - name: Create release notes for Google Play
-      run: "mkdir /home/tc/publish/android/whatsnew && (echo Full release notes are avaliable at the link listed below: && echo ${{ steps.gh_release.html_url }}) > /home/tc/publish/android/whatsnew/whatsnew-en-US"
+      run: "mkdir /home/tc/publish/android/whatsnew && (echo Full release notes are avaliable at the link listed below: && echo ${{ steps.gh_release.outputs.html_url }}) > /home/tc/publish/android/whatsnew/whatsnew-en-US"
     - name: Publish to Google Play
       uses: r0adkll/upload-google-play@v1
       with:
