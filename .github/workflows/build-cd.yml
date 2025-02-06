@@ -49,4 +49,4 @@ jobs:
         packageName: com.ChosenFewSoftware.SubverseIM
         releaseFiles: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM-Signed.aab"
         whatsNewDirectory: "/home/tc/publish/android/whatsnew"
-        track: qa
+        track: internal
