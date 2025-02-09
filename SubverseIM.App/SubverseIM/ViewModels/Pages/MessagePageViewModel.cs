@@ -2,6 +2,7 @@
 using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SIPSorcery.SIP;
+using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
