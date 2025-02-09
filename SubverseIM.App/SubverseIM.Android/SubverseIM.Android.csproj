@@ -2,12 +2,14 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0-android</TargetFramework>
-		<SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
 		<Nullable>enable</Nullable>
-		<AndroidPackageFormat>apk</AndroidPackageFormat>
-		<AvaloniaVersion>11.3.999-cibuild0054816-alpha</AvaloniaVersion>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		<SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<AndroidResource Include="Icon.png">
 			<Link>Resources\drawable\Icon.png</Link>

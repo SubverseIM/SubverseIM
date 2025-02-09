@@ -1,10 +1,8 @@
-﻿using System;
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 using System.Globalization;
-using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace SubverseIM.Models
+namespace SubverseIM.Core
 {
     /// <summary>
     /// Represents a generic 160-bit Peer ID.

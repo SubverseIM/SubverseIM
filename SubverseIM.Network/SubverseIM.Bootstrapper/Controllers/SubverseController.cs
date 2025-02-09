@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using PgpCore;
-using SubverseIM.Models;
+using SubverseIM.Core;
 using System.Text;
 
 namespace SubverseIM.Bootstrapper.Controllers
