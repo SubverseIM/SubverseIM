@@ -1,5 +1,5 @@
-﻿using Avalonia.Media;
-using LiteDB;
+﻿using LiteDB;
+using SubverseIM.Core;
 using System;
 
 namespace SubverseIM.Models

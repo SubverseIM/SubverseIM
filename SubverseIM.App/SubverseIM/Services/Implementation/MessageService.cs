@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MonoTorrent;
 using PgpCore;
 using SIPSorcery.SIP;
+using SubverseIM.Core;
 using SubverseIM.Models;
 
 namespace SubverseIM.Services.Implementation;

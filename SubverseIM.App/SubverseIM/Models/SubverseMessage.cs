@@ -1,4 +1,5 @@
 ﻿using LiteDB;
+using SubverseIM.Core;
 using System;
 
 namespace SubverseIM.Models

@@ -1,4 +1,5 @@
 ﻿using SIPSorcery.SIP;
+using SubverseIM.Core;
 using SubverseIM.Models;
 using System;
 using System.Collections.Concurrent;

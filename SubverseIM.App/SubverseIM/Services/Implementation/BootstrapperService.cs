@@ -5,6 +5,7 @@ using MonoTorrent.Connections.Dht;
 using MonoTorrent.Dht;
 using MonoTorrent.PortForwarding;
 using PgpCore;
+using SubverseIM.Core;
 using SubverseIM.Models;
 using System;
 using System.Collections.Concurrent;

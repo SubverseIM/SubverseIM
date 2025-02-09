@@ -1,4 +1,5 @@
 ﻿using LiteDB;
+using SubverseIM.Core;
 using SubverseIM.Models;
 using System;
 using System.Collections.Generic;
