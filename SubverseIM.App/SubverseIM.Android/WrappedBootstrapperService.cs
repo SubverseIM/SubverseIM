@@ -8,6 +8,7 @@ using Android.Runtime;
 using AndroidX.Core.App;
 using MonoTorrent;
 using SubverseIM.Android.Services;
+using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
