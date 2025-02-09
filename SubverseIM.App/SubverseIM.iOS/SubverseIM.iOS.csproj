@@ -2,12 +2,15 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net8.0-ios17.0</TargetFramework>
-		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
 		<Nullable>enable</Nullable>
-		<AvaloniaVersion>11.3.999-cibuild0054816-alpha</AvaloniaVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
 		<UseInterpreter>true</UseInterpreter>
 		<LinkMode>SdkOnly</LinkMode>
 	</PropertyGroup>
+	
 	<ItemGroup>
 	  <None Remove="iTunesArtwork" />
 	  <None Remove="iTunesArtwork%402x" />

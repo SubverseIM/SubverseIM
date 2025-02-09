@@ -1,4 +1,5 @@
-﻿using SubverseIM.Models;
+﻿using SubverseIM.Core;
+using SubverseIM.Models;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;

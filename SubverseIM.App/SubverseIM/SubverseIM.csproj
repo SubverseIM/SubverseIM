@@ -4,8 +4,6 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-		<AvaloniaVersion>11.3.999-cibuild0054816-alpha</AvaloniaVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -30,5 +28,6 @@
 	  <ProjectReference Include="..\..\monotorrent\src\MonoTorrent.Connections\MonoTorrent.Connections.csproj" />
 	  <ProjectReference Include="..\..\monotorrent\src\MonoTorrent.Dht\MonoTorrent.Dht.csproj" />
 	  <ProjectReference Include="..\..\monotorrent\src\MonoTorrent.PortForwarding\MonoTorrent.PortForwarding.csproj" />
+	  <ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>
 </Project>

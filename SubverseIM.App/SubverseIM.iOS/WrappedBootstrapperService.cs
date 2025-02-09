@@ -11,6 +11,7 @@ using System.Linq;
 using Foundation;
 using MonoTorrent;
 using System.Collections.Immutable;
+using SubverseIM.Core;
 
 namespace SubverseIM.iOS;
 
@@ -56,7 +57,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
                 [(NSString)EXTRA_PARTICIPANTS_ID, (NSString)EXTRA_TOPIC_ID],
                 [
                     (NSString)string.Join(';', ((IEnumerable<SubversePeerId>)
-                [message.Sender, .. message.Recipients])
+                    [message.Sender, .. message.Recipients])
                 .Select(x => x.ToString())),
                 (NSString?)message.TopicName
                 ]);

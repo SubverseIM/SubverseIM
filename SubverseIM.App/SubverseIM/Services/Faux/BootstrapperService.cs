@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using MonoTorrent;
 using PgpCore;
+using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services.Implementation;
 using System;

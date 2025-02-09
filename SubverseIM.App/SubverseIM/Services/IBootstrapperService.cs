@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using MonoTorrent;
 using PgpCore;
+using SubverseIM.Core;
 using SubverseIM.Models;
 
 namespace SubverseIM.Services;

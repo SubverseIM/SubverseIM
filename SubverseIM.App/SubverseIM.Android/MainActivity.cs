@@ -2,7 +2,6 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Android.Content.Res;
 using Android.OS;
 using Android.Text;
 using Android.Views.Accessibility;
@@ -13,6 +12,7 @@ using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
 using SubverseIM.Android.Services;
+using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Orientation = Android.Content.Res.Orientation;
 
 namespace SubverseIM.Android;
 

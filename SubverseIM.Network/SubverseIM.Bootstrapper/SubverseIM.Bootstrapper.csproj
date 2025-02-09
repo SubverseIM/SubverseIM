@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -15,7 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\SubverseIM.App\SubverseIM\SubverseIM.csproj" />
+	  <ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>
 
 </Project>

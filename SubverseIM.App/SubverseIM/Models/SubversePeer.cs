@@ -1,4 +1,5 @@
 ﻿using PgpCore;
+using SubverseIM.Core;
 using System.Net;
 
 namespace SubverseIM.Models
