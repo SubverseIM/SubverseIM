@@ -48,12 +48,5 @@ jobs:
         run: dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
       - name: Restore dependencies
         run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
-      - name: Restore Android signing keys
-        run: (echo ${{ secrets.KEYSTORE }} | base64 --decode) > SubverseIM.App/SubverseIM.Android/ChosenFewKey.keystore
       - name: Build & publish SubverseIM.Android
-        run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1 -p:AndroidPackageFormat=aab -p:AndroidKeyStore=true -p:AndroidSigningKeyStore=ChosenFewKey.keystore -p:AndroidSigningKeyAlias=ChosenFewKey -p:AndroidSigningStorePass=${{ secrets.KEYSTORE_PASSWORD }} -p:AndroidSigningKeyPass=${{ secrets.KEYSTORE_PASSWORD }}
-      - name: Upload .apk as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: "com.ChosenFewSoftware.SubverseIM-Signed.apk"
-          path: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM-Signed.apk"
+        run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj -m:1
