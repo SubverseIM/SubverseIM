@@ -2,12 +2,10 @@
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
-using MonoTorrent;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
-using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -62,17 +60,13 @@ namespace SubverseIM.ViewModels.Components
             get
             {
                 StringBuilder builder = new();
-                builder.AppendLine($"Sent: {innerMessage.DateSignedOn.ToLocalTime()}");
+                builder.AppendLine(innerMessage.Content);
                 builder.AppendLine($"From: {FromName}");
-                builder.AppendLine($"To: {(IsGroupMessage ?
-                    string.Join(", ", innerMessage.RecipientNames[..^1]) + " and " + innerMessage.RecipientNames[^1] :
-                    innerMessage.RecipientNames[0])}");
                 if (!string.IsNullOrEmpty(innerMessage.TopicName))
                 {
-                    builder.AppendLine($"Topic: {innerMessage.TopicName}");
+                    builder.AppendLine($"To: {innerMessage.TopicName}");
                 }
-                builder.AppendLine($"Message body:");
-                builder.AppendLine(innerMessage.Content);
+                builder.AppendLine($"Sent: {innerMessage.DateSignedOn.ToLocalTime()}");
                 return builder.ToString();
             } 
         }
