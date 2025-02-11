@@ -1,12 +1,14 @@
 ﻿using LiteDB;
 using SubverseIM.Core;
 using SubverseIM.Models;
+using SubverseIM.Serializers;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace SubverseIM.Services.Implementation
 {
@@ -178,6 +180,24 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.CallId, unique: true);
 
             messages.DeleteMany(x => x.TopicName == topicName);
+        }
+
+        public void WriteAllMessagesOfTopic(ISerializer<SubverseMessage> serializer, string topicName)
+        {
+            var messages = db.GetCollection<SubverseMessage>();
+
+            messages.EnsureIndex(x => x.Sender);
+            messages.EnsureIndex(x => x.Recipients);
+
+            messages.EnsureIndex(x => x.CallId, unique: true);
+
+            foreach (SubverseMessage message in messages.Query()
+                .Where(x => x.TopicName == topicName)
+                .OrderByDescending(x => x.DateSignedOn)
+                .ToEnumerable()) 
+            {
+                serializer.Serialize(message);
+            }
         }
 
         public bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream)

@@ -51,6 +51,11 @@
 												AutomationProperties.Name="Delete Topic">
 											<PathIcon Data="{StaticResource delete_regular}" />
 										</Button>
+										<Button IsVisible="{Binding IsSelected}"
+												DockPanel.Dock="Right" Command="{Binding ExportTopicCommand}"
+												AutomationProperties.Name="Export Topic">
+											<PathIcon Data="{StaticResource export_regular}" />
+										</Button>
 										<HyperlinkButton Padding="0" Command="{Binding OpenMessageViewCommand}">
 											<TextBlock Foreground="Aqua" Text="{Binding TopicName}"/>
 										</HyperlinkButton>
