@@ -1,6 +1,7 @@
 ﻿using LiteDB;
 using SubverseIM.Core;
 using SubverseIM.Models;
+using SubverseIM.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -39,6 +40,8 @@ namespace SubverseIM.Services
         bool DeleteItemById<T>(BsonValue id);
 
         void DeleteAllMessagesOfTopic(string topicName);
+
+        void WriteAllMessagesOfTopic(ISerializer<SubverseMessage> serializer, string topicName);
 
         bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream);
 

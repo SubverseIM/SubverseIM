@@ -1,6 +1,7 @@
 ﻿using LiteDB;
 using SubverseIM.Core;
 using SubverseIM.Models;
+using SubverseIM.Serializers;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
@@ -219,6 +220,17 @@ namespace SubverseIM.Services.Faux
                 {
                     messages.Remove(message.CallId!);
                 }
+            }
+        }
+
+        public void WriteAllMessagesOfTopic(ISerializer<SubverseMessage> serializer, string topicName)
+        {
+            foreach (SubverseMessage message in messages.Values
+                    .Where(x => x.TopicName == topicName)
+                    .Where(x => x.CallId is not null)
+                    .OrderByDescending(x => x.DateSignedOn))
+            {
+                serializer.Serialize(message);
             }
         }
 
