@@ -50,7 +50,10 @@ public partial class MessagePageView : UserControl
 
     private async void TopicBoxSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        await ((MessagePageViewModel)DataContext!).InitializeAsync();
+        if (DataContext is not null)
+        {
+            await ((MessagePageViewModel)DataContext).InitializeAsync();
+        }
     }
 
     private void MessagesSelectionChanged(object? sender, SelectionChangedEventArgs e)
