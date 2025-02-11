@@ -221,7 +221,8 @@
 									</Classes.offscreen>
 								</TextBlock>
 								<DockPanel>
-									<TextBlock TextWrapping="Wrap" DockPanel.Dock="Top"
+									<TextBlock
+											TextWrapping="Wrap" DockPanel.Dock="Top"
 											HorizontalAlignment="{Binding ContentAlignment}"
 											Text="{Binding FromHeading}"
 											Margin="2">

@@ -45,7 +45,7 @@ namespace SubverseIM.ViewModels.Components
 
         public string DateString => innerMessage
             .DateSignedOn.ToLocalTime()
-            .ToString("dd/MM/yy\nHH:mm:ss");
+            .ToString("dd/MM/yy\nHH:mm");
 
         public string FromName => fromContact?.DisplayName ?? "You";
 
@@ -55,21 +55,7 @@ namespace SubverseIM.ViewModels.Components
 
         public string CcFooter => $"Cc: {string.Join(", ", innerMessage.RecipientNames)}";
 
-        public string ReadoutText 
-        { 
-            get
-            {
-                StringBuilder builder = new();
-                builder.AppendLine(innerMessage.Content);
-                builder.AppendLine($"From: {FromName}");
-                if (!string.IsNullOrEmpty(innerMessage.TopicName))
-                {
-                    builder.AppendLine($"To: {innerMessage.TopicName}");
-                }
-                builder.AppendLine($"Sent: {innerMessage.DateSignedOn.ToLocalTime()}");
-                return builder.ToString();
-            } 
-        }
+        public string ReadoutText => $"Sent: {DateString}";
 
         public HorizontalAlignment ContentAlignment => fromContact is null ? 
             HorizontalAlignment.Left : HorizontalAlignment.Right;
