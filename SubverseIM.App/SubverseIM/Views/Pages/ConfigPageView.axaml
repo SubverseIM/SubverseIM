@@ -19,5 +19,10 @@
 			<Button Command="{Binding RemoveBootstrapperUriCommand}" IsEnabled="{Binding !!SelectedUriList.Count}">Remove Selected URIs</Button>
 		</WrapPanel>
 		<Button Command="{Binding SaveConfigurationCommand}">Save All Changes</Button>
+		<TextBlock TextWrapping="Wrap" FontStyle="Italic">
+			SubverseIM depends on the MonoTorrent project
+			<LineBreak/>
+			Copyright (C) 2006 Alan McGovern, Olivier Dufour
+		</TextBlock>
 	</StackPanel>
 </UserControl>
