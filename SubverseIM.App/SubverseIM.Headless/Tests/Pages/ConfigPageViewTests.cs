@@ -154,4 +154,15 @@ public class ConfigPageViewTests : IClassFixture<MainViewFixture>
         MainViewModel mainViewModel = fixture.GetViewModel();
         Assert.IsType<ConfigPageViewModel>(mainViewModel.CurrentPage);
     }
+
+    [AvaloniaFact]
+    public async Task ShouldNavigateToPreviousView()
+    {
+        (ConfigPageView configPageView, ConfigPageViewModel configPageViewModel) =
+            await EnsureIsOnConfigPageView();
+
+        IServiceManager serviceManager = fixture.GetServiceManager();
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        frontendService.NavigatePreviousView();
+    }
 }

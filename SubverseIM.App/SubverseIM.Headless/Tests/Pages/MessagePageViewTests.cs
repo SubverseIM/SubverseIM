@@ -1,4 +1,5 @@
 ﻿using Avalonia.Headless.XUnit;
+using Org.BouncyCastle.Bcpg;
 using SubverseIM.Headless.Fixtures;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -191,5 +192,16 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
         await messagePageViewModel.SendCommand();
 
         Assert.Contains(checkToken, messagePageViewModel.MessageList.Select(x => x.Content));
+    }
+
+    [AvaloniaFact]
+    public async Task ShouldNavigateToPreviousView() 
+    {
+        (MessagePageView messagePageView, MessagePageViewModel messagePageViewModel) =
+            await EnsureIsOnMessagePageView();
+
+        IServiceManager serviceManager = fixture.GetServiceManager();
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        frontendService.NavigatePreviousView();
     }
 }

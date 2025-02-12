@@ -62,4 +62,16 @@ public class CreateContactPageViewTests : IClassFixture<MainViewFixture>
 
         Assert.NotNull(createContactPageViewModel.Contact);
     }
+
+    [AvaloniaFact]
+    public async Task ShouldNavigateToPreviousView()
+    {
+        (CreateContactPageView createContactPageView,
+            CreateContactPageViewModel createContactPageViewModel) =
+            await EnsureIsOnCreateContactPageView();
+
+        IServiceManager serviceManager = fixture.GetServiceManager();
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        frontendService.NavigatePreviousView();
+    }
 }

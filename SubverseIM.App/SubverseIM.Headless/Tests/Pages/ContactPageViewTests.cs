@@ -188,4 +188,27 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
             messagePageViewModel.ContactsList.Count
             );
     }
+
+    [AvaloniaFact]
+    public async Task ShouldNavigateToPreviousView()
+    {
+        (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+            await EnsureIsOnContactPageView();
+
+        IServiceManager serviceManager = fixture.GetServiceManager();
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        frontendService.NavigatePreviousView();
+    }
+
+    [AvaloniaFact]
+    public async Task ShouldNavigateToPreviousViewWithParent()
+    {
+        IServiceManager serviceManager = fixture.GetServiceManager();
+        MessagePageViewModel messagePageViewModel = new(serviceManager, []);
+        (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+            await EnsureIsOnContactPageView(messagePageViewModel);
+
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        frontendService.NavigatePreviousView();
+    }
 }

@@ -1,5 +1,6 @@
 using Avalonia.Headless.XUnit;
 using SubverseIM.Headless.Fixtures;
+using SubverseIM.Services;
 using SubverseIM.ViewModels;
 using SubverseIM.ViewModels.Pages;
 using SubverseIM.Views;
@@ -56,5 +57,16 @@ public class TorrentPageViewTests : IClassFixture<MainViewFixture>
             MainViewFixture.EXPECTED_NUM_TORRENTS, 
             torrentPageViewModel.Torrents.Count
             );
+    }
+
+    [AvaloniaFact]
+    public async Task ShouldNavigateToPreviousView()
+    {
+        (TorrentPageView torrentPageView, TorrentPageViewModel torrentPageViewModel) =
+            await EnsureIsOnTorrentPageView();
+
+        IServiceManager serviceManager = fixture.GetServiceManager();
+        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        frontendService.NavigatePreviousView();
     }
 }
