@@ -1,5 +1,4 @@
 ﻿using Avalonia.Headless.XUnit;
-using Org.BouncyCastle.Bcpg;
 using SubverseIM.Headless.Fixtures;
 using SubverseIM.Models;
 using SubverseIM.Services;
