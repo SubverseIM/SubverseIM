@@ -26,6 +26,7 @@ public partial class ConfigPageView : UserControl
         if (((ConfigPageViewModel)DataContext!).PromptFreqIndex is null) 
         {
             promptFreqBox.SelectedIndex = promptFreqBox.Items.Add("Never");
+            promptFreqBox.IsEnabled = false;
         }
     }
 }
