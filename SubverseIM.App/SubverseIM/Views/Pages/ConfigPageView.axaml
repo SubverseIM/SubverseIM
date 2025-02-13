@@ -18,6 +18,15 @@
 			<Button Command="{Binding AddBootstrapperUriCommand}">Add URI</Button>
 			<Button Command="{Binding RemoveBootstrapperUriCommand}" IsEnabled="{Binding !!SelectedUriList.Count}">Remove Selected URIs</Button>
 		</WrapPanel>
+		<Label FontWeight="Bold">Remind me to donate</Label>
+		<TextBlock TextWrapping="Wrap">As a FOSS passion project, we need help to pay the bills and make sure that we continue to deliver the best user experience. A one-time donation will unlock the "Never" option and contribute to future development of SubverseIM.</TextBlock>
+		<ComboBox x:Name="promptFreqBox"
+			SelectedIndex="{Binding PromptFreqIndex, TargetNullValue=3}"
+			IsEnabled="{Binding PromptFreqIndex, Converter={x:Static ObjectConverters.IsNotNull}}">
+			<ComboBoxItem>Every 3 days</ComboBoxItem>
+			<ComboBoxItem>Every 5 days</ComboBoxItem>
+			<ComboBoxItem>Every 7 days</ComboBoxItem>
+		</ComboBox>
 		<Button Command="{Binding SaveConfigurationCommand}">Save All Changes</Button>
 		<TextBlock TextWrapping="Wrap" FontStyle="Italic">
 			SubverseIM depends on the MonoTorrent project

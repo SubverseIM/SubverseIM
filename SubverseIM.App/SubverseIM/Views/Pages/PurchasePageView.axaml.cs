@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
-public partial class ConfigPageView : UserControl
+public partial class PurchasePageView : UserControl
 {
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 
     public Task LoadTask => loadTaskSource.Task;
 
-    public ConfigPageView() 
+    public PurchasePageView() 
     {
         InitializeComponent();
         loadTaskSource = new();
@@ -22,10 +22,6 @@ public partial class ConfigPageView : UserControl
         base.OnLoaded(e);
         loadTaskSource.SetResult(e);
 
-        await ((ConfigPageViewModel)DataContext!).InitializeAsync();
-        if (((ConfigPageViewModel)DataContext!).PromptFreqIndex is null) 
-        {
-            promptFreqBox.Items.Add("Never");
-        }
+        await ((PurchasePageViewModel)DataContext!).InitializeAsync();
     }
 }

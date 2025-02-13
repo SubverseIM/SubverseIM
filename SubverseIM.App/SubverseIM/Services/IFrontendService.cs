@@ -20,5 +20,7 @@ namespace SubverseIM.Services
         void NavigateTorrentView();
 
         void NavigateConfigView();
+
+        void NavigatePurchaseView();
     }
 }

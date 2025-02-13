@@ -31,4 +31,10 @@
 	  <ProjectReference Include="..\..\monotorrent\src\MonoTorrent.PortForwarding\MonoTorrent.PortForwarding.csproj" />
 	  <ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Views\Pages\PurchasePageView.axaml.cs">
+	    <DependentUpon>PurchasePageView.axaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
 </Project>

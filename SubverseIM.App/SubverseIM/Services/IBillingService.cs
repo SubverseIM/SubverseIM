@@ -1,10 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using Plugin.InAppBilling;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SubverseIM.Services
 {
     public interface IBillingService
     {
-        Task<bool> WasItemPurchasedAsync(string productId);
+        Task<IEnumerable<InAppBillingProduct>> GetAllProductsAsync();
+
+        Task<bool> WasAnyItemPurchasedAsync(HashSet<string> productIds);
 
         Task<bool> PurchaseItemAsync(string productId);
     }

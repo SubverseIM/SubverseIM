@@ -23,5 +23,9 @@ namespace SubverseIM.Models
         public ObjectId? Id { get; set; }
 
         public string[]? BootstrapperUriList { get; set; }
+
+        public DateTime DateLastPrompted { get; set; }
+
+        public int? PromptFreqIndex { get; set; }
     }
 }
