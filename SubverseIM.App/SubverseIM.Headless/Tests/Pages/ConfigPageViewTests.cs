@@ -164,5 +164,8 @@ public class ConfigPageViewTests : IClassFixture<MainViewFixture>
         IServiceManager serviceManager = fixture.GetServiceManager();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         frontendService.NavigatePreviousView();
+
+        MainViewModel mainViewModel = fixture.GetViewModel();
+        Assert.IsNotType<ConfigPageViewModel>(mainViewModel.CurrentPage);
     }
 }

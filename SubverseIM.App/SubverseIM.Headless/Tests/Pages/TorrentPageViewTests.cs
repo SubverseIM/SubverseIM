@@ -68,5 +68,8 @@ public class TorrentPageViewTests : IClassFixture<MainViewFixture>
         IServiceManager serviceManager = fixture.GetServiceManager();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         frontendService.NavigatePreviousView();
+
+        MainViewModel mainViewModel = fixture.GetViewModel();
+        Assert.IsNotType<TorrentPageViewModel>(mainViewModel.CurrentPage);
     }
 }

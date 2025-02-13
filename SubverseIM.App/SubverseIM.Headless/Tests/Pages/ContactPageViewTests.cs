@@ -197,7 +197,13 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        frontendService.NavigatePreviousView();
+        Exception? exception = null;
+        try
+        {
+            frontendService.NavigatePreviousView();
+        }
+        catch (Exception ex) { exception = ex; }
+        Assert.Null(exception);
     }
 
     [AvaloniaFact]
@@ -209,6 +215,12 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
             await EnsureIsOnContactPageView(messagePageViewModel);
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        frontendService.NavigatePreviousView();
+        Exception? exception = null;
+        try
+        {
+            frontendService.NavigatePreviousView();
+        }
+        catch (Exception ex) { exception = ex; }
+        Assert.Null(exception);
     }
 }

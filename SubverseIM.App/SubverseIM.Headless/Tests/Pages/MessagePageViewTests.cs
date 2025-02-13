@@ -202,5 +202,8 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
         IServiceManager serviceManager = fixture.GetServiceManager();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         frontendService.NavigatePreviousView();
+
+        MainViewModel mainViewModel = fixture.GetViewModel();
+        Assert.IsNotType<MessagePageViewModel>(mainViewModel.CurrentPage);
     }
 }
