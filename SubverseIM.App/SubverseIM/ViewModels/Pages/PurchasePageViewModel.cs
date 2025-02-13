@@ -23,19 +23,27 @@ namespace SubverseIM.ViewModels.Pages
             ProductsList.Clear();
 
             IBillingService billingService = await ServiceManager.GetWithAwaitAsync<IBillingService>();
-            foreach (InAppBillingProduct product in await billingService.GetAllProductsAsync()) 
+            if (await billingService.WasAnyItemPurchasedAsync(["donation_small", "donation_normal", "donation_large"]) == false) 
             {
-                ProductsList.Add(product);
+                foreach (InAppBillingProduct product in await billingService.GetAllProductsAsync())
+                {
+                    ProductsList.Add(product);
+                }
             }
         }
 
         public async Task PurchaseCommand(string productId) 
         {
             IBillingService billingService = await ServiceManager.GetWithAwaitAsync<IBillingService>();
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
+
             if (await billingService.PurchaseItemAsync(productId))
             {
+                await frontendService.RestorePurchasesAsync();
                 await launcherService.ShowAlertDialogAsync("Thank you!", "Your donation has been processed successfully. Much love!");
+
+                await InitializeAsync();
             }
             else 
             {
