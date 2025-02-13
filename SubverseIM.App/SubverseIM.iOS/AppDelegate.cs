@@ -164,6 +164,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         launchedUri = launchOptions?[UIApplication.LaunchOptionsUrlKey] as NSUrl;
         serviceManager.GetOrRegister<ILauncherService>(this);
 
+        serviceManager.GetOrRegister<IBillingService>(new BillingService());
+
         string appDataPath = Environment.GetFolderPath(
             Environment.SpecialFolder.ApplicationData
             );
