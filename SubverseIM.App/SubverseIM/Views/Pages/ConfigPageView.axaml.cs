@@ -25,7 +25,7 @@ public partial class ConfigPageView : UserControl
         await ((ConfigPageViewModel)DataContext!).InitializeAsync();
         if (((ConfigPageViewModel)DataContext!).PromptFreqIndex is null) 
         {
-            promptFreqBox.Items.Add("Never");
+            promptFreqBox.SelectedIndex = promptFreqBox.Items.Add("Never");
         }
     }
 }

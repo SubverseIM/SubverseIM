@@ -92,6 +92,18 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     }
 
     [AvaloniaFact]
+    public async Task ShouldOpenProductsView()
+    {
+        (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+            await EnsureIsOnContactPageView();
+
+        await contactPageViewModel.OpenProductsCommand();
+
+        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        Assert.IsType<PurchasePageViewModel>(currentPageViewModel);
+    }
+
+    [AvaloniaFact]
     public async Task ShouldLoadContacts()
     {
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =

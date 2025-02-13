@@ -29,6 +29,9 @@
 		<SplitView.Pane>
 			<Border BorderThickness="2" BorderBrush="Black" IsVisible="{Binding IsSidebarOpen}">
 				<DockPanel>
+					<Button DockPanel.Dock="Top" HorizontalAlignment="Stretch" Command="{Binding OpenProductsCommand}">
+						<TextBlock FontSize="16" HorizontalAlignment="Center">Donate</TextBlock>
+					</Button>
 					<Button DockPanel.Dock="Top" HorizontalAlignment="Stretch" Command="{Binding OpenSettingsCommand}">
 						<TextBlock FontSize="16" HorizontalAlignment="Center">Settings</TextBlock>
 					</Button>
