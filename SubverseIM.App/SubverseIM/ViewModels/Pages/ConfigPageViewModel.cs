@@ -1,4 +1,5 @@
-﻿using SubverseIM.Models;
+﻿using ReactiveUI;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using System;
 using System.Collections.ObjectModel;
@@ -17,6 +18,16 @@ namespace SubverseIM.ViewModels.Pages
 
         public ObservableCollection<string> SelectedUriList { get; }
 
+        private int? promptFreqIndex;
+        public int? PromptFreqIndex 
+        {
+            get => promptFreqIndex;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref promptFreqIndex, value);
+            }
+        }
+
         public ConfigPageViewModel(IServiceManager serviceManager) : base(serviceManager)
         {
             BootstrapperUriList = new();
@@ -33,6 +44,8 @@ namespace SubverseIM.ViewModels.Pages
             {
                 BootstrapperUriList.Add(bootstrapperUri);
             }
+
+            PromptFreqIndex = config.PromptFreqIndex;
         }
 
         public async Task AddBootstrapperUriCommand(string? defaultText = null)
@@ -76,6 +89,8 @@ namespace SubverseIM.ViewModels.Pages
                 {
                     config.BootstrapperUriList = newBootstrapperUriList;
                 }
+
+                config.PromptFreqIndex = PromptFreqIndex;
 
                 return await peerService.PersistConfigAsync() && frontendService.NavigatePreviousView();
             }

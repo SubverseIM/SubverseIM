@@ -92,6 +92,18 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     }
 
     [AvaloniaFact]
+    public async Task ShouldOpenProductsView()
+    {
+        (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+            await EnsureIsOnContactPageView();
+
+        await contactPageViewModel.OpenProductsCommand();
+
+        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        Assert.IsType<PurchasePageViewModel>(currentPageViewModel);
+    }
+
+    [AvaloniaFact]
     public async Task ShouldLoadContacts()
     {
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
@@ -197,7 +209,13 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        frontendService.NavigatePreviousView();
+        Exception? exception = null;
+        try
+        {
+            frontendService.NavigatePreviousView();
+        }
+        catch (Exception ex) { exception = ex; }
+        Assert.Null(exception);
     }
 
     [AvaloniaFact]
@@ -209,6 +227,12 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
             await EnsureIsOnContactPageView(messagePageViewModel);
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        frontendService.NavigatePreviousView();
+        Exception? exception = null;
+        try
+        {
+            frontendService.NavigatePreviousView();
+        }
+        catch (Exception ex) { exception = ex; }
+        Assert.Null(exception);
     }
 }

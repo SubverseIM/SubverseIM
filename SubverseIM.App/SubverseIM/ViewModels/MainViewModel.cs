@@ -17,6 +17,10 @@ namespace SubverseIM.ViewModels;
 
 public class MainViewModel : ViewModelBase, IFrontendService
 {
+    private const string DONATION_PROMPT_TITLE = "Support us?";
+
+    private const string DONATION_PROMPT_MESSAGE = "If you're enjoying using our app, please consider a one-time donation. Doing so would help support future development of this app and permanently disable these prompts on your devices. Would you like to donate now?";
+
     private readonly IServiceManager serviceManager;
 
     private readonly ContactPageViewModel contactPage;
@@ -26,6 +30,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
     private readonly TorrentPageViewModel torrentPage;
 
     private readonly ConfigPageViewModel configPage;
+
+    private readonly PurchasePageViewModel purchasePage;
 
     private Stack<PageViewModelBase> previousPages;
 
@@ -69,7 +75,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
         contactPage = new(serviceManager);
         createContactPage = new(serviceManager);
         torrentPage = new(serviceManager);
-        configPage = new (serviceManager);
+        configPage = new(serviceManager);
+        purchasePage = new(serviceManager);
 
         previousPages = new();
         currentPage = contactPage;
@@ -215,9 +222,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         vm.MessageList.Insert(0, messageViewModel);
                     }
 
-                    if (launcherService.NotificationsAllowed && 
-                        (!launcherService.IsInForeground || 
-                        launcherService.IsAccessibilityEnabled || 
+                    if (launcherService.NotificationsAllowed &&
+                        (!launcherService.IsInForeground ||
+                        launcherService.IsAccessibilityEnabled ||
                         !isCurrentPeer) && (message.WasDecrypted ?? true))
                     {
                         await nativeService.SendPushNotificationAsync(serviceManager, message);
@@ -229,8 +236,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 }
                 catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
             }
-        } 
-        catch (OperationCanceledException) 
+        }
+        catch (OperationCanceledException)
         {
             await torrentPage.DestroyAsync();
             await Task.WhenAll(subTasks);
@@ -254,6 +261,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public async void NavigateLaunchedUri(Uri? overrideUri = null)
     {
+        IBillingService billingService = await serviceManager.GetWithAwaitAsync<IBillingService>();
+        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
         Uri? launchedUri = overrideUri ?? launcherService.GetLaunchedUri();
@@ -272,6 +281,34 @@ public class MainViewModel : ViewModelBase, IFrontendService
             case null:
                 CurrentPage = contactPage;
                 break;
+        }
+
+        SubverseConfig config = await configurationService.GetConfigAsync();
+        if (await billingService.WasAnyItemPurchasedAsync(["donation_small", "donation_normal", "donation_large"]))
+        {
+            config.DateLastPrompted = DateTime.UtcNow;
+            config.PromptFreqIndex = null;
+
+            await configurationService.PersistConfigAsync();
+        }
+
+        TimeSpan promptInterval = configurationService.GetPromptFrequencyValueFromIndex(config.PromptFreqIndex);
+        if (config.DateLastPrompted == default)
+        {
+            config.DateLastPrompted = DateTime.UtcNow;
+            config.PromptFreqIndex = 0;
+
+            await configurationService.PersistConfigAsync();
+        }
+        else if (DateTime.UtcNow - config.DateLastPrompted > promptInterval)
+        {
+            config.DateLastPrompted = DateTime.UtcNow;
+            await configurationService.PersistConfigAsync();
+
+            if (await launcherService.ShowConfirmationDialogAsync(DONATION_PROMPT_TITLE, DONATION_PROMPT_MESSAGE))
+            {
+                NavigatePurchaseView();
+            }
         }
     }
 
@@ -302,7 +339,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         vm.SendMessageTopicName = topicName;
     }
 
-    public void NavigateTorrentView() 
+    public void NavigateTorrentView()
     {
         CurrentPage = torrentPage;
     }
@@ -310,6 +347,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
     public void NavigateConfigView()
     {
         CurrentPage = configPage;
+    }
+
+    public void NavigatePurchaseView()
+    {
+        CurrentPage = purchasePage;
     }
 
     public void RegisterTopLevel(TopLevel topLevel)

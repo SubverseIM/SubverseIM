@@ -111,6 +111,12 @@ namespace SubverseIM.ViewModels.Pages
             frontendService.NavigateConfigView();
         }
 
+        public async Task OpenProductsCommand()
+        {
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService.NavigatePurchaseView();
+        }
+
         public async Task AddParticipantsCommand()
         {
             Debug.Assert(Parent is not null);

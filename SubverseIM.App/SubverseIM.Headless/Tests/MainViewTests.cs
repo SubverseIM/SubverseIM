@@ -119,4 +119,15 @@ public class MainViewTests : IClassFixture<MainViewFixture>
 
         Assert.IsType<TorrentPageViewModel>(mainViewModel.CurrentPage);
     }
+
+    [AvaloniaFact]
+    public async Task ShouldNavigateToPurchaseView()
+    {
+        await EnsureMainViewLoaded();
+
+        MainViewModel mainViewModel = fixture.GetViewModel();
+        mainViewModel.NavigatePurchaseView();
+
+        Assert.IsType<PurchasePageViewModel>(mainViewModel.CurrentPage);
+    }
 }
