@@ -11,6 +11,7 @@ using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
+using Microsoft.Maui.ApplicationModel;
 using SubverseIM.Android.Services;
 using SubverseIM.Core;
 using SubverseIM.Models;
@@ -100,6 +101,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     protected override async void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        Platform.Init(this, savedInstanceState);
 
         OnBackPressedDispatcher.AddCallback(backPressedCallback);
 

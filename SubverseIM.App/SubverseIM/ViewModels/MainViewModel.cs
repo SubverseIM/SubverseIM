@@ -245,6 +245,47 @@ public class MainViewModel : ViewModelBase, IFrontendService
         }
     }
 
+    public async Task RestorePurchasesAsync()
+    {
+        IBillingService billingService = await serviceManager.GetWithAwaitAsync<IBillingService>();
+        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
+
+        SubverseConfig config = await configurationService.GetConfigAsync();
+        if (await billingService.WasAnyItemPurchasedAsync(["donation_small", "donation_normal", "donation_large"]))
+        {
+            config.DateLastPrompted = DateTime.UtcNow;
+            config.PromptFreqIndex = null;
+
+            await configurationService.PersistConfigAsync();
+        }
+    }
+
+    public async Task PromptForPurchaseAsync()
+    {
+        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
+        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+
+        SubverseConfig config = await configurationService.GetConfigAsync();
+        TimeSpan promptInterval = configurationService.GetPromptFrequencyValueFromIndex(config.PromptFreqIndex);
+        if (config.DateLastPrompted == default)
+        {
+            config.DateLastPrompted = DateTime.UtcNow;
+            config.PromptFreqIndex = 0;
+
+            await configurationService.PersistConfigAsync();
+        }
+        else if (DateTime.UtcNow - config.DateLastPrompted > promptInterval)
+        {
+            config.DateLastPrompted = DateTime.UtcNow;
+            await configurationService.PersistConfigAsync();
+
+            if (await launcherService.ShowConfirmationDialogAsync(DONATION_PROMPT_TITLE, DONATION_PROMPT_MESSAGE))
+            {
+                NavigatePurchaseView();
+            }
+        }
+    }
+
     public bool NavigatePreviousView()
     {
         if (previousPages.TryPop(out PageViewModelBase? previousPage))
@@ -261,8 +302,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public async void NavigateLaunchedUri(Uri? overrideUri = null)
     {
-        IBillingService billingService = await serviceManager.GetWithAwaitAsync<IBillingService>();
-        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
         Uri? launchedUri = overrideUri ?? launcherService.GetLaunchedUri();
@@ -283,33 +322,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 break;
         }
 
-        SubverseConfig config = await configurationService.GetConfigAsync();
-        if (await billingService.WasAnyItemPurchasedAsync(["donation_small", "donation_normal", "donation_large"]))
-        {
-            config.DateLastPrompted = DateTime.UtcNow;
-            config.PromptFreqIndex = null;
-
-            await configurationService.PersistConfigAsync();
-        }
-
-        TimeSpan promptInterval = configurationService.GetPromptFrequencyValueFromIndex(config.PromptFreqIndex);
-        if (config.DateLastPrompted == default)
-        {
-            config.DateLastPrompted = DateTime.UtcNow;
-            config.PromptFreqIndex = 0;
-
-            await configurationService.PersistConfigAsync();
-        }
-        else if (DateTime.UtcNow - config.DateLastPrompted > promptInterval)
-        {
-            config.DateLastPrompted = DateTime.UtcNow;
-            await configurationService.PersistConfigAsync();
-
-            if (await launcherService.ShowConfirmationDialogAsync(DONATION_PROMPT_TITLE, DONATION_PROMPT_MESSAGE))
-            {
-                NavigatePurchaseView();
-            }
-        }
+        // Synchronize purchases
+        await RestorePurchasesAsync();
+        await PromptForPurchaseAsync();
     }
 
     public void NavigateContactView(MessagePageViewModel? parentOrNull)

@@ -9,13 +9,13 @@
 	<Design.DataContext>
 		<vm:PurchasePageViewModel />
 	</Design.DataContext>
-	<DockPanel>
+	<Panel>
 		<ListBox x:Name="productListBox" ItemsSource="{Binding ProductsList}">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<StackPanel Orientation="Vertical">
 						<TextBlock FontWeight="Bold" Text="{Binding Name}" />
-						<TextBlock FontStyle="Italic" Text="{Binding Description}" />
+						<TextBlock FontStyle="Italic" Text="{Binding Description}" TextWrapping="Wrap" />
 						<StackPanel Orientation="Horizontal">
 							<Label>Purchase for:</Label>
 							<Button 
@@ -28,5 +28,13 @@
 				</DataTemplate>
 			</ListBox.ItemTemplate>
 		</ListBox>
-	</DockPanel>
+		<TextBlock IsVisible="{Binding !ProductsList.Count}"
+								   HorizontalAlignment="Center"
+								   VerticalAlignment="Center"
+								   TextWrapping="Wrap"
+								   TextAlignment="Center"
+								   Margin="5" FontSize="16">
+			You've already donated to SubverseIM. Thank you so much!
+		</TextBlock>
+	</Panel>
 </UserControl>
