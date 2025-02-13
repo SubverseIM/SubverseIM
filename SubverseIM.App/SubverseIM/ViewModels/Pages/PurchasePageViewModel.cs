@@ -20,6 +20,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task InitializeAsync() 
         {
+            ProductsList.Clear();
+
             IBillingService billingService = await ServiceManager.GetWithAwaitAsync<IBillingService>();
             foreach (InAppBillingProduct product in await billingService.GetAllProductsAsync()) 
             {

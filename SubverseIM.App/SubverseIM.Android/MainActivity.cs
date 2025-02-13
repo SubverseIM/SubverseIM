@@ -115,6 +115,8 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
         serviceManager.GetOrRegister<ILauncherService>(this);
 
+        serviceManager.GetOrRegister<IBillingService>(new BillingService());
+
         string appDataPath = System.Environment.GetFolderPath(
             System.Environment.SpecialFolder.ApplicationData
             );

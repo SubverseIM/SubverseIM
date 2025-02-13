@@ -57,16 +57,14 @@ namespace SubverseIM.Services.Implementation
                     // if on Android may be good to check if these purchases need to be acknowledge
                     return true;
                 }
-                else
-                {
-                    //no purchases found
-                    return false;
-                }
             }
+            catch { }
             finally
             {
                 await billing.DisconnectAsync();
             }
+
+            return false;
         }
 
         public async Task<bool> PurchaseItemAsync(string productId)
@@ -99,6 +97,7 @@ namespace SubverseIM.Services.Implementation
                     return ack.All(x => x.Success);
                 }
             }
+            catch { }
             finally
             {
                 await billing.DisconnectAsync();
