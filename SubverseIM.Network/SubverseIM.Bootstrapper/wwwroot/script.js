@@ -67,3 +67,7 @@ HexGrid();
 const myElement = document.getElementById("hex-grid");
 const detailedSize = getDetailedSize(myElement);
 console.log(detailedSize);
+
+if (!window.location.href.endsWith("/")) {
+    window.location.href += "/"
+}
