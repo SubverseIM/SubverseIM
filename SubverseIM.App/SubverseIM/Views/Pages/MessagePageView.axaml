@@ -27,7 +27,7 @@
 			<Setter Property="DockPanel.Dock" Value="Bottom"/>
 		</Style>
 	</UserControl.Styles>
-	<SplitView x:Name="splitView" 
+	<SplitView x:Name="splitView"
 		   IsPaneOpen="{Binding IsSidebarOpen}"
 		   PanePlacement="Right"
            OpenPaneLength="300"
@@ -87,10 +87,10 @@
 						AutomationProperties.Name="New Topic">
 					<PathIcon Data="{StaticResource comment_add_regular}" />
 					<Classes.offscreen>
-                		<MultiBinding Converter="{x:Static BoolConverters.And}">
-                			<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
-                			<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
-            			</MultiBinding>
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
+							<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+							<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+						</MultiBinding>
 					</Classes.offscreen>
 				</Button>
 				<ComboBox x:Name="topicBox" DockPanel.Dock="Top"
@@ -100,10 +100,10 @@
 						SelectedItem="{Binding SendMessageTopicName}"
 						AutomationProperties.HelpText="Choose conversation topic.">
 					<Classes.offscreen>
-                		<MultiBinding Converter="{x:Static BoolConverters.And}">
-                			<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
-                			<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
-            			</MultiBinding>
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
+							<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+							<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+						</MultiBinding>
 					</Classes.offscreen>
 				</ComboBox>
 			</DockPanel>
@@ -170,12 +170,12 @@
 							<Setter Property="Classes.offscreen">
 								<Setter.Value>
 									<MultiBinding Converter="{x:Static BoolConverters.Or}">
-                						<MultiBinding Converter="{x:Static BoolConverters.And}">
-                							<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
-                							<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
-            							</MultiBinding>
-                						<Binding Path="IsDropDownOpen" ElementName="topicBox" />
-            						</MultiBinding>
+										<MultiBinding Converter="{x:Static BoolConverters.And}">
+											<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+											<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+										</MultiBinding>
+										<Binding Path="IsDropDownOpen" ElementName="topicBox" />
+									</MultiBinding>
 								</Setter.Value>
 							</Setter>
 						</Style>
@@ -253,19 +253,20 @@
 									<ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Embeds}" HorizontalAlignment="{Binding ContentAlignment}">
 										<ItemsControl.ItemTemplate>
 											<DataTemplate>
-												<HyperlinkButton Padding="0" IsEnabled="True"
-														NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
-													<Classes.offscreen>
-														<MultiBinding Converter="{x:Static BoolConverters.Or}">
-															<MultiBinding Converter="{x:Static BoolConverters.And}">
-																<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
-																<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+												<StackPanel Orientation="Vertical">
+													<Image Source="{Binding FetchedBitmap^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
+													<HyperlinkButton Padding="0" IsEnabled="True" HorizontalAlignment="{Binding $parent[DockPanel].DataContext.ContentAlignment}"	NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
+														<Classes.offscreen>
+															<MultiBinding Converter="{x:Static BoolConverters.Or}">
+																<MultiBinding Converter="{x:Static BoolConverters.And}">
+																	<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+																	<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+																</MultiBinding>
+																<Binding Path="IsDropDownOpen" ElementName="topicBox" />
 															</MultiBinding>
-															<Binding Path="IsDropDownOpen" ElementName="topicBox" />
-														</MultiBinding>
-													</Classes.offscreen>
-													<TextBlock Foreground="Aqua" TextWrapping="Wrap"
-															Text="{Binding Name, DataType={x:Type vmx:EmbedViewModel}}">
+														</Classes.offscreen>
+														<TextBlock Foreground="Aqua" TextWrapping="Wrap"
+																Text="{Binding DisplayName, DataType={x:Type vmx:EmbedViewModel}}">
 															<Classes.offscreen>
 																<MultiBinding Converter="{x:Static BoolConverters.Or}">
 																	<MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -275,8 +276,9 @@
 																	<Binding Path="IsDropDownOpen" ElementName="topicBox" />
 																</MultiBinding>
 															</Classes.offscreen>
-													</TextBlock>
-												</HyperlinkButton>
+														</TextBlock>
+													</HyperlinkButton>
+												</StackPanel>
 											</DataTemplate>
 										</ItemsControl.ItemTemplate>
 									</ItemsControl>

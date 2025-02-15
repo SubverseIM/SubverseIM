@@ -97,7 +97,7 @@ namespace SubverseIM.ViewModels.Components
             Embeds = URL_REGEX
                 .Matches(innerMessage.Content ?? string.Empty)
                 .Where(x => x.Success)
-                .Select(x => new EmbedViewModel(x.Value))
+                .Select(x => new EmbedViewModel(messagePageView.ServiceManager, x.Value))
                 .ToArray();
         }
 
