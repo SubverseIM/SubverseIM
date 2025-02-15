@@ -1,0 +1,44 @@
+:root {
+  --hex-size: 60px;
+  --border-size: 5px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #000;
+}
+
+#hex-grid {
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(0, 0);
+  z-index: -100;
+}
+
+.hex {
+  width: var(--hex-size);
+  height: calc(var(--hex-size) * cos(30deg));
+  position: absolute;
+  clip-path: polygon(
+    25% 0%, 75% 0%, 
+    100% 50%, 75% 100%, 
+    25% 100%, 0% 50%
+  );
+  background: rgb(0, 0, 0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hex-inner {
+  width: calc(var(--hex-size) - var(--border-size));
+  height: calc(var(--hex-size) * cos(30deg) - var(--border-size));
+  clip-path: inherit;
+  transition: opacity 2s, background-color 2s;
+}
+
+.hidden {
+  opacity: 0;
+}
