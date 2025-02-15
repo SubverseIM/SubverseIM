@@ -70,7 +70,7 @@ namespace SubverseIM.ViewModels.Pages
             IsSidebarOverlay = !isLandscape;
             if (isLandscape)
             {
-                IsSidebarOpen = true;
+                IsSidebarOpen = HasSidebar;
             }
         }
 
