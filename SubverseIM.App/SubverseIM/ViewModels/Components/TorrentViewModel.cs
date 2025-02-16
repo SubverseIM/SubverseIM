@@ -27,10 +27,10 @@ namespace SubverseIM.ViewModels.Components
             MagnetLink.Parse(innerTorrent.MagnetUri).Name;
 
         private TorrentStatus? torrentStatus;
-        public TorrentStatus? CurrentStatus 
+        public TorrentStatus? CurrentStatus
         {
             get => torrentStatus;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref torrentStatus, value);
             }
@@ -55,7 +55,8 @@ namespace SubverseIM.ViewModels.Components
 
         private async void TorrentProgressChanged(object? sender, TorrentStatus newStatus)
         {
-            if (CurrentStatus is not null && newStatus.Complete != CurrentStatus.Complete)
+            if (newStatus.Complete && CurrentStatus is not null && 
+                newStatus.Complete != CurrentStatus.Complete)
             {
                 INativeService nativeService = await parent.ServiceManager.GetWithAwaitAsync<INativeService>();
                 await nativeService.SendPushNotificationAsync(parent.ServiceManager, innerTorrent);
@@ -141,6 +142,15 @@ namespace SubverseIM.ViewModels.Components
                         await cacheFileStream.CopyToAsync(localFileStream);
                     }
                 }
+            }
+        }
+
+        public async Task CopyCommand()
+        {
+            TopLevel topLevel = await parent.ServiceManager.GetWithAwaitAsync<TopLevel>();
+            if (topLevel.Clipboard is not null)
+            {
+                await topLevel.Clipboard.SetTextAsync(innerTorrent.MagnetUri);
             }
         }
     }

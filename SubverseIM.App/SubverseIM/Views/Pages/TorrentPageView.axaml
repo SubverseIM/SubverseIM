@@ -30,6 +30,10 @@
 								AutomationProperties.Name="Stop Download">
 							<PathIcon Data="{StaticResource dismiss_regular}" />
 						</Button>
+						<Button DockPanel.Dock="Right" Command="{Binding CopyCommand}"
+								AutomationProperties.Name="Copy Magnet URI">
+							<PathIcon Data="{StaticResource clipboard_link_regular}" />
+						</Button>
 						<Button DockPanel.Dock="Right" Command="{Binding DeleteCommand}"
 								IsVisible="{Binding !IsStarted}"
 								AutomationProperties.Name="Delete File"
