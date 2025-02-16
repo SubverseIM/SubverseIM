@@ -9,8 +9,6 @@ namespace SubverseIM.Services
 {
     public interface IMessageService
     {
-        public IPEndPoint LocalEndPoint { get; }
-
         public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
         
         Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default);
