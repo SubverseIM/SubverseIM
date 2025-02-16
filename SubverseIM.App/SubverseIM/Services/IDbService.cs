@@ -2,14 +2,13 @@
 using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Serializers;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace SubverseIM.Services
 {
-    public interface IDbService : IDisposable
+    public interface IDbService : IDisposableService
     {
         SubverseConfig? GetConfig();
 
