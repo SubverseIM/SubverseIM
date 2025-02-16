@@ -226,15 +226,19 @@ namespace SubverseIM.Services.Implementation
             await portForwarder.StartAsync(default);
 
             int portNum, retryCount = 0;
-            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault();
+            Mapping? mapping = portForwarder.Mappings.Created.SingleOrDefault(x =>
+                    x.PrivatePort == IBootstrapperService.DEFAULT_PORT_NUMBER
+                    );
             for (portNum = IBootstrapperService.DEFAULT_PORT_NUMBER; retryCount++ < 3 && mapping is null; portNum++)
             {
                 if (!portForwarder.Active) break;
 
-                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, messageService.LocalEndPoint!.Port, portNum));
+                await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, IBootstrapperService.DEFAULT_PORT_NUMBER, portNum));
                 await timer.WaitForNextTickAsync();
 
-                mapping = portForwarder.Mappings.Created.SingleOrDefault();
+                mapping = portForwarder.Mappings.Created.SingleOrDefault(x => 
+                    x.PrivatePort == IBootstrapperService.DEFAULT_PORT_NUMBER
+                    );
             }
 
             // Perform synchronization activities
@@ -244,6 +248,13 @@ namespace SubverseIM.Services.Implementation
                 lock (messageService.CachedPeers)
                 {
                     peers = messageService.CachedPeers.Keys.ToArray();
+                }
+
+                foreach (SubversePeerId otherPeer in peers)
+                {
+                    await timer.WaitForNextTickAsync();
+                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()),
+                        mapping?.PublicPort ?? portNum);
                 }
 
                 foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
@@ -260,12 +271,6 @@ namespace SubverseIM.Services.Implementation
                             await timer.WaitForNextTickAsync(cancellationToken);
                         }
                     }
-                }
-
-                foreach (SubversePeerId otherPeer in peers)
-                {
-                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()),
-                        mapping?.PublicPort ?? portNum);
                 }
             }
 
