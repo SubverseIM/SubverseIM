@@ -1,3 +1,8 @@
+using MonoTorrent;
+using PgpCore;
+using SIPSorcery.SIP;
+using SubverseIM.Core;
+using SubverseIM.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,15 +12,10 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MonoTorrent;
-using PgpCore;
-using SIPSorcery.SIP;
-using SubverseIM.Core;
-using SubverseIM.Models;
 
 namespace SubverseIM.Services.Implementation;
 
-public class MessageService : IMessageService, IDisposable
+public class MessageService : IMessageService, IDisposableService
 {
     private readonly Dictionary<string, SIPRequest> callIdMap;
 
