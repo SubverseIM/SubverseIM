@@ -27,6 +27,8 @@ public class MessageService : IMessageService, IDisposableService
 
     private readonly IServiceManager serviceManager;
 
+    public IPEndPoint LocalEndPoint { get; }
+
     public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
     public MessageService(IServiceManager serviceManager)
@@ -43,6 +45,7 @@ public class MessageService : IMessageService, IDisposableService
         sipTransport.SIPTransportResponseReceived += SIPTransportResponseReceived;
         sipTransport.AddSIPChannel(sipChannel);
 
+        LocalEndPoint = sipChannel.ListeningEndPoint;
         CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
     }
 
