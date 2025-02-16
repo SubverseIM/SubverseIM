@@ -132,6 +132,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
             }));
         }
 
+        await Task.Delay(TimeSpan.FromSeconds(5));
+
         lock (messageService.CachedPeers)
         {
             foreach (SubverseContact contact in dbService.GetContacts())

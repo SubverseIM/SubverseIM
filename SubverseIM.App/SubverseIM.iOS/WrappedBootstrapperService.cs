@@ -1,17 +1,16 @@
+using Foundation;
+using MonoTorrent;
+using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UIKit;
 using UserNotifications;
-using System.Linq;
-using Foundation;
-using MonoTorrent;
-using System.Collections.Immutable;
-using SubverseIM.Core;
 
 namespace SubverseIM.iOS;
 
