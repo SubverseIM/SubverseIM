@@ -75,6 +75,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
 
     private readonly ActivityBackPressedCallback backPressedCallback;
 
+    private Task? mainTask;
 
     public bool NotificationsAllowed { get; private set; }
 
@@ -141,9 +142,12 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         }
     }
 
-    protected override void OnDestroy()
+    protected override async void OnDestroy()
     {
         base.OnDestroy();
+
+        cancellationTokenSource.Dispose();
+        serviceManager.Dispose();
 
         if (peerServiceConn.IsConnected)
         {
@@ -151,17 +155,23 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             StopService(new Intent(this, typeof(WrappedBootstrapperService)));
         }
 
+        try
+        {
+            if (mainTask is not null) 
+            { await mainTask; }
+        }
+        catch (System.OperationCanceledException) { }
+
         System.Environment.Exit(0);
     }
 
     protected override async void OnStart()
     {
         base.OnStart();
-        
         IsInForeground = true;
 
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        await frontendService.RunOnceAsync(cancellationTokenSource.Token);
+        mainTask = frontendService.RunOnceAsync(cancellationTokenSource.Token);
     }
 
     protected override void OnStop()
@@ -286,15 +296,5 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
     public Task ShareFileToAppAsync(Visual? sender, string title, string path)
     {
         return Task.FromException(new PlatformNotSupportedException("This method is not supported on Android!"));
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-        if (disposing) 
-        {
-            serviceManager.Dispose();
-            cancellationTokenSource.Dispose();
-        }
     }
 }

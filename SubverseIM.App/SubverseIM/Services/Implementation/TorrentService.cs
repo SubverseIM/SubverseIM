@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Implementation
 {
-    public class TorrentService : ITorrentService, IDisposable
+    public class TorrentService : ITorrentService, IDisposableService
     {
         private readonly Dictionary<string, TorrentManager> managerMap;
 

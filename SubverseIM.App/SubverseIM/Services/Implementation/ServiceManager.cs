@@ -124,7 +124,7 @@ namespace SubverseIM.Services.Implementation
                 {
                     foreach (var (_, service) in serviceMap)
                     {
-                        (service as IDisposable)?.Dispose();
+                        (service as IDisposableService)?.Dispose();
                     }
                 }
 

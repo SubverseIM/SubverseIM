@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Implementation
 {
-    public class BootstrapperService : IBootstrapperService, IDisposable, IInjectable
+    public class BootstrapperService : IBootstrapperService, IDisposableService, IInjectable
     {
         private const string SECRET_PASSWORD = "#FreeTheInternet";
 
