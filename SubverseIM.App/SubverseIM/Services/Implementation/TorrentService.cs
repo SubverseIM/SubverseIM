@@ -77,8 +77,6 @@ namespace SubverseIM.Services.Implementation
             Progress<TorrentStatus> progress = new();
             Dispatcher.UIThread.InvokeAsync(async Task () =>
             {
-                ((IProgress<TorrentStatus>)progress)
-                    .Report(new TorrentStatus(false, 0.0));
                 using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(300));
                 while (engine.Torrents.Contains(manager))
                 {

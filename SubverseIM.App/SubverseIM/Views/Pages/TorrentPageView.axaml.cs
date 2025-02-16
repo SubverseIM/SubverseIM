@@ -17,11 +17,9 @@ public partial class TorrentPageView : UserControl
         loadTaskSource = new();
     }
 
-    protected override async void OnLoaded(RoutedEventArgs e)
+    protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
         loadTaskSource.SetResult(e);
-
-        await ((TorrentPageViewModel)DataContext!).InitializeAsync();
     }
 }
