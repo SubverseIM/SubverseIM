@@ -73,7 +73,7 @@ namespace SubverseIM.Services.Implementation
             return torrents.FindOne(x => x.MagnetUri == magnetUri);
         }
 
-        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName)
+        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName, bool orderFlag)
         {
             var messages = db.GetCollection<SubverseMessage>();
 
@@ -82,13 +82,16 @@ namespace SubverseIM.Services.Implementation
 
             messages.EnsureIndex(x => x.CallId, unique: true);
 
-            return otherPeers.SelectMany(otherPeer => messages.Query()
+            IEnumerable<SubverseMessage> topicMessages = otherPeers
+                .SelectMany(otherPeer => messages.Query()
                 .Where(x => x.WasDecrypted ?? true)
                 .Where(x => otherPeer == x.Sender || x.Recipients.Contains(otherPeer))
                 .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
                 .ToEnumerable())
-                .DistinctBy(x => x.CallId)
-                .OrderByDescending(x => x.DateSignedOn);
+                .DistinctBy(x => x.CallId);
+
+            return orderFlag ? topicMessages.OrderBy(x => x.DateSignedOn) : 
+                topicMessages.OrderByDescending(x => x.DateSignedOn);
         }
 
         public IEnumerable<SubverseMessage> GetAllUndeliveredMessages()

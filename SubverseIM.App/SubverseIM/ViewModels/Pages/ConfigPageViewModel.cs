@@ -18,6 +18,16 @@ namespace SubverseIM.ViewModels.Pages
 
         public ObservableCollection<string> SelectedUriList { get; }
 
+        private bool messageOrderFlag;
+        public bool MessageOrderFlag 
+        { 
+            get => messageOrderFlag;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref messageOrderFlag, value);
+            }
+        }
+
         private int? promptFreqIndex;
         public int? PromptFreqIndex 
         {
@@ -44,6 +54,8 @@ namespace SubverseIM.ViewModels.Pages
             {
                 BootstrapperUriList.Add(bootstrapperUri);
             }
+
+            MessageOrderFlag = config.MessageOrderFlag;
 
             PromptFreqIndex = config.PromptFreqIndex;
         }
@@ -89,6 +101,8 @@ namespace SubverseIM.ViewModels.Pages
                 {
                     config.BootstrapperUriList = newBootstrapperUriList;
                 }
+
+                config.MessageOrderFlag = MessageOrderFlag;
 
                 config.PromptFreqIndex = PromptFreqIndex;
 

@@ -30,6 +30,9 @@ namespace SubverseIM.ViewModels.Pages
 
         public ObservableCollection<string> TopicsList { get; }
 
+        public Task<bool> MessageOrderFlagAsync => GetMessageOrderFlagAsync();
+
+
         private string? sendMessageText;
         public string? SendMessageText
         {
@@ -66,6 +69,13 @@ namespace SubverseIM.ViewModels.Pages
             ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             MessageList = [];
             TopicsList = [string.Empty];
+        }
+
+        private async Task<bool> GetMessageOrderFlagAsync() 
+        {
+            IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>();
+            SubverseConfig config = await configurationService.GetConfigAsync();
+            return config.MessageOrderFlag;
         }
 
         public async Task AddParticipantsCommand()
@@ -115,10 +125,12 @@ namespace SubverseIM.ViewModels.Pages
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             IBootstrapperService bootstrapperService = await ServiceManager.GetWithAwaitAsync<IBootstrapperService>(cancellationToken);
+            IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>(cancellationToken);
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>(cancellationToken);
 
             SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
+            SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
 
             MessageList.Clear();
 
@@ -140,7 +152,7 @@ namespace SubverseIM.ViewModels.Pages
             HashSet<SubversePeerId> participantIds = permContactsList
                 .Select(x => x.innerContact.OtherPeer)
                 .ToHashSet();
-            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(participantIds, null).Take(250))
+            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(participantIds, null, config.MessageOrderFlag))
             {
                 if (message.TopicName == "#system") continue;
 
@@ -155,7 +167,7 @@ namespace SubverseIM.ViewModels.Pages
                     new() { OtherPeer = message.Sender, DisplayName = message.SenderName, };
 
                 bool isEmptyTopic = string.IsNullOrEmpty(SendMessageTopicName);
-                bool isCurrentTopic = message.TopicName == SendMessageTopicName || 
+                bool isCurrentTopic = message.TopicName == SendMessageTopicName ||
                     (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(SendMessageTopicName));
                 bool isSentByMe = thisPeer == sender.OtherPeer;
 
@@ -188,12 +200,14 @@ namespace SubverseIM.ViewModels.Pages
             if (string.IsNullOrEmpty(messageText)) return;
 
             IBootstrapperService peerService = await ServiceManager.GetWithAwaitAsync<IBootstrapperService>();
+            IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>();
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
             INativeService nativeService = await ServiceManager.GetWithAwaitAsync<INativeService>();
             IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>();
 
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync();
             SubverseContact? thisContact = dbService.GetContact(thisPeer);
+            SubverseConfig config = await configurationService.GetConfigAsync();
 
             SubverseMessage message = new SubverseMessage()
             {
@@ -219,9 +233,13 @@ namespace SubverseIM.ViewModels.Pages
                 SendMessageText = null;
             }
 
-            if (messageTopicName == SendMessageTopicName)
+            if (messageTopicName == SendMessageTopicName && config.MessageOrderFlag == false)
             {
                 MessageList.Insert(0, new(this, null, message));
+            }
+            else if (messageTopicName == SendMessageTopicName && config.MessageOrderFlag == true)
+            {
+                MessageList.Add(new (this, null, message));
             }
 
             foreach (SubverseContact contact in permContactsList.Select(x => x.innerContact))
@@ -235,23 +253,24 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public Task SendCommand() 
+        public Task SendCommand()
         {
             return SendMessageAsync();
         }
 
-        public async Task AttachFileCommand() 
+        public async Task AttachFileCommand()
         {
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
 
             TopLevel topLevel = await ServiceManager.GetWithAwaitAsync<TopLevel>();
             IStorageFile? selectedFile = (await topLevel.StorageProvider.OpenFilePickerAsync(
-                new FilePickerOpenOptions { 
-                    AllowMultiple = false, 
-                    Title = "Select file attachment", 
-                    FileTypeFilter = [FilePickerFileTypes.All] 
+                new FilePickerOpenOptions
+                {
+                    AllowMultiple = false,
+                    Title = "Select file attachment",
+                    FileTypeFilter = [FilePickerFileTypes.All]
                 })).SingleOrDefault();
-            if (selectedFile is not null) 
+            if (selectedFile is not null)
             {
                 SubverseTorrent torrent = await torrentService.AddTorrentAsync(selectedFile);
                 await SendMessageAsync(torrent.MagnetUri);
