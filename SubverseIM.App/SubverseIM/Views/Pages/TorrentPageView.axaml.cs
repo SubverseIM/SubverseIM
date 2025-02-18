@@ -20,6 +20,6 @@ public partial class TorrentPageView : UserControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        loadTaskSource.SetResult(e);
+        loadTaskSource.TrySetResult(e);
     }
 }

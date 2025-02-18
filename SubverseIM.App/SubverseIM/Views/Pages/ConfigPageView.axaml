@@ -25,6 +25,13 @@
 				<TextBlock IsVisible="{Binding MessageOrderFlag}">Topmost is least recent</TextBlock>
 			</Panel>
 		</CheckBox>
+		<Label FontWeight="Bold">Mirror conversation view</Label>
+		<CheckBox IsChecked="{Binding MessageMirrorFlag}">
+			<Panel>
+				<TextBlock IsVisible="{Binding !MessageMirrorFlag}">Left is "You"</TextBlock>
+				<TextBlock IsVisible="{Binding MessageMirrorFlag}">Left is "Them"</TextBlock>
+			</Panel>
+		</CheckBox>
 		<Label FontWeight="Bold">Remind me to donate</Label>
 		<TextBlock TextWrapping="Wrap">As a FOSS passion project, we need help to pay the bills and make sure that we continue to deliver the best user experience. A one-time donation will unlock the "Never" option and contribute to future development of SubverseIM.</TextBlock>
 		<ComboBox x:Name="promptFreqBox"

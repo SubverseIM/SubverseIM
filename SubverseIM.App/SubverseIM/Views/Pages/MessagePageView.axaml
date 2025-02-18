@@ -214,7 +214,7 @@
 							<DockPanel
 								AutomationProperties.HelpText="{Binding ReadoutText}">
 								<Button Background="DarkRed"
-										DockPanel.Dock="{Binding OptionsAlignment}"
+										DockPanel.Dock="{Binding OptionsAlignmentAsync^}"
 										VerticalAlignment="Top"
 										Margin="2"
 										IsVisible="{Binding IsSelected}"
@@ -232,9 +232,9 @@
 									<PathIcon Data="{StaticResource delete_regular}" />
 								</Button>
 								<TextBlock
-									DockPanel.Dock="{Binding OptionsAlignment}"
+									DockPanel.Dock="{Binding OptionsAlignmentAsync^}"
 									VerticalAlignment="Top"
-									HorizontalAlignment="{Binding ContentAlignment}"
+									HorizontalAlignment="{Binding ContentAlignmentAsync^}"
 									IsVisible="{Binding IsSelected}"
 									Text="{Binding DateString}"
 									FontSize="12"
@@ -252,7 +252,7 @@
 								<DockPanel>
 									<TextBlock
 											TextWrapping="Wrap" DockPanel.Dock="Top"
-											HorizontalAlignment="{Binding ContentAlignment}"
+											HorizontalAlignment="{Binding ContentAlignmentAsync^}"
 											Text="{Binding FromHeading}"
 											Margin="2">
 										<Classes.offscreen>
@@ -267,7 +267,7 @@
 									</TextBlock>
 									<TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap"
 										IsVisible="{Binding IsGroupMessage}"
-										HorizontalAlignment="{Binding ContentAlignment}"
+										HorizontalAlignment="{Binding ContentAlignmentAsync^}"
 										Text="{Binding CcFooter}" Margin="2" FontSize="12" FontStyle="Italic">
 										<Classes.offscreen>
 											<MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -279,12 +279,12 @@
 											</MultiBinding>
 										</Classes.offscreen>
 									</TextBlock>
-									<ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Embeds}" HorizontalAlignment="{Binding ContentAlignment}">
+									<ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Embeds}" HorizontalAlignment="{Binding ContentAlignmentAsync^}">
 										<ItemsControl.ItemTemplate>
 											<DataTemplate>
 												<StackPanel Orientation="Vertical">
 													<Image Source="{Binding FetchedBitmap^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
-													<HyperlinkButton Padding="0" IsEnabled="True" HorizontalAlignment="{Binding $parent[DockPanel].DataContext.ContentAlignment}"	NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
+													<HyperlinkButton Padding="0" IsEnabled="True" HorizontalAlignment="{Binding $parent[DockPanel].DataContext.ContentAlignmentAsync^}"	NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
 														<Classes.offscreen>
 															<MultiBinding Converter="{x:Static BoolConverters.Or}">
 																<MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -311,7 +311,7 @@
 											</DataTemplate>
 										</ItemsControl.ItemTemplate>
 									</ItemsControl>
-									<Border Background="{Binding BubbleBrush}" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignment}">
+									<Border Background="{Binding BubbleBrush}" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignmentAsync^}">
 										<TextBlock Foreground="White" TextWrapping="Wrap" Text="{Binding Content}" Margin="2">
 											<Classes.offscreen>
 												<MultiBinding Converter="{x:Static BoolConverters.Or}">

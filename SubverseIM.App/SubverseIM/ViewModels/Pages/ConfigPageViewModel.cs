@@ -28,6 +28,16 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        private bool messageMirrorFlag;
+        public bool MessageMirrorFlag
+        {
+            get => messageMirrorFlag;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref messageMirrorFlag, value);
+            }
+        }
+
         private int? promptFreqIndex;
         public int? PromptFreqIndex 
         {
@@ -56,6 +66,8 @@ namespace SubverseIM.ViewModels.Pages
             }
 
             MessageOrderFlag = config.MessageOrderFlag;
+
+            MessageMirrorFlag = config.MessageMirrorFlag;
 
             PromptFreqIndex = config.PromptFreqIndex;
         }
@@ -103,6 +115,8 @@ namespace SubverseIM.ViewModels.Pages
                 }
 
                 config.MessageOrderFlag = MessageOrderFlag;
+
+                config.MessageMirrorFlag = messageMirrorFlag;
 
                 config.PromptFreqIndex = PromptFreqIndex;
 

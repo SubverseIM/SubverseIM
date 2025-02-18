@@ -20,7 +20,7 @@ public partial class ConfigPageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        loadTaskSource.SetResult(e);
+        loadTaskSource.TrySetResult(e);
 
         await ((ConfigPageViewModel)DataContext!).InitializeAsync();
         if (((ConfigPageViewModel)DataContext!).PromptFreqIndex is null) 

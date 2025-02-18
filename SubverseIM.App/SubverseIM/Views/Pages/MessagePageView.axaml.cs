@@ -110,7 +110,7 @@ public partial class MessagePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        loadTaskSource.SetResult(e);
+        loadTaskSource.TrySetResult(e);
 
         await ((MessagePageViewModel)DataContext!).InitializeAsync();
         ((MessagePageViewModel)DataContext!).RaisePropertyChanged(

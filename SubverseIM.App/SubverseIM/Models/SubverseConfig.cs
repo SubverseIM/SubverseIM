@@ -26,6 +26,8 @@ namespace SubverseIM.Models
 
         public bool MessageOrderFlag { get; set; }
 
+        public bool MessageMirrorFlag { get; set; }
+
         public DateTime DateLastPrompted { get; set; }
 
         public int? PromptFreqIndex { get; set; }
