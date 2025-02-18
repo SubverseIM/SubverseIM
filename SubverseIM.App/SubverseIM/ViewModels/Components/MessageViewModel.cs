@@ -7,7 +7,6 @@ using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -57,10 +56,9 @@ namespace SubverseIM.ViewModels.Components
 
         public string ReadoutText => $"Sent: {DateString}";
 
-        public HorizontalAlignment ContentAlignment => fromContact is null ? 
-            HorizontalAlignment.Left : HorizontalAlignment.Right;
+        public Task<HorizontalAlignment> ContentAlignmentAsync => GetContentAlignmentAsync();
 
-        public Dock OptionsAlignment => fromContact is null ? Dock.Right : Dock.Left;
+        public Task<Dock> OptionsAlignmentAsync => GetOptionsAlignmentAsync();
 
         public SubverseContact[] CcContacts { get; }
 
@@ -99,6 +97,24 @@ namespace SubverseIM.ViewModels.Components
                 .Where(x => x.Success)
                 .Select(x => new EmbedViewModel(messagePageView.ServiceManager, x.Value))
                 .ToArray();
+        }
+
+        private async Task<HorizontalAlignment> GetContentAlignmentAsync() 
+        {
+            IConfigurationService configurationService = await messagePageView.ServiceManager
+                .GetWithAwaitAsync<IConfigurationService>();
+            SubverseConfig config = await configurationService.GetConfigAsync();
+            return fromContact is null ^ config.MessageMirrorFlag ? 
+                HorizontalAlignment.Left : HorizontalAlignment.Right;
+        }
+
+        private async Task<Dock> GetOptionsAlignmentAsync()
+        {
+            IConfigurationService configurationService = await messagePageView.ServiceManager
+                .GetWithAwaitAsync<IConfigurationService>();
+            SubverseConfig config = await configurationService.GetConfigAsync();
+            return fromContact is null ^ config.MessageMirrorFlag ?
+                Dock.Right : Dock.Left;
         }
 
         public async Task DeleteCommand() 

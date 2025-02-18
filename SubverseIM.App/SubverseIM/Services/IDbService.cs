@@ -22,7 +22,7 @@ namespace SubverseIM.Services
 
         SubverseTorrent? GetTorrent(string magnetUri);
 
-        IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName);
+        IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName = null, bool orderFlag = false);
 
         IEnumerable<SubverseMessage> GetAllUndeliveredMessages();
 

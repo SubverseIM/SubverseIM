@@ -24,6 +24,10 @@ namespace SubverseIM.Models
 
         public string[]? BootstrapperUriList { get; set; }
 
+        public bool MessageOrderFlag { get; set; }
+
+        public bool MessageMirrorFlag { get; set; }
+
         public DateTime DateLastPrompted { get; set; }
 
         public int? PromptFreqIndex { get; set; }

@@ -77,7 +77,7 @@ namespace SubverseIM.Services.Faux
             }
         }
 
-        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName)
+        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName, bool orderFlag)
         {
             lock (messages)
             {
@@ -86,9 +86,9 @@ namespace SubverseIM.Services.Faux
                     .Where(x => x.WasDecrypted ?? true)
                     .Where(x => otherPeer == x.Sender || x.Recipients.Contains(otherPeer))
                     .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName))
-                    .DistinctBy(x => x.CallId)
-                    .OrderByDescending(x => x.DateSignedOn);
-
+                    .DistinctBy(x => x.CallId);
+                topicMessages = orderFlag ? topicMessages.OrderBy(x => x.DateSignedOn) :
+                    topicMessages.OrderByDescending(x => x.DateSignedOn);
                 foreach (SubverseMessage message in topicMessages)
                 {
                     yield return message;

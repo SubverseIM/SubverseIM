@@ -1,9 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ReactiveUI;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,6 +25,8 @@ public partial class MessagePageView : UserControl
         contacts.SelectionChanged += ContactsSelectionChanged;
         messages.SelectionChanged += MessagesSelectionChanged;
         topicBox.SelectionChanged += TopicBoxSelectionChanged;
+
+        messages.Items.CollectionChanged += MessageListChanged;
 
         messageBox.GotFocus += TextBoxGotFocus;
     }
@@ -69,12 +73,28 @@ public partial class MessagePageView : UserControl
         }
     }
 
+    private async void MessageListChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (DataContext is null || !LoadTask.IsCompleted) return;
+
+        IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
+        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
+
+        SubverseConfig config = await configurationService.GetConfigAsync();
+        if (config.MessageOrderFlag && e.Action == NotifyCollectionChangedAction.Add)
+        {
+            messages.ScrollIntoView(messages.ItemCount - 1);
+        }
+    }
+
     private async void TextBoxGotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
     {
-        ILauncherService launcherService = await ((MessagePageViewModel)DataContext!)
-            .ServiceManager.GetWithAwaitAsync<ILauncherService>();
+        IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
+        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
+        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
 
-        if (launcherService.IsAccessibilityEnabled && sender is TextBox textBox)
+        SubverseConfig config = await configurationService.GetConfigAsync();
+        if ((launcherService.IsAccessibilityEnabled || config.MessageOrderFlag) && sender is TextBox textBox)
         {
             textBox.IsEnabled = false;
 
@@ -90,7 +110,7 @@ public partial class MessagePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        loadTaskSource.SetResult(e);
+        loadTaskSource.TrySetResult(e);
 
         await ((MessagePageViewModel)DataContext!).InitializeAsync();
         ((MessagePageViewModel)DataContext!).RaisePropertyChanged(
