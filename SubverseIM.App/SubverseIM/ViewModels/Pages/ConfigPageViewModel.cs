@@ -118,7 +118,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 config.MessageMirrorFlag = messageMirrorFlag;
 
-                config.PromptFreqIndex = PromptFreqIndex;
+                config.PromptFreqIndex = PromptFreqIndex == 3 ? null : PromptFreqIndex;
 
                 return await peerService.PersistConfigAsync() && frontendService.NavigatePreviousView();
             }
