@@ -72,7 +72,7 @@ namespace SubverseIM.ViewModels.Components
 
             if(fromContact is null)
             {
-                BubbleBrush = new ImmutableSolidColorBrush(Colors.MediumPurple);
+                BubbleBrush = new ImmutableSolidColorBrush(messagePageView.DefaultChatColor ?? Colors.MediumPurple);
             }
             else if(fromContact.ChatColorCode == default)
             {

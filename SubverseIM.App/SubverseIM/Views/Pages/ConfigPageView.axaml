@@ -12,7 +12,7 @@
 	<StackPanel Orientation="Vertical">
 		<Label FontWeight="Bold">Bootstrapper URIs</Label>
 		<TextBlock TextWrapping="Wrap">A list of addresses the app uses to synchronize networking activities amongst peers</TextBlock>
-		<ListBox Height="75" ItemsSource="{Binding BootstrapperUriList}" 
+		<ListBox Height="75" ItemsSource="{Binding BootstrapperUriList}"
 				 SelectedItems="{Binding SelectedUriList}" SelectionMode="Multiple,Toggle" />
 		<WrapPanel Orientation="Horizontal">
 			<Button Command="{Binding AddBootstrapperUriCommand}">Add URI</Button>
@@ -32,6 +32,12 @@
 				<TextBlock IsVisible="{Binding MessageMirrorFlag}">Left is "Them"</TextBlock>
 			</Panel>
 		</CheckBox>
+		<Label FontWeight="Bold">Default message color</Label>
+		<TextBlock TextWrapping="Wrap">Your messages will display as this color</TextBlock>
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+			<ColorPicker HorizontalAlignment="Left" Color="{Binding DefaultChatColor}" ColorModel="Hsva" IsAlphaVisible="False" />
+			<Button Command="{Binding ResetDefaultChatColorCommand}" IsEnabled="{Binding !IsChatColorDefault}">Reset to default</Button>
+		</StackPanel>
 		<Label FontWeight="Bold">Remind me to donate</Label>
 		<TextBlock TextWrapping="Wrap">As a FOSS passion project, we need help to pay the bills and make sure that we continue to deliver the best user experience. A one-time donation will unlock the "Never" option and contribute to future development of SubverseIM.</TextBlock>
 		<ComboBox x:Name="promptFreqBox"
