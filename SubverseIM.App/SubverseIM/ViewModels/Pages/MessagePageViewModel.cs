@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SIPSorcery.SIP;
@@ -31,6 +32,16 @@ namespace SubverseIM.ViewModels.Pages
         public ObservableCollection<string> TopicsList { get; }
 
         public Task<bool> MessageOrderFlagAsync => GetMessageOrderFlagAsync();
+
+        private Color? defaultChatColor;
+        public Color? DefaultChatColor 
+        {
+            get => defaultChatColor;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref defaultChatColor, value);
+            }
+        }
 
 
         private string? sendMessageText;
@@ -131,6 +142,9 @@ namespace SubverseIM.ViewModels.Pages
 
             SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
             SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
+
+            DefaultChatColor = config.DefaultChatColorCode is null ? 
+                null : Color.FromUInt32(config.DefaultChatColorCode.Value);
 
             MessageList.Clear();
 

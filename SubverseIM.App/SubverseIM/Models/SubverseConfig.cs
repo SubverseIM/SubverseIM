@@ -28,6 +28,8 @@ namespace SubverseIM.Models
 
         public bool MessageMirrorFlag { get; set; }
 
+        public uint? DefaultChatColorCode { get; set; }
+
         public DateTime DateLastPrompted { get; set; }
 
         public int? PromptFreqIndex { get; set; }

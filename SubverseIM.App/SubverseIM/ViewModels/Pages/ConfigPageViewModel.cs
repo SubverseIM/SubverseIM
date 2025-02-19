@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using Avalonia.Media;
+using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using System;
@@ -38,6 +39,27 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        private Color defaultChatColor;
+        public Color DefaultChatColor
+        {
+            get => defaultChatColor;
+            set 
+            {
+                IsChatColorDefault = false;
+                this.RaiseAndSetIfChanged(ref defaultChatColor, value);
+            }
+        }
+
+        private bool isChatColorDefault;
+        public bool IsChatColorDefault 
+        {
+            get => isChatColorDefault;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref isChatColorDefault, value);
+            }
+        }
+
         private int? promptFreqIndex;
         public int? PromptFreqIndex 
         {
@@ -68,6 +90,10 @@ namespace SubverseIM.ViewModels.Pages
             MessageOrderFlag = config.MessageOrderFlag;
 
             MessageMirrorFlag = config.MessageMirrorFlag;
+
+            DefaultChatColor = config.DefaultChatColorCode is null ? Colors.MediumPurple : 
+                Color.FromUInt32(config.DefaultChatColorCode.Value);
+            IsChatColorDefault = config.DefaultChatColorCode is null;
 
             PromptFreqIndex = config.PromptFreqIndex;
         }
@@ -118,6 +144,9 @@ namespace SubverseIM.ViewModels.Pages
 
                 config.MessageMirrorFlag = messageMirrorFlag;
 
+                config.DefaultChatColorCode = DefaultChatColor == Colors.MediumPurple ?
+                    null : DefaultChatColor.ToUInt32();
+
                 config.PromptFreqIndex = PromptFreqIndex == 3 ? null : PromptFreqIndex;
 
                 return await peerService.PersistConfigAsync() && frontendService.NavigatePreviousView();
@@ -128,6 +157,12 @@ namespace SubverseIM.ViewModels.Pages
             }
 
             return false;
+        }
+
+        public void ResetDefaultChatColorCommand() 
+        {
+            DefaultChatColor = Colors.MediumPurple;
+            IsChatColorDefault = true;
         }
     }
 }
