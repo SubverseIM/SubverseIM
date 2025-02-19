@@ -42,7 +42,7 @@ namespace SubverseIM.Bootstrapper.Controllers
                     $"INV-{inviteId}", $"sv://{peerIdStr}",
                     new DistributedCacheEntryOptions 
                     { 
-                        AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(5) 
+                        AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(15) 
                     },
                     cancellationToken);
             return inviteId;
