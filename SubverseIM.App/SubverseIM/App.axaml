@@ -14,6 +14,7 @@
 				<ColorPaletteResources x:Key="Dark" Accent="#ff8961cc" AltHigh="Black" AltLow="Black" AltMedium="Black" AltMediumHigh="Black" AltMediumLow="Black" BaseHigh="White" BaseLow="#ff64576b" BaseMedium="#ffb6aabc" BaseMediumHigh="#ffcbbfd0" BaseMediumLow="#ff8d8193" ChromeAltLow="#ffcbbfd0" ChromeBlackHigh="Black" ChromeBlackLow="#ffcbbfd0" ChromeBlackMedium="Black" ChromeBlackMediumLow="Black" ChromeDisabledHigh="#ff64576b" ChromeDisabledLow="#ffb6aabc" ChromeGray="#ffa295a8" ChromeHigh="#ffa295a8" ChromeLow="#ff332041" ChromeMedium="#ff3f2e4b" ChromeMediumLow="#ff584960" ChromeWhite="White" ListLow="#ff3f2e4b" ListMedium="#ff64576b" RegionColor="#ff262738" />
 			</FluentTheme.Palettes>
 		</FluentTheme>
+		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
 	</Application.Styles>
 	<Application.Resources>
 		<StreamGeometry x:Key="caret_left_regular">M12.9268 18.8389C13.7351 19.5461 15 18.9721 15 17.8982L15 6.10192C15 5.02797 13.7351 4.454 12.9268 5.1612L6.61617 10.683C5.81935 11.3802 5.81935 12.6198 6.61617 13.317L12.9268 18.8389ZM13.5 17.3472L7.60393 12.1882C7.4901 12.0886 7.4901 11.9115 7.60393 11.8119L13.5 6.65286L13.5 17.3472Z</StreamGeometry>
