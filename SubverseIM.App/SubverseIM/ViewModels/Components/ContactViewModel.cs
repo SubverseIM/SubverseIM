@@ -107,6 +107,16 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
+        public Color BubbleColor
+        {
+            get => Color.FromUInt32(innerContact.ChatColorCode);
+            set
+            {
+                innerContact.ChatColorCode = value.ToUInt32();
+                this.RaisePropertyChanged();
+            }
+        }
+
         public IList<Point> HexagonPoints => hexagonPoints;
 
         public Geometry HexagonPath => hexagonPath;
