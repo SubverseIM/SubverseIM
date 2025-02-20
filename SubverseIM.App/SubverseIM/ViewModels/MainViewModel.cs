@@ -108,6 +108,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
     private async Task RunAsync(CancellationToken cancellationToken)
     {
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
+        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
         IMessageService messageService = await serviceManager.GetWithAwaitAsync<IMessageService>(cancellationToken);
@@ -221,7 +222,16 @@ public class MainViewModel : ViewModelBase, IFrontendService
                             if (participant.OtherPeer == thisPeer) continue;
                             vm.AddUniqueParticipant(participant, false);
                         }
-                        vm.MessageList.Insert(0, messageViewModel);
+
+                        SubverseConfig config = await configurationService.GetConfigAsync();
+                        if (config.MessageMirrorFlag == false) 
+                        {
+                            vm.MessageList.Insert(0, messageViewModel);
+                        }
+                        else
+                        {
+                            vm.MessageList.Add(messageViewModel);
+                        }
                     }
 
                     if (launcherService.NotificationsAllowed &&
