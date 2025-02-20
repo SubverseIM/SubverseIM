@@ -3,6 +3,7 @@ using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using Android.Runtime;
 using Android.Text;
 using Android.Views.Accessibility;
 using Android.Widget;
@@ -11,6 +12,7 @@ using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
+using Java.Lang;
 using Microsoft.Maui.ApplicationModel;
 using SubverseIM.Android.Services;
 using SubverseIM.Core;
@@ -275,6 +277,31 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             ?.SetTitle(prompt)
             ?.SetView(frameLayout)
             ?.SetPositiveButton("Submit", (s, ev) => tcs.SetResult(editText.Text))
+            ?.SetNegativeButton("Cancel", (s, ev) => tcs.SetResult(null))
+            ?.SetCancelable(false)
+            ?.Show();
+
+        return tcs.Task;
+    }
+
+    public Task<string?> ShowPickerDialogAsync(string prompt, string? defaultItem = null, params string[] items)
+    {
+        TaskCompletionSource<string?> tcs = new();
+
+        FrameLayout frameLayout = new(this);
+        frameLayout.SetPadding(25, 25, 25, 25);
+
+        ArrayAdapter<ICharSequence> adapter = new(this,
+            Resource.Layout.support_simple_spinner_dropdown_item,
+            CharSequence.ArrayFromStringArray(items)
+            );
+        Spinner spinner = new(this) { Adapter = adapter };
+        frameLayout.AddView(spinner);
+
+        AlertDialog? alertDialog = new AlertDialog.Builder(this)
+            ?.SetTitle(prompt)
+            ?.SetView(frameLayout)
+            ?.SetPositiveButton("Submit", (s, ev) => tcs.SetResult(((ICharSequence?)spinner.SelectedItem)?.ToString()))
             ?.SetNegativeButton("Cancel", (s, ev) => tcs.SetResult(null))
             ?.SetCancelable(false)
             ?.Show();

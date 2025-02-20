@@ -20,6 +20,8 @@ namespace SubverseIM.Services
 
         Task<string?> ShowInputDialogAsync(string prompt, string? defaultText = null);
 
+        Task<string?> ShowPickerDialogAsync(string prompt, string? defaultItem = null, params string[] pickerItems);
+
         Task ShareUrlToAppAsync(Visual? sender, string title, string content);
 
         Task ShareFileToAppAsync(Visual? sender, string title, string path);
