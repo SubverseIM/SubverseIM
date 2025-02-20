@@ -29,6 +29,14 @@ namespace SubverseIM.Services.Implementation
 
         private const string NODES_LIST_PATH = "$/pkx/nodes.list";
 
+        private static readonly IReadOnlyDictionary<string, TimeSpan> expireTimes =
+            new Dictionary<string, TimeSpan>()
+            {
+                { "90 minutes", TimeSpan.FromMinutes(90) },
+                { "24 hours", TimeSpan.FromHours(24) },
+                { "3 days", TimeSpan.FromDays(3) }
+            };
+
         private readonly INativeService nativeService;
 
         private readonly HttpClient http;
@@ -40,7 +48,7 @@ namespace SubverseIM.Services.Implementation
         private readonly TaskCompletionSource<IDhtListener> dhtListenerTcs;
 
         private readonly TaskCompletionSource<IPortForwarder> portForwarderTcs;
-        
+
         private readonly TaskCompletionSource<IServiceManager> serviceManagerTcs;
 
         private readonly PeriodicTimer timer;
@@ -236,7 +244,7 @@ namespace SubverseIM.Services.Implementation
                 await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, IBootstrapperService.DEFAULT_PORT_NUMBER, portNum));
                 await timer.WaitForNextTickAsync();
 
-                mapping = portForwarder.Mappings.Created.SingleOrDefault(x => 
+                mapping = portForwarder.Mappings.Created.SingleOrDefault(x =>
                     x.PrivatePort == IBootstrapperService.DEFAULT_PORT_NUMBER
                     );
             }
@@ -297,9 +305,9 @@ namespace SubverseIM.Services.Implementation
         }
 
         public async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer, CancellationToken cancellationToken)
-        {   
+        {
             IServiceManager serviceManager = await serviceManagerTcs.Task;
-            
+
             IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             IMessageService messageService = await serviceManager.GetWithAwaitAsync<IMessageService>();
@@ -360,8 +368,12 @@ namespace SubverseIM.Services.Implementation
             IServiceManager serviceManager = await serviceManagerTcs.Task;
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
 
+            string[] pickerItems = expireTimes.Keys.ToArray();
+            string? expireTimeKey = await launcherService.ShowPickerDialogAsync("Link should expire in...", pickerItems[0], pickerItems);
+            if (expireTimeKey is null || !expireTimes.TryGetValue(expireTimeKey, out TimeSpan expireTimeValue)) return;
+
             SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
-            string inviteId = await http.GetFromJsonAsync<string>(new Uri($"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite?p={thisPeer}")) ??
+            string inviteId = await http.GetFromJsonAsync<string>(new Uri($"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite?p={thisPeer}&t={expireTimeValue.TotalHours}")) ??
                 throw new InvalidOperationException("Failed to resolve inviteUri!");
 
             await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");

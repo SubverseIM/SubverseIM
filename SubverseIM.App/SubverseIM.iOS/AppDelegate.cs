@@ -259,6 +259,37 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         return await tcs.Task;
     }
 
+    public async Task<string?> ShowPickerDialogAsync(string prompt, string? defaultItem = null, params string[] pickerItems)
+    {
+        TaskCompletionSource<string?> tcs = new();
+
+        UIAlertController alertController = UIAlertController
+            .Create(prompt, null, UIAlertControllerStyle.Alert);
+
+        UITextField? textField = null;
+        alertController.AddTextField(x =>
+        {
+            textField = x;
+            textField.Text = defaultItem;
+            textField.InputView = new PickerDialogHelper(textField, pickerItems);
+        });
+
+        UIAlertAction positiveAction = UIAlertAction
+            .Create("Submit", UIAlertActionStyle.Default, x => tcs.SetResult(textField?.Text));
+        alertController.AddAction(positiveAction);
+
+        UIAlertAction negativeAction = UIAlertAction
+            .Create("Cancel", UIAlertActionStyle.Cancel, x => tcs.SetResult(null));
+        alertController.AddAction(negativeAction);
+
+        await (Window?.RootViewController
+            ?.PresentViewControllerAsync(
+                viewControllerToPresent: alertController,
+                animated: true) ?? Task.CompletedTask);
+
+        return await tcs.Task;
+    }
+
     private Task ShowShareSheetAsync(Visual? sender, UIActivityItemSource activityItemSource)
     {
         TopLevel? topLevel = TopLevel.GetTopLevel(sender);

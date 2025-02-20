@@ -23,5 +23,7 @@ namespace SubverseIM.Services.Faux
         public Task<bool> ShowConfirmationDialogAsync(string title, string message) => Task.FromResult(true);
 
         public Task<string?> ShowInputDialogAsync(string prompt, string? defaultText = null) => Task.FromResult(defaultText);
+
+        public Task<string?> ShowPickerDialogAsync(string prompt, string? defaultItem = null, params string[] pickerItems) => Task.FromResult(defaultItem);
     }
 }

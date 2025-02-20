@@ -35,14 +35,14 @@ namespace SubverseIM.Bootstrapper.Controllers
         
         [HttpGet("invite")]
         [Produces("application/json")]
-        public async Task<string> CreateInviteAsync([FromQuery(Name = "p")] string peerIdStr, CancellationToken cancellationToken) 
+        public async Task<string> CreateInviteAsync([FromQuery(Name = "p")] string peerIdStr, [FromQuery(Name = "t")] double expireTimeHrs, CancellationToken cancellationToken) 
         {
             string inviteId = Guid.NewGuid().ToString();
             await _cache.SetStringAsync(
                     $"INV-{inviteId}", $"sv://{peerIdStr}",
                     new DistributedCacheEntryOptions 
                     { 
-                        AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(15) 
+                        AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(expireTimeHrs) 
                     },
                     cancellationToken);
             return inviteId;
