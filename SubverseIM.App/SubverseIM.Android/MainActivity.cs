@@ -270,7 +270,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         FrameLayout frameLayout = new(this);
         frameLayout.SetPadding(25, 25, 25, 25);
 
-        EditText editText = new(this) { InputType = InputTypes.ClassText, Text = defaultText };
+        EditText editText = new(this) { InputType = InputTypes.ClassText, Text = defaultText, ShowSoftInputOnFocus = true };
         frameLayout.AddView(editText);
 
         AlertDialog? alertDialog = new AlertDialog.Builder(this)
@@ -280,6 +280,7 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
             ?.SetNegativeButton("Cancel", (s, ev) => tcs.SetResult(null))
             ?.SetCancelable(false)
             ?.Show();
+        editText.RequestFocus();
 
         return tcs.Task;
     }

@@ -239,8 +239,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         UITextField? inputView = null;
         alertController.AddTextField(x =>
         {
-            x.Text = defaultText;
             inputView = x;
+            inputView.Text = defaultText;
+            inputView.BecomeFirstResponder();
         });
 
         UIAlertAction positiveAction = UIAlertAction
@@ -272,6 +273,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             textField = x;
             textField.Text = defaultItem;
             textField.InputView = new PickerDialogHelper(textField, pickerItems);
+            textField.BecomeFirstResponder();
         });
 
         UIAlertAction positiveAction = UIAlertAction

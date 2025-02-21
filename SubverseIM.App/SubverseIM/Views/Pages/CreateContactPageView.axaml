@@ -9,28 +9,30 @@
 	<Design.DataContext>
 		<vm:CreateContactPageViewModel />
 	</Design.DataContext>
-	<DockPanel>
-		<UniformGrid DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Rows="1" Columns="2">
-			<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding Contact.ChangePhotoCommand}"
-					AutomationProperties.Name="Change Photo">
-				<PathIcon Data="{StaticResource camera_edit_regular}" />
-			</Button>
-			<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding Contact.SaveChangesCommand}"
-					AutomationProperties.Name="Save Changes">
-				<PathIcon Data="{StaticResource save_regular}" />
-			</Button>
-		</UniformGrid>
-		<ColorView Color="{Binding Contact.BubbleColor}" ColorModel="Hsva" IsAlphaEnabled="False" DockPanel.Dock="Bottom" />
-		<Label x:Name="colorEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Bubble Color</Label>
-		<TextBox x:Name="noteEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom"
-				 Watermark="Write contact note..." Text="{Binding Contact.UserNote}"
-				 AutomationProperties.LabeledBy="{Binding #noteEditLabel}" />
-		<Label x:Name="noteEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Notes</Label>
-		<TextBox x:Name="nameEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom"
-				 Watermark="Write contact name..." Text="{Binding Contact.DisplayName}"
-				 AutomationProperties.LabeledBy="{Binding #nameEditLabel}" />
-		<Label x:Name="nameEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Contact Name</Label>
-		<Image Source="{Binding Contact.ContactPhoto}"
-			   AutomationProperties.Name="Contact photo" />
-	</DockPanel>
+	<ScrollViewer x:Name="scrollView" VerticalScrollBarVisibility="Disabled">
+		<DockPanel>
+			<UniformGrid DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Rows="1" Columns="2">
+				<Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Command="{Binding Contact.ChangePhotoCommand}"
+						AutomationProperties.Name="Change Photo">
+					<PathIcon Data="{StaticResource camera_edit_regular}" />
+				</Button>
+				<Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Command="{Binding Contact.SaveChangesCommand}"
+						AutomationProperties.Name="Save Changes">
+					<PathIcon Data="{StaticResource save_regular}" />
+				</Button>
+			</UniformGrid>
+			<ColorView x:Name="colorEditBox" Color="{Binding Contact.BubbleColor}" ColorModel="Hsva" IsAlphaEnabled="False" DockPanel.Dock="Bottom" />
+			<Label x:Name="colorEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Bubble Color</Label>
+			<TextBox x:Name="noteEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom"
+					 Watermark="Write contact note..." Text="{Binding Contact.UserNote}"
+					 AutomationProperties.LabeledBy="{Binding #noteEditLabel}" />
+			<Label x:Name="noteEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Notes</Label>
+			<TextBox x:Name="nameEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom"
+					 Watermark="Write contact name..." Text="{Binding Contact.DisplayName}"
+					 AutomationProperties.LabeledBy="{Binding #nameEditLabel}" />
+			<Label x:Name="nameEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Contact Name</Label>
+			<Image Source="{Binding Contact.ContactPhoto}"
+				   AutomationProperties.Name="Contact photo" MaxHeight="200" />
+		</DockPanel>
+	</ScrollViewer>
 </UserControl>
