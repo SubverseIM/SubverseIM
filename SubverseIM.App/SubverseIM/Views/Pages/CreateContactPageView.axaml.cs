@@ -1,4 +1,7 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
+using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
 
@@ -29,6 +32,27 @@ public partial class CreateContactPageView : UserControl
             textBox.Text = messageText;
 
             textBox.IsEnabled = true;
+        }
+    }
+
+    private void InputPane_StateChanged(object? sender, InputPaneStateEventArgs e)
+    {
+        scrollView.VerticalScrollBarVisibility = e.NewState switch
+        {
+            InputPaneState.Open => ScrollBarVisibility.Auto,
+            _ => ScrollBarVisibility.Disabled,
+        };
+    }
+
+    protected override async void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
+
+        IServiceManager serviceManager = ((CreateContactPageViewModel)DataContext!).ServiceManager;
+        TopLevel topLevel = await serviceManager.GetWithAwaitAsync<TopLevel>();
+        if (topLevel.InputPane is not null)
+        {
+            topLevel.InputPane.StateChanged += InputPane_StateChanged;
         }
     }
 }

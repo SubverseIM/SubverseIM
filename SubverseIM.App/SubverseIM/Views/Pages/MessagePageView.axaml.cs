@@ -1,8 +1,11 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System.Collections.Specialized;
@@ -81,7 +84,7 @@ public partial class MessagePageView : UserControl
         IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
 
         SubverseConfig config = await configurationService.GetConfigAsync();
-        if (config.MessageOrderFlag && e.Action == NotifyCollectionChangedAction.Add)
+        if (config.MessageOrderFlag == true && e.Action == NotifyCollectionChangedAction.Add)
         {
             messages.ScrollIntoView(messages.ItemCount - 1);
         }
@@ -90,11 +93,8 @@ public partial class MessagePageView : UserControl
     private async void TextBoxGotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
     {
         IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
-        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
-
-        SubverseConfig config = await configurationService.GetConfigAsync();
-        if ((launcherService.IsAccessibilityEnabled || config.MessageOrderFlag) && sender is TextBox textBox)
+        if (launcherService.IsAccessibilityEnabled && sender is TextBox textBox)
         {
             textBox.IsEnabled = false;
 
@@ -116,5 +116,26 @@ public partial class MessagePageView : UserControl
         ((MessagePageViewModel)DataContext!).RaisePropertyChanged(
             nameof(MessagePageViewModel.SendMessageTopicName)
             );
+
+        IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
+        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
+        SubverseConfig config = await configurationService.GetConfigAsync();
+        if (config.MessageOrderFlag == true)
+        {
+            Dispatcher.UIThread.RunJobs();
+            messages.ScrollIntoView(messages.ItemCount - 1);
+        }
+    }
+
+    protected override async void OnSizeChanged(SizeChangedEventArgs e)
+    {
+        base.OnSizeChanged(e);
+        if (DataContext is not null)
+        {
+            IServiceManager serviceManager = ((MessagePageViewModel)DataContext).ServiceManager;
+            IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
+            SubverseConfig config = await configurationService.GetConfigAsync();
+            if (config.MessageOrderFlag == true) messages.ScrollIntoView(messages.ItemCount - 1);
+        }
     }
 }

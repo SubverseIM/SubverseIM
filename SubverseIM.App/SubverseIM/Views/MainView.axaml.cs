@@ -1,4 +1,6 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Platform;
 using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
@@ -31,13 +33,28 @@ public partial class MainView : UserControl
            throw new InvalidOperationException("Could not resolve TopLevel instance from control");
         ((MainViewModel)DataContext!).RegisterTopLevel(topLevel);
 
-        ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
+        if (topLevel.InputPane is not null)
+        {
+            topLevel.InputPane.StateChanged += InputPaneStateChanged;
+        }
+
         if (topLevel.Screens is not null)
         {
             topLevel.Screens.Changed += (s, ev) => ScreenOrientationChanged();
         }
+        ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
 
         ((MainViewModel)DataContext!).NavigateLaunchedUri();
+    }
+
+    private void InputPaneStateChanged(object? sender, InputPaneStateEventArgs e)
+    {
+        VerticalAlignment = e.NewState switch
+        {
+            InputPaneState.Open => Avalonia.Layout.VerticalAlignment.Top,
+            _ => Avalonia.Layout.VerticalAlignment.Stretch,
+        };
+        Height = ((IInputPane?)sender)?.OccludedRect.Top ?? Height;
     }
 
     public void ScreenOrientationChanged()

@@ -20,7 +20,7 @@
 			<Setter Property="DisplayMode" Value="Inline"/>
 		</Style>
 	</UserControl.Styles>
-	<SplitView x:Name="splitView" 
+	<SplitView x:Name="splitView"
 			   IsPaneOpen="{Binding IsSidebarOpen}"
 			   PanePlacement="Right"
 			   OpenPaneLength="300"
