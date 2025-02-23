@@ -1,4 +1,3 @@
-using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -151,7 +150,7 @@ public partial class ContactPageView : UserControl
             .Where(x => x is not null)
             .Cast<ContactViewModel>())
         {
-            item.ShouldShowOptions = isDoubleTap;
+            item.ShouldShowOptions = launcherService?.IsAccessibilityEnabled == true || isDoubleTap;
             item.IsSelected = true;
         }
 
@@ -160,7 +159,7 @@ public partial class ContactPageView : UserControl
             .Where(x => x is not null)
             .Cast<ContactViewModel>())
         {
-            item.ShouldShowOptions = isDoubleTap;
+            item.ShouldShowOptions = launcherService?.IsAccessibilityEnabled == true || isDoubleTap;
             item.IsSelected = !isLongPress && 
                 launcherService?.IsAccessibilityEnabled == false &&
                 ((ContactPageViewModel)DataContext!).Parent is null;
