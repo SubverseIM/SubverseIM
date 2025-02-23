@@ -16,7 +16,7 @@ namespace SubverseIM.Views.Pages;
 
 public partial class ContactPageView : UserControl
 {
-    private class TimerState 
+    private class TimerState
     {
         public object? DataContext { get; set; }
     }
@@ -30,6 +30,8 @@ public partial class ContactPageView : UserControl
     {
         public int TapCount { get; set; }
     }
+
+    private readonly Stack<ContactViewModel> selectionStack;
 
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 
@@ -46,6 +48,9 @@ public partial class ContactPageView : UserControl
     public ContactPageView()
     {
         InitializeComponent();
+
+        selectionStack = new();
+
         loadTaskSource = new();
 
         tapTimerState = new();
@@ -78,16 +83,16 @@ public partial class ContactPageView : UserControl
 
         bool isDoubleTap;
         ContactPageViewModel? dataContext;
-        lock (tapTimerState) 
-        { 
+        lock (tapTimerState)
+        {
             isDoubleTap = tapTimerState.TapCount > 1;
             dataContext = tapTimerState.DataContext as ContactPageViewModel;
         }
 
         if (launcherService?.IsAccessibilityEnabled == false &&
-            !isLongPress && 
-            !isDoubleTap && 
-            dataContext is not null && 
+            !isLongPress &&
+            !isDoubleTap &&
+            dataContext is not null &&
             dataContext.Parent is null &&
             contacts.SelectedItems?.Count > 0)
         {
@@ -134,6 +139,7 @@ public partial class ContactPageView : UserControl
         if (selectedItems.Count() > 0)
         {
             foreach (var item in selectedItems
+                .Where(x => !e.RemovedItems.Contains(x))
                 .Cast<ContactViewModel>())
             {
                 item.ShouldShowOptions = false;
@@ -150,7 +156,16 @@ public partial class ContactPageView : UserControl
             .Where(x => x is not null)
             .Cast<ContactViewModel>())
         {
-            item.ShouldShowOptions = launcherService?.IsAccessibilityEnabled == true || isDoubleTap;
+            if (launcherService?.IsAccessibilityEnabled == true || isDoubleTap)
+            {
+                item.ShouldShowOptions = true;
+                selectionStack.Push(item);
+            }
+            else
+            {
+                item.ShouldShowOptions = false;
+            }
+
             item.IsSelected = true;
         }
 
@@ -159,16 +174,35 @@ public partial class ContactPageView : UserControl
             .Where(x => x is not null)
             .Cast<ContactViewModel>())
         {
-            item.ShouldShowOptions = launcherService?.IsAccessibilityEnabled == true || isDoubleTap;
-            item.IsSelected = !isLongPress && 
+            if (!item.ShouldShowOptions)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    contacts.Selection.Select(contacts.Items.IndexOf(item));
+                    item.ShouldShowOptions = launcherService?.IsAccessibilityEnabled == true || isDoubleTap;
+                }, DispatcherPriority.Input);
+            }
+            else
+            {
+                item.ShouldShowOptions = false;
+            }
+
+            item.IsSelected = !isLongPress &&
                 launcherService?.IsAccessibilityEnabled == false &&
                 ((ContactPageViewModel)DataContext!).Parent is null;
+        }
+
+        if (!contacts.Items.Cast<ContactViewModel>().Any(x => x.ShouldShowOptions) && 
+            selectionStack.TryPop(out ContactViewModel? _) && 
+            selectionStack.TryPeek(out ContactViewModel? restoreItem)) 
+        {
+            restoreItem.ShouldShowOptions = true;
         }
     }
 
     private void Topics_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        foreach (var item in e.AddedItems.Cast<TopicViewModel>()) 
+        foreach (var item in e.AddedItems.Cast<TopicViewModel>())
         {
             item.IsSelected = true;
         }
