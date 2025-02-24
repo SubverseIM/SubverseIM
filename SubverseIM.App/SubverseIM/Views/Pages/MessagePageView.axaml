@@ -45,11 +45,23 @@
 					<DockPanel DockPanel.Dock="Top">
 						<Button DockPanel.Dock="Right"
 								VerticalAlignment="Stretch"
+								Command="{Binding DeleteAllCommand}"
+								AutomationProperties.Name="Delete All Messages">
+							<PathIcon Data="{StaticResource delete_regular}" />
+						</Button>
+						<Button DockPanel.Dock="Right"
+								VerticalAlignment="Stretch"
+								Command="{Binding ExportAllCommand}"
+								AutomationProperties.Name="Export All Messages">
+							<PathIcon Data="{StaticResource export_regular}" />
+						</Button>
+						<Button DockPanel.Dock="Right"
+								VerticalAlignment="Stretch"
 								Command="{Binding AddParticipantsCommand}"
 								AutomationProperties.Name="Add Participants">
 							<PathIcon Data="{StaticResource people_add_regular}" />
 						</Button>
-						<Label>Participants</Label>
+						<Label>Manage Conversation</Label>
 					</DockPanel>
 					<ListBox x:Name="contacts" SelectionMode="Single,Toggle" ItemsSource="{Binding ContactsList}">
 						<ListBox.Styles>

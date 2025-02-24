@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Threading;
 using LiteDB;
 using ReactiveUI;
 using SIPSorcery.SIP;
@@ -224,7 +225,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         }
 
                         SubverseConfig config = await configurationService.GetConfigAsync();
-                        if (config.MessageMirrorFlag == false) 
+                        if (config.MessageMirrorFlag == false)
                         {
                             vm.MessageList.Insert(0, messageViewModel);
                         }
@@ -358,12 +359,22 @@ public class MainViewModel : ViewModelBase, IFrontendService
         CurrentPage = createContactPage;
     }
 
-    public void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName)
+    public async void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName)
     {
         MessagePageViewModel vm = new MessagePageViewModel(serviceManager, contacts);
+        if (topicName is null)
+        {
+            await vm.InitializeAsync();
+        }
+        else
+        {
+            vm.TopicsList.Add(topicName);
+            Dispatcher.UIThread.Post(() =>
+                vm.SendMessageTopicName = topicName,
+                DispatcherPriority.Input
+                );
+        }
         CurrentPage = vm;
-
-        vm.SendMessageTopicName = topicName;
     }
 
     public void NavigateTorrentView()

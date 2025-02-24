@@ -5,6 +5,7 @@ using ReactiveUI;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
 using SubverseIM.Models;
+using SubverseIM.Serializers;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using System;
@@ -19,6 +20,9 @@ namespace SubverseIM.ViewModels.Pages
 {
     public class MessagePageViewModel : PageViewModelBase<MessagePageViewModel>, IContactContainer
     {
+        private const string DELETE_CONFIRM_TITLE = "Delete topic messages?";
+        private const string DELETE_CONFIRM_MESSAGE = "Warning: all messages labeled with this topic will be permanently deleted! Are you sure you want to proceed?";
+
         private readonly List<ContactViewModel> permContactsList;
 
         public override string Title => $"Conversation View";
@@ -34,10 +38,10 @@ namespace SubverseIM.ViewModels.Pages
         public Task<bool> MessageOrderFlagAsync => GetMessageOrderFlagAsync();
 
         private Color? defaultChatColor;
-        public Color? DefaultChatColor 
+        public Color? DefaultChatColor
         {
             get => defaultChatColor;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref defaultChatColor, value);
             }
@@ -82,7 +86,7 @@ namespace SubverseIM.ViewModels.Pages
             TopicsList = [string.Empty];
         }
 
-        private async Task<bool> GetMessageOrderFlagAsync() 
+        private async Task<bool> GetMessageOrderFlagAsync()
         {
             IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>();
             SubverseConfig config = await configurationService.GetConfigAsync();
@@ -109,6 +113,50 @@ namespace SubverseIM.ViewModels.Pages
             {
                 TopicsList.Insert(0, filteredText);
                 SendMessageTopicName = filteredText;
+            }
+        }
+
+        public async Task DeleteAllCommand()
+        {
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
+            if (string.IsNullOrEmpty(SendMessageTopicName))
+            {
+                await launcherService.ShowAlertDialogAsync("Action Disallowed", "You cannot delete the default topic.");
+                return;
+            }
+
+            if (await launcherService.ShowConfirmationDialogAsync(DELETE_CONFIRM_TITLE, DELETE_CONFIRM_MESSAGE))
+            {
+                IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
+                dbService.DeleteAllMessagesOfTopic(SendMessageTopicName);
+
+                IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+                while (frontendService.NavigatePreviousView()) ;
+            }
+        }
+
+        public async Task ExportAllCommand()
+        {
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
+            if (string.IsNullOrEmpty(SendMessageTopicName))
+            {
+                await launcherService.ShowAlertDialogAsync("Action Disallowed", "You cannot export the default topic.");
+                return;
+            }
+
+            TopLevel topLevel = await ServiceManager.GetWithAwaitAsync<TopLevel>();
+            IStorageFile? outputFile = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                DefaultExtension = ".csv",
+                SuggestedFileName = $"{SendMessageTopicName.TrimStart('#')}_exported",
+                FileTypeChoices = [new FilePickerFileType("text/csv")]
+            });
+
+            if (outputFile is not null)
+            {
+                using CsvMessageSerializer serializer = new(await outputFile.OpenWriteAsync());
+                IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
+                dbService.WriteAllMessagesOfTopic(serializer, SendMessageTopicName);
             }
         }
 
@@ -141,12 +189,22 @@ namespace SubverseIM.ViewModels.Pages
             IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>(cancellationToken);
 
             SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
+            HashSet<SubversePeerId> participantIds = permContactsList
+                .Select(x => x.innerContact.OtherPeer)
+                .ToHashSet();
+            if (participantIds.Count > 1 && string.IsNullOrEmpty(SendMessageTopicName))
+            {
+                TopicsList.Remove(string.Empty);
+                await AddTopicCommand();
+            }
+            else if (participantIds.Count == 1 && !TopicsList.Contains(string.Empty))
+            {
+                TopicsList.Insert(0, string.Empty);
+            }
+
             SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
-
-            DefaultChatColor = config.DefaultChatColorCode is null ? 
+            DefaultChatColor = config.DefaultChatColorCode is null ?
                 null : Color.FromUInt32(config.DefaultChatColorCode.Value);
-
-            MessageList.Clear();
 
             if (shouldRefreshContacts)
             {
@@ -163,9 +221,7 @@ namespace SubverseIM.ViewModels.Pages
                 ShouldRefreshContacts = true;
             }
 
-            HashSet<SubversePeerId> participantIds = permContactsList
-                .Select(x => x.innerContact.OtherPeer)
-                .ToHashSet();
+            MessageList.Clear();
             foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(participantIds, null, config.MessageOrderFlag))
             {
                 if (message.TopicName == "#system") continue;
@@ -253,7 +309,7 @@ namespace SubverseIM.ViewModels.Pages
             }
             else if (messageTopicName == SendMessageTopicName && config.MessageOrderFlag == true)
             {
-                MessageList.Add(new (this, null, message));
+                MessageList.Add(new(this, null, message));
             }
 
             foreach (SubverseContact contact in permContactsList.Select(x => x.innerContact))

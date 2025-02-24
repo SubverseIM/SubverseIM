@@ -26,13 +26,20 @@ public partial class ContactPageView : UserControl
         public bool HasElapsed { get; set; }
     }
 
+    private class TapTimerState : TimerState
+    {
+        public int TapCount { get; set; }
+    }
+
     private readonly List<ContactViewModel> selectionStack;
 
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 
-    private readonly Timer pressTimer;
+    private readonly Timer pressTimer, tapTimer;
 
     private readonly PressTimerState pressTimerState;
+
+    private readonly TapTimerState tapTimerState;
 
     private ILauncherService? launcherService;
 
@@ -49,11 +56,14 @@ public partial class ContactPageView : UserControl
         pressTimer = new Timer(PressTimerElapsed, pressTimerState,
             Timeout.Infinite, Timeout.Infinite);
 
+        tapTimerState = new();
+        tapTimer = new Timer(TapTimerElapsed, tapTimerState,
+            Timeout.Infinite, Timeout.Infinite);
+
         contacts.PointerPressed += Contacts_PointerPressed;
         contacts.PointerReleased += Contacts_PointerReleased;
 
         contacts.SelectionChanged += Contacts_SelectionChanged;
-        topics.SelectionChanged += Topics_SelectionChanged;
     }
 
     private void PressTimerElapsed(object? state)
@@ -62,10 +72,48 @@ public partial class ContactPageView : UserControl
         lock (pressTimerState) { pressTimerState.HasElapsed = true; }
     }
 
+    private async void TapTimerElapsed(object? state)
+    {
+        Debug.Assert(state == tapTimerState);
+
+        bool isLongPress;
+        lock (pressTimerState) { isLongPress = pressTimerState.HasElapsed; }
+
+        ContactPageViewModel? dataContext;
+        lock (tapTimerState)
+        {
+            dataContext = tapTimerState.DataContext as ContactPageViewModel;
+        }
+
+        if (launcherService?.IsAccessibilityEnabled == false &&
+            !isLongPress &&
+            dataContext is not null &&
+            dataContext.Parent is null &&
+            contacts.SelectedItems?.Count > 0)
+        {
+            await Dispatcher.UIThread.InvokeAsync(dataContext.MessageCommand);
+        }
+        else
+        {
+            lock (tapTimerState) { tapTimerState.TapCount = 0; }
+        }
+    }
+
     private void Contacts_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         lock (pressTimerState) { pressTimerState.HasElapsed = false; }
         pressTimer.Change(275, Timeout.Infinite);
+
+        bool isFirstTap;
+        lock (tapTimerState)
+        {
+            isFirstTap = tapTimerState.TapCount++ == 0;
+        }
+
+        if (isFirstTap)
+        {
+            tapTimer.Change(300, Timeout.Infinite);
+        }
     }
 
     private void Contacts_PointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -135,25 +183,13 @@ public partial class ContactPageView : UserControl
         }
     }
 
-    private void Topics_SelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        foreach (var item in e.AddedItems.Cast<TopicViewModel>())
-        {
-            item.IsSelected = true;
-        }
-
-        foreach (var item in e.RemovedItems.Cast<TopicViewModel>())
-        {
-            item.IsSelected = false;
-        }
-    }
-
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
         loadTaskSource.TrySetResult(e);
 
         pressTimerState.DataContext = DataContext;
+        tapTimerState.DataContext = DataContext;
 
         await ((ContactPageViewModel)DataContext!).LoadTopicsAsync();
         await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
