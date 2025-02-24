@@ -1,11 +1,8 @@
 using Avalonia.Controls;
-using Avalonia.Controls.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
-using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System.Collections.Specialized;
@@ -82,11 +79,21 @@ public partial class MessagePageView : UserControl
 
         IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
         IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
-
         SubverseConfig config = await configurationService.GetConfigAsync();
-        if (config.MessageOrderFlag == true && e.Action == NotifyCollectionChangedAction.Add)
+
+        bool isValidAction = e.Action switch
         {
-            messages.ScrollIntoView(messages.ItemCount - 1);
+            NotifyCollectionChangedAction.Add => true,
+            NotifyCollectionChangedAction.Reset => true,
+            _ => false
+        };
+
+        if (config.MessageOrderFlag == true && isValidAction)
+        {
+            Dispatcher.UIThread.Post(() =>
+                messages.ScrollIntoView(messages.ItemCount - 1),
+                DispatcherPriority.Loaded
+                );
         }
     }
 
@@ -112,18 +119,16 @@ public partial class MessagePageView : UserControl
         base.OnLoaded(e);
         loadTaskSource.TrySetResult(e);
 
-        await ((MessagePageViewModel)DataContext!).InitializeAsync();
-        ((MessagePageViewModel)DataContext!).RaisePropertyChanged(
-            nameof(MessagePageViewModel.SendMessageTopicName)
-            );
-
         IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
         IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
         SubverseConfig config = await configurationService.GetConfigAsync();
+
         if (config.MessageOrderFlag == true)
         {
-            Dispatcher.UIThread.RunJobs();
-            messages.ScrollIntoView(messages.ItemCount - 1);
+            Dispatcher.UIThread.Post(() =>
+                messages.ScrollIntoView(messages.ItemCount - 1),
+                DispatcherPriority.Loaded
+                );
         }
     }
 
