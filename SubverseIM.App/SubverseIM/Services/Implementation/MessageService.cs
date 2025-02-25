@@ -107,7 +107,16 @@ public class MessageService : IMessageService, IDisposableService
                 CachedPeers.Add(fromPeer, peer = new() { OtherPeer = fromPeer });
             }
         }
-        peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
+
+        peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
+        foreach (SIPViaHeader viaHeader in sipRequest.Header.Vias.Via) 
+        {
+            string viaEndPointStr = $"{viaHeader.ReceivedFromIPAddress}:{viaHeader.ReceivedFromPort}";
+            if (IPEndPoint.TryParse(viaEndPointStr, out IPEndPoint? viaEndPoint))
+            {
+                peer.RemoteEndPoints.Add(viaEndPoint);
+            }
+        }
 
         bool hasReachedDestination = toPeer == await bootstrapperService.GetPeerIdAsync();
         message.WasDecrypted = (message.WasDelivered = hasReachedDestination) && wasDecrypted;
@@ -126,6 +135,9 @@ public class MessageService : IMessageService, IDisposableService
         }
         else
         {
+            SIPViaHeader viaHeader = new(remoteEndPoint, CallProperties.CreateBranchId());
+            sipRequest.Header.Vias.PushViaHeader(viaHeader);
+
             dbService.InsertOrUpdateItem(message);
             await SendSIPRequestAsync(sipRequest);
 
@@ -159,7 +171,7 @@ public class MessageService : IMessageService, IDisposableService
             {
                 if (CachedPeers.TryGetValue(peerId, out SubversePeer? peer))
                 {
-                    peer.RemoteEndPoint = remoteEndPoint.GetIPEndPoint();
+                    peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
                 }
             }
         }
@@ -177,14 +189,14 @@ public class MessageService : IMessageService, IDisposableService
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
 
         SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
-        IPEndPoint? cachedEndPoint;
+        HashSet<IPEndPoint> cachedEndPoints;
         lock (CachedPeers)
         {
             CachedPeers.TryGetValue(toPeer, out SubversePeer? peer);
-            cachedEndPoint = peer?.RemoteEndPoint;
+            cachedEndPoints = peer?.RemoteEndPoints ?? [];
         }
 
-        if (cachedEndPoint is not null)
+        foreach (IPEndPoint cachedEndPoint in cachedEndPoints) 
         {
             await sipTransport.SendRequestAsync(new(cachedEndPoint), sipRequest);
         }

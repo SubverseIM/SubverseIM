@@ -1,5 +1,6 @@
 ﻿using PgpCore;
 using SubverseIM.Core;
+using System.Collections.Generic;
 using System.Net;
 
 namespace SubverseIM.Models
@@ -8,8 +9,13 @@ namespace SubverseIM.Models
     {
         public SubversePeerId OtherPeer { get; set; }
 
-        public IPEndPoint? RemoteEndPoint { get; set; }
+        public HashSet<IPEndPoint> RemoteEndPoints { get; set; }
 
         public EncryptionKeys? KeyContainer { get; set; }
+
+        public SubversePeer() 
+        {
+            RemoteEndPoints = new();
+        }
     }
 }
