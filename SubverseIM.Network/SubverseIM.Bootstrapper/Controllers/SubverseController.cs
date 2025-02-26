@@ -91,6 +91,7 @@ namespace SubverseIM.Bootstrapper.Controllers
         public async Task GetNodesAsync([FromQuery(Name = "p")] string peerIdStr, CancellationToken cancellationToken)
         {
             byte[] responseBytes = await _cache.GetAsync($"DAT-{peerIdStr}", cancellationToken) ?? [];
+            Response.GetTypedHeaders().ContentType = new("application/octet-stream");
             await Response.Body.WriteAsync(responseBytes, cancellationToken);
         }
 

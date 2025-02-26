@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  test-app:
     name: SubverseIM.App
     runs-on: self-hosted
 
@@ -26,6 +26,23 @@ jobs:
       run: dotnet build SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj --no-restore
     - name: Test SubverseIM
       run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj --no-build --verbosity normal
+  test-web:
+    name: SubverseIM.Bootstrapper
+    runs-on: self-hosted
+
+    container: 
+      image: mcr.microsoft.com/dotnet/sdk:8.0
+      
+    steps:
+    - uses: actions/checkout@v4
+      with: 
+        submodules: 'recursive'
+    - name: Restore dependencies
+      run: dotnet restore SubverseIM.Network/SubverseIM.Bootstrapper.Tests/SubverseIM.Bootstrapper.Tests.csproj
+    - name: Build SubverseIM
+      run: dotnet build SubverseIM.Network/SubverseIM.Bootstrapper.Tests/SubverseIM.Bootstrapper.Tests.csproj --no-restore
+    - name: Test SubverseIM
+      run: dotnet test SubverseIM.Network/SubverseIM.Bootstrapper.Tests/SubverseIM.Bootstrapper.Tests.csproj --no-build --verbosity normal
   publish:
     name: SubverseIM.Android
     runs-on: self-hosted
