@@ -55,6 +55,8 @@ jobs:
   publish-web:
     name: SubverseIM.Bootstrapper
     runs-on: self-hosted
+    permissions:
+      contents: read
 
     container: 
       image: mcr.microsoft.com/dotnet/sdk:8.0
