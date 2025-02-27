@@ -6,7 +6,7 @@ on:
     - '*'
 
 jobs:
-  publish:
+  publish-app:
     name: SubverseIM.Android
     runs-on: self-hosted
     permissions:
@@ -52,3 +52,45 @@ jobs:
         releaseFiles: "/home/tc/publish/android/com.ChosenFewSoftware.SubverseIM-Signed.aab"
         whatsNewDirectory: "/home/tc/publish/android/whatsnew"
         track: internal
+  publish-web:
+    name: SubverseIM.Bootstrapper
+    runs-on: self-hosted
+
+    container: 
+      image: mcr.microsoft.com/dotnet/sdk:8.0
+      
+    steps:
+    - uses: actions/checkout@v4
+      with: 
+        submodules: 'recursive'
+    - name: Create publish directory
+      run: |
+        mkdir -p /home/tc/publish/web
+        touch /home/tc/publish/web/app_offline.htm
+    - name: Initial Web deployment
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_HOSTNAME }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftps
+        security: strict
+        local-dir: /home/tc/publish/web/
+        server-dir: /subverse/
+    - name: Cleanup initial Web deployment
+      run: rm -f /home/tc/publish/web/*
+    - name: Test SubverseIM.Bootstrapper
+      run: dotnet test SubverseIM.Network/SubverseIM.Bootstrapper.Tests/SubverseIM.Bootstrapper.Tests.csproj
+    - name: Publish SubverseIM.Bootstrapper
+      run: dotnet publish --configuration Release --runtime win-x64 --self-contained false --output /home/tc/publish/web -p:PublishReadyToRun=true -m:1
+    - name: Final Web deployment
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_HOSTNAME }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftps
+        security: strict
+        local-dir: /home/tc/publish/web/
+        server-dir: /subverse/
+
