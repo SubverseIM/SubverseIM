@@ -10,6 +10,8 @@ jobs:
   test-app:
     name: SubverseIM.App
     runs-on: self-hosted
+    permissions:
+      contents: read
 
     container: 
       image: mcr.microsoft.com/dotnet/sdk:8.0
@@ -29,6 +31,8 @@ jobs:
   test-web:
     name: SubverseIM.Bootstrapper
     runs-on: self-hosted
+    permissions:
+      contents: read
 
     container: 
       image: mcr.microsoft.com/dotnet/sdk:8.0
@@ -46,6 +50,8 @@ jobs:
   build-app:
     name: SubverseIM.Android
     runs-on: self-hosted
+    permissions:
+      contents: read
     
     container: 
       image: mobiledevops/android-sdk-image
