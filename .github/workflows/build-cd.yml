@@ -76,7 +76,6 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftps
-        security: strict
         local-dir: /home/tc/publish/web/
         server-dir: /subverse/
     - name: Cleanup initial Web deployment
@@ -92,7 +91,6 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         protocol: ftps
-        security: strict
         local-dir: /home/tc/publish/web/
         server-dir: /subverse/
 
