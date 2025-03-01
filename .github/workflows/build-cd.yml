@@ -83,7 +83,7 @@ jobs:
     - name: Test SubverseIM.Bootstrapper
       run: dotnet test SubverseIM.Network/SubverseIM.Bootstrapper.Tests/SubverseIM.Bootstrapper.Tests.csproj
     - name: Publish SubverseIM.Bootstrapper
-      run: dotnet publish --configuration Release --runtime win-x64 --self-contained false --output /home/tc/publish/web -p:PublishReadyToRun=true -m:1
+      run: dotnet publish SubverseIM.Network/SubverseIM.Bootstrapper/SubverseIM.Bootstrapper.csproj --configuration Release --runtime win-x64 --self-contained false --output /home/tc/publish/web -p:PublishReadyToRun=true -m:1
     - name: Final Web deployment
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
