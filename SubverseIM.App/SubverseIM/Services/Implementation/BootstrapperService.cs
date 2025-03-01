@@ -16,6 +16,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace SubverseIM.Services.Implementation
 {
@@ -373,8 +374,12 @@ namespace SubverseIM.Services.Implementation
             if (expireTimeKey is null || !expireTimes.TryGetValue(expireTimeKey, out TimeSpan expireTimeValue)) return;
 
             SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
-            string inviteId = await http.GetFromJsonAsync<string>(new Uri($"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite?p={thisPeer}&t={expireTimeValue.TotalHours}")) ??
-                throw new InvalidOperationException("Failed to resolve inviteUri!");
+            UriBuilder builder = new($"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite") 
+            { 
+                Query = $"?p={thisPeer}&t={HttpUtility.UrlEncode(expireTimeValue.TotalHours.ToString())}"
+            };
+            string inviteId = await http.GetFromJsonAsync<string>(builder.Uri) ??
+                throw new InvalidOperationException("Failed to resolve inviteId!");
 
             await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
         }
