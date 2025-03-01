@@ -324,17 +324,39 @@
 										</ItemsControl.ItemTemplate>
 									</ItemsControl>
 									<Border Background="{Binding BubbleBrush}" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignmentAsync^}">
-										<TextBlock Foreground="White" TextWrapping="Wrap" Text="{Binding Content}" Margin="2">
-											<Classes.offscreen>
-												<MultiBinding Converter="{x:Static BoolConverters.Or}">
-													<MultiBinding Converter="{x:Static BoolConverters.And}">
-														<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
-														<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
-													</MultiBinding>
-													<Binding Path="IsDropDownOpen" ElementName="topicBox" />
-												</MultiBinding>
-											</Classes.offscreen>
-										</TextBlock>
+										<ItemsControl ItemsSource="{Binding Content}">
+											<ItemsControl.ItemsPanel>
+												<ItemsPanelTemplate>
+													<WrapPanel Margin="2">
+														<Classes.offscreen>
+															<MultiBinding Converter="{x:Static BoolConverters.Or}">
+																<MultiBinding Converter="{x:Static BoolConverters.And}">
+																	<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+																	<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+																</MultiBinding>
+																<Binding Path="IsDropDownOpen" ElementName="topicBox" />
+															</MultiBinding>
+														</Classes.offscreen>
+													</WrapPanel>
+												</ItemsPanelTemplate>
+											</ItemsControl.ItemsPanel>
+											<ItemsControl.ItemTemplate>
+												<DataTemplate>
+													<TextBlock Classes.emphasis="{Binding IsEmphasized, DataType={x:Type vmx:InlineContentViewModel}}}"
+														 Classes.italic="{Binding IsItalics, DataType={x:Type vmx:InlineContentViewModel}}}"
+														 Text="{Binding Content, DataType={x:Type vmx:InlineContentViewModel}}"
+														 Foreground="White" TextWrapping="Wrap"/>
+												</DataTemplate>
+											</ItemsControl.ItemTemplate>
+											<ItemsControl.Styles>
+												<Style Selector="TextBlock.emphasis" x:DataType="vmx:InlineContentViewModel">
+													<Setter Property="FontWeight" Value="Bold"/>
+												</Style>
+												<Style Selector="TextBlock.italic" x:DataType="vmx:InlineContentViewModel">
+													<Setter Property="FontStyle" Value="Italic"/>
+												</Style>
+											</ItemsControl.Styles>
+										</ItemsControl>
 									</Border>
 								</DockPanel>
 							</DockPanel>

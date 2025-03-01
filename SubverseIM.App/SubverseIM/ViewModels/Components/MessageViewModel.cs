@@ -6,6 +6,8 @@ using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -16,6 +18,18 @@ namespace SubverseIM.ViewModels.Components
     {
         private static readonly Regex URL_REGEX = new(
             @"((?:https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b)|(?:magnet:))([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+            );
+
+        private static readonly Regex EMPHASIS_REGEX = new(
+            @"\*\*(.+)\*\*"
+            );
+
+        private static readonly Regex ITALICS_REGEX = new(
+            @"_(.+)_"
+            );
+
+        private static readonly Regex PLAIN_REGEX = new(
+            @"(?:(?:\*.+\*)|(?:_.+_))?([^\*_]*)"
             );
 
         private readonly MessagePageViewModel messagePageView;
@@ -38,7 +52,7 @@ namespace SubverseIM.ViewModels.Components
 
         public bool IsGroupMessage => innerMessage.RecipientNames.Length > 1;
 
-        public string Content => URL_REGEX.Replace(
+        public string ContentString => URL_REGEX.Replace(
             innerMessage.Content ?? string.Empty, "[embed]"
             );
 
@@ -63,6 +77,8 @@ namespace SubverseIM.ViewModels.Components
         public SubverseContact[] CcContacts { get; }
 
         public EmbedViewModel[] Embeds { get; }
+
+        public InlineContentViewModel[] Content { get; }
 
         public MessageViewModel(MessagePageViewModel messagePageView, SubverseContact? fromContact, SubverseMessage innerMessage)
         {
@@ -97,6 +113,28 @@ namespace SubverseIM.ViewModels.Components
                 .Where(x => x.Success)
                 .Select(x => new EmbedViewModel(messagePageView.ServiceManager, x.Value))
                 .ToArray();
+
+            Content = ((IEnumerable<Match>)
+                [.. PLAIN_REGEX.Matches(ContentString).AsEnumerable(), 
+                .. EMPHASIS_REGEX.Matches(ContentString).AsEnumerable(), 
+                .. ITALICS_REGEX.Matches(ContentString).AsEnumerable()])
+                .OrderBy(x => x.Groups[1].Index)
+                .Where(x => x.Groups[1].Value.Length > 0)
+                .Select(x => 
+                {
+                    if (x.Value.StartsWith('_') && x.Value.EndsWith('_'))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, false, true);
+                    }
+                    else if (x.Value.StartsWith('*') && x.Value.EndsWith('*'))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, true, false);
+                    }
+                    else 
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, false, false);
+                    }
+                }).ToArray();
         }
 
         private async Task<HorizontalAlignment> GetContentAlignmentAsync() 

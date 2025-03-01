@@ -190,7 +190,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
         messagePageViewModel.SendMessageText = checkToken;
         await messagePageViewModel.SendCommand();
 
-        Assert.Contains(checkToken, messagePageViewModel.MessageList.Select(x => x.Content));
+        Assert.Contains(checkToken, messagePageViewModel.MessageList.Select(x => x.ContentString));
     }
 
     [AvaloniaFact]
