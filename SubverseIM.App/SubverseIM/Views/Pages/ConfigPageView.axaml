@@ -18,6 +18,14 @@
 			<Button Command="{Binding AddBootstrapperUriCommand}">Add URI</Button>
 			<Button Command="{Binding RemoveBootstrapperUriCommand}" IsEnabled="{Binding !!SelectedUriList.Count}">Remove Selected URIs</Button>
 		</WrapPanel>
+		<Label FontWeight="Bold">Message formatting (does not affect embeds)</Label>
+		<CheckBox IsChecked="{Binding IsFormattingAllowed}" 
+				  IsEnabled="{Binding !IsAccessibilityEnabledAsync^}">
+			<Panel>
+				<TextBlock IsVisible="{Binding !IsFormattingAllowed}">Display all messages as plaintext</TextBlock>
+				<TextBlock IsVisible="{Binding IsFormattingAllowed}">Display messages with formatting</TextBlock>
+			</Panel>
+		</CheckBox>
 		<Label FontWeight="Bold">Reverse message order</Label>
 		<CheckBox IsChecked="{Binding MessageOrderFlag}">
 			<Panel>

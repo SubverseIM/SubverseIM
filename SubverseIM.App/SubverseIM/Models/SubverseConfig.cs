@@ -24,6 +24,8 @@ namespace SubverseIM.Models
 
         public string[]? BootstrapperUriList { get; set; }
 
+        public bool IsFormattingAllowed { get; set; }
+
         public bool MessageOrderFlag { get; set; }
 
         public bool MessageMirrorFlag { get; set; }
