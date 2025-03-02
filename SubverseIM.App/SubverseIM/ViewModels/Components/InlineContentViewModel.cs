@@ -2,17 +2,26 @@
 {
     public class InlineContentViewModel : ViewModelBase
     {
+        private readonly InlineStyle inlineStyle;
+
         public string Content { get; }
 
-        public bool IsEmphasized { get; }
+        public bool HasNewline => Content.EndsWith('\n');
 
-        public bool IsItalics { get; }
+        public bool IsEmphasis => inlineStyle.HasFlag(InlineStyle.Emphasis);
 
-        public InlineContentViewModel(string content, bool isEmphasized, bool isItalics)
+        public bool IsItalics => inlineStyle.HasFlag(InlineStyle.Italics);
+
+        public bool IsUnderline => inlineStyle.HasFlag(InlineStyle.Underline);
+
+        public bool IsStrike => inlineStyle.HasFlag(InlineStyle.Strike);
+
+        public bool IsCode => inlineStyle.HasFlag(InlineStyle.Code);
+
+        public InlineContentViewModel(string content, InlineStyle inlineStyle)
         {
             Content = content;
-            IsEmphasized = isEmphasized;
-            IsItalics = isItalics;
+            this.inlineStyle = inlineStyle;
         }
     }
 }

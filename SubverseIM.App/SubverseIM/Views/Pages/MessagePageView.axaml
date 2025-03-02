@@ -173,6 +173,7 @@
 						 VerticalAlignment="Stretch"
 						 Watermark="Write a message..."
 						 Text="{Binding SendMessageText}"
+						 AcceptsReturn="True"
 						 AutomationProperties.Name="Message edit box"
 						 AutomationProperties.HelpText="Write a message...">
 					<TextBox.Styles>
@@ -324,39 +325,75 @@
 										</ItemsControl.ItemTemplate>
 									</ItemsControl>
 									<Border Background="{Binding BubbleBrush}" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignmentAsync^}">
-										<ItemsControl ItemsSource="{Binding Content}">
-											<ItemsControl.ItemsPanel>
-												<ItemsPanelTemplate>
-													<WrapPanel Margin="2">
-														<Classes.offscreen>
-															<MultiBinding Converter="{x:Static BoolConverters.Or}">
-																<MultiBinding Converter="{x:Static BoolConverters.And}">
-																	<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
-																	<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
-																</MultiBinding>
-																<Binding Path="IsDropDownOpen" ElementName="topicBox" />
-															</MultiBinding>
-														</Classes.offscreen>
-													</WrapPanel>
-												</ItemsPanelTemplate>
-											</ItemsControl.ItemsPanel>
-											<ItemsControl.ItemTemplate>
-												<DataTemplate>
-													<TextBlock Classes.emphasis="{Binding IsEmphasized, DataType={x:Type vmx:InlineContentViewModel}}}"
-														 Classes.italic="{Binding IsItalics, DataType={x:Type vmx:InlineContentViewModel}}}"
-														 Text="{Binding Content, DataType={x:Type vmx:InlineContentViewModel}}"
-														 Foreground="White" TextWrapping="Wrap"/>
-												</DataTemplate>
-											</ItemsControl.ItemTemplate>
-											<ItemsControl.Styles>
-												<Style Selector="TextBlock.emphasis" x:DataType="vmx:InlineContentViewModel">
-													<Setter Property="FontWeight" Value="Bold"/>
-												</Style>
-												<Style Selector="TextBlock.italic" x:DataType="vmx:InlineContentViewModel">
-													<Setter Property="FontStyle" Value="Italic"/>
-												</Style>
-											</ItemsControl.Styles>
-										</ItemsControl>
+										<Panel>
+											<Classes.offscreen>
+												<MultiBinding Converter="{x:Static BoolConverters.Or}">
+													<MultiBinding Converter="{x:Static BoolConverters.And}">
+														<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+														<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+													</MultiBinding>
+													<Binding Path="IsDropDownOpen" ElementName="topicBox" />
+												</MultiBinding>
+											</Classes.offscreen>
+											<TextBlock Text="{Binding ContentString}" Margin="2"
+													   IsVisible="{Binding DataContext.IsAccessibilityEnabledAsync^, ElementName='splitView'}"
+													   Foreground="White" TextWrapping="Wrap" />
+											<ItemsControl IsVisible="{Binding !DataContext.IsAccessibilityEnabledAsync^, ElementName='splitView'}" ItemsSource="{Binding Content}">
+												<ItemsControl.ItemsPanel>
+													<ItemsPanelTemplate>
+														<StackPanel Orientation="Vertical" Margin="2" />
+													</ItemsPanelTemplate>
+												</ItemsControl.ItemsPanel>
+												<ItemsControl.ItemTemplate>
+													<DataTemplate>
+														<ItemsControl ItemsSource="{Binding .}">
+															<ItemsControl.ItemsPanel>
+																<ItemsPanelTemplate>
+																	<StackPanel Orientation="Horizontal" />
+																</ItemsPanelTemplate>
+															</ItemsControl.ItemsPanel>
+															<ItemsControl.ItemTemplate>
+																<DataTemplate>
+																	<Panel VerticalAlignment="Center">
+																		<TextBlock Classes.emphasis="{Binding IsEmphasis, DataType={x:Type vmx:InlineContentViewModel}}}"
+																			 Classes.italic="{Binding IsItalics, DataType={x:Type vmx:InlineContentViewModel}}}"
+																			 Classes.underline="{Binding IsUnderline, DataType={x:Type vmx:InlineContentViewModel}}}"
+																			 Classes.strike="{Binding IsStrike, DataType={x:Type vmx:InlineContentViewModel}}}"
+																			 IsVisible="{Binding !IsCode, DataType={x:Type vmx:InlineContentViewModel}}}"
+																			 Text="{Binding Content, DataType={x:Type vmx:InlineContentViewModel}}" TextAlignment="Start"
+																			 Foreground="White" TextWrapping="Wrap"/>
+																		<Border IsVisible="{Binding IsCode, DataType={x:Type vmx:InlineContentViewModel}}}" 
+																				Background="Black" BorderBrush="DimGray" BorderThickness="1" CornerRadius="2"
+																				Padding="3">
+																			<TextBlock Text="{Binding Content, DataType={x:Type vmx:InlineContentViewModel}}"
+																					   Foreground="White" TextWrapping="Wrap"
+																					   FontFamily="{StaticResource SourceCodePro}"/>
+																		</Border>
+																	</Panel>
+																</DataTemplate>
+															</ItemsControl.ItemTemplate>
+															<ItemsControl.Styles>
+																<Style Selector="TextBlock.emphasis">
+																	<Setter Property="FontWeight" Value="Bold"/>
+																</Style>
+																<Style Selector="TextBlock.italic">
+																	<Setter Property="FontStyle" Value="Italic"/>
+																</Style>
+																<Style Selector="TextBlock.underline">
+																	<Setter Property="TextDecorations" Value="Underline"/>
+																</Style>
+																<Style Selector="TextBlock.strike">
+																	<Setter Property="TextDecorations" Value="Strikethrough"/>
+																</Style>
+																<Style Selector="TextBlock.code">
+																	<Setter Property="FontFamily" Value="SourceCodePro"/>
+																</Style>
+															</ItemsControl.Styles>
+														</ItemsControl>
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+										</Panel>
 									</Border>
 								</DockPanel>
 							</DockPanel>

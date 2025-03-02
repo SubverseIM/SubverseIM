@@ -2,12 +2,11 @@
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using DnsClient;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -20,17 +19,10 @@ namespace SubverseIM.ViewModels.Components
             @"((?:https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b)|(?:magnet:))([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
             );
 
-        private static readonly Regex EMPHASIS_REGEX = new(
-            @"\*\*(.+)\*\*"
-            );
-
-        private static readonly Regex ITALICS_REGEX = new(
-            @"_(.+)_"
-            );
-
-        private static readonly Regex PLAIN_REGEX = new(
-            @"(?:(?:\*.+\*)|(?:_.+_))?([^\*_]*)"
-            );
+        private static readonly Regex[] MARKDOWN_REGEX = [
+            new(@"~~([^~]+)~~"), new(@"`([^`]+)`"), new(@"__?([^_]+)__?"), new(@"\*\*{0,2}([^\*]+)\*\*{0,2}"), 
+            new(@"(?:(?:\*[^\*]+\*)|(?:\*\*[^\*]+\*\*)|(?:\*\*\*[^\*]+\*\*\*)|(?:_[^_]+_)|(?:__[^_]+__)|(?:~~[^~]+~~)|(?:`[^`]+`))?(.?[^\*_~`]*)"),
+            ];
 
         private readonly MessagePageViewModel messagePageView;
 
@@ -78,7 +70,7 @@ namespace SubverseIM.ViewModels.Components
 
         public EmbedViewModel[] Embeds { get; }
 
-        public InlineContentViewModel[] Content { get; }
+        public InlineContentViewModel[][] Content { get; }
 
         public MessageViewModel(MessagePageViewModel messagePageView, SubverseContact? fromContact, SubverseMessage innerMessage)
         {
@@ -114,27 +106,44 @@ namespace SubverseIM.ViewModels.Components
                 .Select(x => new EmbedViewModel(messagePageView.ServiceManager, x.Value))
                 .ToArray();
 
-            Content = ((IEnumerable<Match>)
-                [.. PLAIN_REGEX.Matches(ContentString).AsEnumerable(), 
-                .. EMPHASIS_REGEX.Matches(ContentString).AsEnumerable(), 
-                .. ITALICS_REGEX.Matches(ContentString).AsEnumerable()])
+            Content = ContentString.Split('\n')
+                .Select(line => MARKDOWN_REGEX
+                .SelectMany(x => x.Matches(line))
                 .OrderBy(x => x.Groups[1].Index)
                 .Where(x => x.Groups[1].Value.Length > 0)
                 .Select(x => 
                 {
-                    if (x.Value.StartsWith('_') && x.Value.EndsWith('_'))
+                    if (x.Value.StartsWith("***") && x.Value.EndsWith("***"))
                     {
-                        return new InlineContentViewModel(x.Groups[1].Value, false, true);
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Emphasis | InlineStyle.Italics);
                     }
-                    else if (x.Value.StartsWith('*') && x.Value.EndsWith('*'))
+                    else if (x.Value.StartsWith("**") && x.Value.EndsWith("**"))
                     {
-                        return new InlineContentViewModel(x.Groups[1].Value, true, false);
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Emphasis);
                     }
-                    else 
+                    else if (x.Value.StartsWith("__") && x.Value.EndsWith("__")) 
                     {
-                        return new InlineContentViewModel(x.Groups[1].Value, false, false);
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Underline);
                     }
-                }).ToArray();
+                    else if ((x.Value.StartsWith("_") && x.Value.EndsWith("_")) ||
+                        (x.Value.StartsWith("*") && x.Value.EndsWith("*")))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Italics);
+                    }
+                    else if (x.Value.StartsWith("~~") && x.Value.EndsWith("~~"))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Strike);
+                    }
+                    else if (x.Value.StartsWith("`") && x.Value.EndsWith("`"))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Code);
+                    }
+                    else
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Plain);
+                    }
+                }).ToArray())
+                .ToArray();
         }
 
         private async Task<HorizontalAlignment> GetContentAlignmentAsync() 
