@@ -173,7 +173,7 @@
 						 VerticalAlignment="Stretch"
 						 Watermark="Write a message..."
 						 Text="{Binding SendMessageText}"
-						 AcceptsReturn="True"
+						 AcceptsReturn="{Binding !IsAccessibilityEnabledAsync^}"
 						 AutomationProperties.Name="Message edit box"
 						 AutomationProperties.HelpText="Write a message...">
 					<TextBox.Styles>
