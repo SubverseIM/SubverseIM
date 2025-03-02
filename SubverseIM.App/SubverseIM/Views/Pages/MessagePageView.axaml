@@ -244,6 +244,23 @@
 									</Classes.offscreen>
 									<PathIcon Data="{StaticResource delete_regular}" />
 								</Button>
+								<Button DockPanel.Dock="{Binding OptionsAlignmentAsync^}"
+										VerticalAlignment="Top"
+										Margin="2"
+										IsVisible="{Binding IsSelected}"
+										Command="{Binding CopyCommand}"
+										AutomationProperties.Name="Copy Message Text">
+									<Classes.offscreen>
+										<MultiBinding Converter="{x:Static BoolConverters.Or}">
+											<MultiBinding Converter="{x:Static BoolConverters.And}">
+												<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+												<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+											</MultiBinding>
+											<Binding Path="IsDropDownOpen" ElementName="topicBox" />
+										</MultiBinding>
+									</Classes.offscreen>
+									<PathIcon Data="{StaticResource clipboard_letter_regular}" />
+								</Button>
 								<TextBlock
 									DockPanel.Dock="{Binding OptionsAlignmentAsync^}"
 									VerticalAlignment="Top"
