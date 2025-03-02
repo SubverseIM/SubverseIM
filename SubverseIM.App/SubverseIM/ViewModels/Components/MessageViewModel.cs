@@ -2,6 +2,7 @@
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using DnsClient;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -17,6 +18,11 @@ namespace SubverseIM.ViewModels.Components
         private static readonly Regex URL_REGEX = new(
             @"((?:https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b)|(?:magnet:))([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
             );
+
+        private static readonly Regex[] MARKDOWN_REGEX = [
+            new(@"~~([^~]+)~~"), new(@"`([^`]+)`"), new(@"__?([^_]+)__?"), new(@"\*\*{0,2}([^\*]+)\*\*{0,2}"), 
+            new(@"(?:(?:\*[^\*]+\*)|(?:\*\*[^\*]+\*\*)|(?:\*\*\*[^\*]+\*\*\*)|(?:_[^_]+_)|(?:__[^_]+__)|(?:~~[^~]+~~)|(?:`[^`]+`))?(.?[^\*_~`]*)"),
+            ];
 
         private readonly MessagePageViewModel messagePageView;
 
@@ -38,7 +44,7 @@ namespace SubverseIM.ViewModels.Components
 
         public bool IsGroupMessage => innerMessage.RecipientNames.Length > 1;
 
-        public string Content => URL_REGEX.Replace(
+        public string ContentString => URL_REGEX.Replace(
             innerMessage.Content ?? string.Empty, "[embed]"
             );
 
@@ -63,6 +69,8 @@ namespace SubverseIM.ViewModels.Components
         public SubverseContact[] CcContacts { get; }
 
         public EmbedViewModel[] Embeds { get; }
+
+        public InlineContentViewModel[][] Content { get; }
 
         public MessageViewModel(MessagePageViewModel messagePageView, SubverseContact? fromContact, SubverseMessage innerMessage)
         {
@@ -96,6 +104,45 @@ namespace SubverseIM.ViewModels.Components
                 .Matches(innerMessage.Content ?? string.Empty)
                 .Where(x => x.Success)
                 .Select(x => new EmbedViewModel(messagePageView.ServiceManager, x.Value))
+                .ToArray();
+
+            Content = ContentString.Split('\n')
+                .Select(line => MARKDOWN_REGEX
+                .SelectMany(x => x.Matches(line))
+                .OrderBy(x => x.Groups[1].Index)
+                .Where(x => x.Groups[1].Value.Length > 0)
+                .Select(x => 
+                {
+                    if (x.Value.StartsWith("***") && x.Value.EndsWith("***"))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Emphasis | InlineStyle.Italics);
+                    }
+                    else if (x.Value.StartsWith("**") && x.Value.EndsWith("**"))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Emphasis);
+                    }
+                    else if (x.Value.StartsWith("__") && x.Value.EndsWith("__")) 
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Underline);
+                    }
+                    else if ((x.Value.StartsWith("_") && x.Value.EndsWith("_")) ||
+                        (x.Value.StartsWith("*") && x.Value.EndsWith("*")))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Italics);
+                    }
+                    else if (x.Value.StartsWith("~~") && x.Value.EndsWith("~~"))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Strike);
+                    }
+                    else if (x.Value.StartsWith("`") && x.Value.EndsWith("`"))
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Code);
+                    }
+                    else
+                    {
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Plain);
+                    }
+                }).ToArray())
                 .ToArray();
         }
 
