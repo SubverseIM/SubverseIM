@@ -366,7 +366,7 @@
 														<ItemsControl ItemsSource="{Binding .}">
 															<ItemsControl.ItemsPanel>
 																<ItemsPanelTemplate>
-																	<StackPanel Orientation="Horizontal" />
+																	<WrapPanel Orientation="Horizontal" />
 																</ItemsPanelTemplate>
 															</ItemsControl.ItemsPanel>
 															<ItemsControl.ItemTemplate>
