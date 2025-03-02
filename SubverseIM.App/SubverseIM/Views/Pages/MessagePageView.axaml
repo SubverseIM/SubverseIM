@@ -358,7 +358,7 @@
 																		<TextBlock Classes.emphasis="{Binding IsEmphasis, DataType={x:Type vmx:InlineContentViewModel}}}"
 																			 Classes.italic="{Binding IsItalics, DataType={x:Type vmx:InlineContentViewModel}}}"
 																			 Classes.underline="{Binding IsUnderline, DataType={x:Type vmx:InlineContentViewModel}}}"
-																			 Classes.strike="{Binding IsStrike, DataType={x:Type vmx:InlineContentViewModel}}}"
+																			 Classes.strike="{Binding IsStrikeout, DataType={x:Type vmx:InlineContentViewModel}}}"
 																			 IsVisible="{Binding !IsCode, DataType={x:Type vmx:InlineContentViewModel}}}"
 																			 Text="{Binding Content, DataType={x:Type vmx:InlineContentViewModel}}" TextAlignment="Start"
 																			 Foreground="White" TextWrapping="Wrap"/>

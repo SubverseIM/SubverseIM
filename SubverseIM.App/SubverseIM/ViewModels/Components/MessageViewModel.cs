@@ -132,7 +132,7 @@ namespace SubverseIM.ViewModels.Components
                     }
                     else if (x.Value.StartsWith("~~") && x.Value.EndsWith("~~"))
                     {
-                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Strike);
+                        return new InlineContentViewModel(x.Groups[1].Value, InlineStyle.Strikeout);
                     }
                     else if (x.Value.StartsWith("`") && x.Value.EndsWith("`"))
                     {

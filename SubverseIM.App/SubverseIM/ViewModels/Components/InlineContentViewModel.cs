@@ -14,7 +14,7 @@
 
         public bool IsUnderline => inlineStyle.HasFlag(InlineStyle.Underline);
 
-        public bool IsStrike => inlineStyle.HasFlag(InlineStyle.Strike);
+        public bool IsStrikeout => inlineStyle.HasFlag(InlineStyle.Strikeout);
 
         public bool IsCode => inlineStyle.HasFlag(InlineStyle.Code);
 
