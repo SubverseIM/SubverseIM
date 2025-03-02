@@ -296,7 +296,7 @@
 										<ItemsControl.ItemTemplate>
 											<DataTemplate>
 												<StackPanel Orientation="Vertical">
-													<Image Source="{Binding FetchedBitmap^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
+													<Image Source="{Binding FetchedBitmapAsync^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
 													<HyperlinkButton Padding="0" IsEnabled="True" HorizontalAlignment="{Binding $parent[DockPanel].DataContext.ContentAlignmentAsync^}"	NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
 														<Classes.offscreen>
 															<MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -325,7 +325,7 @@
 										</ItemsControl.ItemTemplate>
 									</ItemsControl>
 									<Border Background="{Binding BubbleBrush}" Padding="5" BorderThickness="0" CornerRadius="10" HorizontalAlignment="{Binding ContentAlignmentAsync^}">
-										<Panel>
+										<Panel Margin="2">
 											<Classes.offscreen>
 												<MultiBinding Converter="{x:Static BoolConverters.Or}">
 													<MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -335,13 +335,13 @@
 													<Binding Path="IsDropDownOpen" ElementName="topicBox" />
 												</MultiBinding>
 											</Classes.offscreen>
-											<TextBlock Text="{Binding ContentString}" Margin="2"
-													   IsVisible="{Binding DataContext.IsAccessibilityEnabledAsync^, ElementName='splitView'}"
+											<TextBlock Text="{Binding ContentString}"
+													   IsVisible="{Binding !DataContext.IsFormattingAllowedAsync^, ElementName='splitView'}"
 													   Foreground="White" TextWrapping="Wrap" />
-											<ItemsControl IsVisible="{Binding !DataContext.IsAccessibilityEnabledAsync^, ElementName='splitView'}" ItemsSource="{Binding Content}">
+											<ItemsControl IsVisible="{Binding DataContext.IsFormattingAllowedAsync^, ElementName='splitView'}" ItemsSource="{Binding Content}">
 												<ItemsControl.ItemsPanel>
 													<ItemsPanelTemplate>
-														<StackPanel Orientation="Vertical" Margin="2" />
+														<StackPanel Orientation="Vertical" />
 													</ItemsPanelTemplate>
 												</ItemsControl.ItemsPanel>
 												<ItemsControl.ItemTemplate>

@@ -29,6 +29,16 @@ namespace SubverseIM.ViewModels.Pages
 
         public override bool HasSidebar => true;
 
+        public Task<bool> IsFormattingAllowedAsync => GetIsFormattingAllowedAsync();
+        private async Task<bool> GetIsFormattingAllowedAsync()
+        {
+            IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>();
+            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
+
+            SubverseConfig config = await configurationService.GetConfigAsync();
+            return config.IsFormattingAllowed && !launcherService.IsAccessibilityEnabled;
+        }
+
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
         public ObservableCollection<MessageViewModel> MessageList { get; }

@@ -19,6 +19,16 @@ namespace SubverseIM.ViewModels.Pages
 
         public ObservableCollection<string> SelectedUriList { get; }
 
+        private bool isFormattingAllowed;
+        public bool IsFormattingAllowed 
+        {
+            get => isFormattingAllowed;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref isFormattingAllowed, value);
+            }
+        }
+
         private bool messageOrderFlag;
         public bool MessageOrderFlag 
         { 
@@ -87,6 +97,8 @@ namespace SubverseIM.ViewModels.Pages
                 BootstrapperUriList.Add(bootstrapperUri);
             }
 
+            IsFormattingAllowed = config.IsFormattingAllowed;
+
             MessageOrderFlag = config.MessageOrderFlag;
 
             MessageMirrorFlag = config.MessageMirrorFlag;
@@ -139,6 +151,8 @@ namespace SubverseIM.ViewModels.Pages
                 {
                     config.BootstrapperUriList = newBootstrapperUriList;
                 }
+
+                config.IsFormattingAllowed = IsFormattingAllowed;
 
                 config.MessageOrderFlag = MessageOrderFlag;
 
