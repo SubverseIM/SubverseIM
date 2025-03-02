@@ -147,10 +147,16 @@ namespace SubverseIM.ViewModels.Components
 
         public async Task CopyCommand()
         {
+            ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             TopLevel topLevel = await parent.ServiceManager.GetWithAwaitAsync<TopLevel>();
             if (topLevel.Clipboard is not null)
             {
                 await topLevel.Clipboard.SetTextAsync(innerTorrent.MagnetUri);
+                await launcherService.ShowAlertDialogAsync("Information", "Magnet link copied to the clipboard.");
+            }
+            else 
+            {
+                await launcherService.ShowAlertDialogAsync("Error", "Could not copy magnet link to the clipboard.");
             }
         }
     }

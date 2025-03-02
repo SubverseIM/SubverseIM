@@ -164,6 +164,21 @@ namespace SubverseIM.ViewModels.Components
                 Dock.Right : Dock.Left;
         }
 
+        public async Task CopyCommand()
+        {
+            ILauncherService launcherService = await messagePageView.ServiceManager.GetWithAwaitAsync<ILauncherService>();
+            TopLevel topLevel = await messagePageView.ServiceManager.GetWithAwaitAsync<TopLevel>();
+            if (topLevel.Clipboard is not null)
+            {
+                await topLevel.Clipboard.SetTextAsync(innerMessage.Content);
+                await launcherService.ShowAlertDialogAsync("Information", "Message content copied to the clipboard.");
+            }
+            else 
+            {
+                await launcherService.ShowAlertDialogAsync("Error", "Could not copy message to the clipboard.");
+            }
+        }
+
         public async Task DeleteCommand() 
         {
             ILauncherService launcherService = await messagePageView.ServiceManager
