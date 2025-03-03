@@ -2,7 +2,6 @@
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
-using DnsClient;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -20,8 +19,8 @@ namespace SubverseIM.ViewModels.Components
             );
 
         private static readonly Regex[] MARKDOWN_REGEX = [
-            new(@"~~([^~]+)~~"), new(@"`([^`]+)`"), new(@"__?([^_]+)__?"), new(@"\*\*{0,2}([^\*]+)\*\*{0,2}"), 
-            new(@"(?:(?:\*[^\*]+\*)|(?:\*\*[^\*]+\*\*)|(?:\*\*\*[^\*]+\*\*\*)|(?:_[^_]+_)|(?:__[^_]+__)|(?:~~[^~]+~~)|(?:`[^`]+`))?(.?[^\*_~`]*)"),
+            new(@"\*{1,3}([^*]+)\*{1,3}"), new(@"_{1,2}([^_]+)_{1,2}"), new(@"~{2}([^~]+)~{2}"), new(@"`([^`]+)`"), 
+            new(@"(?:(?:\*{1,3}[^*]+\*{1,3})|(?:_{1,2}[^_]+_{1,2})|(?:~{2}[^~]+~{2})|(?:`[^`]+`))?((?:\*+|_+|~+|`*)[^*_~`]*)")
             ];
 
         private readonly MessagePageViewModel messagePageView;
