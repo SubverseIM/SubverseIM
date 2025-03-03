@@ -72,4 +72,10 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
       - name: Build & publish SubverseIM.Android
-        run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj -m:1
+        run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1
+      - name: Upload .apk artifact
+        uses: actions/upload-artifact@v4.6.1
+        with:
+          name: com.ChosenFewSoftware.SubverseIM-nosig.apk
+          path: /home/tc/publish/android/com.ChosenFewSoftware.SubverseIM.apk
+      
