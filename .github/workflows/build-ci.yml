@@ -68,7 +68,7 @@ jobs:
       - name: Test SubverseIM.App
         run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
       - name: Restore workloads
-        run: dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
+        run: dotnet workload install android
       - name: Restore dependencies
         run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
       - name: Build & publish SubverseIM.Android
