@@ -68,7 +68,7 @@ jobs:
       - name: Test SubverseIM.App
         run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
       - name: Restore workloads
-        run: dotnet workload install android --version 8.0.16
+        run: dotnet workload install android --version 8.0.406
       - name: Restore dependencies
         run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
       - name: Build & publish SubverseIM.Android
