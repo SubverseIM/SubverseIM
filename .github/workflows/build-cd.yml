@@ -29,7 +29,7 @@ jobs:
     - name: Test SubverseIM.Bootstrapper
       run: dotnet test SubverseIM.Network/SubverseIM.Bootstrapper.Tests/SubverseIM.Bootstrapper.Tests.csproj
     - name: Restore workloads
-      run: dotnet workload install android
+      run: dotnet workload install android --version 8.0.16
     - name: Restore dependencies
       run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
     - name: Restore Android signing keys
