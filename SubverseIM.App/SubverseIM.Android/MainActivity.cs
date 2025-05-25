@@ -49,7 +49,7 @@ namespace SubverseIM.Android;
     Label = "Add Torrent (SubverseIM)",
     Categories = [Intent.CategoryDefault],
     DataScheme = "magnet")]
-public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
+public class MainActivity : AvaloniaMainActivity, ILauncherService
 {
     private const int REQUEST_NOTIFICATION_PERMISSION = 1000;
 
@@ -192,11 +192,16 @@ public class MainActivity : AvaloniaMainActivity<App>, ILauncherService
         }
     }
 
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    protected override AppBuilder CreateAppBuilder()
     {
         return AppBuilder.Configure(
             () => new App(serviceManager)
-            ).UseAndroid()
+            ).UseAndroid();
+    }
+
+    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+    {
+        return builder
             .WithInterFont()
             .UseReactiveUI();
     }
