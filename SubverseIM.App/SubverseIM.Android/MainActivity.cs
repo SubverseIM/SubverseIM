@@ -11,7 +11,6 @@ using AndroidX.Activity;
 using AndroidX.Core.App;
 using Avalonia;
 using Avalonia.Android;
-using Avalonia.ReactiveUI;
 using Java.Lang;
 using Microsoft.Maui.ApplicationModel;
 using SubverseIM.Android.Services;
@@ -55,21 +54,22 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
     private class ActivityBackPressedCallback : OnBackPressedCallback
     {
-        private readonly IServiceManager serviceManager;
+        private readonly IServiceManager? serviceManager;
 
-        public ActivityBackPressedCallback(IServiceManager serviceManager) : base(true)
+        public ActivityBackPressedCallback(IServiceManager? serviceManager) : base(true)
         {
             this.serviceManager = serviceManager;
         }
 
         public override async void HandleOnBackPressed()
         {
-            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigatePreviousView();
+            IFrontendService? frontendService = serviceManager is null ? null :
+                await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            frontendService?.NavigatePreviousView();
         }
     }
 
-    private readonly ServiceManager serviceManager;
+    private readonly IServiceManager? serviceManager;
 
     private readonly ServiceConnection<IBootstrapperService> peerServiceConn;
 
@@ -83,21 +83,22 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
     public bool IsInForeground { get; private set; }
 
-    public bool IsAccessibilityEnabled 
-    { 
-        get 
+    public bool IsAccessibilityEnabled
+    {
+        get
         {
             AccessibilityManager am = (AccessibilityManager)GetSystemService(AccessibilityService)!;
             return am.IsTouchExplorationEnabled;
-        } 
+        }
     }
 
     public MainActivity()
     {
-        serviceManager = new();
+        Application? app = Application as Application;
+        serviceManager = app?.ServiceManager;
+
         peerServiceConn = new();
         cancellationTokenSource = new();
-
         backPressedCallback = new(serviceManager);
     }
 
@@ -118,16 +119,16 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
             NotificationsAllowed = true;
         }
 
-        serviceManager.GetOrRegister<ILauncherService>(this);
+        serviceManager?.GetOrRegister<ILauncherService>(this);
 
-        serviceManager.GetOrRegister<IBillingService>(new BillingService());
+        serviceManager?.GetOrRegister<IBillingService>(new BillingService());
 
         string appDataPath = System.Environment.GetFolderPath(
             System.Environment.SpecialFolder.ApplicationData
             );
 
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
-        serviceManager.GetOrRegister<IDbService>(
+        serviceManager?.GetOrRegister<IDbService>(
             new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
             );
 
@@ -138,7 +139,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
             BindService(serviceIntent, peerServiceConn, Bind.AutoCreate);
             StartService(serviceIntent);
 
-            serviceManager.GetOrRegister(
+            serviceManager?.GetOrRegister(
                 await peerServiceConn.ConnectAsync()
                 );
         }
@@ -149,7 +150,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         base.OnDestroy();
 
         cancellationTokenSource.Dispose();
-        serviceManager.Dispose();
+        serviceManager?.Dispose();
 
         if (peerServiceConn.IsConnected)
         {
@@ -159,7 +160,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         try
         {
-            if (mainTask is not null) 
+            if (mainTask is not null)
             { await mainTask; }
         }
         catch (System.OperationCanceledException) { }
@@ -172,8 +173,9 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         base.OnStart();
         IsInForeground = true;
 
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        mainTask = frontendService.RunOnceAsync(cancellationTokenSource.Token);
+        IFrontendService? frontendService = serviceManager is null ? null :
+            await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        mainTask = frontendService?.RunOnceAsync(cancellationTokenSource.Token);
     }
 
     protected override void OnStop()
@@ -192,46 +194,34 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         }
     }
 
-    protected override AppBuilder CreateAppBuilder()
-    {
-        return AppBuilder.Configure(
-            () => new App(serviceManager)
-            ).UseAndroid();
-    }
-
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
-    {
-        return builder
-            .WithInterFont()
-            .UseReactiveUI();
-    }
-
     protected override async void OnNewIntent(Intent? intent)
     {
         base.OnNewIntent(intent);
         Intent = intent;
 
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+        IFrontendService? frontendService = serviceManager is null ? null :
+            await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        IDbService? dbService = serviceManager is null ? null :
+            await serviceManager.GetWithAwaitAsync<IDbService>();
 
         IEnumerable<SubverseContact>? contacts = Intent?
                 .GetStringArrayExtra(WrappedBootstrapperService.EXTRA_PARTICIPANTS_ID)?
-                .Select(x => dbService.GetContact(SubversePeerId.FromString(x)))
+                .Select(x => dbService?.GetContact(SubversePeerId.FromString(x)))
                 .Where(x => x is not null)
                 .Cast<SubverseContact>();
         string? topicName = Intent?.GetStringExtra(WrappedBootstrapperService.EXTRA_TOPIC_ID);
 
         if (Intent?.DataString is not null)
         {
-            frontendService.NavigateLaunchedUri();
+            frontendService?.NavigateLaunchedUri();
         }
         else if (contacts is not null)
         {
-            frontendService.NavigateMessageView(contacts, topicName);
+            frontendService?.NavigateMessageView(contacts, topicName);
         }
-        else 
+        else
         {
-            frontendService.NavigateContactView();
+            frontendService?.NavigateContactView();
         }
     }
 
