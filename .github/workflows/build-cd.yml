@@ -21,7 +21,7 @@ jobs:
         submodules: 'recursive'
     - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '9.0.x'
     - name: Add Avalonia Nuget feed
       run: dotnet nuget add source https://nuget-feed-all.avaloniaui.net/v3/index.json
     - name: Test SubverseIM.App
@@ -59,7 +59,7 @@ jobs:
       contents: read
 
     container: 
-      image: mcr.microsoft.com/dotnet/sdk:8.0
+      image: mcr.microsoft.com/dotnet/sdk:9.0
       
     steps:
     - uses: actions/checkout@v4
