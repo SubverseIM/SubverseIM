@@ -13,7 +13,7 @@ jobs:
       contents: write
 
     container: 
-      image: mobiledevops/android-sdk-image
+      image: garretech/android-sdk-image:35.0.0
       
     steps:
     - uses: actions/checkout@v4
