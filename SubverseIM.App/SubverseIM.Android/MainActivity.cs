@@ -69,13 +69,13 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         }
     }
 
-    private readonly IServiceManager? serviceManager;
-
     private readonly ServiceConnection<IBootstrapperService> peerServiceConn;
 
     private readonly CancellationTokenSource cancellationTokenSource;
 
-    private readonly ActivityBackPressedCallback backPressedCallback;
+    private ActivityBackPressedCallback? backPressedCallback;
+
+    private IServiceManager? serviceManager;
 
     private Task? mainTask;
 
@@ -94,12 +94,8 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
     public MainActivity()
     {
-        Application? app = Application as Application;
-        serviceManager = app?.ServiceManager;
-
         peerServiceConn = new();
         cancellationTokenSource = new();
-        backPressedCallback = new(serviceManager);
     }
 
     protected override async void OnCreate(Bundle? savedInstanceState)
@@ -107,6 +103,10 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         base.OnCreate(savedInstanceState);
         Platform.Init(this, savedInstanceState);
 
+        Application? app = Application as Application;
+        serviceManager = app?.ServiceManager;
+
+        backPressedCallback = new(serviceManager);
         OnBackPressedDispatcher.AddCallback(backPressedCallback);
 
         if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
