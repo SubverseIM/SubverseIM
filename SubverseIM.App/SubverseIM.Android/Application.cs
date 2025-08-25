@@ -8,7 +8,7 @@ using SubverseIM.Services.Implementation;
 
 namespace SubverseIM.Android
 {
-    [Application]
+    [Application(NetworkSecurityConfig = "@xml/network_security_config")]
     public class Application : AvaloniaAndroidApplication<App>
     {
         public IServiceManager ServiceManager { get; }

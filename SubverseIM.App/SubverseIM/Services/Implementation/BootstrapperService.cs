@@ -60,7 +60,7 @@ namespace SubverseIM.Services.Implementation
         {
             this.nativeService = nativeService;
 
-            http = new();
+            http = new(nativeService.GetNativeHttpHandlerInstance());
 
             peerInfoBag = new();
 

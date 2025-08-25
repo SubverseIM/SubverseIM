@@ -15,8 +15,10 @@ using SubverseIM.Services.Implementation;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Xamarin.Android.Net;
 
 namespace SubverseIM.Android
 {
@@ -223,6 +225,11 @@ namespace SubverseIM.Android
         public Task RunInBackgroundAsync(System.Func<CancellationToken, Task> taskFactory, CancellationToken cancellationToken)
         {
             return taskFactory(cancellationToken);
+        }
+
+        public HttpMessageHandler GetNativeHttpHandlerInstance()
+        {
+            return new AndroidMessageHandler();
         }
     }
 }
