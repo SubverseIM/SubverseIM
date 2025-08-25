@@ -73,7 +73,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
     private readonly CancellationTokenSource cancellationTokenSource;
 
-    private ActivityBackPressedCallback backPressedCallback;
+    private ActivityBackPressedCallback? backPressedCallback;
 
     private IServiceManager? serviceManager;
 
