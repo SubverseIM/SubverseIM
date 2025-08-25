@@ -7,6 +7,7 @@ using SubverseIM.Services.Implementation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using UIKit;
@@ -110,6 +111,11 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
             catch (OperationCanceledException) { }
             appInstance.EndBackgroundTask(handle);
         }
+    }
+
+    public HttpMessageHandler GetNativeHttpHandlerInstance()
+    {
+        return new NSUrlSessionHandler();
     }
 
     public override async void DidReceiveNotificationResponse(UNUserNotificationCenter center, UNNotificationResponse response, Action completionHandler)

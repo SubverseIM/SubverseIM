@@ -28,6 +28,11 @@ public class WrappedBootstrapperService : INativeService
 
     public void ClearNotification(SubverseMessage message) { }
 
+    public HttpMessageHandler GetNativeHttpHandlerInstance()
+    {
+        return new SocketsHttpHandler();
+    }
+
     public static implicit operator BootstrapperService(WrappedBootstrapperService wrapper)
     {
         return wrapper.instance;
