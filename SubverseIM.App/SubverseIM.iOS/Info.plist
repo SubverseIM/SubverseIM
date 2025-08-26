@@ -76,5 +76,7 @@
 	<array>
 		<string>com.chosenfewsoftware.SubverseIM.AppRefresh</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
