@@ -138,7 +138,11 @@ public class MessageService : IMessageService, IDisposableService
             SIPViaHeader viaHeader = new(remoteEndPoint, CallProperties.CreateBranchId());
             sipRequest.Header.Vias.PushViaHeader(viaHeader);
 
-            dbService.InsertOrUpdateItem(message);
+            if (!recipients.Contains(await bootstrapperService.GetPeerIdAsync()))
+            {
+                dbService.InsertOrUpdateItem(message);
+            }
+
             await SendSIPRequestAsync(sipRequest);
 
             SIPResponse sipResponse = SIPResponse.GetResponse(
