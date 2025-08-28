@@ -17,7 +17,7 @@ namespace SubverseIM.Services.Implementation;
 
 public class MessageService : IMessageService, IDisposableService
 {
-    private readonly Dictionary<string, SIPRequest> callIdMap;
+    private readonly Dictionary<(string callId, SubversePeerId toPeer), SIPRequest> requestMap;
 
     private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messagesBag;
 
@@ -31,7 +31,7 @@ public class MessageService : IMessageService, IDisposableService
 
     public MessageService(IServiceManager serviceManager)
     {
-        callIdMap = new();
+        requestMap = new();
         messagesBag = new();
 
         sipChannel = new SIPUDPChannel(IPAddress.Any, IBootstrapperService.DEFAULT_PORT_NUMBER);
@@ -152,17 +152,13 @@ public class MessageService : IMessageService, IDisposableService
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
+        string callId;
         SubversePeerId peerId;
-        lock (callIdMap)
+        lock (requestMap)
         {
-            if (!callIdMap.Remove(sipResponse.Header.CallId, out SIPRequest? sipRequest))
-            {
-                throw new InvalidOperationException("Received response for invalid Call ID!");
-            }
-            else
-            {
-                peerId = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
-            }
+            callId = sipResponse.Header.CallId;
+            peerId = SubversePeerId.FromString(sipResponse.Header.To.ToURI.User);
+            requestMap.Remove((callId, peerId));
         }
 
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
@@ -276,15 +272,15 @@ public class MessageService : IMessageService, IDisposableService
                     sipRequest.Body = message.Content;
                 }
 
-                lock (callIdMap)
+                lock (requestMap)
                 {
-                    if (!callIdMap.ContainsKey(sipRequest.Header.CallId))
+                    if (!requestMap.ContainsKey((sipRequest.Header.CallId, recipient)))
                     {
-                        callIdMap.Add(sipRequest.Header.CallId, sipRequest);
+                        requestMap.Add((sipRequest.Header.CallId, recipient), sipRequest);
                     }
                     else
                     {
-                        callIdMap[sipRequest.Header.CallId] = sipRequest;
+                        requestMap[(sipRequest.Header.CallId, recipient)] = sipRequest;
                     }
                 }
 
@@ -294,9 +290,9 @@ public class MessageService : IMessageService, IDisposableService
                 {
                     await SendSIPRequestAsync(sipRequest);
                     await timer.WaitForNextTickAsync(cancellationToken);
-                    lock (callIdMap)
+                    lock (requestMap)
                     {
-                        flag = callIdMap.ContainsKey(sipRequest.Header.CallId);
+                        flag = requestMap.ContainsKey((sipRequest.Header.CallId, recipient));
                     }
                 } while (flag && !cancellationToken.IsCancellationRequested);
             }));
