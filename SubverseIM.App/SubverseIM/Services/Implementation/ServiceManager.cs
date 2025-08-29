@@ -106,10 +106,6 @@ namespace SubverseIM.Services.Implementation
                     instanceTcs = new();
                     awaitMap.Add(typeof(TService), instanceTcs);
                 }
-                else
-                {
-                    awaitMap.Remove(typeof(TService));
-                }
             }
 
             return (TService)await instanceTcs.Task
