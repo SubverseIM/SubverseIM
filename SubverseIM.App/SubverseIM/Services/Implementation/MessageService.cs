@@ -1,3 +1,4 @@
+using LiteDB;
 using MonoTorrent;
 using PgpCore;
 using SIPSorcery.SIP;
@@ -109,7 +110,7 @@ public class MessageService : IMessageService, IDisposableService
         }
 
         peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
-        foreach (SIPViaHeader viaHeader in sipRequest.Header.Vias.Via) 
+        foreach (SIPViaHeader viaHeader in sipRequest.Header.Vias.Via)
         {
             string viaEndPointStr = $"{viaHeader.ReceivedFromIPAddress}:{viaHeader.ReceivedFromPort}";
             if (IPEndPoint.TryParse(viaEndPointStr, out IPEndPoint? viaEndPoint))
@@ -140,7 +141,11 @@ public class MessageService : IMessageService, IDisposableService
 
             if (!recipients.Contains(await bootstrapperService.GetPeerIdAsync()))
             {
-                dbService.InsertOrUpdateItem(message);
+                try
+                {
+                    dbService.InsertOrUpdateItem(message);
+                }
+                catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
             }
 
             await SendSIPRequestAsync(sipRequest);
@@ -196,7 +201,7 @@ public class MessageService : IMessageService, IDisposableService
             cachedEndPoints = peer?.RemoteEndPoints ?? [];
         }
 
-        foreach (IPEndPoint cachedEndPoint in cachedEndPoints) 
+        foreach (IPEndPoint cachedEndPoint in cachedEndPoints)
         {
             await sipTransport.SendRequestAsync(new(cachedEndPoint), sipRequest);
         }
@@ -316,7 +321,7 @@ public class MessageService : IMessageService, IDisposableService
                 sipChannel.Dispose();
                 sipTransport.Dispose();
             }
-            CachedPeers.Clear();    
+            CachedPeers.Clear();
             disposedValue = true;
         }
     }
