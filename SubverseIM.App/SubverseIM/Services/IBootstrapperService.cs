@@ -1,11 +1,10 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia;
 using MonoTorrent;
 using PgpCore;
 using SubverseIM.Core;
-using SubverseIM.Models;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SubverseIM.Services;
 
@@ -16,6 +15,8 @@ public interface IBootstrapperService
     const int DEFAULT_PORT_NUMBER = 6_03_03;
 
     Task BootstrapSelfAsync(CancellationToken cancellationToken = default);
+
+    Task<List<string>> GetAnnounceUriListAsync(CancellationToken cancellationToken = default);
 
     Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default);
 

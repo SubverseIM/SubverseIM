@@ -78,5 +78,22 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeDescription</key>
+			<string>BitTorrent</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.ChosenFewSoftware.SubverseIM.BitTorrent</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.content</string>
+			</array>
+			<key>UTTypeSize64IconFile</key>
+			<string>sv_512</string>
+			<key>UTTypeSize320IconFile</key>
+			<string>sv_512</string>
+		</dict>
+	</array>
 </dict>
 </plist>

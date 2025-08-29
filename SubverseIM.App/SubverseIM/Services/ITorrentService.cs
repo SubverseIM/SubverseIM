@@ -13,7 +13,7 @@ namespace SubverseIM.Services
 
         Task DestroyAsync();
 
-        Task<bool> AddTorrentAsync(string magnetUri);
+        Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes = null);
 
         Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default);
 

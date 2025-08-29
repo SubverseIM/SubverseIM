@@ -9,49 +9,64 @@
 	<Design.DataContext>
 		<vm:TorrentPageViewModel />
 	</Design.DataContext>
-	<Panel>
-		<ListBox ItemsSource="{Binding Torrents}">
-			<ListBox.ItemTemplate>
-				<DataTemplate>
-					<DockPanel>
-						<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" />
-						<Button DockPanel.Dock="Right" Command="{Binding ShareCommand}"
-								IsVisible="{Binding CurrentStatus.Complete}"
-								AutomationProperties.Name="Save File As">
-							<PathIcon Data="{StaticResource save_regular}" />
-						</Button>
-						<Button DockPanel.Dock="Right" Command="{Binding StartCommand}"
-								IsVisible="{Binding !IsStarted}"
-								AutomationProperties.Name="Start Download">
-							<PathIcon Data="{StaticResource arrow_download_regular}" />
-						</Button>
-						<Button DockPanel.Dock="Right" Command="{Binding StopCommand}"
-								IsVisible="{Binding IsStarted}"
-								AutomationProperties.Name="Stop Download">
-							<PathIcon Data="{StaticResource dismiss_regular}" />
-						</Button>
-						<Button DockPanel.Dock="Right" Command="{Binding CopyCommand}"
-								AutomationProperties.Name="Copy Magnet URI">
-							<PathIcon Data="{StaticResource clipboard_link_regular}" />
-						</Button>
-						<Button DockPanel.Dock="Right" Command="{Binding DeleteCommand}"
-								IsVisible="{Binding !IsStarted}"
-								AutomationProperties.Name="Delete File"
-								Background="DarkRed">
-							<PathIcon Data="{StaticResource delete_regular}" />
-						</Button>
-						<ProgressBar Value="{Binding CurrentStatus.Progress}" Margin="5" />
-					</DockPanel>
-				</DataTemplate>
-			</ListBox.ItemTemplate>
-		</ListBox>
-		<TextBlock IsVisible="{Binding !Torrents.Count}"
-				   HorizontalAlignment="Center"
-				   VerticalAlignment="Center"
-				   TextWrapping="Wrap"
-				   TextAlignment="Center"
-				   Margin="5" FontSize="16">
-			No files found! Try sending one to a friend?
-		</TextBlock>
-	</Panel>
+	<DockPanel>
+		<DockPanel DockPanel.Dock="Top">
+			<Button DockPanel.Dock="Right" Command="{Binding ImportCommand}"
+					AutomationProperties.LabeledBy="{Binding #labelAddTorrent}">
+				<PathIcon Data="{StaticResource document_add_regular}" />
+			</Button>
+			<Label DockPanel.Dock="Right" x:Name="labelAddTorrent">Add Torrent from File</Label>
+			<Label FontWeight="Bold">Actions:</Label>
+		</DockPanel>
+		<Panel>
+			<ListBox ItemsSource="{Binding Torrents}">
+				<ListBox.ItemTemplate>
+					<DataTemplate>
+						<DockPanel>
+							<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" />
+							<Button DockPanel.Dock="Right" Command="{Binding ShareCommand}"
+									IsVisible="{Binding CurrentStatus.Complete}"
+									AutomationProperties.Name="Save File As">
+								<PathIcon Data="{StaticResource save_regular}" />
+							</Button>
+							<Button DockPanel.Dock="Right" Command="{Binding StartCommand}"
+									IsVisible="{Binding !IsStarted}"
+									AutomationProperties.Name="Start Download">
+								<PathIcon Data="{StaticResource arrow_download_regular}" />
+							</Button>
+							<Button DockPanel.Dock="Right" Command="{Binding StopCommand}"
+									IsVisible="{Binding IsStarted}"
+									AutomationProperties.Name="Stop Download">
+								<PathIcon Data="{StaticResource dismiss_regular}" />
+							</Button>
+							<Button DockPanel.Dock="Right" Command="{Binding CopyCommand}"
+									AutomationProperties.Name="Copy Magnet URI">
+								<PathIcon Data="{StaticResource clipboard_link_regular}" />
+							</Button>
+							<Button DockPanel.Dock="Right" Command="{Binding ExportCommand}"
+									IsVisible="{Binding IsExportable}"
+									AutomationProperties.Name="Export Torrent">
+								<PathIcon Data="{StaticResource export_regular}" />
+							</Button>
+							<Button DockPanel.Dock="Right" Command="{Binding DeleteCommand}"
+									IsVisible="{Binding !IsStarted}"
+									AutomationProperties.Name="Delete File"
+									Background="DarkRed">
+								<PathIcon Data="{StaticResource delete_regular}" />
+							</Button>
+							<ProgressBar Value="{Binding CurrentStatus.Progress}" Margin="5" />
+						</DockPanel>
+					</DataTemplate>
+				</ListBox.ItemTemplate>
+			</ListBox>
+			<TextBlock IsVisible="{Binding !Torrents.Count}"
+					   HorizontalAlignment="Center"
+					   VerticalAlignment="Center"
+					   TextWrapping="Wrap"
+					   TextAlignment="Center"
+					   Margin="5" FontSize="16">
+				No files found! Try sending one to a friend?
+			</TextBlock>
+		</Panel>
+	</DockPanel>
 </UserControl>

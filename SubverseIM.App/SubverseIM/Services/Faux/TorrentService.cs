@@ -30,10 +30,10 @@ namespace SubverseIM.Services.Faux
             return Task.CompletedTask;
         }
 
-        public async Task<bool> AddTorrentAsync(string magnetUri)
+        public async Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            return !dbService.InsertOrUpdateItem(new SubverseTorrent(magnetUri));
+            return !dbService.InsertOrUpdateItem(new SubverseTorrent(magnetUri) { TorrentBytes = torrentBytes });
         }
 
         public Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)

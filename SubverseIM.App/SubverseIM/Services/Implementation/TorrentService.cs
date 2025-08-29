@@ -59,7 +59,7 @@ namespace SubverseIM.Services.Implementation
             IEnumerable<SubverseTorrent> files = dbService.GetTorrents();
 
             // Add and start all outstanding torrents
-            await Task.WhenAll(files.Select(x => AddTorrentAsync(x.MagnetUri)));
+            await Task.WhenAll(files.Select(x => AddTorrentAsync(x.MagnetUri, x.TorrentBytes)));
 
             return files.Zip(await Task.WhenAll(files.Select(StartAsync)))
                 .ToFrozenDictionary(x => x.First, x => x.Second!);
@@ -91,11 +91,15 @@ namespace SubverseIM.Services.Implementation
             return progress;
         }
 
-        public async Task<bool> AddTorrentAsync(string magnetUri)
+        public async Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             SubverseTorrent? torrent = dbService.GetTorrent(magnetUri) ??
-                new SubverseTorrent(magnetUri) { DateLastUpdatedOn = DateTime.UtcNow };
+                new SubverseTorrent(magnetUri) 
+                { 
+                    DateLastUpdatedOn = DateTime.UtcNow
+                };
+            torrent.TorrentBytes ??= torrentBytes;
             dbService.InsertOrUpdateItem(torrent);
 
             string cacheDirPath = Path.Combine(
@@ -140,6 +144,7 @@ namespace SubverseIM.Services.Implementation
 
         public async Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
         {
+            IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
             string cacheDirPath = Path.Combine(
@@ -158,6 +163,8 @@ namespace SubverseIM.Services.Implementation
             }
 
             TorrentCreator torrentCreator = new(TorrentType.V1V2Hybrid);
+            torrentCreator.Announces.Add(await bootstrapperService.GetAnnounceUriListAsync(cancellationToken));
+
             BEncodedDictionary metadataDict = await torrentCreator.CreateAsync(new TorrentFileSource(cacheFilePath), cancellationToken);
             Torrent metadata = Torrent.Load(metadataDict);
 
@@ -175,7 +182,7 @@ namespace SubverseIM.Services.Implementation
                     );
             }
 
-            string magnetUri = manager.MagnetLink.ToV1String();
+            string magnetUri = new MagnetLink(metadata.InfoHashes, metadata.Name).ToV1String();
             SubverseTorrent torrent = new SubverseTorrent(magnetUri)
             {
                 TorrentBytes = metadataDict.Encode(),
