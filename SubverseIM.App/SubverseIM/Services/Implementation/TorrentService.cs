@@ -83,7 +83,7 @@ namespace SubverseIM.Services.Implementation
                     await timer.WaitForNextTickAsync();
                     ((IProgress<TorrentStatus>)progress)
                     .Report(new TorrentStatus(
-                            manager.Complete,
+                            manager.Complete || manager.PartialProgress == 100.0,
                             manager.PartialProgress
                             ));
                 }
