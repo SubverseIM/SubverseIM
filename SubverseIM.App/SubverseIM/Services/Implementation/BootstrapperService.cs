@@ -22,6 +22,8 @@ namespace SubverseIM.Services.Implementation
 {
     public class BootstrapperService : IBootstrapperService, IDisposableService, IInjectable
     {
+        private const string TRACKERS_LIST_URI = "https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt";
+
         private const string SECRET_PASSWORD = "#FreeTheInternet";
 
         private const string PUBLIC_KEY_PATH = "$/pkx/public.key";
@@ -287,6 +289,25 @@ namespace SubverseIM.Services.Implementation
             await dhtEngine.StopAsync();
             await portForwarder.StopAsync(true, default);
             cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        public async Task<List<string>> GetAnnounceUriListAsync(CancellationToken cancellationToken)
+        {
+            List<string> announceUriList = new();
+
+            using Stream httpStream = await http.GetStreamAsync(TRACKERS_LIST_URI, cancellationToken);
+            using StreamReader reader = new(httpStream);
+
+            string? line;
+            do
+            {
+                line = await reader.ReadLineAsync(cancellationToken);
+                if (string.IsNullOrEmpty(line)) continue;
+
+                announceUriList.Add(line);
+            } while (line is not null);
+
+            return announceUriList;
         }
 
         public async Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken)

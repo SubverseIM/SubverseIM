@@ -33,6 +33,11 @@ namespace SubverseIM.Services.Faux
             return Task.FromException(new PlatformNotSupportedException());
         }
 
+        public Task<List<string>> GetAnnounceUriListAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromException<List<string>>(new PlatformNotSupportedException());
+        }
+
         public Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default)
         {
             thisPeerTcs.TrySetResult(new(RandomNumberGenerator.GetBytes(20)));

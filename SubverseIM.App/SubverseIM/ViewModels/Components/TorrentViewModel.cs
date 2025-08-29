@@ -46,6 +46,8 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
+        public bool IsExportable => innerTorrent.TorrentBytes is not null;
+
         public TorrentViewModel(TorrentPageViewModel parent, SubverseTorrent innerTorrent, Progress<TorrentStatus>? torrentProgress)
         {
             this.parent = parent;
@@ -55,7 +57,7 @@ namespace SubverseIM.ViewModels.Components
 
         private async void TorrentProgressChanged(object? sender, TorrentStatus newStatus)
         {
-            if (newStatus.Complete && CurrentStatus is not null && 
+            if (newStatus.Complete && CurrentStatus is not null &&
                 newStatus.Complete != CurrentStatus.Complete)
             {
                 INativeService nativeService = await parent.ServiceManager.GetWithAwaitAsync<INativeService>();
@@ -145,6 +147,49 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
+        public async Task ExportCommand(Visual? sender)
+        {
+            if (innerTorrent.TorrentBytes is null) 
+            {
+                throw new InvalidOperationException("Can't export this torrent.");
+            }
+
+            string exportDirPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "exported"
+                );
+            Directory.CreateDirectory(exportDirPath);
+
+            string exportFilePath = Path.Combine(exportDirPath,
+                (DisplayName ?? throw new InvalidOperationException("No display name was provided for this file!")) + ".torrent"
+                );
+            File.WriteAllBytes(exportFilePath, innerTorrent.TorrentBytes);
+
+            try
+            {
+                ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
+                await launcherService.ShareFileToAppAsync(sender, "Export Torrent", exportFilePath);
+            }
+            catch (PlatformNotSupportedException)
+            {
+                TopLevel topLevel = await parent.ServiceManager.GetWithAwaitAsync<TopLevel>();
+                IStorageFile? saveAsFile = await topLevel.StorageProvider.SaveFilePickerAsync(
+                    new FilePickerSaveOptions
+                    {
+                        Title = "Export Torrent",
+                        FileTypeChoices = [FilePickerFileTypes.All],
+                        SuggestedFileName = DisplayName + ".torrent",
+                    });
+                if (saveAsFile is not null)
+                {
+                    using (Stream cacheFileStream = File.OpenRead(exportFilePath))
+                    using (Stream localFileStream = await saveAsFile.OpenWriteAsync())
+                    {
+                        await cacheFileStream.CopyToAsync(localFileStream);
+                    }
+                }
+            }
+        }
+
         public async Task CopyCommand()
         {
             ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
@@ -154,7 +199,7 @@ namespace SubverseIM.ViewModels.Components
                 await topLevel.Clipboard.SetTextAsync(innerTorrent.MagnetUri);
                 await launcherService.ShowAlertDialogAsync("Information", "Magnet link copied to the clipboard.");
             }
-            else 
+            else
             {
                 await launcherService.ShowAlertDialogAsync("Error", "Could not copy magnet link to the clipboard.");
             }
