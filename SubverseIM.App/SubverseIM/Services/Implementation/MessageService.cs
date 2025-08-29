@@ -109,13 +109,16 @@ public class MessageService : IMessageService, IDisposableService
             }
         }
 
-        peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
-        foreach (SIPViaHeader viaHeader in sipRequest.Header.Vias.Via)
+        lock (peer.RemoteEndPoints)
         {
-            string viaEndPointStr = $"{viaHeader.ReceivedFromIPAddress}:{viaHeader.ReceivedFromPort}";
-            if (IPEndPoint.TryParse(viaEndPointStr, out IPEndPoint? viaEndPoint))
+            peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
+            foreach (SIPViaHeader viaHeader in sipRequest.Header.Vias.Via)
             {
-                peer.RemoteEndPoints.Add(viaEndPoint);
+                string viaEndPointStr = $"{viaHeader.ReceivedFromIPAddress}:{viaHeader.ReceivedFromPort}";
+                if (IPEndPoint.TryParse(viaEndPointStr, out IPEndPoint? viaEndPoint))
+                {
+                    peer.RemoteEndPoints.Add(viaEndPoint);
+                }
             }
         }
 
@@ -161,23 +164,31 @@ public class MessageService : IMessageService, IDisposableService
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-        string callId;
-        SubversePeerId peerId;
+        string callId = sipResponse.Header.CallId;
+        SubversePeerId peerId = SubversePeerId.FromString(sipResponse.Header.To.ToURI.User);
         lock (requestMap)
         {
-            callId = sipResponse.Header.CallId;
-            peerId = SubversePeerId.FromString(sipResponse.Header.To.ToURI.User);
             requestMap.Remove((callId, peerId));
         }
 
+        SubversePeer? peer;
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
         {
             lock (CachedPeers)
             {
-                if (CachedPeers.TryGetValue(peerId, out SubversePeer? peer))
-                {
-                    peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
-                }
+                CachedPeers.TryGetValue(peerId, out peer);
+            }
+        }
+        else
+        {
+            peer = null;
+        }
+
+        if (peer is not null)
+        {
+            lock (peer.RemoteEndPoints)
+            {
+                peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
             }
         }
 
@@ -194,11 +205,24 @@ public class MessageService : IMessageService, IDisposableService
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
 
         SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
-        HashSet<IPEndPoint> cachedEndPoints;
+
+        SubversePeer? peer;
         lock (CachedPeers)
         {
-            CachedPeers.TryGetValue(toPeer, out SubversePeer? peer);
-            cachedEndPoints = peer?.RemoteEndPoints ?? [];
+            CachedPeers.TryGetValue(toPeer, out peer);
+        }
+
+        IPEndPoint[] cachedEndPoints;
+        if (peer is null)
+        {
+            cachedEndPoints = [];
+        }
+        else
+        {
+            lock (peer.RemoteEndPoints)
+            {
+                cachedEndPoints = peer.RemoteEndPoints.ToArray();
+            }
         }
 
         foreach (IPEndPoint cachedEndPoint in cachedEndPoints)
