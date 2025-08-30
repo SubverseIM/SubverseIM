@@ -2,7 +2,6 @@
 using MonoTorrent;
 using PgpCore;
 using SubverseIM.Core;
-using SubverseIM.Models;
 using SubverseIM.Services.Implementation;
 using System;
 using System.Collections.Generic;
@@ -33,7 +32,7 @@ namespace SubverseIM.Services.Faux
             return Task.FromException(new PlatformNotSupportedException());
         }
 
-        public Task<List<string>> GetAnnounceUriListAsync(CancellationToken cancellationToken = default)
+        public Task<List<string>> GetAnnounceUriListAsync(int maxCount, CancellationToken cancellationToken = default)
         {
             return Task.FromException<List<string>>(new PlatformNotSupportedException());
         }

@@ -16,6 +16,8 @@ namespace SubverseIM.Services.Implementation
 {
     public class TorrentService : ITorrentService, IDisposableService
     {
+        private const int MAX_ANNOUNCE_COUNT = 3;
+
         private readonly Dictionary<string, TorrentManager> managerMap;
 
         private readonly Dictionary<TorrentManager, Progress<TorrentStatus>> progressMap;
@@ -99,7 +101,7 @@ namespace SubverseIM.Services.Implementation
                 { 
                     DateLastUpdatedOn = DateTime.UtcNow
                 };
-            torrent.TorrentBytes ??= torrentBytes;
+            torrent.TorrentBytes = torrentBytes ?? torrent.TorrentBytes;
             dbService.InsertOrUpdateItem(torrent);
 
             string cacheDirPath = Path.Combine(
@@ -163,7 +165,7 @@ namespace SubverseIM.Services.Implementation
             }
 
             TorrentCreator torrentCreator = new(TorrentType.V1V2Hybrid);
-            torrentCreator.Announces.Add(await bootstrapperService.GetAnnounceUriListAsync(cancellationToken));
+            torrentCreator.Announces.Add(await bootstrapperService.GetAnnounceUriListAsync(MAX_ANNOUNCE_COUNT, cancellationToken));
 
             BEncodedDictionary metadataDict = await torrentCreator.CreateAsync(new TorrentFileSource(cacheFilePath), cancellationToken);
             Torrent metadata = Torrent.Load(metadataDict);
@@ -182,7 +184,13 @@ namespace SubverseIM.Services.Implementation
                     );
             }
 
-            string magnetUri = new MagnetLink(metadata.InfoHashes, metadata.Name).ToV1String();
+            string magnetUri = new MagnetLink(
+                infoHashes: metadata.InfoHashes,
+                name: metadata.Name,
+                announceUrls: metadata.AnnounceUrls[0],
+                size: metadata.Size
+                ).ToV1String();
+
             SubverseTorrent torrent = new SubverseTorrent(magnetUri)
             {
                 TorrentBytes = metadataDict.Encode(),
