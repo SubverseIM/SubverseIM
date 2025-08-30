@@ -18,7 +18,7 @@ namespace SubverseIM.ViewModels.Components
 
         public string DisplayName => MagnetLink.TryParse(
             AbsoluteUri.OriginalString, out MagnetLink? magnetLink) ?
-            magnetLink.Name ?? "Untitled" :
+            (magnetLink.Name ?? "Untitled") + UnitHelpers.ByteCountToString(magnetLink.Size) :
             AbsoluteUri.Host;
 
         public Task<Bitmap?> FetchedBitmapAsync { get; }

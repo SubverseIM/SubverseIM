@@ -291,13 +291,14 @@ namespace SubverseIM.Services.Implementation
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        public async Task<List<string>> GetAnnounceUriListAsync(CancellationToken cancellationToken)
+        public async Task<List<string>> GetAnnounceUriListAsync(int maxCount, CancellationToken cancellationToken)
         {
             List<string> announceUriList = new();
 
             using Stream httpStream = await http.GetStreamAsync(TRACKERS_LIST_URI, cancellationToken);
             using StreamReader reader = new(httpStream);
 
+            int i = 0;
             string? line;
             do
             {
@@ -305,7 +306,7 @@ namespace SubverseIM.Services.Implementation
                 if (string.IsNullOrEmpty(line)) continue;
 
                 announceUriList.Add(line);
-            } while (line is not null);
+            } while (line is not null && ++i < maxCount);
 
             return announceUriList;
         }

@@ -16,7 +16,7 @@ public interface IBootstrapperService
 
     Task BootstrapSelfAsync(CancellationToken cancellationToken = default);
 
-    Task<List<string>> GetAnnounceUriListAsync(CancellationToken cancellationToken = default);
+    Task<List<string>> GetAnnounceUriListAsync(int maxCount, CancellationToken cancellationToken = default);
 
     Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default);
 
