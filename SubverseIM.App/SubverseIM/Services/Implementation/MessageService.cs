@@ -137,19 +137,16 @@ public class MessageService : IMessageService, IDisposableService
                 );
             await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
         }
-        else
+        else if (!recipients.Contains(await bootstrapperService.GetPeerIdAsync()))
         {
             SIPViaHeader viaHeader = new(remoteEndPoint, CallProperties.CreateBranchId());
             sipRequest.Header.Vias.PushViaHeader(viaHeader);
 
-            if (!recipients.Contains(await bootstrapperService.GetPeerIdAsync()))
+            try
             {
-                try
-                {
-                    dbService.InsertOrUpdateItem(message);
-                }
-                catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
+                dbService.InsertOrUpdateItem(message);
             }
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
 
             await SendSIPRequestAsync(sipRequest);
 
