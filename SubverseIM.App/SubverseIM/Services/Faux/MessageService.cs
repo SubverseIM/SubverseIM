@@ -52,7 +52,7 @@ namespace SubverseIM.Services.Faux
             await Task.Delay(1000);
             tcs.SetResult(new SubverseMessage
             {
-                CallId = CallProperties.CreateNewCallId(),
+                MessageId = new(CallProperties.CreateNewCallId(), await bootstrapperService.GetPeerIdAsync()),
 
                 Sender = message.Recipients[0],
                 SenderName = message.RecipientNames[0],

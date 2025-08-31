@@ -17,7 +17,7 @@ namespace SubverseIM.Services.Faux
 
         private readonly Dictionary<SubversePeerId, SubverseContact> contacts = new();
 
-        private readonly Dictionary<string, SubverseMessage> messages = new();
+        private readonly Dictionary<SubverseMessage.Identifier, SubverseMessage> messages = new();
 
         private readonly Dictionary<string, SubverseTorrent> torrents = new();
 
@@ -86,7 +86,7 @@ namespace SubverseIM.Services.Faux
                     .Where(x => x.WasDecrypted ?? true)
                     .Where(x => otherPeer == x.Sender || x.Recipients.Contains(otherPeer))
                     .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName))
-                    .DistinctBy(x => x.CallId);
+                    .DistinctBy(x => x.MessageId);
                 topicMessages = orderFlag ? topicMessages.OrderBy(x => x.DateSignedOn) :
                     topicMessages.OrderByDescending(x => x.DateSignedOn);
                 foreach (SubverseMessage message in topicMessages)
@@ -108,11 +108,11 @@ namespace SubverseIM.Services.Faux
             }
         }
 
-        public SubverseMessage? GetMessageByCallId(string callId)
+        public SubverseMessage? GetMessageById(SubverseMessage.Identifier messageId)
         {
             lock (messages)
             {
-                messages.TryGetValue(callId, out SubverseMessage? message);
+                messages.TryGetValue(messageId, out SubverseMessage? message);
                 return message;
             }
         }
@@ -183,8 +183,8 @@ namespace SubverseIM.Services.Faux
         {
             lock (messages)
             {
-                if (newItem.CallId is not null && messages
-                    .TryGetValue(newItem.CallId, out SubverseMessage? oldItem))
+                if (newItem.MessageId is not null && messages
+                    .TryGetValue(newItem.MessageId, out SubverseMessage? oldItem))
                 {
                     oldItem.Content = newItem.Content;
                     oldItem.DateSignedOn = newItem.DateSignedOn;
@@ -197,15 +197,15 @@ namespace SubverseIM.Services.Faux
                     oldItem.WasDelivered = newItem.WasDelivered;
                     return true;
                 }
-                else if (newItem.CallId is not null)
+                else if (newItem.MessageId is not null)
                 {
                     newItem.Id ??= ObjectId.NewObjectId();
-                    messages.Add(newItem.CallId, newItem);
+                    messages.Add(newItem.MessageId, newItem);
                     return false;
                 }
                 else
                 {
-                    throw new ArgumentNullException(nameof(newItem.CallId));
+                    throw new ArgumentNullException(nameof(newItem.MessageId));
                 }
             }
         }
@@ -216,9 +216,9 @@ namespace SubverseIM.Services.Faux
             {
                 foreach (SubverseMessage message in messages.Values
                     .Where(x => x.TopicName == topicName)
-                    .Where(x => x.CallId is not null))
+                    .Where(x => x.MessageId is not null))
                 {
-                    messages.Remove(message.CallId!);
+                    messages.Remove(message.MessageId!);
                 }
             }
         }
@@ -227,7 +227,7 @@ namespace SubverseIM.Services.Faux
         {
             foreach (SubverseMessage message in messages.Values
                     .Where(x => x.TopicName == topicName)
-                    .Where(x => x.CallId is not null)
+                    .Where(x => x.MessageId is not null)
                     .OrderByDescending(x => x.DateSignedOn))
             {
                 serializer.Serialize(message);
@@ -252,10 +252,10 @@ namespace SubverseIM.Services.Faux
                 case "SubverseIM.Models.SubverseMessage":
                     lock (messages)
                     {
-                        foreach ((string callId, SubverseMessage _) in messages
+                        foreach ((SubverseMessage.Identifier messageId, SubverseMessage _) in messages
                             .Where(x => x.Value.Id == id.AsObjectId).ToHashSet())
                         {
-                            removedFlag |= messages.Remove(callId);
+                            removedFlag |= messages.Remove(messageId);
                         }
                         break;
                     }

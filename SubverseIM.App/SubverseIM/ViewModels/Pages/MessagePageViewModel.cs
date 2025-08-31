@@ -291,7 +291,7 @@ namespace SubverseIM.ViewModels.Pages
 
             SubverseMessage message = new SubverseMessage()
             {
-                CallId = CallProperties.CreateNewCallId(),
+                MessageId = new(CallProperties.CreateNewCallId(), thisPeer),
 
                 TopicName = messageTopicName,
 

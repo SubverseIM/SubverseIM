@@ -149,7 +149,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                 SubverseMessage message = new SubverseMessage()
                 {
-                    CallId = CallProperties.CreateNewCallId(),
+                    MessageId = new(CallProperties.CreateNewCallId(), contact.OtherPeer),
 
                     TopicName = "#system",
 

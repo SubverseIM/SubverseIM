@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using LiteDB;
 using MonoTorrent;
 using SIPSorcery.SIP;
+using SubverseIM.Core;
 using SubverseIM.Headless.Services;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -75,11 +76,12 @@ public class MainViewFixture : IDisposable
         }
 
         // Initialize messages
+        SubversePeerId thisPeer = new(RandomNumberGenerator.GetBytes(20));
         SubverseMessage message = new SubverseMessage
         {
-            CallId = CallProperties.CreateNewCallId(),
+            MessageId = new(CallProperties.CreateNewCallId(), thisPeer),
 
-            Sender = new(RandomNumberGenerator.GetBytes(20)),
+            Sender = thisPeer,
             SenderName = "Anonymous",
 
             Recipients = contacts.Select(x => x.OtherPeer).ToArray(),
