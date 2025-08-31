@@ -28,7 +28,7 @@ namespace SubverseIM.Services
 
         IReadOnlyDictionary<string, IEnumerable<SubversePeerId>> GetAllMessageTopics();
 
-        SubverseMessage? GetMessageByCallId(string callId);
+        SubverseMessage? GetMessageById(SubverseMessage.Identifier messageId);
 
         bool InsertOrUpdateItem(SubverseContact newItem);
 

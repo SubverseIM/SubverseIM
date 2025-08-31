@@ -80,7 +80,7 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.Sender);
             messages.EnsureIndex(x => x.Recipients);
 
-            messages.EnsureIndex(x => x.CallId, unique: true);
+            messages.EnsureIndex(x => x.MessageId, unique: true);
 
             IEnumerable<SubverseMessage> topicMessages = otherPeers
                 .SelectMany(otherPeer => messages.Query()
@@ -88,7 +88,7 @@ namespace SubverseIM.Services.Implementation
                 .Where(x => otherPeer == x.Sender || x.Recipients.Contains(otherPeer))
                 .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
                 .ToEnumerable())
-                .DistinctBy(x => x.CallId);
+                .DistinctBy(x => x.MessageId);
 
             return orderFlag ? topicMessages.OrderBy(x => x.DateSignedOn) : 
                 topicMessages.OrderByDescending(x => x.DateSignedOn);
@@ -101,7 +101,7 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.Sender);
             messages.EnsureIndex(x => x.Recipients);
 
-            messages.EnsureIndex(x => x.CallId, unique: true);
+            messages.EnsureIndex(x => x.MessageId, unique: true);
 
             return messages.Query()
                 .Where(x => !x.WasDelivered)
@@ -116,7 +116,7 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.Sender);
             messages.EnsureIndex(x => x.Recipients);
 
-            messages.EnsureIndex(x => x.CallId, unique: true);
+            messages.EnsureIndex(x => x.MessageId, unique: true);
 
             return messages.Query()
                 .OrderByDescending(x => x.DateSignedOn)
@@ -128,16 +128,16 @@ namespace SubverseIM.Services.Implementation
                     .Distinct());
         }
 
-        public SubverseMessage? GetMessageByCallId(string callId)
+        public SubverseMessage? GetMessageById(SubverseMessage.Identifier messageId)
         {
             var messages = db.GetCollection<SubverseMessage>();
 
             messages.EnsureIndex(x => x.Sender);
             messages.EnsureIndex(x => x.Recipients);
 
-            messages.EnsureIndex(x => x.CallId, unique: true);
+            messages.EnsureIndex(x => x.MessageId, unique: true);
 
-            return messages.FindOne(x => x.CallId == callId);
+            return messages.FindOne(x => x.MessageId == messageId);
         }
 
         public bool InsertOrUpdateItem(SubverseContact newItem)
@@ -179,7 +179,7 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.Sender);
             messages.EnsureIndex(x => x.Recipients);
 
-            messages.EnsureIndex(x => x.CallId, unique: true);
+            messages.EnsureIndex(x => x.MessageId, unique: true);
 
             messages.DeleteMany(x => x.TopicName == topicName);
         }
@@ -191,7 +191,7 @@ namespace SubverseIM.Services.Implementation
             messages.EnsureIndex(x => x.Sender);
             messages.EnsureIndex(x => x.Recipients);
 
-            messages.EnsureIndex(x => x.CallId, unique: true);
+            messages.EnsureIndex(x => x.MessageId, unique: true);
 
             foreach (SubverseMessage message in messages.Query()
                 .Where(x => x.TopicName == topicName)

@@ -18,7 +18,7 @@ namespace SubverseIM.Services.Implementation;
 
 public class MessageService : IMessageService, IDisposableService
 {
-    private readonly Dictionary<(string callId, SubversePeerId toPeer), SIPRequest> requestMap;
+    private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
 
     private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messagesBag;
 
@@ -87,7 +87,7 @@ public class MessageService : IMessageService, IDisposableService
 
         SubverseMessage message = new SubverseMessage
         {
-            CallId = sipRequest.Header.CallId,
+            MessageId = new(sipRequest.Header.CallId, toPeer),
             Content = messageContent,
             Sender = fromPeer,
             SenderName = fromName,
@@ -137,17 +137,12 @@ public class MessageService : IMessageService, IDisposableService
                 );
             await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
         }
-        else if (!recipients.Contains(await bootstrapperService.GetPeerIdAsync()))
+        else
         {
             SIPViaHeader viaHeader = new(remoteEndPoint, CallProperties.CreateBranchId());
             sipRequest.Header.Vias.PushViaHeader(viaHeader);
 
-            try
-            {
-                dbService.InsertOrUpdateItem(message);
-            }
-            catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
-
+            dbService.InsertOrUpdateItem(message);
             await SendSIPRequestAsync(sipRequest);
 
             SIPResponse sipResponse = SIPResponse.GetResponse(
@@ -161,11 +156,11 @@ public class MessageService : IMessageService, IDisposableService
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-        string callId = sipResponse.Header.CallId;
-        SubversePeerId peerId = SubversePeerId.FromString(sipResponse.Header.To.ToURI.User);
+        SubverseMessage.Identifier messageId = new(sipResponse.Header.CallId,
+            SubversePeerId.FromString(sipResponse.Header.To.ToURI.User));
         lock (requestMap)
         {
-            requestMap.Remove((callId, peerId));
+            requestMap.Remove(messageId);
         }
 
         SubversePeer? peer;
@@ -173,7 +168,7 @@ public class MessageService : IMessageService, IDisposableService
         {
             lock (CachedPeers)
             {
-                CachedPeers.TryGetValue(peerId, out peer);
+                CachedPeers.TryGetValue(messageId.OtherPeer, out peer);
             }
         }
         else
@@ -189,7 +184,7 @@ public class MessageService : IMessageService, IDisposableService
             }
         }
 
-        SubverseMessage? message = dbService.GetMessageByCallId(sipResponse.Header.CallId);
+        SubverseMessage? message = dbService.GetMessageById(messageId);
         if (message is not null)
         {
             message.WasDelivered = true;
@@ -257,7 +252,7 @@ public class MessageService : IMessageService, IDisposableService
         List<Task> sendTasks = new();
         foreach ((SubversePeerId recipient, string contactName) in message.Recipients.Zip(message.RecipientNames))
         {
-            sendTasks.Add(Task.Run(async Task? () =>
+            sendTasks.Add(Task.Run((Func<Task?>)(async Task? () =>
             {
                 SIPURI requestUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
                 if (message.TopicName is not null)
@@ -274,9 +269,9 @@ public class MessageService : IMessageService, IDisposableService
                     new(message.SenderName, fromURI, null)
                     );
 
-                if (message.CallId is not null)
+                if (message.MessageId is not null)
                 {
-                    sipRequest.Header.CallId = message.CallId;
+                    sipRequest.Header.CallId = message.MessageId.CallId;
                 }
 
                 sipRequest.Header.SetDateHeader();
@@ -302,15 +297,16 @@ public class MessageService : IMessageService, IDisposableService
                     sipRequest.Body = message.Content;
                 }
 
+                SubverseMessage.Identifier messageId = new(sipRequest.Header.CallId, recipient);
                 lock (requestMap)
                 {
-                    if (!requestMap.ContainsKey((sipRequest.Header.CallId, recipient)))
+                    if (!requestMap.ContainsKey(messageId))
                     {
-                        requestMap.Add((sipRequest.Header.CallId, recipient), sipRequest);
+                        requestMap.Add(messageId, sipRequest);
                     }
                     else
                     {
-                        requestMap[(sipRequest.Header.CallId, recipient)] = sipRequest;
+                        requestMap[messageId] = sipRequest;
                     }
                 }
 
@@ -322,10 +318,10 @@ public class MessageService : IMessageService, IDisposableService
                     await timer.WaitForNextTickAsync(cancellationToken);
                     lock (requestMap)
                     {
-                        flag = requestMap.ContainsKey((sipRequest.Header.CallId, recipient));
+                        flag = requestMap.ContainsKey(messageId);
                     }
                 } while (flag && !cancellationToken.IsCancellationRequested);
-            }));
+            })));
         }
 
         await Task.WhenAll(sendTasks);
