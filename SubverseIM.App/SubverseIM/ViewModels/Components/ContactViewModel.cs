@@ -109,7 +109,17 @@ namespace SubverseIM.ViewModels.Components
 
         public Color BubbleColor
         {
-            get => Color.FromUInt32(innerContact.ChatColorCode);
+            get
+            {
+                if (innerContact.ChatColorCode.HasValue)
+                {
+                    return Color.FromUInt32(innerContact.ChatColorCode.Value);
+                }
+                else
+                {
+                    return HsvColor.ToRgb(RandomNumberGenerator.GetInt32(360), 1.0, 0.5);
+                }
+            }
             set
             {
                 innerContact.ChatColorCode = value.ToUInt32();
@@ -174,10 +184,7 @@ namespace SubverseIM.ViewModels.Components
                 ContactPhoto.Save(dbFileStream);
             }
 
-            if (innerContact.ChatColorCode == default)
-            {
-                innerContact.ChatColorCode = HsvColor.ToRgb(RandomNumberGenerator.GetInt32(360), 0.5, 0.25).ToUInt32();
-            }
+            innerContact.ChatColorCode = BubbleColor.ToUInt32();
             dbService.InsertOrUpdateItem(innerContact);
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
