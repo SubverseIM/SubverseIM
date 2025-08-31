@@ -81,13 +81,13 @@ namespace SubverseIM.ViewModels.Components
             {
                 BubbleBrush = new ImmutableSolidColorBrush(messagePageView.DefaultChatColor ?? Colors.MediumPurple);
             }
-            else if(fromContact.ChatColorCode == default)
+            else if(fromContact.ChatColorCode is null)
             {
                 BubbleBrush = new ImmutableSolidColorBrush(Colors.DimGray);
             }
             else
             {
-                BubbleBrush = new ImmutableSolidColorBrush(fromContact.ChatColorCode);
+                BubbleBrush = new ImmutableSolidColorBrush(fromContact.ChatColorCode.Value);
             }
 
             CcContacts = innerMessage.Recipients
