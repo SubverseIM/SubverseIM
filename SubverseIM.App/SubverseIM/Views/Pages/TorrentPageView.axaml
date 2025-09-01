@@ -15,7 +15,7 @@
 					AutomationProperties.LabeledBy="{Binding #labelAddTorrent}">
 				<PathIcon Data="{StaticResource document_add_regular}" />
 			</Button>
-			<Label DockPanel.Dock="Right" x:Name="labelAddTorrent">Add Torrent from File</Label>
+			<Label DockPanel.Dock="Right" x:Name="labelAddTorrent">Import Torrent</Label>
 			<Label FontWeight="Bold">Actions:</Label>
 		</DockPanel>
 		<Panel>
