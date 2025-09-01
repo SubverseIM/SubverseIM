@@ -111,7 +111,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
 
         Assert.Equal(
             MainViewFixture.EXPECTED_NUM_CONTACTS,
-            contactPageViewModel.ContactsList.Count
+            contactPageViewModel.ContactsList.Count(x => x.TopicName is null)
             );
     }
 
@@ -123,7 +123,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
 
         Assert.Contains(
             MainViewFixture.EXPECTED_TOPIC_NAME,
-            contactPageViewModel.TopicsList
+            contactPageViewModel.ContactsList
             .Select(x => x.TopicName)
             );
     }
@@ -136,12 +136,28 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
 
         foreach (ContactViewModel contactViewModel in contactPageViewModel.ContactsList)
         {
-            contactViewModel.IsSelected = true;
+            contactViewModel.IsSelected = contactViewModel.TopicName is null;
         }
         await contactPageViewModel.MessageCommand();
 
         PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
         Assert.IsType<MessagePageViewModel>(currentPageViewModel);
+    }
+
+    [AvaloniaFact]
+    public async Task ShouldNotOpenConversationViewWithMultipleTopicsSelected()
+    {
+        (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+            await EnsureIsOnContactPageView();
+
+        foreach (ContactViewModel contactViewModel in contactPageViewModel.ContactsList)
+        {
+            contactViewModel.IsSelected = true;
+        }
+        await contactPageViewModel.MessageCommand();
+
+        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        Assert.IsType<ContactPageViewModel>(currentPageViewModel);
     }
 
     [AvaloniaFact]

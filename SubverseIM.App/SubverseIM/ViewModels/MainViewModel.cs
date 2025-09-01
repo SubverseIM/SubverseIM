@@ -11,6 +11,8 @@ using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -178,11 +180,14 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 cancellationToken.ThrowIfCancellationRequested();
 
                 SubverseMessage message = await messageService.ReceiveMessageAsync(cancellationToken);
-                SubverseContact contact = dbService.GetContact(message.Sender) ??
+                SubversePeerId? topicId = message.TopicName is null || message.TopicName == "#system" ?
+                    null : new(SHA1.HashData(Encoding.UTF8.GetBytes(message.TopicName)));
+                SubverseContact contact = dbService.GetContact(topicId ?? message.Sender) ??
                     new SubverseContact()
                     {
-                        OtherPeer = message.Sender,
-                        DisplayName = message.SenderName,
+                        OtherPeer = topicId ?? message.Sender,
+                        DisplayName = message.TopicName ?? message.SenderName,
+                        TopicName = message.TopicName,
                     };
 
                 contact.DateLastChattedWith = message.DateSignedOn;
@@ -206,7 +211,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                     bool isCurrentPeer = false;
                     if (contact is not null && currentPage is MessagePageViewModel vm &&
-                        (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == contact.OtherPeer) &&
+                        (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == message.Sender) &&
                         message.TopicName != "#system" && (message.WasDecrypted ?? true) && (message.TopicName == vm.SendMessageTopicName ||
                         (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(vm.SendMessageTopicName))
                         )))
@@ -217,7 +222,13 @@ public class MainViewModel : ViewModelBase, IFrontendService
                             vm.TopicsList.Insert(0, message.TopicName);
                         }
 
-                        MessageViewModel messageViewModel = new(vm, contact, message);
+                        SubverseContact sender = dbService.GetContact(message.Sender) ?? new()
+                        {
+                            OtherPeer = message.Sender,
+                            DisplayName = message.SenderName
+                        };
+
+                        MessageViewModel messageViewModel = new(vm, sender, message);
                         foreach (SubverseContact participant in messageViewModel.CcContacts)
                         {
                             if (participant.OtherPeer == thisPeer) continue;

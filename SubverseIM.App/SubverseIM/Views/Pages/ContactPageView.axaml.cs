@@ -191,7 +191,6 @@ public partial class ContactPageView : UserControl
         pressTimerState.DataContext = DataContext;
         tapTimerState.DataContext = DataContext;
 
-        await ((ContactPageViewModel)DataContext!).LoadTopicsAsync();
         await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
 
         ILauncherService launcherService = await ((ContactPageViewModel)DataContext!)
