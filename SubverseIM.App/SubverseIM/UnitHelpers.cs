@@ -17,7 +17,7 @@
                 curr >>= 10;
             }
 
-            decimal result = curr + prev / 1000M;
+            double result = curr + prev / 1024.0;
             return $" ({result:F2} {byteCountUnits[idx]})";
         }
     }
