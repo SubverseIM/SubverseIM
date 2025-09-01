@@ -222,7 +222,13 @@ public class MainViewModel : ViewModelBase, IFrontendService
                             vm.TopicsList.Insert(0, message.TopicName);
                         }
 
-                        MessageViewModel messageViewModel = new(vm, contact, message);
+                        SubverseContact sender = dbService.GetContact(message.Sender) ?? new()
+                        {
+                            OtherPeer = message.Sender,
+                            DisplayName = message.SenderName
+                        };
+
+                        MessageViewModel messageViewModel = new(vm, sender, message);
                         foreach (SubverseContact participant in messageViewModel.CcContacts)
                         {
                             if (participant.OtherPeer == thisPeer) continue;
