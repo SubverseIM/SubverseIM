@@ -7,6 +7,7 @@ using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,6 +20,9 @@ namespace SubverseIM.ViewModels.Components
 {
     public class ContactViewModel : ViewModelBase
     {
+        private const string DELETE_CONFIRM_TITLE = "Delete topic messages?";
+        private const string DELETE_CONFIRM_MESSAGE = "Warning: all messages labeled with this topic will be permanently deleted! Are you sure you want to proceed?";
+
         private const double HEX_ANGLE = Math.Tau / 6.0;
 
         private static readonly Geometry hexagonPath;
@@ -207,13 +211,26 @@ namespace SubverseIM.ViewModels.Components
         public async Task DeleteCommand(bool deleteFromDb)
         {
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
-            if (await launcherService.ShowConfirmationDialogAsync("Remove this Contact?", deleteFromDb ?
+            if (string.IsNullOrEmpty(TopicName) && await launcherService.ShowConfirmationDialogAsync("Remove this Contact?", deleteFromDb ?
                 "Are you sure you want to remove this contact?" :
                 "Are you sure you want to remove this recipient from the conversation?"))
             {
                 if (deleteFromDb)
                 {
                     IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+                    dbService.DeleteItemById<SubverseContact>(innerContact.Id);
+                }
+
+                contactContainer?.RemoveContact(this);
+                ShouldShowOptions = false;
+            }
+            else if (!string.IsNullOrEmpty(TopicName) && await launcherService.ShowConfirmationDialogAsync(DELETE_CONFIRM_TITLE, DELETE_CONFIRM_MESSAGE))
+            {
+                IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+                dbService.DeleteAllMessagesOfTopic(TopicName);
+
+                if (deleteFromDb)
+                {
                     dbService.DeleteItemById<SubverseContact>(innerContact.Id);
                 }
 

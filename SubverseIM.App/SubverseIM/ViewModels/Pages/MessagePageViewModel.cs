@@ -20,9 +20,6 @@ namespace SubverseIM.ViewModels.Pages
 {
     public class MessagePageViewModel : PageViewModelBase<MessagePageViewModel>, IContactContainer
     {
-        private const string DELETE_CONFIRM_TITLE = "Delete topic messages?";
-        private const string DELETE_CONFIRM_MESSAGE = "Warning: all messages labeled with this topic will be permanently deleted! Are you sure you want to proceed?";
-
         private readonly List<ContactViewModel> permContactsList;
 
         public override string Title => $"Conversation View";
@@ -123,25 +120,6 @@ namespace SubverseIM.ViewModels.Pages
             {
                 TopicsList.Insert(0, filteredText);
                 SendMessageTopicName = filteredText;
-            }
-        }
-
-        public async Task DeleteAllCommand()
-        {
-            ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
-            if (string.IsNullOrEmpty(SendMessageTopicName))
-            {
-                await launcherService.ShowAlertDialogAsync("Action Disallowed", "You cannot delete the default topic.");
-                return;
-            }
-
-            if (await launcherService.ShowConfirmationDialogAsync(DELETE_CONFIRM_TITLE, DELETE_CONFIRM_MESSAGE))
-            {
-                IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
-                dbService.DeleteAllMessagesOfTopic(SendMessageTopicName);
-
-                IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-                while (frontendService.NavigatePreviousView()) ;
             }
         }
 
