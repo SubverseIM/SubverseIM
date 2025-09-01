@@ -30,7 +30,7 @@
 			<TextBox x:Name="nameEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom"
 					 Watermark="Write contact name..." Text="{Binding Contact.DisplayName}"
 					 AutomationProperties.LabeledBy="{Binding #nameEditLabel}"
-					 IsEnabled="{Binding !Contact.IsGroupChat}"/>
+					 IsEnabled="{Binding Contact.TopicName, Converter={x:Static ObjectConverters.IsNull}}"/>
 			<Label x:Name="nameEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Contact Name</Label>
 			<Image Source="{Binding Contact.ContactPhoto}"
 				   AutomationProperties.Name="Contact photo" MaxHeight="200" />

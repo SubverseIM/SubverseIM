@@ -50,7 +50,7 @@ namespace SubverseIM.ViewModels.Components
 
         internal readonly SubverseContact innerContact;
 
-        public bool IsGroupChat => innerContact.TopicName is not null;
+        public string? TopicName => innerContact.TopicName;
 
         private bool isSelected;
         public bool IsSelected

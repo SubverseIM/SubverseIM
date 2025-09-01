@@ -85,7 +85,7 @@ namespace SubverseIM.ViewModels.Pages
                 .Where(x => x.IsSelected)
                 .Select(x => x.innerContact);
 
-            if (contacts.All(x => x.TopicName is null))
+            if (contacts.Any() && contacts.All(x => x.TopicName is null))
             {
                 frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
                 frontendService.NavigateMessageView(contacts);
