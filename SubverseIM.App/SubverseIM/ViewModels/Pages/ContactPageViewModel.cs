@@ -4,6 +4,7 @@ using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -55,7 +56,7 @@ namespace SubverseIM.ViewModels.Pages
                     };
 
                 IEnumerable<SubverseMessage> messages = dbService.GetMessagesWithPeersOnTopic(participants.ToHashSet(), topicName);
-                newContact.DateLastChattedWith = messages.First().DateSignedOn;
+                newContact.DateLastChattedWith = messages.FirstOrDefault()?.DateSignedOn ?? DateTime.MinValue;
 
                 dbService.InsertOrUpdateItem(newContact);
             }

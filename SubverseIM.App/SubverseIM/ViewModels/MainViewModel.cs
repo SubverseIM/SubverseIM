@@ -11,6 +11,8 @@ using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -178,11 +180,13 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 cancellationToken.ThrowIfCancellationRequested();
 
                 SubverseMessage message = await messageService.ReceiveMessageAsync(cancellationToken);
-                SubverseContact contact = dbService.GetContact(message.Sender) ??
+                SubversePeerId? topicId = message.TopicName is null ? null : 
+                    new(SHA1.HashData(Encoding.UTF8.GetBytes(message.TopicName)));
+                SubverseContact contact = dbService.GetContact(topicId ?? message.Sender) ??
                     new SubverseContact()
                     {
-                        OtherPeer = message.Sender,
-                        DisplayName = message.SenderName,
+                        OtherPeer = topicId ?? message.Sender,
+                        DisplayName = message.TopicName ?? message.SenderName,
                     };
 
                 contact.DateLastChattedWith = message.DateSignedOn;
