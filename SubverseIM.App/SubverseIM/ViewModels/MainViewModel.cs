@@ -211,7 +211,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                     bool isCurrentPeer = false;
                     if (contact is not null && currentPage is MessagePageViewModel vm &&
-                        (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == contact.OtherPeer) &&
+                        (isCurrentPeer = vm.ContactsList.Any(x => x.innerContact.OtherPeer == message.Sender) &&
                         message.TopicName != "#system" && (message.WasDecrypted ?? true) && (message.TopicName == vm.SendMessageTopicName ||
                         (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(vm.SendMessageTopicName))
                         )))
