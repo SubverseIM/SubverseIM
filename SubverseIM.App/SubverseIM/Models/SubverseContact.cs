@@ -10,6 +10,8 @@ namespace SubverseIM.Models
 
         public SubversePeerId OtherPeer { get; set; }
 
+        public string? TopicName { get; set; }
+
         public string? ImagePath { get; set; }
 
         public string? DisplayName { get; set; }
