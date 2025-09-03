@@ -14,14 +14,24 @@ jobs:
       contents: read
 
     container: 
-      image: mcr.microsoft.com/dotnet/sdk:9.0
+      image: garretech/android-sdk-image:35.0.0
       
     steps:
     - uses: actions/checkout@v4
       with: 
         submodules: 'recursive'
-    - name: Add Avalonia Nuget feed
-      run: dotnet nuget add source https://nuget-feed-all.avaloniaui.net/v3/index.json
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: | 
+          8.0.x
+          9.0.x
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 'latest'
+    - name: Restore workloads
+      run: cd Avalonia && dotnet workload restore dirs.proj
+    - name: Build Avalonia (local)
+      run: cd Avalonia && ./build.sh BuildToNuGetCache
     - name: Restore dependencies
       run: dotnet restore SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
     - name: Build SubverseIM.App
@@ -62,13 +72,20 @@ jobs:
           submodules: 'recursive'
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
-      - name: Add Avalonia Nuget feed
-        run: dotnet nuget add source https://nuget-feed-all.avaloniaui.net/v3/index.json
+          dotnet-version: | 
+            8.0.x
+            9.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+      - name: Restore workloads
+        run: |
+          cd Avalonia && dotnet workload restore dirs.proj && cd ..
+          dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
+      - name: Build Avalonia (local)
+        run: cd Avalonia && ./build.sh BuildToNuGetCache
       - name: Test SubverseIM.App
         run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
-      - name: Restore workloads
-        run: dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
       - name: Restore dependencies
         run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
       - name: Build & publish SubverseIM.Android
