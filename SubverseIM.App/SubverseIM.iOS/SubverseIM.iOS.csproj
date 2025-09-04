@@ -8,6 +8,7 @@
 	<PropertyGroup>
 		<SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
 		<UseInterpreter>true</UseInterpreter>
+		<ProvisioningType>manual</ProvisioningType>
 	</PropertyGroup>
 	
 	<ItemGroup>
