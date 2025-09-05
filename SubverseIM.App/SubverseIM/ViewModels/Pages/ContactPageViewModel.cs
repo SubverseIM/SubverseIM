@@ -62,7 +62,8 @@ namespace SubverseIM.ViewModels.Pages
             }
 
             ContactsList.Clear();
-            foreach (SubverseContact contact in dbService.GetContacts())
+            foreach (SubverseContact contact in dbService.GetContacts()
+                .Where(x => Parent is null || x.TopicName is null))
             {
                 ContactViewModel vm = new(ServiceManager, this, contact);
                 await vm.LoadPhotoAsync();
