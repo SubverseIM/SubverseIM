@@ -48,7 +48,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
             Title = message.TopicName is null ? contact?.DisplayName ?? "Anonymous" :
                 $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})",
             Body = message.Content ?? string.Empty,
-            Sound = UNNotificationSound.Default
+            Sound = UNNotificationSound.GetSound("notif.aiff")
         };
 
         if (message.TopicName != "#system")
@@ -76,7 +76,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
         {
             Title = MagnetLink.Parse(torrent.MagnetUri).Name ?? "Untitled",
             Body = "File was downloaded successfully.",
-            Sound = UNNotificationSound.Default,
+            Sound = UNNotificationSound.GetSound("notif.aiff")
         };
         var extraData = new NSDictionary<NSString, NSString?>(
                 [(NSString)EXTRA_URI_ID],
