@@ -88,10 +88,13 @@ namespace SubverseIM.Android
 
         private void CreateNotificationChannels()
         {
+            Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);
+
             NotificationChannel messageChannel = new NotificationChannel(
                 MSG_CHANNEL_ID, new Java.Lang.String("User Messages"),
                 NotificationImportance.High);
             messageChannel.Description = "Inbound messages from your contacts";
+            messageChannel.SetSound(soundUri, null);
 
             NotificationChannel serviceChannel = new NotificationChannel(
                 SRV_CHANNEL_ID, new Java.Lang.String("Application Services"),
@@ -101,7 +104,8 @@ namespace SubverseIM.Android
             NotificationChannel torrentChannel = new NotificationChannel(
                 TRN_CHANNEL_ID, new Java.Lang.String("File Services"),
                 NotificationImportance.High);
-            messageChannel.Description = "Status updates for active file downloads";
+            torrentChannel.Description = "Status updates for active file downloads";
+            torrentChannel.SetSound(soundUri, null);
 
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this.
