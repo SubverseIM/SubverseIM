@@ -1,9 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-	<debug-overrides>
+	<domain-config>
+		<domain includeSubdomains="false">subverse.network</domain>
 		<trust-anchors>
-			<!-- Trust user added CAs while debuggable only -->
-			<certificates src="user" />
+			<certificates src="@raw/trusted_root"/>
 		</trust-anchors>
-	</debug-overrides>
+	</domain-config>
 </network-security-config>
