@@ -20,7 +20,7 @@ namespace SubverseIM.Android.Services
             instanceTcs = new();
         }
 
-        public async Task<TService> ConnectAsync(CancellationToken cancellationToken = default) 
+        public Task<TService> ConnectAsync(CancellationToken cancellationToken = default) 
         {
             if (isConnected)
             {
@@ -28,7 +28,8 @@ namespace SubverseIM.Android.Services
             }
             else
             {
-                return await instanceTcs.Task.WaitAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                return instanceTcs.Task.WaitAsync(cancellationToken);
             }
         }
 

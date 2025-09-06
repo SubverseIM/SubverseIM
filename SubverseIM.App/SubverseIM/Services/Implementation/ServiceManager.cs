@@ -108,6 +108,7 @@ namespace SubverseIM.Services.Implementation
                 }
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             return (TService)await instanceTcs.Task
                 .WaitAsync(cancellationToken);
         }

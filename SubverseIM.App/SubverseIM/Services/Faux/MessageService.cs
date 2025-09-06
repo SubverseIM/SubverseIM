@@ -31,6 +31,7 @@ namespace SubverseIM.Services.Faux
 
         public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (messageBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
             {
                 return tcs.Task.WaitAsync(cancellationToken);

@@ -145,26 +145,17 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         }
     }
 
-    protected override async void OnDestroy()
+    protected override void OnDestroy()
     {
         base.OnDestroy();
 
         cancellationTokenSource.Dispose();
-        serviceManager?.Dispose();
-
         if (peerServiceConn.IsConnected)
         {
             UnbindService(peerServiceConn);
-            StopService(new Intent(this, typeof(WrappedBootstrapperService)));
         }
 
-        try
-        {
-            if (mainTask is not null)
-            { await mainTask; }
-        }
-        catch (System.OperationCanceledException) { }
-
+        serviceManager?.Dispose();
         System.Environment.Exit(0);
     }
 

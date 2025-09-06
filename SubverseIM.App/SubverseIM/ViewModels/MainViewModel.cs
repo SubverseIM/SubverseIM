@@ -100,7 +100,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
     {
         if (mainTask?.IsCompleted ?? true)
         {
-            return mainTask = RunAsync(cancellationToken);
+            return mainTask = Task.Run(() => RunAsync(cancellationToken));
         }
         else
         {
@@ -135,8 +135,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 await messageService.SendMessageAsync(message, cancellationToken);
             }));
         }
-
-        await Task.Delay(TimeSpan.FromSeconds(5));
 
         lock (messageService.CachedPeers)
         {
@@ -261,11 +259,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
             }
         }
-        catch (OperationCanceledException)
+        finally 
         {
             await torrentPage.DestroyAsync();
             await Task.WhenAll(subTasks);
-            throw;
         }
     }
 
