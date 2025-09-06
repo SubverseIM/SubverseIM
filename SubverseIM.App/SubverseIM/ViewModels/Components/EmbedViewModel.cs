@@ -35,7 +35,7 @@ namespace SubverseIM.ViewModels.Components
             OpenGraph og;
             ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
             Progress<TorrentStatus>? progress = await torrentService.StartAsync(new SubverseTorrent(AbsoluteUri.OriginalString));
-            if (progress is not null)
+            if (progress is not null && MagnetLink.TryParse(AbsoluteUri.OriginalString, out MagnetLink? magnetLink))
             {
                 TaskCompletionSource tcs = new();
                 progress.ProgressChanged += (s, ev) =>
@@ -48,7 +48,7 @@ namespace SubverseIM.ViewModels.Components
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
                         );
                 string cacheFilePath = Path.Combine(cacheDirPath,
-                    DisplayName ?? throw new InvalidOperationException("No display name was provided for this file!")
+                    magnetLink.Name ?? throw new InvalidOperationException("No display name was provided for this file!")
                     );
 
                 using Stream stream = File.OpenRead(cacheFilePath);
