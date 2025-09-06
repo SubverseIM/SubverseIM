@@ -235,14 +235,15 @@ public class MessageService : IMessageService, IDisposableService
         }
     }
 
-    public async Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
+    public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
     {
         if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
         {
             messagesBag.Add(tcs = new());
         }
 
-        return await tcs.Task.WaitAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        return tcs.Task.WaitAsync(cancellationToken);
     }
 
     public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)

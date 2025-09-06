@@ -311,9 +311,10 @@ namespace SubverseIM.Services.Implementation
             return announceUriList;
         }
 
-        public async Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken)
+        public Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken)
         {
-            return await thisPeerTcs.Task.WaitAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            return thisPeerTcs.Task.WaitAsync(cancellationToken);
         }
 
         public async Task<IList<PeerInfo>> GetPeerInfoAsync(SubversePeerId toPeer, CancellationToken cancellationToken)
