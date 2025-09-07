@@ -20,10 +20,16 @@
 		</DockPanel>
 		<Panel>
 			<ListBox ItemsSource="{Binding Torrents}">
+				<ListBox.Styles>
+					<Style Selector="ListBoxItem">
+						<Setter Property="Focusable" Value="False" />
+					</Style>
+				</ListBox.Styles>
 				<ListBox.ItemTemplate>
 					<DataTemplate>
 						<DockPanel>
 							<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" />
+							<TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding CurrentStatus.Progress, StringFormat=###\\%}" />
 							<Button DockPanel.Dock="Right" Command="{Binding ShareCommand}"
 									IsVisible="{Binding CurrentStatus.Complete}"
 									AutomationProperties.Name="Save File As">
@@ -54,7 +60,7 @@
 									Background="DarkRed">
 								<PathIcon Data="{StaticResource delete_regular}" />
 							</Button>
-							<ProgressBar Value="{Binding CurrentStatus.Progress}" Margin="5" />
+							<ProgressBar Value="{Binding CurrentStatus.Progress}" Margin="5" MinWidth="0" />
 						</DockPanel>
 					</DataTemplate>
 				</ListBox.ItemTemplate>

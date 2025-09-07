@@ -202,7 +202,7 @@
 					</Classes.dockBottom>
 					<ListBox.Styles>
 						<Style Selector="ListBoxItem">
-							<Setter Property="AutomationProperties.Name" Value="Message" />
+							<Setter Property="Focusable" Value="False" />
 							<Setter Property="Classes.offscreen">
 								<Setter.Value>
 									<MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -373,7 +373,7 @@
 																			 IsVisible="{Binding !IsCode, DataType={x:Type vmx:InlineContentViewModel}}}"
 																			 Text="{Binding Content, DataType={x:Type vmx:InlineContentViewModel}}" TextAlignment="Start"
 																			 Foreground="White" TextWrapping="Wrap"/>
-																		<Border IsVisible="{Binding IsCode, DataType={x:Type vmx:InlineContentViewModel}}}" 
+																		<Border IsVisible="{Binding IsCode, DataType={x:Type vmx:InlineContentViewModel}}}"
 																				Background="Black" BorderBrush="DimGray" BorderThickness="1" CornerRadius="2"
 																				Padding="3">
 																			<TextBlock Text="{Binding Content, DataType={x:Type vmx:InlineContentViewModel}}"
