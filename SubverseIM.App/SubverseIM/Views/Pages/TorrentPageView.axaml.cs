@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using SubverseIM.ViewModels.Pages;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
