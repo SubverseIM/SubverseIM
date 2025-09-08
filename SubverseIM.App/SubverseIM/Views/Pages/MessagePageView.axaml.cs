@@ -75,7 +75,7 @@ public partial class MessagePageView : UserControl
 
     private async void MessageListChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (DataContext is null || !LoadTask.IsCompleted) return;
+        if (DataContext is null || (!LoadTask?.IsCompleted ?? false)) return;
 
         IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
         IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
@@ -117,18 +117,19 @@ public partial class MessagePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        loadTaskSource.TrySetResult(e);
-
-        IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
-        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
-        SubverseConfig config = await configurationService.GetConfigAsync();
-
-        if (config.MessageOrderFlag == true)
+        if (loadTaskSource.TrySetResult(e))
         {
-            Dispatcher.UIThread.Post(() =>
-                messages.ScrollIntoView(messages.ItemCount - 1),
-                DispatcherPriority.Loaded
-                );
+            IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
+            IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
+            SubverseConfig config = await configurationService.GetConfigAsync();
+
+            if (config.MessageOrderFlag == true)
+            {
+                Dispatcher.UIThread.Post(() =>
+                    messages.ScrollIntoView(messages.ItemCount - 1),
+                    DispatcherPriority.Loaded
+                    );
+            }
         }
     }
 

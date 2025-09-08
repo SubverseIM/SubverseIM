@@ -20,8 +20,9 @@ public partial class PurchasePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        loadTaskSource.TrySetResult(e);
-
-        await ((PurchasePageViewModel)DataContext!).InitializeAsync();
+        if (loadTaskSource.TrySetResult(e))
+        {
+            await ((PurchasePageViewModel)DataContext!).InitializeAsync();
+        }
     }
 }
