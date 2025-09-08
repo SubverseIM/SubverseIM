@@ -3,4 +3,4 @@
 	url = https://github.com/SubverseIM/monotorrent.git
 [submodule "Avalonia"]
 	path = Avalonia
-	url = https://github.com/IsaMorphic/Avalonia.git
+	url = https://github.com/SubverseIM/Avalonia.git
