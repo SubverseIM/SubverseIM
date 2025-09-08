@@ -147,20 +147,24 @@ namespace SubverseIM.ViewModels.Components
 
         private async Task<HorizontalAlignment> GetContentAlignmentAsync() 
         {
+            ILauncherService launcherService = await messagePageView.ServiceManager
+                .GetWithAwaitAsync<ILauncherService>();
             IConfigurationService configurationService = await messagePageView.ServiceManager
                 .GetWithAwaitAsync<IConfigurationService>();
             SubverseConfig config = await configurationService.GetConfigAsync();
-            return fromContact is null ^ config.MessageMirrorFlag ? 
-                HorizontalAlignment.Left : HorizontalAlignment.Right;
+            return (fromContact is null || launcherService.IsAccessibilityEnabled) ^ 
+                config.MessageMirrorFlag ? HorizontalAlignment.Left : HorizontalAlignment.Right;
         }
 
         private async Task<Dock> GetOptionsAlignmentAsync()
         {
+            ILauncherService launcherService = await messagePageView.ServiceManager
+                .GetWithAwaitAsync<ILauncherService>();
             IConfigurationService configurationService = await messagePageView.ServiceManager
                 .GetWithAwaitAsync<IConfigurationService>();
             SubverseConfig config = await configurationService.GetConfigAsync();
-            return fromContact is null ^ config.MessageMirrorFlag ?
-                Dock.Right : Dock.Left;
+            return (fromContact is null || launcherService.IsAccessibilityEnabled) ^ 
+                config.MessageMirrorFlag ? Dock.Right : Dock.Left;
         }
 
         public async Task CopyCommand()
