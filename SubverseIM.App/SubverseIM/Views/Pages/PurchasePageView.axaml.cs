@@ -11,7 +11,7 @@ public partial class PurchasePageView : UserControl
 
     public Task LoadTask => loadTaskSource.Task;
 
-    public PurchasePageView() 
+    public PurchasePageView()
     {
         InitializeComponent();
         loadTaskSource = new();
@@ -20,9 +20,8 @@ public partial class PurchasePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        if (loadTaskSource.TrySetResult(e))
-        {
-            await ((PurchasePageViewModel)DataContext!).InitializeAsync();
-        }
+        loadTaskSource.TrySetResult(e);
+
+        await ((PurchasePageViewModel)DataContext!).InitializeAsync();
     }
 }
