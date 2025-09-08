@@ -188,15 +188,17 @@ public partial class ContactPageView : UserControl
         base.OnLoaded(e);
         if (loadTaskSource.TrySetResult(e))
         {
-            pressTimerState.DataContext = DataContext;
-            tapTimerState.DataContext = DataContext;
-
-            await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
-
-            ILauncherService launcherService = await ((ContactPageViewModel)DataContext!)
-                .ServiceManager.GetWithAwaitAsync<ILauncherService>();
-            this.launcherService = launcherService;
+            ((ContactPageViewModel)DataContext!).Parent = null;
         }
+
+        pressTimerState.DataContext = DataContext;
+        tapTimerState.DataContext = DataContext;
+
+        await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
+
+        ILauncherService launcherService = await ((ContactPageViewModel)DataContext!)
+            .ServiceManager.GetWithAwaitAsync<ILauncherService>();
+        this.launcherService = launcherService;
     }
 
     protected override void OnUnloaded(RoutedEventArgs e)

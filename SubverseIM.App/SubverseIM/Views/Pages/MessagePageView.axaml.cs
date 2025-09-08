@@ -117,19 +117,18 @@ public partial class MessagePageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        if (loadTaskSource.TrySetResult(e))
-        {
-            IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
-            IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
-            SubverseConfig config = await configurationService.GetConfigAsync();
+        loadTaskSource.TrySetResult(e);
 
-            if (config.MessageOrderFlag == true)
-            {
-                Dispatcher.UIThread.Post(() =>
-                    messages.ScrollIntoView(messages.ItemCount - 1),
-                    DispatcherPriority.Loaded
-                    );
-            }
+        IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
+        IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
+        SubverseConfig config = await configurationService.GetConfigAsync();
+
+        if (config.MessageOrderFlag == true)
+        {
+            Dispatcher.UIThread.Post(() =>
+                messages.ScrollIntoView(messages.ItemCount - 1),
+                DispatcherPriority.Loaded
+                );
         }
     }
 
