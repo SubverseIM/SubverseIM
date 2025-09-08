@@ -218,8 +218,7 @@
 					</ListBox.Styles>
 					<ListBox.ItemTemplate>
 						<DataTemplate>
-							<DockPanel
-								AutomationProperties.HelpText="{Binding ReadoutText}">
+							<DockPanel>
 								<Button Background="DarkRed"
 										DockPanel.Dock="{Binding OptionsAlignmentAsync^}"
 										VerticalAlignment="Top"
@@ -255,30 +254,29 @@
 									</Classes.offscreen>
 									<PathIcon Data="{StaticResource clipboard_letter_regular}" />
 								</Button>
-								<TextBlock
-									DockPanel.Dock="{Binding OptionsAlignmentAsync^}"
-									VerticalAlignment="Top"
-									HorizontalAlignment="{Binding ContentAlignmentAsync^}"
-									IsVisible="{Binding IsSelected}"
-									Text="{Binding DateString}"
-									FontSize="12"
-									Margin="2">
-									<Classes.offscreen>
-										<MultiBinding Converter="{x:Static BoolConverters.Or}">
-											<MultiBinding Converter="{x:Static BoolConverters.And}">
-												<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
-												<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
-											</MultiBinding>
-											<Binding Path="IsDropDownOpen" ElementName="topicBox" />
-										</MultiBinding>
-									</Classes.offscreen>
-								</TextBlock>
 								<DockPanel>
 									<TextBlock
 											TextWrapping="Wrap" DockPanel.Dock="Top"
 											HorizontalAlignment="{Binding ContentAlignmentAsync^}"
 											Text="{Binding FromHeading}"
 											Margin="2">
+										<Classes.offscreen>
+											<MultiBinding Converter="{x:Static BoolConverters.Or}">
+												<MultiBinding Converter="{x:Static BoolConverters.And}">
+													<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
+													<Binding Path="DataContext.IsSidebarOverlay" ElementName="splitView" />
+												</MultiBinding>
+												<Binding Path="IsDropDownOpen" ElementName="topicBox" />
+											</MultiBinding>
+										</Classes.offscreen>
+									</TextBlock>
+									<TextBlock
+										DockPanel.Dock="Top"
+										VerticalAlignment="Top"
+										HorizontalAlignment="{Binding ContentAlignmentAsync^}"
+										Text="{Binding DateString}"
+										FontSize="12"
+										Margin="2">
 										<Classes.offscreen>
 											<MultiBinding Converter="{x:Static BoolConverters.Or}">
 												<MultiBinding Converter="{x:Static BoolConverters.And}">

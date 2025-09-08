@@ -49,7 +49,7 @@ namespace SubverseIM.ViewModels.Components
 
         public string DateString => innerMessage
             .DateSignedOn.ToLocalTime()
-            .ToString("dd/MM/yy\nHH:mm");
+            .ToString("d/M/yy H:mm");
 
         public string FromName => fromContact?.DisplayName ?? "You";
 
