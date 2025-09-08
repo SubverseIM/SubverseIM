@@ -86,8 +86,6 @@ jobs:
         run: cd Avalonia && ./build.sh BuildToNuGetCache
       - name: Test SubverseIM.App
         run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
-      - name: Restore dependencies
-        run: dotnet restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
       - name: Build & publish SubverseIM.Android
         run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1
       - name: Upload .apk artifact
