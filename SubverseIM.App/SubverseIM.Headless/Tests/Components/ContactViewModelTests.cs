@@ -1,4 +1,5 @@
 ﻿using Avalonia.Headless.XUnit;
+using Avalonia.Threading;
 using SubverseIM.Headless.Fixtures;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -47,6 +48,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         Assert.NotNull(contactPageView);
 
         await contactPageView.LoadTask;
+        Dispatcher.UIThread.RunJobs();
 
         return (contactPageView, contactPageViewModel);
     }
