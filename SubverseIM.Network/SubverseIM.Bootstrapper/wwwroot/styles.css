@@ -42,3 +42,7 @@ body {
 .hidden {
   opacity: 0;
 }
+
+a {
+    color: magenta;
+}
