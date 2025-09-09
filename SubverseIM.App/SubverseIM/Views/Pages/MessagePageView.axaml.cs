@@ -75,7 +75,7 @@ public partial class MessagePageView : UserControl
 
     private async void MessageListChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (DataContext is null || (!LoadTask?.IsCompleted ?? false)) return;
+        if (DataContext is null || !LoadTask.IsCompleted) return;
 
         IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
         IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();

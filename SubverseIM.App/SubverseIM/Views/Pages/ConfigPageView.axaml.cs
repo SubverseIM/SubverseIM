@@ -20,14 +20,14 @@ public partial class ConfigPageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        if (loadTaskSource.TrySetResult(e))
+        loadTaskSource.TrySetResult(e);
+
+        await ((ConfigPageViewModel)DataContext!).InitializeAsync();
+
+        if (((ConfigPageViewModel)DataContext!).PromptFreqIndex is null)
         {
-            await ((ConfigPageViewModel)DataContext!).InitializeAsync();
-            if (((ConfigPageViewModel)DataContext!).PromptFreqIndex is null)
-            {
-                promptFreqBox.SelectedIndex = promptFreqBox.Items.Add("Never");
-                promptFreqBox.IsEnabled = false;
-            }
+            promptFreqBox.SelectedIndex = promptFreqBox.Items.Add("Never");
+            promptFreqBox.IsEnabled = false;
         }
     }
 }
