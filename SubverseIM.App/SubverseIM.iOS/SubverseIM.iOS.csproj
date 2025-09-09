@@ -14,7 +14,7 @@
 	<ItemGroup>
 	  <None Remove="iTunesArtwork" />
 	  <None Remove="iTunesArtwork%402x" />
-	  <None Remove="Resources\notif.aiff" />
+	  <None Remove="Resources\*.aif" />
 	  <None Remove="Resources\sv_512.png" />
 	</ItemGroup>
 	<ItemGroup>
