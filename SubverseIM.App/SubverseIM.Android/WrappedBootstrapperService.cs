@@ -27,6 +27,8 @@ namespace SubverseIM.Android
     {
         private const string MSG_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.UserMessage";
 
+        private const string SYS_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.SystemMessage";
+
         private const string TRN_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.TorrentService";
 
         private const string SRV_CHANNEL_ID = "com.ChosenFewSoftware.SubverseIM.ForegroundService";
@@ -88,13 +90,21 @@ namespace SubverseIM.Android
 
         private void CreateNotificationChannels()
         {
-            Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);
-
             NotificationChannel messageChannel = new NotificationChannel(
                 MSG_CHANNEL_ID, new Java.Lang.String("User Messages"),
                 NotificationImportance.High);
             messageChannel.Description = "Inbound messages from your contacts";
-            messageChannel.SetSound(soundUri, null);
+
+            Uri? messageSoundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notifMessage);
+            messageChannel.SetSound(messageSoundUri, null);
+
+            NotificationChannel systemChannel = new NotificationChannel(
+                SYS_CHANNEL_ID, new Java.Lang.String("System Messages"),
+                NotificationImportance.High);
+            systemChannel.Description = "Join messages and other system notifications from your contacts";
+
+            Uri? systemSoundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notifSystem);
+            systemChannel.SetSound(systemSoundUri, null);
 
             NotificationChannel serviceChannel = new NotificationChannel(
                 SRV_CHANNEL_ID, new Java.Lang.String("Application Services"),
@@ -105,12 +115,15 @@ namespace SubverseIM.Android
                 TRN_CHANNEL_ID, new Java.Lang.String("File Services"),
                 NotificationImportance.High);
             torrentChannel.Description = "Status updates for active file downloads";
-            torrentChannel.SetSound(soundUri, null);
+
+            Uri? torrentSoundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notifFile);
+            torrentChannel.SetSound(torrentSoundUri, null);
 
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this.
             NotificationManager? manager = NotificationManager.FromContext(this);
             manager?.CreateNotificationChannel(messageChannel);
+            manager?.CreateNotificationChannel(systemChannel);
             manager?.CreateNotificationChannel(serviceChannel);
             manager?.CreateNotificationChannel(torrentChannel);
         }
@@ -120,7 +133,7 @@ namespace SubverseIM.Android
             lock (notificationMap)
             {
                 notificationMap.Remove(
-                    message.TopicName?.GetHashCode() ?? 
+                    message.TopicName?.GetHashCode() ??
                     message.Sender.GetHashCode()
                     );
             }
@@ -161,12 +174,13 @@ namespace SubverseIM.Android
                     $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})"
                 ));
 
-            Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);
-            
             Intent notifyIntent = new Intent(this, typeof(MainActivity));
             notifyIntent.SetAction(Intent.ActionMain);
             notifyIntent.AddCategory(Intent.CategoryLauncher);
             notifyIntent.AddFlags(ActivityFlags.NewTask);
+
+            Uri? soundUri;
+            string channelId;
             if (message.TopicName != "#system")
             {
                 notifyIntent.PutExtra(EXTRA_TOPIC_ID, message.TopicName);
@@ -175,13 +189,21 @@ namespace SubverseIM.Android
                     [message.Sender, .. message.Recipients])
                     .Select(x => x.ToString())
                     .ToArray());
+
+                soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notifMessage);
+                channelId = MSG_CHANNEL_ID;
+            }
+            else
+            {
+                soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notifSystem);
+                channelId = SYS_CHANNEL_ID;
             }
 
             PendingIntent? pendingIntent = PendingIntent.GetActivity(
                 this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
                 PendingIntentFlags.Immutable);
 
-            Notification notif = new NotificationCompat.Builder(this, MSG_CHANNEL_ID)
+            Notification notif = new NotificationCompat.Builder(this, channelId)
                 .SetPriority(NotificationCompat.PriorityHigh)
                 .SetAutoCancel(true)
                 .SetContentIntent(pendingIntent)
@@ -198,7 +220,7 @@ namespace SubverseIM.Android
         public Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseTorrent torrent)
         {
             int notificationId = torrent.MagnetUri.GetHashCode();
-            Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notif);
+            Uri? soundUri = Uri.Parse("android.resource://" + PackageName + "/" + Resource.Raw.notifFile);
 
             Intent notifyIntent = new Intent(this, typeof(MainActivity));
             notifyIntent.SetAction(Intent.ActionMain);
@@ -210,7 +232,7 @@ namespace SubverseIM.Android
                 this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
                 PendingIntentFlags.Immutable);
 
-            Notification notif = new NotificationCompat.Builder(this, MSG_CHANNEL_ID)
+            Notification notif = new NotificationCompat.Builder(this, TRN_CHANNEL_ID)
                 .SetContentTitle(MagnetLink.Parse(torrent.MagnetUri).Name)
                 .SetContentText("File was downloaded successfully.")
                 .SetPriority(NotificationCompat.PriorityHigh)

@@ -48,7 +48,6 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
             Title = message.TopicName is null ? contact?.DisplayName ?? "Anonymous" :
                 $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})",
             Body = message.Content ?? string.Empty,
-            Sound = UNNotificationSound.GetSound("notif.aiff")
         };
 
         if (message.TopicName != "#system")
@@ -62,6 +61,12 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
                 (NSString?)message.TopicName
                 ]);
             content.UserInfo = extraData;
+
+            content.Sound = UNNotificationSound.GetSound("notifMessage.aif");
+        }
+        else
+        {
+            content.Sound = UNNotificationSound.GetSound("notifSystem.aif");
         }
 
         UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
@@ -76,7 +81,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
         {
             Title = MagnetLink.Parse(torrent.MagnetUri).Name ?? "Untitled",
             Body = "File was downloaded successfully.",
-            Sound = UNNotificationSound.GetSound("notif.aiff")
+            Sound = UNNotificationSound.GetSound("notifFile.aif")
         };
         var extraData = new NSDictionary<NSString, NSString?>(
                 [(NSString)EXTRA_URI_ID],
@@ -132,11 +137,11 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
         if (extraDataKeys.Contains(EXTRA_URI_ID))
         {
             string uriString = (string)(NSString)content.UserInfo[EXTRA_URI_ID];
-            frontendService.NavigateLaunchedUri(new (uriString));
+            frontendService.NavigateLaunchedUri(new(uriString));
         }
         else if (extraDataKeys.Contains(EXTRA_PARTICIPANTS_ID))
         {
-            IEnumerable<SubverseContact>? participants = 
+            IEnumerable<SubverseContact>? participants =
                 ((string)(NSString)content.UserInfo
                 [EXTRA_PARTICIPANTS_ID]).Split(';')
                 .Select(SubversePeerId.FromString)
