@@ -186,10 +186,7 @@ public partial class ContactPageView : UserControl
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        if (loadTaskSource.TrySetResult(e))
-        {
-            ((ContactPageViewModel)DataContext!).Parent = null;
-        }
+        loadTaskSource.TrySetResult(e);
 
         pressTimerState.DataContext = DataContext;
         tapTimerState.DataContext = DataContext;
