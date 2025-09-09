@@ -62,11 +62,11 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
                 ]);
             content.UserInfo = extraData;
 
-            content.Sound = UNNotificationSound.GetSound("notifSystem.aif");
+            content.Sound = UNNotificationSound.GetSound("notifMessage.aif");
         }
         else
         {
-            content.Sound = UNNotificationSound.GetSound("notifMessage.aif");
+            content.Sound = UNNotificationSound.GetSound("notifSystem.aif");
         }
 
         UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(5.0, false);
