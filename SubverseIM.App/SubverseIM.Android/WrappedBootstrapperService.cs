@@ -232,7 +232,7 @@ namespace SubverseIM.Android
                 this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
                 PendingIntentFlags.Immutable);
 
-            Notification notif = new NotificationCompat.Builder(this, MSG_CHANNEL_ID)
+            Notification notif = new NotificationCompat.Builder(this, TRN_CHANNEL_ID)
                 .SetContentTitle(MagnetLink.Parse(torrent.MagnetUri).Name)
                 .SetContentText("File was downloaded successfully.")
                 .SetPriority(NotificationCompat.PriorityHigh)
