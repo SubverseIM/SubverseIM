@@ -35,6 +35,10 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         MainViewModel mainViewModel = fixture.GetViewModel();
         while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
 
+        // Choice of view is arbitrary. Just needs to start
+        // somewhere other than the contact page.
+        mainViewModel.NavigateConfigView(); 
+
         mainViewModel.NavigateContactView(parentOrNull);
 
         ContactPageViewModel? contactPageViewModel = mainViewModel.CurrentPage as ContactPageViewModel;
@@ -198,11 +202,11 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     public async Task ShouldAddParticipantsWithParent()
     {
         IServiceManager serviceManager = fixture.GetServiceManager();
-        MessagePageViewModel messagePageViewModel = new (serviceManager, []);
+        MessagePageViewModel messagePageViewModel = new(serviceManager, []);
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView(messagePageViewModel);
 
-        foreach(ContactViewModel contactViewModel in contactPageViewModel.ContactsList)
+        foreach (ContactViewModel contactViewModel in contactPageViewModel.ContactsList)
         {
             contactViewModel.IsSelected = true;
         }
