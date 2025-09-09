@@ -149,6 +149,22 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     }
 
     [AvaloniaFact]
+    public async Task ShouldOpenConversationViewWithOneTopicSelected()
+    {
+        (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
+            await EnsureIsOnContactPageView();
+
+        foreach (ContactViewModel contactViewModel in contactPageViewModel.ContactsList)
+        {
+            contactViewModel.IsSelected = contactViewModel.TopicName is not null;
+        }
+        await contactPageViewModel.MessageCommand();
+
+        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        Assert.IsType<MessagePageViewModel>(currentPageViewModel);
+    }
+
+    [AvaloniaFact]
     public async Task ShouldNotOpenConversationViewWithMultipleTopicsSelected()
     {
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
@@ -216,7 +232,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         await messagePageViewModel.InitializeAsync();
 
         Assert.Equal(
-            contactPageViewModel.ContactsList.Count, 
+            contactPageViewModel.ContactsList.Count,
             messagePageViewModel.ContactsList.Count
             );
     }
