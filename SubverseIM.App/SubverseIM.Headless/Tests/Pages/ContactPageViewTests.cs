@@ -35,10 +35,6 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         MainViewModel mainViewModel = fixture.GetViewModel();
         while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
 
-        // Choice of view is arbitrary. Just needs to start
-        // somewhere other than the contact page.
-        mainViewModel.NavigateConfigView(); 
-
         mainViewModel.NavigateContactView(parentOrNull);
 
         ContactPageViewModel? contactPageViewModel = mainViewModel.CurrentPage as ContactPageViewModel;
@@ -48,6 +44,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         Assert.NotNull(contactPageView);
 
         await contactPageView.LoadTask;
+        await contactPageViewModel.LoadContactsAsync();
 
         return (contactPageView, contactPageViewModel);
     }

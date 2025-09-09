@@ -47,6 +47,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         Assert.NotNull(contactPageView);
 
         await contactPageView.LoadTask;
+        await contactPageViewModel.LoadContactsAsync();
 
         return (contactPageView, contactPageViewModel);
     }
