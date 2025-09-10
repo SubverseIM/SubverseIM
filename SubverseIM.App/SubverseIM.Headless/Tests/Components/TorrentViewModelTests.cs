@@ -123,4 +123,16 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         Assert.DoesNotContain(checkToken, dbService.GetTorrents().Select(x => x.MagnetUri));
     }
+
+    [AvaloniaFact]
+    public async Task ShouldThrowExceptionOnExportEmpty() 
+    {
+        (TorrentPageView torrentPageView, TorrentPageViewModel torrentPageViewModel) =
+            await EnsureIsOnTorrentPageView();
+
+        TorrentViewModel? torrentViewModel = torrentPageViewModel.Torrents.FirstOrDefault();
+        Debug.Assert(torrentViewModel is not null); // should always be non-null, test should be rewritten otherwise.
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => torrentViewModel.ExportCommand(null));
+    }
 }
