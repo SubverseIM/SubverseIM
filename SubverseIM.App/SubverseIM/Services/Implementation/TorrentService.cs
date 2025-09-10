@@ -4,6 +4,7 @@ using MonoTorrent;
 using MonoTorrent.BEncoding;
 using MonoTorrent.Client;
 using SubverseIM.Models;
+using SubverseIM.Services.Faux;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
@@ -80,12 +81,24 @@ namespace SubverseIM.Services.Implementation
             Dispatcher.UIThread.InvokeAsync(async Task () =>
             {
                 using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(300));
-                while (engine.Torrents.Contains(manager))
+
+                IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+                SubverseTorrent? torrent = dbService.GetTorrent(manager.MagnetLink.ToV1String());
+
+                while (torrent is not null && engine.Torrents.Contains(manager))
                 {
                     await timer.WaitForNextTickAsync();
+
+                    if (manager.HasMetadata) 
+                    {
+                        torrent.TorrentBytes = File.ReadAllBytes(manager.MetadataPath);
+                        dbService.InsertOrUpdateItem(torrent);
+                    }
+
                     ((IProgress<TorrentStatus>)progress)
                     .Report(new TorrentStatus(
                             manager.Complete || manager.PartialProgress == 100.0,
+                            manager.HasMetadata,
                             manager.PartialProgress
                             ));
                 }
@@ -97,8 +110,8 @@ namespace SubverseIM.Services.Implementation
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             SubverseTorrent? torrent = dbService.GetTorrent(magnetUri) ??
-                new SubverseTorrent(magnetUri) 
-                { 
+                new SubverseTorrent(magnetUri)
+                {
                     DateLastUpdatedOn = DateTime.UtcNow
                 };
             torrent.TorrentBytes = torrentBytes ?? torrent.TorrentBytes;

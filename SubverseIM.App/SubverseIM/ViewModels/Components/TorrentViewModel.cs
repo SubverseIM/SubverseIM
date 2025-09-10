@@ -46,13 +46,23 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public bool IsExportable => innerTorrent.TorrentBytes is not null;
+        private bool isExportable;
+        public bool IsExportable 
+        {
+            get => isExportable;
+            private set 
+            {
+                this.RaiseAndSetIfChanged(ref isExportable, value);
+            }
+        }
 
         public TorrentViewModel(TorrentPageViewModel parent, SubverseTorrent innerTorrent, Progress<TorrentStatus>? torrentProgress)
         {
             this.parent = parent;
             this.innerTorrent = innerTorrent;
+
             IsStarted = RegisterStatus(torrentProgress);
+            IsExportable = innerTorrent.TorrentBytes is not null;
         }
 
         private async void TorrentProgressChanged(object? sender, TorrentStatus newStatus)
@@ -62,6 +72,12 @@ namespace SubverseIM.ViewModels.Components
             {
                 INativeService nativeService = await parent.ServiceManager.GetWithAwaitAsync<INativeService>();
                 await nativeService.SendPushNotificationAsync(parent.ServiceManager, innerTorrent);
+            }
+
+            if (newStatus.HasMetadata && CurrentStatus is not null &&
+                newStatus.HasMetadata != CurrentStatus.HasMetadata) 
+            {
+                IsExportable = newStatus.HasMetadata;
             }
 
             CurrentStatus = newStatus;
@@ -149,6 +165,11 @@ namespace SubverseIM.ViewModels.Components
 
         public async Task ExportCommand(Visual? sender)
         {
+            IDbService dbService = await parent.ServiceManager.GetWithAwaitAsync<IDbService>();
+
+            SubverseTorrent? torrent = dbService.GetTorrent(innerTorrent.MagnetUri);
+            innerTorrent.TorrentBytes ??= torrent?.TorrentBytes;
+
             if (innerTorrent.TorrentBytes is null) 
             {
                 throw new InvalidOperationException("Can't export this torrent.");
