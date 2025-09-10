@@ -74,8 +74,7 @@ namespace SubverseIM.ViewModels.Components
                 await nativeService.SendPushNotificationAsync(parent.ServiceManager, innerTorrent);
             }
 
-            if (newStatus.HasMetadata && CurrentStatus is not null &&
-                newStatus.HasMetadata != CurrentStatus.HasMetadata) 
+            if (newStatus.HasMetadata != CurrentStatus?.HasMetadata) 
             {
                 IsExportable = newStatus.HasMetadata;
             }
