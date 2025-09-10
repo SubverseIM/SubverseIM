@@ -335,7 +335,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 break;
             case "magnet":
                 await torrentService.AddTorrentAsync(launchedUri.OriginalString);
-                await torrentPage.InitializeAsync();
                 CurrentPage = torrentPage;
                 break;
             case null:

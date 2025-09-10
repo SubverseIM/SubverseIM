@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using SubverseIM.ViewModels.Pages;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
@@ -16,9 +17,11 @@ public partial class TorrentPageView : UserControl
         loadTaskSource = new();
     }
 
-    protected override void OnLoaded(RoutedEventArgs e)
+    protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
         loadTaskSource.TrySetResult(e);
+
+        await ((TorrentPageViewModel)DataContext!).InitializeAsync();
     }
 }
