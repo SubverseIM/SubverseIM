@@ -2,5 +2,5 @@
 
 namespace SubverseIM.Models;
 
-public record TorrentStatus(bool Complete, double Progress) { }
+public record TorrentStatus(bool Complete, bool HasMetadata, double Progress) { }
 
