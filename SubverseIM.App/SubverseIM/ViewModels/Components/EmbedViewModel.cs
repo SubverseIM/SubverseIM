@@ -21,13 +21,12 @@ namespace SubverseIM.ViewModels.Components
             (magnetLink.Name ?? "Untitled") + UnitHelpers.ByteCountToString(magnetLink.Size) :
             AbsoluteUri.Host;
 
-        public Task<Bitmap?> FetchedBitmapAsync { get; }
+        public Task<Bitmap?> FetchedBitmapAsync => GetBitmapAsync();
 
         public EmbedViewModel(IServiceManager serviceManager, string uriString)
         {
             this.serviceManager = serviceManager;
             AbsoluteUri = new Uri(uriString);
-            FetchedBitmapAsync = GetBitmapAsync();
         }
 
         public async Task<Bitmap?> GetBitmapAsync()
