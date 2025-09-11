@@ -1,13 +1,9 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Controls.Platform;
-using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using SubverseIM.ViewModels;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Views;
@@ -59,8 +55,12 @@ public partial class MainView : UserControl
 
     public void ScreenOrientationChanged()
     {
+        TopLevel? topLevel = TopLevel.GetTopLevel(this);
+        Width = topLevel?.Width ?? Width;
+        Height = topLevel?.Height ?? Height;
+
         ((MainViewModel)DataContext!).CurrentPage
-            .OnOrientationChanged(TopLevel.GetTopLevel(this));
+            .OnOrientationChanged(topLevel);
     }
 
     public T? GetContentAs<T>()
