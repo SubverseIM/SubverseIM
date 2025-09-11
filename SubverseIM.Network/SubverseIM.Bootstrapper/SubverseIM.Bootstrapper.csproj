@@ -8,9 +8,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CoreRPC" Version="0.6.3" />
 		<PackageReference Include="Microsoft.Extensions.Caching.SqlServer" Version="9.0.7" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="PgpCore" Version="6.5.2" />
+		<PackageReference Include="SIPSorcery" Version="8.0.23" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
 	</ItemGroup>
 
