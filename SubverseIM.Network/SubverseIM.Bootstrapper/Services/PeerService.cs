@@ -10,9 +10,11 @@ namespace SubverseIM.Bootstrapper.Services
 {
     public class PeerService : IPeerService
     {
+        private const int MSG_BUFFER_SIZE = 4096;
+
         private readonly Engine engine;
 
-        private readonly ConcurrentQueue<SIPMessageBase> messageQueue;
+        private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>> messageBag;
         
         private readonly ConcurrentDictionary<SubversePeerId, IPeerService> peerProxies;
 
@@ -22,7 +24,7 @@ namespace SubverseIM.Bootstrapper.Services
         {
             engine = new Engine();
 
-            messageQueue = new();
+            messageBag = new();
             peerProxies = new();
 
             this.webSocket = webSocket;
@@ -73,7 +75,7 @@ namespace SubverseIM.Bootstrapper.Services
 
         public async Task ListenSocketAsync(CancellationToken cancellationToken)
         {
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[MSG_BUFFER_SIZE];
             using MemoryStream memoryStream = new MemoryStream();
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -96,9 +98,37 @@ namespace SubverseIM.Bootstrapper.Services
             }
         }
 
-        public Task SendSocketAsync(CancellationToken cancellationToken)
+        public async Task SendSocketAsync(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            byte[] buffer = new byte[MSG_BUFFER_SIZE];
+            while (!cancellationToken.IsCancellationRequested) 
+            {
+                if (!messageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs)) 
+                {
+                    messageBag.Add(tcs = new());
+                }
+
+                SIPMessageBase sipMessage = await tcs.Task;
+                byte[] sipMessageBuffer = sipMessage switch
+                {
+                    SIPRequest sipRequest => sipRequest.GetBytes(),
+                    SIPResponse sipResponse => sipResponse.GetBytes(),
+                    _ => throw new PeerServiceException($"Could not create message buffer from instance of type: {sipMessage.GetType()}")
+                };
+
+                using (MemoryStream memoryStream = new MemoryStream(sipMessageBuffer)) 
+                {
+                    int bytesRead = 0;
+                    bool endOfMessage;
+                    do
+                    {
+                        bytesRead += memoryStream.Read(buffer, 0, buffer.Length);
+                        await webSocket.SendAsync(buffer, WebSocketMessageType.Binary,
+                            endOfMessage = bytesRead == sipMessageBuffer.Length, 
+                            cancellationToken);
+                    } while (!endOfMessage);
+                }
+            }
         }
 
         public Task ReceiveMessageAsync(byte[] messageBytes)
@@ -118,7 +148,13 @@ namespace SubverseIM.Bootstrapper.Services
                     throw new PeerServiceException("Could not parse unknown message type.");
             }
 
-            messageQueue.Enqueue(sipMessage);
+
+            if (!messageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs))
+            {
+                messageBag.Add(tcs = new());
+            }
+            tcs.SetResult(sipMessage);
+
             return Task.CompletedTask;
         }
 
