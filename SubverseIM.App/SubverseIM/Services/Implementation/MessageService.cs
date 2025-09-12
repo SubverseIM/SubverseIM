@@ -222,16 +222,19 @@ public class MessageService : IMessageService, IDisposableService
             await sipTransport.SendRequestAsync(new(cachedEndPoint), sipRequest);
         }
 
-        IList<PeerInfo> peerInfo = await bootstrapperService.GetPeerInfoAsync(toPeer);
-        foreach (Uri peerUri in peerInfo.Select(x => x.ConnectionUri))
+        foreach (SubversePeerId topicId in await bootstrapperService.GetTopicIdsAsync()) 
         {
-            if (!IPAddress.TryParse(peerUri.DnsSafeHost, out IPAddress? ipAddress))
+            IList<PeerInfo> peerInfo = await bootstrapperService.GetPeerInfoAsync(topicId);
+            foreach (Uri peerUri in peerInfo.Select(x => x.ConnectionUri))
             {
-                continue;
-            }
+                if (!IPAddress.TryParse(peerUri.DnsSafeHost, out IPAddress? ipAddress))
+                {
+                    continue;
+                }
 
-            IPEndPoint ipEndPoint = new(ipAddress, peerUri.Port);
-            await sipTransport.SendRequestAsync(new(ipEndPoint), sipRequest);
+                IPEndPoint ipEndPoint = new(ipAddress, peerUri.Port);
+                await sipTransport.SendRequestAsync(new(ipEndPoint), sipRequest);
+            }
         }
     }
 

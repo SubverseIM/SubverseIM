@@ -20,9 +20,11 @@ public interface IBootstrapperService
 
     Task<SubversePeerId> GetPeerIdAsync(CancellationToken cancellationToken = default);
 
-    Task<IList<PeerInfo>> GetPeerInfoAsync(SubversePeerId toPeer, CancellationToken cancellationToken = default);
+    Task<IList<PeerInfo>> GetPeerInfoAsync(SubversePeerId topicId, CancellationToken cancellationToken = default);
 
     Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<SubversePeerId>> GetTopicIdsAsync(CancellationToken cancellationToken = default);
 
     Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken = default);
 }

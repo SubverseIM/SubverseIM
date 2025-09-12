@@ -53,6 +53,11 @@ namespace SubverseIM.Services.Faux
             return Task.FromException<EncryptionKeys>(new PlatformNotSupportedException());
         }
 
+        public Task<IReadOnlyList<SubversePeerId>> GetTopicIdsAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<SubversePeerId>>([]);
+        }
+
         public Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken = default)
         {
             return Task.FromException(new PlatformNotSupportedException());
