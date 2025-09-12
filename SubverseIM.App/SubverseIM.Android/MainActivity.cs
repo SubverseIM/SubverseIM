@@ -154,6 +154,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         {
             UnbindService(peerServiceConn);
         }
+        StopService(new Intent(this, typeof(WrappedBootstrapperService)));
 
         serviceManager?.Dispose();
         System.Environment.Exit(0);
