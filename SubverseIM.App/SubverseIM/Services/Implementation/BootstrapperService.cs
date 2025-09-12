@@ -261,10 +261,10 @@ namespace SubverseIM.Services.Implementation
                     peers = messageService.CachedPeers.Keys.ToArray();
                 }
 
-                foreach (SubversePeerId otherPeer in peers)
+                foreach (SubversePeerId topicId in await GetTopicIdsAsync(cancellationToken))
                 {
                     await timer.WaitForNextTickAsync(cancellationToken);
-                    dhtEngine.Announce(new InfoHash(otherPeer.GetBytes()),
+                    dhtEngine.Announce(new InfoHash(topicId.GetBytes()),
                         mapping?.PublicPort ?? portNum);
                 }
 
@@ -317,10 +317,11 @@ namespace SubverseIM.Services.Implementation
             return thisPeerTcs.Task.WaitAsync(cancellationToken);
         }
 
-        public async Task<IList<PeerInfo>> GetPeerInfoAsync(SubversePeerId toPeer, CancellationToken cancellationToken)
+        public async Task<IList<PeerInfo>> GetPeerInfoAsync(SubversePeerId topicId, CancellationToken cancellationToken)
         {
             IDhtEngine dhtEngine = await dhtEngineTcs.Task.WaitAsync(cancellationToken);
-            dhtEngine.GetPeers(new InfoHash(toPeer.GetBytes()));
+            dhtEngine.GetPeers(new InfoHash(topicId.GetBytes()));
+
             if (!peerInfoBag.TryTake(out TaskCompletionSource<IList<PeerInfo>>? tcs))
             {
                 peerInfoBag.Add(tcs = new());
@@ -385,6 +386,25 @@ namespace SubverseIM.Services.Implementation
             }
 
             return peerKeys;
+        }
+
+        public async Task<IReadOnlyList<SubversePeerId>> GetTopicIdsAsync(CancellationToken cancellationToken = default)
+        {
+            IServiceManager serviceManager = await serviceManagerTcs.Task.WaitAsync(cancellationToken);
+            IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>(cancellationToken);
+            SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
+
+            List<SubversePeerId> topicIds = new();
+            foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
+            {
+                string? topicIdStr = await http.GetFromJsonAsync<string>(new Uri(bootstrapperUri, "topic"));
+                if (!string.IsNullOrEmpty(topicIdStr))
+                {
+                    topicIds.Add(SubversePeerId.FromString(topicIdStr));
+                }
+            }
+
+            return topicIds;
         }
 
         public async Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken)

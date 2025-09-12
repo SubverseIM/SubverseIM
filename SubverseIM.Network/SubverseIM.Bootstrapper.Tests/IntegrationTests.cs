@@ -109,4 +109,16 @@ public class IntegrationTests
         response.EnsureSuccessStatusCode();
         Assert.Equal("application/octet-stream", response.Content.Headers.ContentType?.ToString());
     }
+
+    [Fact]
+    public async Task Get_CacheTopicIdReturnsSuccessAndJson() 
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync($"/topic");
+        response.EnsureSuccessStatusCode();
+
+        string? result = await response.Content.ReadFromJsonAsync<string>();
+        Assert.False(string.IsNullOrEmpty(result));
+    }
 }

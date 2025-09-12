@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using PgpCore;
 using SubverseIM.Core;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace SubverseIM.Bootstrapper.Controllers
@@ -140,6 +141,23 @@ namespace SubverseIM.Bootstrapper.Controllers
             }
 
             return false;
+        }
+
+        [HttpGet("topic")]
+        [Produces("application/json")]
+        public async Task<string> GetTopicIdAsync(CancellationToken cancellationToken)
+        {
+            string? topicStr = await _cache.GetStringAsync("TOPIC-ID");
+            if (string.IsNullOrEmpty(topicStr))
+            {
+                topicStr = RandomNumberGenerator.GetHexString(40);
+                await _cache.SetStringAsync("TOPIC-ID", topicStr,
+                    new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+                    }, cancellationToken);
+            }
+            return topicStr;
         }
     }
 }
