@@ -154,7 +154,7 @@ namespace SubverseIM.Bootstrapper.Controllers
                 await _cache.SetStringAsync("TOPIC-ID", topicStr,
                     new DistributedCacheEntryOptions
                     {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
                     }, cancellationToken);
             }
             return topicStr;
