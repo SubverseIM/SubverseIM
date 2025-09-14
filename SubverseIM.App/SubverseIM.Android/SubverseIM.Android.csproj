@@ -2,13 +2,12 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net9.0-android</TargetFramework>
-		
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
-		<SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
 		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 	
@@ -20,9 +19,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
-		<PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.16" />
 		<PackageReference Include="Plugin.InAppBilling" Version="9.1.0" />
-		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.90" />
+		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.110" />
 	</ItemGroup>
 
 	<ItemGroup>
