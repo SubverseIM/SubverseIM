@@ -111,6 +111,15 @@ public class IntegrationTests
     }
 
     [Fact]
+    public async Task Get_RelayWithHttpThrowsError()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync($"/relay");
+        Assert.Throws<HttpRequestException>(response.EnsureSuccessStatusCode);
+    }
+
+    [Fact]
     public async Task Get_CacheTopicIdReturnsSuccessAndJson() 
     {
         var client = _factory.CreateClient();
