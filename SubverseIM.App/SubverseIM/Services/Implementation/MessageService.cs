@@ -217,6 +217,7 @@ public class MessageService : IMessageService, IDisposableService
     private async Task SendSIPRequestAsync(SIPRequest sipRequest)
     {
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
+        IRelayService relayService = await serviceManager.GetWithAwaitAsync<IRelayService>();
 
         SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
 
@@ -258,6 +259,8 @@ public class MessageService : IMessageService, IDisposableService
                 await sipTransport.SendRequestAsync(new(ipEndPoint), sipRequest);
             }
         }
+
+        await relayService.SendMessageAsync(sipRequest);
     }
 
     public async Task ListenRelayAsync(CancellationToken cancellationToken)
