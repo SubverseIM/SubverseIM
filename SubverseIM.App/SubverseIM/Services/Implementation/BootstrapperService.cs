@@ -472,6 +472,10 @@ namespace SubverseIM.Services.Implementation
                 });
             }
 
+            // Relay service init
+            IRelayService relayService = serviceManager.GetOrRegister
+                <IRelayService>(new RelayService());
+
             // Torrent service init
 
             Factories factories = Factories.Default

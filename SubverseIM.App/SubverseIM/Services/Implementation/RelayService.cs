@@ -4,6 +4,7 @@ using SubverseIM.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
 
@@ -17,19 +18,36 @@ namespace SubverseIM.Services.Implementation
 
         private bool disposedValue;
 
-        public RelayService() 
+        public RelayService()
         {
             messageTcsBag = new();
         }
 
-        public Task<SIPMessageBase> GetNextMessageAsync()
+        public Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
             if (!messageTcsBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs)) 
             {
                 messageTcsBag.Add(tcs = new());
             }
 
-            return tcs.Task;
+            return tcs.Task.WaitAsync(cancellationToken);
+        }
+
+        public Task SendMessageAsync(SIPMessageBase sipMessage, CancellationToken cancellationToken = default)
+        {
+            byte[]? sipMessageBuffer = sipMessage switch
+            {
+                SIPRequest sipRequest => sipRequest.GetBytes(),
+                SIPResponse sipResponse => sipResponse.GetBytes(),
+                _ => null,
+            };
+
+            if (sipMessageBuffer is not null)
+            {
+                webSocket?.Send(sipMessageBuffer);
+            }
+
+            return Task.CompletedTask;
         }
 
         public async Task InjectAsync(IServiceManager serviceManager)
@@ -44,7 +62,12 @@ namespace SubverseIM.Services.Implementation
                 IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT
                 );
 
-            Uri relayUri = new(bootstrapperUri, $"relay?p={peerId}");
+            Uri relayUri = new UriBuilder(bootstrapperUri)
+            {
+                Scheme = Uri.UriSchemeWss,
+                Path = "relay",
+                Query = $"?p={peerId}",
+            }.Uri;
             webSocket = new WebSocket(relayUri.AbsoluteUri);
 
             webSocket.OnMessage += OnSocketMessage;
