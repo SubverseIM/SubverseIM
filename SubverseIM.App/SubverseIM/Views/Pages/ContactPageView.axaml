@@ -57,7 +57,7 @@
 				<ListBox x:Name="contacts" SelectionMode="Multiple,Toggle" ItemsSource="{Binding ContactsList}" >
 					<ListBox.Styles>
 						<Style Selector="ListBoxItem">
-							<Setter Property="AutomationProperties.Name" Value="Contact" />
+							<Setter Property="Focusable" Value="False" />
 							<Setter Property="Classes.offscreen">
 								<Setter.Value>
 									<MultiBinding Converter="{x:Static BoolConverters.And}">
