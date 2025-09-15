@@ -60,7 +60,7 @@
 					<ListBox x:Name="contacts" SelectionMode="Single,Toggle" ItemsSource="{Binding ContactsList}">
 						<ListBox.Styles>
 							<Style Selector="ListBoxItem">
-								<Setter Property="AutomationProperties.Name" Value="Participant"/>
+								<Setter Property="Focusable" Value="False" />
 							</Style>
 						</ListBox.Styles>
 						<ListBox.ItemTemplate>
