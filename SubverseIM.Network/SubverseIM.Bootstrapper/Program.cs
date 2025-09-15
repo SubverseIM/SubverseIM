@@ -36,6 +36,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthorization();
 
+app.UseWebSockets();
+
 app.UseDefaultFiles(new DefaultFilesOptions() { RedirectToAppendTrailingSlash = true });
 
 app.UseStaticFiles();

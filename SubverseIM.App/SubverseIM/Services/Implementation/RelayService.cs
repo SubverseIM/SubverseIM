@@ -4,6 +4,7 @@ using SubverseIM.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
@@ -69,6 +70,7 @@ namespace SubverseIM.Services.Implementation
                 Query = $"?p={peerId}",
             }.Uri;
             webSocket = new WebSocket(relayUri.AbsoluteUri);
+            webSocket.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls13;
 
             webSocket.OnMessage += OnSocketMessage;
             webSocket.Connect();
