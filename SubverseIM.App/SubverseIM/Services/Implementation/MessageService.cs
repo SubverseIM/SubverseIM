@@ -51,6 +51,7 @@ public class MessageService : IMessageService, IDisposableService
     {
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+        IRelayService relayService = await serviceManager.GetWithAwaitAsync<IRelayService>();
 
         SubversePeerId fromPeer = SubversePeerId.FromString(sipRequest.Header.From.FromURI.User);
         string fromName = sipRequest.Header.From.FromName;
@@ -111,7 +112,11 @@ public class MessageService : IMessageService, IDisposableService
 
         lock (peer.RemoteEndPoints)
         {
-            peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
+            if (remoteEndPoint != SIPEndPoint.Empty)
+            {
+                peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
+            }
+
             foreach (SIPViaHeader viaHeader in sipRequest.Header.Vias.Via)
             {
                 string viaEndPointStr = $"{viaHeader.ReceivedFromIPAddress}:{viaHeader.ReceivedFromPort}";
@@ -135,12 +140,22 @@ public class MessageService : IMessageService, IDisposableService
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
                 );
-            await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
+            if (remoteEndPoint == SIPEndPoint.Empty)
+            {
+                await relayService.SendMessageAsync(sipResponse);
+            }
+            else
+            {
+                await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
+            }
         }
         else
         {
-            SIPViaHeader viaHeader = new(remoteEndPoint, CallProperties.CreateBranchId());
-            sipRequest.Header.Vias.PushViaHeader(viaHeader);
+            if (remoteEndPoint != SIPEndPoint.Empty)
+            {
+                SIPViaHeader viaHeader = new(remoteEndPoint, CallProperties.CreateBranchId());
+                sipRequest.Header.Vias.PushViaHeader(viaHeader);
+            }
 
             dbService.InsertOrUpdateItem(message);
             await SendSIPRequestAsync(sipRequest);
@@ -148,7 +163,14 @@ public class MessageService : IMessageService, IDisposableService
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Accepted, "Message was forwarded."
                 );
-            await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
+            if (remoteEndPoint == SIPEndPoint.Empty)
+            {
+                await relayService.SendMessageAsync(sipResponse);
+            }
+            else
+            {
+                await sipTransport.SendResponseAsync(remoteEndPoint, sipResponse);
+            }
         }
     }
 
@@ -176,7 +198,7 @@ public class MessageService : IMessageService, IDisposableService
             peer = null;
         }
 
-        if (peer is not null)
+        if (peer is not null && remoteEndPoint != SIPEndPoint.Empty)
         {
             lock (peer.RemoteEndPoints)
             {
@@ -235,6 +257,24 @@ public class MessageService : IMessageService, IDisposableService
                 IPEndPoint ipEndPoint = new(ipAddress, peerUri.Port);
                 await sipTransport.SendRequestAsync(new(ipEndPoint), sipRequest);
             }
+        }
+    }
+
+    public async Task ListenRelayAsync(CancellationToken cancellationToken)
+    {
+        IRelayService relayService = await serviceManager.GetWithAwaitAsync<IRelayService>(cancellationToken);
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            SIPMessageBase sipMessage = await relayService.ReceiveMessageAsync(cancellationToken);
+
+            Task dispatchMessageTask = sipMessage switch
+            {
+                SIPRequest sipRequest => SIPTransportRequestReceived(sipRequest.LocalSIPEndPoint, sipRequest.RemoteSIPEndPoint, sipRequest),
+                SIPResponse sipResponse => SIPTransportResponseReceived(sipResponse.LocalSIPEndPoint, sipResponse.RemoteSIPEndPoint, sipResponse),
+                _ => Task.CompletedTask,
+            };
+            await dispatchMessageTask;
         }
     }
 

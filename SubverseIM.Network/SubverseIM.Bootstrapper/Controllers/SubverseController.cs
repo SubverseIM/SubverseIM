@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using PgpCore;
+using SubverseIM.Bootstrapper.Services;
 using SubverseIM.Core;
+using System.Collections.Concurrent;
+using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -12,12 +15,46 @@ namespace SubverseIM.Bootstrapper.Controllers
     public class SubverseController : ControllerBase
     {
         private readonly IDistributedCache _cache;
+
         private readonly ILogger<SubverseController> _logger;
+
+        private readonly ConcurrentDictionary<SubversePeerId, PeerService> _activePeerProxies;
 
         public SubverseController(IConfiguration configuration, IDistributedCache cache, ILogger<SubverseController> logger)
         {
             _cache = cache;
             _logger = logger;
+
+            _activePeerProxies = new();
+        }
+
+        [HttpGet("relay")]
+        public async Task StartRelayAsync([FromQuery(Name="p")] string? peerIdStr, CancellationToken cancellationToken)
+        {
+            if (HttpContext.WebSockets.IsWebSocketRequest && !string.IsNullOrEmpty(peerIdStr))
+            {
+                WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+
+                SubversePeerId peerId = SubversePeerId.FromString(peerIdStr);
+                PeerService peer = _activePeerProxies.AddOrUpdate(peerId, 
+                    id => new PeerService(webSocket, id),
+                    (id, x) => new PeerService(webSocket, id));
+
+                foreach((SubversePeerId otherPeerId, PeerService otherPeer) in _activePeerProxies)
+                {
+                    await peer.RegisterPeerAsync(otherPeerId, otherPeer);
+                    await otherPeer.RegisterPeerAsync(peerId, peer);
+                }
+
+                await Task.WhenAll(
+                    peer.ListenSocketAsync(cancellationToken), 
+                    peer.SendSocketAsync(cancellationToken)
+                    );
+            }
+            else 
+            {
+                HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+            }
         }
 
         [HttpGet("invite/{id}")]
