@@ -7,7 +7,7 @@
 
 	<PropertyGroup>
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
-		<SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
 		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
 	</PropertyGroup>
 	
