@@ -93,11 +93,11 @@ namespace SubverseIM.Services.Implementation
                     return;
             }
 
-            if (!messageTcsBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs)) 
+            if (!messageTcsBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage)) 
             {
                 messageTcsBag.Add(tcs = new());
+                tcs.SetResult(sipMessage);
             }
-            tcs.SetResult(sipMessage);
         }
 
         protected virtual void Dispose(bool disposing)
