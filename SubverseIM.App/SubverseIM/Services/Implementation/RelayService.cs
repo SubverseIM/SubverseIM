@@ -34,7 +34,7 @@ namespace SubverseIM.Services.Implementation
             return tcs.Task.WaitAsync(cancellationToken);
         }
 
-        public Task SendMessageAsync(SIPMessageBase sipMessage, CancellationToken cancellationToken = default)
+        public void SendMessage(SIPMessageBase sipMessage)
         {
             byte[]? sipMessageBuffer = sipMessage switch
             {
@@ -43,12 +43,10 @@ namespace SubverseIM.Services.Implementation
                 _ => null,
             };
 
-            if (sipMessageBuffer is not null)
+            if (sipMessageBuffer is not null && webSocket?.IsAlive == true)
             {
-                webSocket?.Send(sipMessageBuffer);
+                webSocket.Send(sipMessageBuffer);
             }
-
-            return Task.CompletedTask;
         }
 
         public async Task InjectAsync(IServiceManager serviceManager)
