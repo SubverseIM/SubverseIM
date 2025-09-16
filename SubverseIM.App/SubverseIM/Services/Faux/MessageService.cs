@@ -37,15 +37,11 @@ namespace SubverseIM.Services.Faux
         public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (messageBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
-            {
-                return tcs.Task.WaitAsync(cancellationToken);
-            }
-            else
+            if (!messageBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
             {
                 messageBag.Add(tcs = new());
-                return tcs.Task.WaitAsync(cancellationToken);
             }
+            return tcs.Task.WaitAsync(cancellationToken);
         }
 
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
@@ -70,7 +66,7 @@ namespace SubverseIM.Services.Faux
 
                 Content = message.Content,
                 TopicName = message.TopicName,
-                
+
                 WasDecrypted = true,
                 WasDelivered = true
             });

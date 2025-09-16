@@ -131,11 +131,11 @@ public class MessageService : IMessageService, IDisposableService
         message.WasDecrypted = (message.WasDelivered = hasReachedDestination) && wasDecrypted;
         if (hasReachedDestination)
         {
-            if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
+            if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs) || !tcs.TrySetResult(message))
             {
                 messagesBag.Add(tcs = new());
+                tcs.SetResult(message);
             }
-            tcs.SetResult(message);
 
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."

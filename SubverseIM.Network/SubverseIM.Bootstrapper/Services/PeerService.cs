@@ -150,11 +150,11 @@ namespace SubverseIM.Bootstrapper.Services
             }
 
 
-            if (!messageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs))
+            if (!messageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage))
             {
                 messageBag.Add(tcs = new());
+                tcs.SetResult(sipMessage);
             }
-            tcs.SetResult(sipMessage);
 
             return Task.CompletedTask;
         }
