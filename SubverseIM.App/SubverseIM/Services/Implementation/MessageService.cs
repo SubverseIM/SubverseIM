@@ -142,7 +142,7 @@ public class MessageService : IMessageService, IDisposableService
                 );
             if (remoteEndPoint == SIPEndPoint.Empty)
             {
-                await relayService.SendMessageAsync(sipResponse);
+                relayService.SendMessage(sipResponse);
             }
             else
             {
@@ -158,14 +158,15 @@ public class MessageService : IMessageService, IDisposableService
             }
 
             dbService.InsertOrUpdateItem(message);
-            await SendSIPRequestAsync(sipRequest);
+            await SendSIPRequestAsync(sipRequest, useRelay: 
+                remoteEndPoint != SIPEndPoint.Empty);
 
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Accepted, "Message was forwarded."
                 );
             if (remoteEndPoint == SIPEndPoint.Empty)
             {
-                await relayService.SendMessageAsync(sipResponse);
+                relayService.SendMessage(sipResponse);
             }
             else
             {
@@ -214,11 +215,15 @@ public class MessageService : IMessageService, IDisposableService
         }
     }
 
-    private async Task SendSIPRequestAsync(SIPRequest sipRequest)
+    private async Task SendSIPRequestAsync(SIPRequest sipRequest, bool useRelay)
     {
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
         IRelayService relayService = await serviceManager.GetWithAwaitAsync<IRelayService>();
 
+        if (useRelay)
+        {
+            _ = Task.Run(() => relayService.SendMessage(sipRequest));
+        }
         SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
 
         SubversePeer? peer;
@@ -259,8 +264,6 @@ public class MessageService : IMessageService, IDisposableService
                 await sipTransport.SendRequestAsync(new(ipEndPoint), sipRequest);
             }
         }
-
-        await relayService.SendMessageAsync(sipRequest);
     }
 
     public async Task ListenRelayAsync(CancellationToken cancellationToken)
@@ -358,16 +361,17 @@ public class MessageService : IMessageService, IDisposableService
                 }
 
                 bool flag;
+                int numAttempts = 0;
                 using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(1500));
                 do
                 {
-                    await SendSIPRequestAsync(sipRequest);
+                    await SendSIPRequestAsync(sipRequest, useRelay: numAttempts > 0);
                     await timer.WaitForNextTickAsync(cancellationToken);
                     lock (requestMap)
                     {
                         flag = requestMap.ContainsKey(messageId);
                     }
-                } while (flag && !cancellationToken.IsCancellationRequested);
+                } while (flag && ++numAttempts < 5 && !cancellationToken.IsCancellationRequested);
             })));
         }
 
