@@ -118,13 +118,14 @@ namespace SubverseIM.Bootstrapper.Services
 
                 using (MemoryStream memoryStream = new MemoryStream(sipMessageBuffer)) 
                 {
-                    int bytesRead = 0;
+                    int totalBytes = 0, bytesRead;
                     bool endOfMessage;
                     do
                     {
-                        bytesRead += memoryStream.Read(buffer, 0, buffer.Length);
-                        await webSocket.SendAsync(buffer, WebSocketMessageType.Binary,
-                            endOfMessage = bytesRead == sipMessageBuffer.Length, 
+                        totalBytes += bytesRead = memoryStream.Read(buffer, 0, buffer.Length);
+                        await webSocket.SendAsync(
+                            new(buffer, 0, bytesRead), WebSocketMessageType.Binary,
+                            endOfMessage = totalBytes == sipMessageBuffer.Length, 
                             cancellationToken);
                     } while (!endOfMessage);
                 }
