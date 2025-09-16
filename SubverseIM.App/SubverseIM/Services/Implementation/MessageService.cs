@@ -335,7 +335,7 @@ public class MessageService : IMessageService, IDisposableService
                     sipRequest.Header.Contact.Add(new(message.RecipientNames[i], contactUri));
                 }
 
-                if ((message.Sender == await bootstrapperService.GetPeerIdAsync()) && message.WasDecrypted == true)
+                if ((message.Sender == await bootstrapperService.GetPeerIdAsync()) && (message.WasDecrypted ?? true))
                 {
                     using (PGP pgp = new(await bootstrapperService.GetPeerKeysAsync(recipient, cancellationToken)))
                     {
