@@ -68,7 +68,7 @@ namespace SubverseIM.Services.Implementation
                 Query = $"?p={peerId}",
             }.Uri;
             webSocket = new WebSocket(relayUri.AbsoluteUri);
-            webSocket.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls13;
+            webSocket.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls12;
 
             webSocket.OnMessage += OnSocketMessage;
             webSocket.Connect();
