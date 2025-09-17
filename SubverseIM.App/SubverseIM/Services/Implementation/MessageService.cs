@@ -365,7 +365,7 @@ public class MessageService : IMessageService, IDisposableService
                 using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(1500));
                 do
                 {
-                    await SendSIPRequestAsync(sipRequest, useRelay: numAttempts > 0);
+                    await SendSIPRequestAsync(sipRequest, useRelay: true /* TODO: make this conditional */);
                     await timer.WaitForNextTickAsync(cancellationToken);
                     lock (requestMap)
                     {
