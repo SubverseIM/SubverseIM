@@ -15,10 +15,12 @@ namespace SubverseIM.Bootstrapper.Services
         private readonly Engine engine;
 
         private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>> messageBag;
-        
+
         private readonly ConcurrentDictionary<SubversePeerId, IPeerService> peerProxies;
 
         private readonly WebSocket webSocket;
+
+        private readonly SubversePeerId peerId;
 
         public PeerService(WebSocket webSocket, SubversePeerId peerId)
         {
@@ -28,26 +30,14 @@ namespace SubverseIM.Bootstrapper.Services
             peerProxies = new();
 
             this.webSocket = webSocket;
-
-            var router = new DefaultTargetSelector();
-            router.Register<IPeerService, PeerService>(this);
-
-            var handler = engine.CreateRequestHandler(router);
-            new NamedPipeHost(handler).StartListening(peerId.ToString());
+            this.peerId = peerId;
         }
 
-        private IPeerService GetPeerProxy(SubversePeerId peerId) 
+        private IPeerService GetPeerProxy(SubversePeerId peerId)
         {
-            if (peerProxies.TryGetValue(peerId, out IPeerService? peer))
-            {
-                return peer;
-            }
-            else 
-            {
-                var transport = new NamedPipeClientTransport(peerId.ToString());
-                var proxy = engine.CreateProxy<IPeerService>(transport);
-                return peerProxies.GetOrAdd(peerId, proxy);
-            }
+            var transport = new NamedPipeClientTransport($"PEER-{peerId}");
+            var proxy = engine.CreateProxy<IPeerService>(transport);
+            return peerProxies.GetOrAdd(peerId, proxy);
         }
 
         private Task DispatchMessageAsync(byte[] messageBytes)
@@ -75,6 +65,12 @@ namespace SubverseIM.Bootstrapper.Services
 
         public async Task ListenSocketAsync(CancellationToken cancellationToken)
         {
+            var router = new DefaultTargetSelector();
+            router.Register<IPeerService, PeerService>(this);
+
+            var handler = engine.CreateRequestHandler(router);
+            new NamedPipeHost(handler).StartListening($"PEER-{peerId}", cancellationToken);
+
             byte[] buffer = new byte[MSG_BUFFER_SIZE];
             using MemoryStream memoryStream = new MemoryStream();
             while (!cancellationToken.IsCancellationRequested)
@@ -101,14 +97,15 @@ namespace SubverseIM.Bootstrapper.Services
         public async Task SendSocketAsync(CancellationToken cancellationToken)
         {
             byte[] buffer = new byte[MSG_BUFFER_SIZE];
-            while (!cancellationToken.IsCancellationRequested) 
+            while (!cancellationToken.IsCancellationRequested)
             {
-                if (!messageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs)) 
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!messageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs))
                 {
                     messageBag.Add(tcs = new());
                 }
 
-                SIPMessageBase sipMessage = await tcs.Task;
+                SIPMessageBase sipMessage = await tcs.Task.WaitAsync(cancellationToken);
                 byte[] sipMessageBuffer = sipMessage switch
                 {
                     SIPRequest sipRequest => sipRequest.GetBytes(),
@@ -116,7 +113,7 @@ namespace SubverseIM.Bootstrapper.Services
                     _ => throw new PeerServiceException($"Could not create message buffer from instance of type: {sipMessage.GetType()}")
                 };
 
-                using (MemoryStream memoryStream = new MemoryStream(sipMessageBuffer)) 
+                using (MemoryStream memoryStream = new MemoryStream(sipMessageBuffer))
                 {
                     int totalBytes = 0, bytesRead;
                     bool endOfMessage;
@@ -125,7 +122,7 @@ namespace SubverseIM.Bootstrapper.Services
                         totalBytes += bytesRead = memoryStream.Read(buffer, 0, buffer.Length);
                         await webSocket.SendAsync(
                             new(buffer, 0, bytesRead), WebSocketMessageType.Binary,
-                            endOfMessage = totalBytes == sipMessageBuffer.Length, 
+                            endOfMessage = totalBytes == sipMessageBuffer.Length,
                             cancellationToken);
                     } while (!endOfMessage);
                 }
@@ -156,12 +153,6 @@ namespace SubverseIM.Bootstrapper.Services
                 tcs.SetResult(sipMessage);
             }
 
-            return Task.CompletedTask;
-        }
-
-        public Task RegisterPeerAsync(SubversePeerId peerId, IPeerService peer)
-        {
-            peerProxies.AddOrUpdate(peerId, id => peer, (id, x) => peer);
             return Task.CompletedTask;
         }
     }

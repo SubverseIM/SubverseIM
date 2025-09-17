@@ -18,40 +18,28 @@ namespace SubverseIM.Bootstrapper.Controllers
 
         private readonly ILogger<SubverseController> _logger;
 
-        private readonly ConcurrentDictionary<SubversePeerId, PeerService> _activePeerProxies;
-
         public SubverseController(IConfiguration configuration, IDistributedCache cache, ILogger<SubverseController> logger)
         {
             _cache = cache;
             _logger = logger;
-
-            _activePeerProxies = new();
         }
 
         [HttpGet("relay")]
-        public async Task StartRelayAsync([FromQuery(Name="p")] string? peerIdStr, CancellationToken cancellationToken)
+        public async Task StartRelayAsync([FromQuery(Name = "p")] string? peerIdStr, CancellationToken cancellationToken)
         {
             if (HttpContext.WebSockets.IsWebSocketRequest && !string.IsNullOrEmpty(peerIdStr))
             {
                 WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
                 SubversePeerId peerId = SubversePeerId.FromString(peerIdStr);
-                PeerService peer = _activePeerProxies.AddOrUpdate(peerId, 
-                    id => new PeerService(webSocket, id),
-                    (id, x) => new PeerService(webSocket, id));
-
-                foreach((SubversePeerId otherPeerId, PeerService otherPeer) in _activePeerProxies)
-                {
-                    await peer.RegisterPeerAsync(otherPeerId, otherPeer);
-                    await otherPeer.RegisterPeerAsync(peerId, peer);
-                }
+                PeerService peer = new PeerService(webSocket, peerId);
 
                 await Task.WhenAll(
-                    peer.ListenSocketAsync(cancellationToken), 
+                    peer.ListenSocketAsync(cancellationToken),
                     peer.SendSocketAsync(cancellationToken)
                     );
             }
-            else 
+            else
             {
                 HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             }
@@ -65,22 +53,22 @@ namespace SubverseIM.Bootstrapper.Controllers
             {
                 return Redirect(peerUri);
             }
-            else 
+            else
             {
                 return NotFound();
             }
         }
-        
+
         [HttpGet("invite")]
         [Produces("application/json")]
-        public async Task<string> CreateInviteAsync([FromQuery(Name = "p")] string peerIdStr, [FromQuery(Name = "t")] double expireTimeHrs, CancellationToken cancellationToken) 
+        public async Task<string> CreateInviteAsync([FromQuery(Name = "p")] string peerIdStr, [FromQuery(Name = "t")] double expireTimeHrs, CancellationToken cancellationToken)
         {
             string inviteId = Guid.NewGuid().ToString();
             await _cache.SetStringAsync(
                     $"INV-{inviteId}", $"sv://{peerIdStr}",
-                    new DistributedCacheEntryOptions 
-                    { 
-                        AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(expireTimeHrs) 
+                    new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(expireTimeHrs)
                     },
                     cancellationToken);
             return inviteId;
