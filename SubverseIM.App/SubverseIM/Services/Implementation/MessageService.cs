@@ -18,6 +18,8 @@ namespace SubverseIM.Services.Implementation;
 
 public class MessageService : IMessageService, IDisposableService
 {
+    private const int MAX_MSGSEND_ATTEMPTS = 25;
+
     private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
 
     private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messagesBag;
@@ -178,17 +180,17 @@ public class MessageService : IMessageService, IDisposableService
     private async Task SIPTransportResponseReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPResponse sipResponse)
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-
         SubverseMessage.Identifier messageId = new(sipResponse.Header.CallId,
             SubversePeerId.FromString(sipResponse.Header.To.ToURI.User));
-        lock (requestMap)
-        {
-            requestMap.Remove(messageId);
-        }
 
         SubversePeer? peer;
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
         {
+            lock (requestMap)
+            {
+                requestMap.Remove(messageId);
+            }
+
             lock (CachedPeers)
             {
                 CachedPeers.TryGetValue(messageId.OtherPeer, out peer);
@@ -365,13 +367,15 @@ public class MessageService : IMessageService, IDisposableService
                 using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(1500));
                 do
                 {
-                    await SendSIPRequestAsync(sipRequest, useRelay: true /* TODO: make this conditional */);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await SendSIPRequestAsync(sipRequest, useRelay: numAttempts > 0);
                     await timer.WaitForNextTickAsync(cancellationToken);
                     lock (requestMap)
                     {
                         flag = requestMap.ContainsKey(messageId);
                     }
-                } while (flag && ++numAttempts < 5 && !cancellationToken.IsCancellationRequested);
+                } while (flag && ++numAttempts < MAX_MSGSEND_ATTEMPTS && 
+                    !cancellationToken.IsCancellationRequested);
             })));
         }
 
