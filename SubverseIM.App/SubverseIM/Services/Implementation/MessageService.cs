@@ -114,7 +114,7 @@ public class MessageService : IMessageService, IDisposableService
 
         lock (peer.RemoteEndPoints)
         {
-            if (remoteEndPoint != SIPEndPoint.Empty)
+            if (remoteEndPoint.Address != IPAddress.None)
             {
                 peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
             }
@@ -142,9 +142,9 @@ public class MessageService : IMessageService, IDisposableService
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
                 );
-            if (remoteEndPoint == SIPEndPoint.Empty)
+            if (remoteEndPoint.Address == IPAddress.None)
             {
-                relayService.SendMessage(sipResponse);
+                await relayService.SendMessageAsync(sipResponse);
             }
             else
             {
@@ -153,7 +153,7 @@ public class MessageService : IMessageService, IDisposableService
         }
         else
         {
-            if (remoteEndPoint != SIPEndPoint.Empty)
+            if (remoteEndPoint.Address != IPAddress.None)
             {
                 SIPViaHeader viaHeader = new(remoteEndPoint, CallProperties.CreateBranchId());
                 sipRequest.Header.Vias.PushViaHeader(viaHeader);
@@ -161,14 +161,14 @@ public class MessageService : IMessageService, IDisposableService
 
             dbService.InsertOrUpdateItem(message);
             await SendSIPRequestAsync(sipRequest, useRelay: 
-                remoteEndPoint != SIPEndPoint.Empty);
+                remoteEndPoint.Address != IPAddress.None);
 
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Accepted, "Message was forwarded."
                 );
-            if (remoteEndPoint == SIPEndPoint.Empty)
+            if (remoteEndPoint.Address != IPAddress.None)
             {
-                relayService.SendMessage(sipResponse);
+                await relayService.SendMessageAsync(sipResponse);
             }
             else
             {
@@ -201,7 +201,7 @@ public class MessageService : IMessageService, IDisposableService
             peer = null;
         }
 
-        if (peer is not null && remoteEndPoint != SIPEndPoint.Empty)
+        if (peer is not null && remoteEndPoint.Address != IPAddress.None)
         {
             lock (peer.RemoteEndPoints)
             {
@@ -224,7 +224,7 @@ public class MessageService : IMessageService, IDisposableService
 
         if (useRelay)
         {
-            _ = Task.Run(() => relayService.SendMessage(sipRequest));
+            _ = Task.Run(() => relayService.SendMessageAsync(sipRequest));
         }
         SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
 

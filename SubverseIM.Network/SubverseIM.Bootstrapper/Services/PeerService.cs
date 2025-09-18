@@ -4,6 +4,7 @@ using CoreRPC.Transport.NamedPipe;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.WebSockets;
 
 namespace SubverseIM.Bootstrapper.Services
@@ -45,7 +46,8 @@ namespace SubverseIM.Bootstrapper.Services
 
         private Task DispatchMessageAsync(byte[] messageBytes)
         {
-            SIPMessageBuffer messageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, SIPEndPoint.Empty, SIPEndPoint.Empty);
+            SIPMessageBuffer messageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, 
+                new(new IPEndPoint(IPAddress.None, 0)), new(new IPEndPoint(IPAddress.None, 0)));
 
             SIPMessageBase sipMessage;
             switch (messageBuffer.SIPMessageType)
@@ -97,7 +99,7 @@ namespace SubverseIM.Bootstrapper.Services
 
                 memoryStream.SetLength(bytesRead);
 
-                await DispatchMessageAsync(memoryStream.ToArray());
+                _ = DispatchMessageAsync(memoryStream.ToArray());
             }
         }
 

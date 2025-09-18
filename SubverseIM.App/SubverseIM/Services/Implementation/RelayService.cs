@@ -4,6 +4,7 @@ using SubverseIM.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Net;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace SubverseIM.Services.Implementation
             return tcs.Task.WaitAsync(cancellationToken);
         }
 
-        public void SendMessage(SIPMessageBase sipMessage)
+        public Task<bool> SendMessageAsync(SIPMessageBase sipMessage)
         {
             byte[]? sipMessageBuffer = sipMessage switch
             {
@@ -45,7 +46,13 @@ namespace SubverseIM.Services.Implementation
 
             if (sipMessageBuffer is not null && webSocket?.IsAlive == true)
             {
-                webSocket.Send(sipMessageBuffer);
+                TaskCompletionSource<bool> tcs = new();
+                webSocket.SendAsync(sipMessageBuffer, tcs.SetResult);
+                return tcs.Task;
+            }
+            else 
+            {
+                return Task.FromResult(false);
             }
         }
 
@@ -76,7 +83,8 @@ namespace SubverseIM.Services.Implementation
 
         private void OnSocketMessage(object? sender, MessageEventArgs e)
         {
-            SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(e.RawData, SIPEndPoint.Empty, SIPEndPoint.Empty);
+            SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(e.RawData,
+                new(new IPEndPoint(IPAddress.None, 0)), new(new IPEndPoint(IPAddress.None, 0)));
 
             SIPMessageBase sipMessage;
             switch (sipMessageBuffer.SIPMessageType) 
