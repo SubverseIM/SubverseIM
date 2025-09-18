@@ -35,9 +35,12 @@ namespace SubverseIM.Bootstrapper.Services
 
         private IPeerService GetPeerProxy(SubversePeerId peerId)
         {
-            var transport = new NamedPipeClientTransport($"PEER-{peerId}");
-            var proxy = engine.CreateProxy<IPeerService>(transport);
-            return peerProxies.GetOrAdd(peerId, proxy);
+            return peerProxies.GetOrAdd(peerId, x => 
+            {
+                var transport = new NamedPipeClientTransport($"PEER-{x}");
+                var proxy = engine.CreateProxy<IPeerService>(transport);
+                return proxy;
+            });
         }
 
         private Task DispatchMessageAsync(byte[] messageBytes)
@@ -65,11 +68,13 @@ namespace SubverseIM.Bootstrapper.Services
 
         public async Task ListenSocketAsync(CancellationToken cancellationToken)
         {
+            using CancellationTokenSource cts = new();
+
             var router = new DefaultTargetSelector();
             router.Register<IPeerService, PeerService>(this);
 
             var handler = engine.CreateRequestHandler(router);
-            new NamedPipeHost(handler).StartListening($"PEER-{peerId}", cancellationToken);
+            new NamedPipeHost(handler).StartListening($"PEER-{peerId}", cts.Token);
 
             byte[] buffer = new byte[MSG_BUFFER_SIZE];
             using MemoryStream memoryStream = new MemoryStream();
@@ -83,6 +88,8 @@ namespace SubverseIM.Bootstrapper.Services
                 WebSocketReceiveResult result;
                 do
                 {
+                    if (webSocket.State != WebSocketState.Open) return;
+
                     result = await webSocket.ReceiveAsync(buffer, cancellationToken);
                     memoryStream.Write(buffer, 0, result.Count);
                     bytesRead += result.Count;
@@ -90,7 +97,7 @@ namespace SubverseIM.Bootstrapper.Services
 
                 memoryStream.SetLength(bytesRead);
 
-                _ = Task.Run(Task? () => DispatchMessageAsync(memoryStream.ToArray()));
+                await DispatchMessageAsync(memoryStream.ToArray());
             }
         }
 
@@ -119,6 +126,8 @@ namespace SubverseIM.Bootstrapper.Services
                     bool endOfMessage;
                     do
                     {
+                        if (webSocket.State != WebSocketState.Open) return;
+
                         totalBytes += bytesRead = memoryStream.Read(buffer, 0, buffer.Length);
                         await webSocket.SendAsync(
                             new(buffer, 0, bytesRead), WebSocketMessageType.Binary,
