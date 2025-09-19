@@ -4,6 +4,7 @@ using CoreRPC.Transport.NamedPipe;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.WebSockets;
 
 namespace SubverseIM.Bootstrapper.Services
@@ -12,49 +13,50 @@ namespace SubverseIM.Bootstrapper.Services
     {
         private const int MSG_BUFFER_SIZE = 4096;
 
-        private readonly Engine engine;
+        private readonly Engine _engine;
 
-        private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>> messageBag;
+        private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>> _messageTcsBag;
 
-        private readonly ConcurrentDictionary<SubversePeerId, IPeerService> peerProxies;
+        private readonly ConcurrentDictionary<SubversePeerId, IPeerService> _peerProxies;
 
-        private readonly WebSocket webSocket;
+        private readonly WebSocket _webSocket;
 
-        private readonly SubversePeerId peerId;
+        private readonly SubversePeerId _peerId;
 
         public PeerService(WebSocket webSocket, SubversePeerId peerId)
         {
-            engine = new Engine();
+            _engine = new Engine();
 
-            messageBag = new();
-            peerProxies = new();
+            _messageTcsBag = new();
+            _peerProxies = new();
 
-            this.webSocket = webSocket;
-            this.peerId = peerId;
+            _webSocket = webSocket;
+            _peerId = peerId;
         }
 
         private IPeerService GetPeerProxy(SubversePeerId peerId)
         {
-            return peerProxies.GetOrAdd(peerId, x => 
+            return _peerProxies.GetOrAdd(peerId, x => 
             {
                 var transport = new NamedPipeClientTransport($"PEER-{x}");
-                var proxy = engine.CreateProxy<IPeerService>(transport);
+                var proxy = _engine.CreateProxy<IPeerService>(transport);
                 return proxy;
             });
         }
 
         private Task DispatchMessageAsync(byte[] messageBytes)
         {
-            SIPMessageBuffer messageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, SIPEndPoint.Empty, SIPEndPoint.Empty);
+            SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, 
+                new(new IPEndPoint(IPAddress.None, 0)), new(new IPEndPoint(IPAddress.None, 0)));
 
             SIPMessageBase sipMessage;
-            switch (messageBuffer.SIPMessageType)
+            switch (sipMessageBuffer.SIPMessageType)
             {
                 case SIPMessageTypesEnum.Request:
-                    sipMessage = SIPRequest.ParseSIPRequest(messageBuffer);
+                    sipMessage = SIPRequest.ParseSIPRequest(sipMessageBuffer);
                     break;
                 case SIPMessageTypesEnum.Response:
-                    sipMessage = SIPResponse.ParseSIPResponse(messageBuffer);
+                    sipMessage = SIPResponse.ParseSIPResponse(sipMessageBuffer);
                     break;
                 default:
                     throw new PeerServiceException("Could not parse unknown message type.");
@@ -73,8 +75,8 @@ namespace SubverseIM.Bootstrapper.Services
             var router = new DefaultTargetSelector();
             router.Register<IPeerService, PeerService>(this);
 
-            var handler = engine.CreateRequestHandler(router);
-            new NamedPipeHost(handler).StartListening($"PEER-{peerId}", cts.Token);
+            var handler = _engine.CreateRequestHandler(router);
+            new NamedPipeHost(handler).StartListening($"PEER-{_peerId}", cts.Token);
 
             byte[] buffer = new byte[MSG_BUFFER_SIZE];
             using MemoryStream memoryStream = new MemoryStream();
@@ -88,16 +90,16 @@ namespace SubverseIM.Bootstrapper.Services
                 WebSocketReceiveResult result;
                 do
                 {
-                    if (webSocket.State != WebSocketState.Open) return;
+                    if (_webSocket.State > WebSocketState.Open) return;
 
-                    result = await webSocket.ReceiveAsync(buffer, cancellationToken);
+                    result = await _webSocket.ReceiveAsync(buffer, cancellationToken);
                     memoryStream.Write(buffer, 0, result.Count);
                     bytesRead += result.Count;
                 } while (!result.EndOfMessage);
 
                 memoryStream.SetLength(bytesRead);
 
-                await DispatchMessageAsync(memoryStream.ToArray());
+                _ = DispatchMessageAsync(memoryStream.ToArray());
             }
         }
 
@@ -107,9 +109,9 @@ namespace SubverseIM.Bootstrapper.Services
             while (!cancellationToken.IsCancellationRequested)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!messageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs))
+                if (!_messageTcsBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs))
                 {
-                    messageBag.Add(tcs = new());
+                    _messageTcsBag.Add(tcs = new());
                 }
 
                 SIPMessageBase sipMessage = await tcs.Task.WaitAsync(cancellationToken);
@@ -126,10 +128,10 @@ namespace SubverseIM.Bootstrapper.Services
                     bool endOfMessage;
                     do
                     {
-                        if (webSocket.State != WebSocketState.Open) return;
+                        if (_webSocket.State > WebSocketState.Open) return;
 
                         totalBytes += bytesRead = memoryStream.Read(buffer, 0, buffer.Length);
-                        await webSocket.SendAsync(
+                        await _webSocket.SendAsync(
                             new(buffer, 0, bytesRead), WebSocketMessageType.Binary,
                             endOfMessage = totalBytes == sipMessageBuffer.Length,
                             cancellationToken);
@@ -140,25 +142,26 @@ namespace SubverseIM.Bootstrapper.Services
 
         public Task ReceiveMessageAsync(byte[] messageBytes)
         {
-            SIPMessageBuffer messageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, SIPEndPoint.Empty, SIPEndPoint.Empty);
+            SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, 
+                new(new IPEndPoint(IPAddress.None, 0)), new(new IPEndPoint(IPAddress.None, 0)));
 
             SIPMessageBase sipMessage;
-            switch (messageBuffer.SIPMessageType)
+            switch (sipMessageBuffer.SIPMessageType)
             {
                 case SIPMessageTypesEnum.Request:
-                    sipMessage = SIPRequest.ParseSIPRequest(messageBuffer);
+                    sipMessage = SIPRequest.ParseSIPRequest(sipMessageBuffer);
                     break;
                 case SIPMessageTypesEnum.Response:
-                    sipMessage = SIPResponse.ParseSIPResponse(messageBuffer);
+                    sipMessage = SIPResponse.ParseSIPResponse(sipMessageBuffer);
                     break;
                 default:
                     throw new PeerServiceException("Could not parse unknown message type.");
             }
 
 
-            if (!messageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage))
+            if (!_messageTcsBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage))
             {
-                messageBag.Add(tcs = new());
+                _messageTcsBag.Add(tcs = new());
                 tcs.SetResult(sipMessage);
             }
 
