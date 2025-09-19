@@ -2,6 +2,7 @@
 using CoreRPC.Routing;
 using CoreRPC.Transport.NamedPipe;
 using SIPSorcery.SIP;
+using SubverseIM.Bootstrapper.Controllers;
 using SubverseIM.Core;
 using System.Collections.Concurrent;
 using System.Net;
@@ -23,7 +24,9 @@ namespace SubverseIM.Bootstrapper.Services
 
         private readonly SubversePeerId _peerId;
 
-        public PeerService(WebSocket webSocket, SubversePeerId peerId)
+        private readonly ILogger<SubverseController> _logger;
+
+        public PeerService(WebSocket webSocket, SubversePeerId peerId, ILogger<SubverseController> logger)
         {
             _engine = new Engine();
 
@@ -32,6 +35,8 @@ namespace SubverseIM.Bootstrapper.Services
 
             _webSocket = webSocket;
             _peerId = peerId;
+
+            _logger = logger;
         }
 
         private IPeerService GetPeerProxy(SubversePeerId peerId)
@@ -97,6 +102,7 @@ namespace SubverseIM.Bootstrapper.Services
                     bytesRead += result.Count;
                 } while (!result.EndOfMessage);
 
+                _logger.LogInformation($"Message length: {bytesRead}");
                 memoryStream.SetLength(bytesRead);
 
                 _ = DispatchMessageAsync(memoryStream.ToArray());
