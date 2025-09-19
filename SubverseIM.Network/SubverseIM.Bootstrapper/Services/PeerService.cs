@@ -102,7 +102,6 @@ namespace SubverseIM.Bootstrapper.Services
                     bytesRead += result.Count;
                 } while (!result.EndOfMessage);
 
-                _logger.LogInformation($"Message length: {bytesRead}");
                 memoryStream.SetLength(bytesRead);
 
                 _ = DispatchMessageAsync(memoryStream.ToArray());
@@ -150,6 +149,8 @@ namespace SubverseIM.Bootstrapper.Services
         {
             SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(rawMessage, 
                 new(new IPEndPoint(IPAddress.None, 0)), new(new IPEndPoint(IPAddress.None, 0)));
+
+            _logger.LogInformation($"Message recieved for peer {_peerId}: {rawMessage}");
 
             SIPMessageBase sipMessage;
             switch (sipMessageBuffer.SIPMessageType)
