@@ -65,7 +65,7 @@ namespace SubverseIM.Bootstrapper.Services
             SubversePeerId toPeerId = SubversePeerId.FromString(sipMessage.Header.To.ToURI.User);
             IPeerService toPeer = GetPeerProxy(toPeerId);
 
-            return toPeer.ReceiveMessageAsync(messageBytes);
+            return toPeer.ReceiveMessageAsync(sipMessageBuffer.RawMessage);
         }
 
         public async Task ListenSocketAsync(CancellationToken cancellationToken)
@@ -140,9 +140,9 @@ namespace SubverseIM.Bootstrapper.Services
             }
         }
 
-        public Task ReceiveMessageAsync(byte[] messageBytes)
+        public Task ReceiveMessageAsync(string rawMessage)
         {
-            SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, 
+            SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(rawMessage, 
                 new(new IPEndPoint(IPAddress.None, 0)), new(new IPEndPoint(IPAddress.None, 0)));
 
             SIPMessageBase sipMessage;

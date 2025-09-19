@@ -4,6 +4,6 @@ namespace SubverseIM.Bootstrapper.Services
 {
     public interface IPeerService
     {
-        Task ReceiveMessageAsync(byte[] messageBytes);
+        Task ReceiveMessageAsync(string rawMessage);
     }
 }
