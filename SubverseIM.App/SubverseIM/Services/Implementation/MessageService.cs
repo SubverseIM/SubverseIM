@@ -186,10 +186,10 @@ public class MessageService : IMessageService, IDisposableService
         SubversePeer? peer;
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
         {
-            lock (requestMap)
-            {
-                requestMap.Remove(messageId);
-            }
+        lock (requestMap)
+        {
+            requestMap.Remove(messageId);
+        }
 
             lock (CachedPeers)
             {
@@ -224,7 +224,7 @@ public class MessageService : IMessageService, IDisposableService
 
         if (useRelay)
         {
-            _ = Task.Run(() => relayService.SendMessageAsync(sipRequest));
+            await relayService.SendMessageAsync(sipRequest);
         }
         SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
 

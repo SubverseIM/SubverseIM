@@ -35,25 +35,22 @@ namespace SubverseIM.Services.Implementation
             return tcs.Task.WaitAsync(cancellationToken);
         }
 
-        public Task<bool> SendMessageAsync(SIPMessageBase sipMessage)
+        public Task SendMessageAsync(SIPMessageBase sipMessage)
         {
-            byte[]? sipMessageBuffer = sipMessage switch
+            return Task.Run(() =>
             {
-                SIPRequest sipRequest => sipRequest.GetBytes(),
-                SIPResponse sipResponse => sipResponse.GetBytes(),
-                _ => null,
-            };
+                byte[]? sipMessageBuffer = sipMessage switch
+                {
+                    SIPRequest sipRequest => sipRequest.GetBytes(),
+                    SIPResponse sipResponse => sipResponse.GetBytes(),
+                    _ => null,
+                };
 
-            if (sipMessageBuffer is not null && webSocket?.IsAlive == true)
-            {
-                TaskCompletionSource<bool> tcs = new();
-                webSocket.SendAsync(sipMessageBuffer, tcs.SetResult);
-                return tcs.Task;
-            }
-            else 
-            {
-                return Task.FromResult(false);
-            }
+                if (sipMessageBuffer is not null && webSocket?.IsAlive == true)
+                {
+                    webSocket.Send(sipMessageBuffer);
+                }
+            });
         }
 
         public async Task InjectAsync(IServiceManager serviceManager)
