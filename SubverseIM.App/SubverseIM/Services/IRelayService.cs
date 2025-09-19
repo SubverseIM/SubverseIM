@@ -8,6 +8,6 @@ namespace SubverseIM.Services
     {
         Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken = default);
 
-        Task<bool> SendMessageAsync(SIPMessageBase sipMessage);
+        Task SendMessageAsync(SIPMessageBase sipMessage);
     }
 }
