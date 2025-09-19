@@ -22,6 +22,10 @@ namespace SubverseIM.Services.Implementation
 {
     public class BootstrapperService : IBootstrapperService, IDisposableService, IInjectable
     {
+        private record struct CachedTopicId(DateTime Timestamp, SubversePeerId TopicId);
+
+        private const int TOPIC_CACHE_EXPIRE_MINUTES = 3;
+
         private const string TRACKERS_LIST_URI = "https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt";
 
         private const string SECRET_PASSWORD = "#FreeTheInternet";
@@ -44,6 +48,8 @@ namespace SubverseIM.Services.Implementation
 
         private readonly HttpClient http;
 
+        private readonly ConcurrentDictionary<string, CachedTopicId> cachedTopicIds;
+
         private readonly ConcurrentBag<TaskCompletionSource<IList<PeerInfo>>> peerInfoBag;
 
         private readonly TaskCompletionSource<IDhtEngine> dhtEngineTcs;
@@ -64,6 +70,7 @@ namespace SubverseIM.Services.Implementation
 
             http = new();
 
+            cachedTopicIds = new();
             peerInfoBag = new();
 
             dhtEngineTcs = new();
@@ -397,10 +404,22 @@ namespace SubverseIM.Services.Implementation
             List<SubversePeerId> topicIds = new();
             foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
             {
-                string? topicIdStr = await http.GetFromJsonAsync<string>(new Uri(bootstrapperUri, "topic"));
-                if (!string.IsNullOrEmpty(topicIdStr))
+                if (cachedTopicIds.TryGetValue(bootstrapperUri.OriginalString, out CachedTopicId cachedTopicId) &&
+                    (DateTime.UtcNow - cachedTopicId.Timestamp).TotalMinutes < TOPIC_CACHE_EXPIRE_MINUTES)
                 {
-                    topicIds.Add(SubversePeerId.FromString(topicIdStr));
+                    topicIds.Add(cachedTopicId.TopicId);
+                }
+                else
+                {
+                    string? topicIdStr = await http.GetFromJsonAsync<string>(new Uri(bootstrapperUri, "topic"));
+                    if (!string.IsNullOrEmpty(topicIdStr))
+                    {
+                        SubversePeerId newTopicId = SubversePeerId.FromString(topicIdStr);
+                        cachedTopicIds.AddOrUpdate(bootstrapperUri.OriginalString, 
+                            (x, t) => new(t, newTopicId), (x, oldValue, t) => new(t, newTopicId), 
+                            DateTime.UtcNow);
+                        topicIds.Add(newTopicId);
+                    }
                 }
             }
 
