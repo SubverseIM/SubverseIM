@@ -32,7 +32,7 @@ namespace SubverseIM.Bootstrapper.Controllers
                 WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
                 SubversePeerId peerId = SubversePeerId.FromString(peerIdStr);
-                PeerService peer = new PeerService(webSocket, peerId);
+                PeerService peer = new PeerService(webSocket, peerId, _logger);
 
                 await Task.WhenAll(
                     peer.ListenSocketAsync(cancellationToken),
