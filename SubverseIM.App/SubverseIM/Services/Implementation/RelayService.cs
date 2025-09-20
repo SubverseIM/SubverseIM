@@ -14,7 +14,9 @@ namespace SubverseIM.Services.Implementation
 {
     public class RelayService : IRelayService, IInjectable, IDisposableService
     {
-        private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>> messageTcsBag;
+        private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>>
+            recvMessageBag,
+            sendMessageBag;
 
         private WebSocket? webSocket;
 
@@ -22,35 +24,59 @@ namespace SubverseIM.Services.Implementation
 
         public RelayService()
         {
-            messageTcsBag = new();
+            recvMessageBag = new();
+            sendMessageBag = new();
         }
 
         public Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
-            if (!messageTcsBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs)) 
+            if (!recvMessageBag.TryPeek(out TaskCompletionSource<SIPMessageBase>? tcs))
             {
-                messageTcsBag.Add(tcs = new());
+                recvMessageBag.Add(tcs = new());
             }
 
             return tcs.Task.WaitAsync(cancellationToken);
         }
 
-        public Task SendMessageAsync(SIPMessageBase sipMessage)
+        public Task QueueMessageAsync(SIPMessageBase sipMessage)
         {
-            return Task.Run(() =>
+            if (!sendMessageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage))
             {
-                byte[]? sipMessageBuffer = sipMessage switch
-                {
-                    SIPRequest sipRequest => sipRequest.GetBytes(),
-                    SIPResponse sipResponse => sipResponse.GetBytes(),
-                    _ => null,
-                };
+                sendMessageBag.Add(tcs = new());
+                tcs.SetResult(sipMessage);
+            }
 
-                if (sipMessageBuffer is not null && webSocket?.IsAlive == true)
+            return Task.CompletedTask;
+        }
+
+        public async Task SendMessageAsync(CancellationToken cancellationToken = default)
+        {
+            if (!sendMessageBag.TryPeek(out TaskCompletionSource<SIPMessageBase>? tcs))
+            {
+                sendMessageBag.Add(tcs = new());
+            }
+
+            SIPMessageBase sipMessage = await tcs.Task.WaitAsync(cancellationToken);
+
+            byte[]? sipMessageBuffer = sipMessage switch
+            {
+                SIPRequest sipRequest => sipRequest.GetBytes(),
+                SIPResponse sipResponse => sipResponse.GetBytes(),
+                _ => null,
+            };
+
+            if (sipMessageBuffer is not null && webSocket?.IsAlive == true)
+            {
+                try
                 {
                     webSocket.Send(sipMessageBuffer);
+                    return;
                 }
-            });
+                catch { }
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            await QueueMessageAsync(sipMessage);
         }
 
         public async Task InjectAsync(IServiceManager serviceManager)
@@ -61,7 +87,7 @@ namespace SubverseIM.Services.Implementation
             IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
             SubverseConfig config = await configurationService.GetConfigAsync();
             Uri bootstrapperUri = new(
-                config.BootstrapperUriList?.FirstOrDefault() ?? 
+                config.BootstrapperUriList?.FirstOrDefault() ??
                 IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT
                 );
 
@@ -87,7 +113,7 @@ namespace SubverseIM.Services.Implementation
                 new(new IPEndPoint(IPAddress.None, 0)), new(new IPEndPoint(IPAddress.None, 0)));
 
             SIPMessageBase sipMessage;
-            switch (sipMessageBuffer.SIPMessageType) 
+            switch (sipMessageBuffer.SIPMessageType)
             {
                 case SIPMessageTypesEnum.Request:
                     sipMessage = SIPRequest.ParseSIPRequest(sipMessageBuffer);
@@ -99,9 +125,9 @@ namespace SubverseIM.Services.Implementation
                     return;
             }
 
-            if (!messageTcsBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage)) 
+            if (!recvMessageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage))
             {
-                messageTcsBag.Add(tcs = new());
+                recvMessageBag.Add(tcs = new());
                 tcs.SetResult(sipMessage);
             }
         }

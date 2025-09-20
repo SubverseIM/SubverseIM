@@ -10,7 +10,7 @@ namespace SubverseIM.Services
     {
         public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
-        Task ListenRelayAsync(CancellationToken cancellationToken = default);
+        Task ProcessRelayAsync(CancellationToken cancellationToken = default);
 
         Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default);
 
