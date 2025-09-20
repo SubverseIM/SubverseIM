@@ -192,8 +192,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 contact.DateLastChattedWith = message.DateSignedOn;
                 dbService.InsertOrUpdateItem(contact);
 
-                await contactPage.LoadContactsAsync(cancellationToken);
-
                 lock (messageService.CachedPeers)
                 {
                     messageService.CachedPeers.TryAdd(
@@ -243,6 +241,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         {
                             vm.MessageList.Add(messageViewModel);
                         }
+
+                        await contactPage.LoadContactsAsync(cancellationToken);
                     }
 
                     if (launcherService.NotificationsAllowed &&
