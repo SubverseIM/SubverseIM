@@ -29,7 +29,7 @@ namespace SubverseIM.Services.Faux
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
         }
 
-        public Task ListenRelayAsync(CancellationToken cancellationToken = default)
+        public Task ProcessRelayAsync(CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }
@@ -37,7 +37,7 @@ namespace SubverseIM.Services.Faux
         public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (!messageBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
+            if (!messageBag.TryPeek(out TaskCompletionSource<SubverseMessage>? tcs))
             {
                 messageBag.Add(tcs = new());
             }

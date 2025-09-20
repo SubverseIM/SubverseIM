@@ -18,7 +18,7 @@ namespace SubverseIM.Services.Implementation;
 
 public class MessageService : IMessageService, IDisposableService
 {
-    private const int MAX_MSGSEND_ATTEMPTS = 25;
+    private const int MAX_MSGSEND_ATTEMPTS = 50;
 
     private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
 
@@ -144,7 +144,7 @@ public class MessageService : IMessageService, IDisposableService
                 );
             if (remoteEndPoint.Address == IPAddress.None)
             {
-                await relayService.SendMessageAsync(sipResponse);
+                await relayService.QueueMessageAsync(sipResponse);
             }
             else
             {
@@ -160,7 +160,7 @@ public class MessageService : IMessageService, IDisposableService
             }
 
             dbService.InsertOrUpdateItem(message);
-            await SendSIPRequestAsync(sipRequest, useRelay: 
+            await SendSIPRequestAsync(sipRequest, useRelay:
                 remoteEndPoint.Address != IPAddress.None);
 
             SIPResponse sipResponse = SIPResponse.GetResponse(
@@ -168,7 +168,7 @@ public class MessageService : IMessageService, IDisposableService
                 );
             if (remoteEndPoint.Address != IPAddress.None)
             {
-                await relayService.SendMessageAsync(sipResponse);
+                await relayService.QueueMessageAsync(sipResponse);
             }
             else
             {
@@ -186,10 +186,10 @@ public class MessageService : IMessageService, IDisposableService
         SubversePeer? peer;
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
         {
-        lock (requestMap)
-        {
-            requestMap.Remove(messageId);
-        }
+            lock (requestMap)
+            {
+                requestMap.Remove(messageId);
+            }
 
             lock (CachedPeers)
             {
@@ -224,7 +224,7 @@ public class MessageService : IMessageService, IDisposableService
 
         if (useRelay)
         {
-            await relayService.SendMessageAsync(sipRequest);
+            await relayService.QueueMessageAsync(sipRequest);
         }
         SubversePeerId toPeer = SubversePeerId.FromString(sipRequest.URI.User);
 
@@ -252,7 +252,7 @@ public class MessageService : IMessageService, IDisposableService
             await sipTransport.SendRequestAsync(new(cachedEndPoint), sipRequest);
         }
 
-        foreach (SubversePeerId topicId in await bootstrapperService.GetTopicIdsAsync()) 
+        foreach (SubversePeerId topicId in await bootstrapperService.GetTopicIdsAsync())
         {
             IList<PeerInfo> peerInfo = await bootstrapperService.GetPeerInfoAsync(topicId);
             foreach (Uri peerUri in peerInfo.Select(x => x.ConnectionUri))
@@ -268,9 +268,8 @@ public class MessageService : IMessageService, IDisposableService
         }
     }
 
-    public async Task ListenRelayAsync(CancellationToken cancellationToken)
+    private async Task ListenRelayAsync(IRelayService relayService, CancellationToken cancellationToken)
     {
-        IRelayService relayService = await serviceManager.GetWithAwaitAsync<IRelayService>(cancellationToken);
         while (!cancellationToken.IsCancellationRequested)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -286,9 +285,27 @@ public class MessageService : IMessageService, IDisposableService
         }
     }
 
+    private async Task ProcessRelayAsync(IRelayService relayService, CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await relayService.SendMessageAsync(cancellationToken);
+        }
+    }
+
+    public async Task ProcessRelayAsync(CancellationToken cancellationToken)
+    {
+        IRelayService relayService = await serviceManager.GetWithAwaitAsync<IRelayService>(cancellationToken);
+        await Task.WhenAll(
+            Task.Run(Task? () => ListenRelayAsync(relayService, cancellationToken)),
+            Task.Run(Task? () => ProcessRelayAsync(relayService, cancellationToken))
+            );
+    }
+
     public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
     {
-        if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
+        if (!messagesBag.TryPeek(out TaskCompletionSource<SubverseMessage>? tcs))
         {
             messagesBag.Add(tcs = new());
         }
@@ -304,7 +321,7 @@ public class MessageService : IMessageService, IDisposableService
         List<Task> sendTasks = new();
         foreach ((SubversePeerId recipient, string contactName) in message.Recipients.Zip(message.RecipientNames))
         {
-            sendTasks.Add(Task.Run((Func<Task?>)(async Task? () =>
+            sendTasks.Add(Task.Run(async Task? () =>
             {
                 SIPURI requestUri = SIPURI.ParseSIPURI($"sip:{recipient}@subverse.network");
                 if (message.TopicName is not null)
@@ -374,9 +391,9 @@ public class MessageService : IMessageService, IDisposableService
                     {
                         flag = requestMap.ContainsKey(messageId);
                     }
-                } while (flag && ++numAttempts < MAX_MSGSEND_ATTEMPTS && 
+                } while (flag && ++numAttempts < MAX_MSGSEND_ATTEMPTS &&
                     !cancellationToken.IsCancellationRequested);
-            })));
+            }));
         }
 
         await Task.WhenAll(sendTasks);

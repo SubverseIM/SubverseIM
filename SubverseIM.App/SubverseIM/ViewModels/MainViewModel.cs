@@ -122,8 +122,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
         List<Task> subTasks =
         [
+            Task.Run(Task? () => messageService.ProcessRelayAsync(cancellationToken)),
             Task.Run(Task? () => bootstrapperService.BootstrapSelfAsync(cancellationToken)),
-            Task.Run(Task? () => messageService.ListenRelayAsync(cancellationToken)),
             Task.Run(torrentPage.InitializeAsync),
         ];
 

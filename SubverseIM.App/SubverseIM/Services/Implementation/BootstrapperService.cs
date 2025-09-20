@@ -329,7 +329,7 @@ namespace SubverseIM.Services.Implementation
             IDhtEngine dhtEngine = await dhtEngineTcs.Task.WaitAsync(cancellationToken);
             dhtEngine.GetPeers(new InfoHash(topicId.GetBytes()));
 
-            if (!peerInfoBag.TryTake(out TaskCompletionSource<IList<PeerInfo>>? tcs))
+            if (!peerInfoBag.TryPeek(out TaskCompletionSource<IList<PeerInfo>>? tcs))
             {
                 peerInfoBag.Add(tcs = new());
             }
