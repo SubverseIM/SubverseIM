@@ -18,7 +18,7 @@ namespace SubverseIM.Services.Implementation;
 
 public class MessageService : IMessageService, IDisposableService
 {
-    private const int MAX_MSGSEND_ATTEMPTS = 50;
+    private const int MAX_MSGSEND_ATTEMPTS = 100;
 
     private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
 
@@ -114,7 +114,7 @@ public class MessageService : IMessageService, IDisposableService
 
         lock (peer.RemoteEndPoints)
         {
-            if (remoteEndPoint.Address != IPAddress.None)
+            if (remoteEndPoint != SIPEndPoint.Empty)
             {
                 peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
             }
@@ -142,7 +142,7 @@ public class MessageService : IMessageService, IDisposableService
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
                 );
-            if (remoteEndPoint.Address == IPAddress.None)
+            if (remoteEndPoint != SIPEndPoint.Empty)
             {
                 await relayService.QueueMessageAsync(sipResponse);
             }
@@ -153,7 +153,7 @@ public class MessageService : IMessageService, IDisposableService
         }
         else
         {
-            if (remoteEndPoint.Address != IPAddress.None)
+            if (remoteEndPoint != SIPEndPoint.Empty)
             {
                 SIPViaHeader viaHeader = new(remoteEndPoint, CallProperties.CreateBranchId());
                 sipRequest.Header.Vias.PushViaHeader(viaHeader);
@@ -161,12 +161,12 @@ public class MessageService : IMessageService, IDisposableService
 
             dbService.InsertOrUpdateItem(message);
             await SendSIPRequestAsync(sipRequest, useRelay:
-                remoteEndPoint.Address != IPAddress.None);
+                remoteEndPoint != SIPEndPoint.Empty);
 
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Accepted, "Message was forwarded."
                 );
-            if (remoteEndPoint.Address != IPAddress.None)
+            if (remoteEndPoint != SIPEndPoint.Empty)
             {
                 await relayService.QueueMessageAsync(sipResponse);
             }
@@ -180,17 +180,17 @@ public class MessageService : IMessageService, IDisposableService
     private async Task SIPTransportResponseReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPResponse sipResponse)
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+
         SubverseMessage.Identifier messageId = new(sipResponse.Header.CallId,
             SubversePeerId.FromString(sipResponse.Header.To.ToURI.User));
+        lock (requestMap)
+        {
+            requestMap.Remove(messageId);
+        }
 
         SubversePeer? peer;
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
         {
-            lock (requestMap)
-            {
-                requestMap.Remove(messageId);
-            }
-
             lock (CachedPeers)
             {
                 CachedPeers.TryGetValue(messageId.OtherPeer, out peer);
@@ -201,7 +201,7 @@ public class MessageService : IMessageService, IDisposableService
             peer = null;
         }
 
-        if (peer is not null && remoteEndPoint.Address != IPAddress.None)
+        if (peer is not null && remoteEndPoint != SIPEndPoint.Empty)
         {
             lock (peer.RemoteEndPoints)
             {
@@ -343,7 +343,8 @@ public class MessageService : IMessageService, IDisposableService
                     sipRequest.Header.CallId = message.MessageId.CallId;
                 }
 
-                sipRequest.Header.SetDateHeader();
+                sipRequest.Header.Date = message.DateSignedOn.ToUniversalTime()
+                    .ToString("ddd, dd MMM yyyy HH:mm:ss ") + "GMT";
 
                 sipRequest.Header.Contact = new();
                 for (int i = 0; i < message.Recipients.Length; i++)
