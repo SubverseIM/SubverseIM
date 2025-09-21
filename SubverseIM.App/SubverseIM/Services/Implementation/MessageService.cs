@@ -18,8 +18,6 @@ namespace SubverseIM.Services.Implementation;
 
 public class MessageService : IMessageService, IDisposableService
 {
-    private const int MAX_MSGSEND_ATTEMPTS = 100;
-
     private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
 
     private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messagesBag;
@@ -183,14 +181,15 @@ public class MessageService : IMessageService, IDisposableService
 
         SubverseMessage.Identifier messageId = new(sipResponse.Header.CallId,
             SubversePeerId.FromString(sipResponse.Header.To.ToURI.User));
-        lock (requestMap)
-        {
-            requestMap.Remove(messageId);
-        }
 
         SubversePeer? peer;
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
         {
+            lock (requestMap)
+            {
+                requestMap.Remove(messageId);
+            }
+
             lock (CachedPeers)
             {
                 CachedPeers.TryGetValue(messageId.OtherPeer, out peer);
@@ -380,20 +379,18 @@ public class MessageService : IMessageService, IDisposableService
                     }
                 }
 
-                bool flag;
-                int numAttempts = 0;
+                bool flag = false;
                 using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(1500));
                 do
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await SendSIPRequestAsync(sipRequest, useRelay: numAttempts > 0);
+                    await SendSIPRequestAsync(sipRequest, useRelay: flag);
                     await timer.WaitForNextTickAsync(cancellationToken);
                     lock (requestMap)
                     {
                         flag = requestMap.ContainsKey(messageId);
                     }
-                } while (flag && ++numAttempts < MAX_MSGSEND_ATTEMPTS &&
-                    !cancellationToken.IsCancellationRequested);
+                } while (flag && !cancellationToken.IsCancellationRequested);
             }));
         }
 
