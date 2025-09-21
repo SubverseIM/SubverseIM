@@ -4,7 +4,6 @@ using SubverseIM.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Net;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
@@ -109,8 +108,7 @@ namespace SubverseIM.Services.Implementation
             byte[] rawMessageBuffer = new byte[e.RawData.Length];
             Array.Copy(e.RawData, rawMessageBuffer, rawMessageBuffer.Length);
 
-            SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(rawMessageBuffer,
-                new(new IPEndPoint(IPAddress.None, 0)), new(new IPEndPoint(IPAddress.None, 0)));
+            SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(rawMessageBuffer, SIPEndPoint.Empty, SIPEndPoint.Empty);
 
             SIPMessageBase sipMessage;
             switch (sipMessageBuffer.SIPMessageType)
