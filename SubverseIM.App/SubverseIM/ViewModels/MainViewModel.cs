@@ -205,6 +205,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 try
                 {
                     dbService.InsertOrUpdateItem(message);
+                    await contactPage.LoadContactsAsync(cancellationToken);
 
                     bool isCurrentPeer = false;
                     if (contact is not null && currentPage is MessagePageViewModel vm &&
@@ -241,8 +242,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         {
                             vm.MessageList.Add(messageViewModel);
                         }
-
-                        await contactPage.LoadContactsAsync(cancellationToken);
                     }
 
                     if (launcherService.NotificationsAllowed &&
