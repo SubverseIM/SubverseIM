@@ -179,14 +179,18 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 cancellationToken.ThrowIfCancellationRequested();
 
                 SubverseMessage message = await messageService.ReceiveMessageAsync(cancellationToken);
+
                 SubversePeerId? topicId = message.TopicName is null || message.TopicName == "#system" ?
                     null : new(SHA1.HashData(Encoding.UTF8.GetBytes(message.TopicName)));
+                string? topicName = message.TopicName is null || message.TopicName == "#system" ? 
+                    null : message.TopicName;
+
                 SubverseContact contact = dbService.GetContact(topicId ?? message.Sender) ??
                     new SubverseContact()
                     {
                         OtherPeer = topicId ?? message.Sender,
-                        DisplayName = message.TopicName ?? message.SenderName,
-                        TopicName = message.TopicName,
+                        DisplayName = topicName ?? message.SenderName,
+                        TopicName = topicName,
                     };
 
                 contact.DateLastChattedWith = message.DateSignedOn;
