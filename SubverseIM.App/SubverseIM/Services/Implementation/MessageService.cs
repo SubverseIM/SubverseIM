@@ -142,7 +142,7 @@ public class MessageService : IMessageService, IDisposableService
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
                 );
-            if (remoteEndPoint != SIPEndPoint.Empty)
+            if (remoteEndPoint == SIPEndPoint.Empty)
             {
                 await relayService.QueueMessageAsync(sipResponse);
             }
@@ -166,7 +166,7 @@ public class MessageService : IMessageService, IDisposableService
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Accepted, "Message was forwarded."
                 );
-            if (remoteEndPoint != SIPEndPoint.Empty)
+            if (remoteEndPoint == SIPEndPoint.Empty)
             {
                 await relayService.QueueMessageAsync(sipResponse);
             }
