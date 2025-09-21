@@ -43,8 +43,14 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         ContactPageView? contactPageView = mainView.GetContentAs<ContactPageView>();
         Assert.NotNull(contactPageView);
 
-        await contactPageView.LoadTask;
-        await contactPageViewModel.LoadContactsAsync();
+        if (contactPageView.LoadTask.IsCompleted)
+        {
+            await contactPageViewModel.LoadContactsAsync();
+        }
+        else
+        {
+            await contactPageView.LoadTask;
+        }
 
         return (contactPageView, contactPageViewModel);
     }
