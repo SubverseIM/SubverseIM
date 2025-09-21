@@ -13,9 +13,9 @@ namespace SubverseIM.Services.Implementation
 {
     public class RelayService : IRelayService, IInjectable, IDisposableService
     {
-        private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>>
-            recvMessageBag,
-            sendMessageBag;
+        private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>> recvMessageBag;
+
+        private readonly ConcurrentQueue<SIPMessageBase> sendMessageQueue;
 
         private WebSocket? webSocket;
 
@@ -24,7 +24,7 @@ namespace SubverseIM.Services.Implementation
         public RelayService()
         {
             recvMessageBag = new();
-            sendMessageBag = new();
+            sendMessageQueue = new();
         }
 
         public Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken)
@@ -39,23 +39,13 @@ namespace SubverseIM.Services.Implementation
 
         public Task QueueMessageAsync(SIPMessageBase sipMessage)
         {
-            if (!sendMessageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage))
-            {
-                sendMessageBag.Add(tcs = new());
-                tcs.SetResult(sipMessage);
-            }
-
+            sendMessageQueue.Enqueue(sipMessage);
             return Task.CompletedTask;
         }
 
-        public async Task SendMessageAsync(CancellationToken cancellationToken = default)
+        public async Task<bool> SendMessageAsync(CancellationToken cancellationToken = default)
         {
-            if (!sendMessageBag.TryPeek(out TaskCompletionSource<SIPMessageBase>? tcs))
-            {
-                sendMessageBag.Add(tcs = new());
-            }
-
-            SIPMessageBase sipMessage = await tcs.Task.WaitAsync(cancellationToken);
+            if (!sendMessageQueue.TryDequeue(out SIPMessageBase? sipMessage)) return false;
 
             byte[]? sipMessageBuffer = sipMessage switch
             {
@@ -69,13 +59,15 @@ namespace SubverseIM.Services.Implementation
                 try
                 {
                     webSocket.Send(sipMessageBuffer);
-                    return;
+                    return true;
                 }
                 catch { }
             }
 
             cancellationToken.ThrowIfCancellationRequested();
             await QueueMessageAsync(sipMessage);
+
+            return false;
         }
 
         public async Task InjectAsync(IServiceManager serviceManager)
