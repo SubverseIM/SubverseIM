@@ -272,15 +272,19 @@ public class MessageService : IMessageService, IDisposableService
         while (!cancellationToken.IsCancellationRequested)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            SIPMessageBase sipMessage = await relayService.ReceiveMessageAsync(cancellationToken);
-
-            Task dispatchMessageTask = sipMessage switch
+            try
             {
-                SIPRequest sipRequest => SIPTransportRequestReceived(sipRequest.LocalSIPEndPoint, sipRequest.RemoteSIPEndPoint, sipRequest),
-                SIPResponse sipResponse => SIPTransportResponseReceived(sipResponse.LocalSIPEndPoint, sipResponse.RemoteSIPEndPoint, sipResponse),
-                _ => Task.CompletedTask,
-            };
-            await dispatchMessageTask;
+                SIPMessageBase sipMessage = await relayService.ReceiveMessageAsync(cancellationToken);
+
+                Task dispatchMessageTask = sipMessage switch
+                {
+                    SIPRequest sipRequest => SIPTransportRequestReceived(sipRequest.LocalSIPEndPoint, sipRequest.RemoteSIPEndPoint, sipRequest),
+                    SIPResponse sipResponse => SIPTransportResponseReceived(sipResponse.LocalSIPEndPoint, sipResponse.RemoteSIPEndPoint, sipResponse),
+                    _ => Task.CompletedTask,
+                };
+                await dispatchMessageTask;
+            }
+            catch { }
         }
     }
 
@@ -289,7 +293,11 @@ public class MessageService : IMessageService, IDisposableService
         while (!cancellationToken.IsCancellationRequested)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await relayService.SendMessageAsync(cancellationToken);
+            try
+            {
+                await relayService.SendMessageAsync(cancellationToken);
+            }
+            catch { }
         }
     }
 
