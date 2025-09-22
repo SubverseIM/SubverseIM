@@ -295,7 +295,10 @@ public class MessageService : IMessageService, IDisposableService
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                await relayService.SendMessageAsync(cancellationToken);
+                bool flag = await relayService.SendMessageAsync(cancellationToken);
+                if (flag) continue;
+
+                await Task.Delay(150);
             }
             catch { }
         }
