@@ -18,9 +18,11 @@ namespace SubverseIM.Services.Implementation;
 
 public class MessageService : IMessageService, IDisposableService
 {
+    private const int MAX_RESEND_ATTEMPTS = 5;
+
     private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
 
-    private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messagesBag;
+    private readonly ConcurrentQueue<SubverseMessage> messageQueue;
 
     private readonly SIPUDPChannel sipChannel;
 
@@ -33,7 +35,7 @@ public class MessageService : IMessageService, IDisposableService
     public MessageService(IServiceManager serviceManager)
     {
         requestMap = new();
-        messagesBag = new();
+        messageQueue = new();
 
         sipChannel = new SIPUDPChannel(IPAddress.Any, IBootstrapperService.DEFAULT_PORT_NUMBER);
         sipTransport = new SIPTransport(stateless: true);
@@ -131,11 +133,7 @@ public class MessageService : IMessageService, IDisposableService
         message.WasDecrypted = (message.WasDelivered = hasReachedDestination) && wasDecrypted;
         if (hasReachedDestination)
         {
-            if (!messagesBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs) || !tcs.TrySetResult(message))
-            {
-                messagesBag.Add(tcs = new());
-                tcs.SetResult(message);
-            }
+            messageQueue.Enqueue(message);
 
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
@@ -181,15 +179,14 @@ public class MessageService : IMessageService, IDisposableService
 
         SubverseMessage.Identifier messageId = new(sipResponse.Header.CallId,
             SubversePeerId.FromString(sipResponse.Header.To.ToURI.User));
+        lock (requestMap)
+        {
+            requestMap.Remove(messageId);
+        }
 
         SubversePeer? peer;
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
         {
-            lock (requestMap)
-            {
-                requestMap.Remove(messageId);
-            }
-
             lock (CachedPeers)
             {
                 CachedPeers.TryGetValue(messageId.OtherPeer, out peer);
@@ -312,15 +309,40 @@ public class MessageService : IMessageService, IDisposableService
             );
     }
 
-    public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
+    public async Task ResendAllUndeliveredMessagesAsync(CancellationToken cancellationToken)
     {
-        if (!messagesBag.TryPeek(out TaskCompletionSource<SubverseMessage>? tcs))
-        {
-            messagesBag.Add(tcs = new());
-        }
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
+        PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            int unsentCount = 0;
+
+            List<Task> subTasks = new();
+            foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
+            {
+                subTasks.Add(SendMessageAsync(unsentCount++ * 333, message, cancellationToken));
+            }
+            await Task.WhenAll(subTasks);
+
+            await timer.WaitForNextTickAsync();
+        }
+    }
+
+    public Task<SubverseMessage?> ReceiveMessageAsync(CancellationToken cancellationToken)
+    {
         cancellationToken.ThrowIfCancellationRequested();
-        return tcs.Task.WaitAsync(cancellationToken);
+        messageQueue.TryDequeue(out SubverseMessage? message);
+        return Task.FromResult(message);
+    }
+
+    private Task SendMessageAsync(int delayMs, SubverseMessage message, CancellationToken cancellationToken)
+    {
+        return Task.Run(async Task? () =>
+        {
+            await Task.Delay(delayMs, cancellationToken);
+            await SendMessageAsync(message, cancellationToken);
+        }, cancellationToken);
     }
 
     public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
@@ -389,19 +411,22 @@ public class MessageService : IMessageService, IDisposableService
                     }
                 }
 
-                bool flag = false;
+                bool flag;
+                int numAttempts = 0;
                 using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(1500));
                 do
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await SendSIPRequestAsync(sipRequest, useRelay: flag);
+                    await SendSIPRequestAsync(sipRequest, useRelay: numAttempts > 0);
                     await timer.WaitForNextTickAsync(cancellationToken);
                     lock (requestMap)
                     {
                         flag = requestMap.ContainsKey(messageId);
                     }
-                } while (flag && !cancellationToken.IsCancellationRequested);
+                } while (flag && ++numAttempts < MAX_RESEND_ATTEMPTS && !cancellationToken.IsCancellationRequested);
             }));
+
+            await Task.Delay(333);
         }
 
         await Task.WhenAll(sendTasks);

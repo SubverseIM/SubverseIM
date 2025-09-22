@@ -50,7 +50,7 @@ namespace SubverseIM.Services.Implementation
                 _ => null,
             };
 
-            if (sipMessageBuffer is not null && webSocket?.IsAlive == true)
+            if (sipMessageBuffer is not null && webSocket is not null)
             {
                 try
                 {
@@ -87,8 +87,14 @@ namespace SubverseIM.Services.Implementation
             webSocket = new WebSocket(relayUri.AbsoluteUri);
             webSocket.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls12;
 
+            webSocket.OnError += OnSocketError;
             webSocket.OnMessage += OnSocketMessage;
             webSocket.Connect();
+        }
+
+        private void OnSocketError(object? sender, ErrorEventArgs e)
+        {
+            ((WebSocket?)sender)?.Connect();
         }
 
         private void OnSocketMessage(object? sender, MessageEventArgs e)
