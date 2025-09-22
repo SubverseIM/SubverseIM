@@ -177,19 +177,27 @@ public class MessageService : IMessageService, IDisposableService
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-        SubverseMessage.Identifier messageId = new(sipResponse.Header.CallId,
-            SubversePeerId.FromString(sipResponse.Header.To.ToURI.User));
-        lock (requestMap)
-        {
-            requestMap.Remove(messageId);
-        }
-
         SubversePeer? peer;
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
         {
+            SubverseMessage.Identifier messageId = new(sipResponse.Header.CallId,
+                SubversePeerId.FromString(sipResponse.Header.To.ToURI.User));
+
+            SubverseMessage? message = dbService.GetMessageById(messageId);
+            if (message is not null)
+            {
+                message.WasDelivered = true;
+                dbService.InsertOrUpdateItem(message);
+            }
+
             lock (CachedPeers)
             {
                 CachedPeers.TryGetValue(messageId.OtherPeer, out peer);
+            }
+
+            lock (requestMap)
+            {
+                requestMap.Remove(messageId);
             }
         }
         else
@@ -203,13 +211,6 @@ public class MessageService : IMessageService, IDisposableService
             {
                 peer.RemoteEndPoints.Add(remoteEndPoint.GetIPEndPoint());
             }
-        }
-
-        SubverseMessage? message = dbService.GetMessageById(messageId);
-        if (message is not null)
-        {
-            message.WasDelivered = true;
-            dbService.InsertOrUpdateItem(message);
         }
     }
 
@@ -423,7 +424,8 @@ public class MessageService : IMessageService, IDisposableService
                     {
                         flag = requestMap.ContainsKey(messageId);
                     }
-                } while (flag && ++numAttempts < MAX_RESEND_ATTEMPTS && !cancellationToken.IsCancellationRequested);
+                } while (flag && ++numAttempts < MAX_RESEND_ATTEMPTS && 
+                    !cancellationToken.IsCancellationRequested);
             }));
 
             await Task.Delay(333);
