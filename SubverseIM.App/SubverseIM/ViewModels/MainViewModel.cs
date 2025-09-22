@@ -128,9 +128,9 @@ public class MainViewModel : ViewModelBase, IFrontendService
             Task.Run(torrentPage.InitializeAsync),
         ];
 
-        foreach (SubverseContact contact in dbService.GetContacts().Where(x => x.TopicName is null))
+        lock (messageService.CachedPeers)
         {
-            lock (messageService.CachedPeers)
+            foreach (SubverseContact contact in dbService.GetContacts().Where(x => x.TopicName is null))
             {
                 messageService.CachedPeers.TryAdd(
                     contact.OtherPeer,

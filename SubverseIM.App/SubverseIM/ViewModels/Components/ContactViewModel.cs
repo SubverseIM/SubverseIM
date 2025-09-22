@@ -7,7 +7,6 @@ using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
-using SubverseIM.Services.Implementation;
 using System;
 using System.Collections.Generic;
 using System.IO;
