@@ -21,22 +21,16 @@ public class MainViewFixture : IDisposable
 
     public const string EXPECTED_TOPIC_NAME = "#xunit-testing";
 
-    private readonly CancellationTokenSource cts;
-
     private readonly IServiceManager serviceManager;
 
     private readonly MainViewModel mainViewModel;
 
     private readonly MainView mainView;
 
-    private readonly Task mainTask;
-
     private Window? window;
 
     public MainViewFixture()
     {
-        cts = new();
-
         serviceManager = new SubverseIM.Services.Implementation.ServiceManager();
 
         RegisterBootstrapperService();
@@ -45,8 +39,6 @@ public class MainViewFixture : IDisposable
 
         mainViewModel = new(serviceManager);
         mainView = new() { DataContext = mainViewModel };
-
-        mainTask = mainViewModel.RunOnceAsync(cts.Token);
     }
 
     private IBootstrapperService RegisterBootstrapperService()
@@ -132,18 +124,12 @@ public class MainViewFixture : IDisposable
 
     private bool disposedValue;
 
-    protected virtual async void Dispose(bool disposing)
+    protected virtual void Dispose(bool disposing)
     {
         if (!disposedValue)
         {
             if (disposing)
             {
-                try
-                {
-                    cts.Dispose();
-                    await mainTask;
-                }
-                catch (OperationCanceledException) { }
                 serviceManager.Dispose();
             }
             disposedValue = true;

@@ -12,7 +12,9 @@ namespace SubverseIM.Services
 
         Task ProcessRelayAsync(CancellationToken cancellationToken = default);
 
-        Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default);
+        Task ResendAllUndeliveredMessagesAsync(CancellationToken cancellationToken = default);
+
+        Task<SubverseMessage?> ReceiveMessageAsync(CancellationToken cancellationToken = default);
 
         Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default);
     }

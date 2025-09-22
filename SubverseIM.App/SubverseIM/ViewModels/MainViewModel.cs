@@ -123,23 +123,14 @@ public class MainViewModel : ViewModelBase, IFrontendService
         List<Task> subTasks =
         [
             Task.Run(Task? () => messageService.ProcessRelayAsync(cancellationToken)),
+            Task.Run(Task? () => messageService.ResendAllUndeliveredMessagesAsync(cancellationToken)),
             Task.Run(Task? () => bootstrapperService.BootstrapSelfAsync(cancellationToken)),
             Task.Run(torrentPage.InitializeAsync),
         ];
 
-        int unsentCount = 0, joinCount = 0;
-        foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
-        {
-            subTasks.Add(Task.Run(async Task? () =>
-            {
-                await Task.Delay(++unsentCount * 333);
-                await messageService.SendMessageAsync(message, cancellationToken);
-            }));
-        }
-
         lock (messageService.CachedPeers)
         {
-            foreach (SubverseContact contact in dbService.GetContacts())
+            foreach (SubverseContact contact in dbService.GetContacts().Where(x => x.TopicName is null))
             {
                 messageService.CachedPeers.TryAdd(
                     contact.OtherPeer,
@@ -147,30 +138,34 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     {
                         OtherPeer = contact.OtherPeer
                     });
-
-                SubverseMessage message = new SubverseMessage()
-                {
-                    MessageId = new(CallProperties.CreateNewCallId(), contact.OtherPeer),
-
-                    TopicName = "#system",
-
-                    Sender = thisPeer,
-                    SenderName = thisContact?.DisplayName ?? "Anonymous",
-
-                    Recipients = [contact.OtherPeer],
-                    RecipientNames = [contact.DisplayName ?? "Anonymous"],
-
-                    Content = "<joined SubverseIM>",
-                    DateSignedOn = DateTime.UtcNow,
-                };
-
-                subTasks.Add(Task.Run(async Task? () =>
-                {
-                    await Task.Delay(++joinCount * 333);
-                    await messageService.SendMessageAsync(message, cancellationToken);
-                }));
             }
         }
+
+        subTasks.Add(Task.Run(async Task? () => 
+        {
+            SubverseMessage joinMessage = new SubverseMessage()
+            {
+                TopicName = "#system",
+                MessageId = new(CallProperties.CreateNewCallId(), thisPeer),
+
+                Sender = thisPeer,
+                SenderName = thisContact?.DisplayName ?? "Anonymous",
+
+                Recipients = dbService.GetContacts()
+                    .Where(x => x.TopicName is null)
+                    .Select(x => x.OtherPeer)
+                    .ToArray(),
+                RecipientNames = dbService.GetContacts()
+                    .Where(x => x.TopicName is null)
+                    .Select(x => x.DisplayName ?? "Anonymous")
+                    .ToArray(),
+
+                Content = "<joined SubverseIM>",
+                DateSignedOn = DateTime.UtcNow,
+            };
+
+            await messageService.SendMessageAsync(joinMessage, cancellationToken); 
+        }));
 
         try
         {
@@ -178,11 +173,16 @@ public class MainViewModel : ViewModelBase, IFrontendService
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                SubverseMessage message = await messageService.ReceiveMessageAsync(cancellationToken);
+                SubverseMessage? message = await messageService.ReceiveMessageAsync(cancellationToken);
+                if (message is null)
+                {
+                    await Task.Delay(150);
+                    continue;
+                }
 
                 SubversePeerId? topicId = message.TopicName is null || message.TopicName == "#system" ?
                     null : new(SHA1.HashData(Encoding.UTF8.GetBytes(message.TopicName)));
-                string? topicName = message.TopicName is null || message.TopicName == "#system" ? 
+                string? topicName = message.TopicName is null || message.TopicName == "#system" ?
                     null : message.TopicName;
 
                 SubverseContact contact = dbService.GetContact(topicId ?? message.Sender) ??
@@ -263,7 +263,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
             }
         }
-        finally 
+        finally
         {
             await torrentPage.DestroyAsync();
             await Task.WhenAll(subTasks);

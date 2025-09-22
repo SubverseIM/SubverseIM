@@ -12,7 +12,7 @@ namespace SubverseIM.Services.Faux
 {
     public class MessageService : IMessageService
     {
-        private readonly ConcurrentBag<TaskCompletionSource<SubverseMessage>> messageBag;
+        private readonly ConcurrentQueue<SubverseMessage> messageQueue;
 
         private readonly IServiceManager serviceManager;
 
@@ -22,7 +22,7 @@ namespace SubverseIM.Services.Faux
 
         public MessageService(IServiceManager serviceManager)
         {
-            messageBag = new();
+            messageQueue = new();
             this.serviceManager = serviceManager;
 
             LocalEndPoint = new IPEndPoint(IPAddress.Loopback, IBootstrapperService.DEFAULT_PORT_NUMBER);
@@ -34,25 +34,23 @@ namespace SubverseIM.Services.Faux
             return Task.CompletedTask;
         }
 
-        public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
+        public Task ResendAllUndeliveredMessagesAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<SubverseMessage?> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (!messageBag.TryPeek(out TaskCompletionSource<SubverseMessage>? tcs))
-            {
-                messageBag.Add(tcs = new());
-            }
-            return tcs.Task.WaitAsync(cancellationToken);
+            messageQueue.TryDequeue(out SubverseMessage? message);
+            return Task.FromResult(message);
         }
 
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
             IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
-            if (!messageBag.TryTake(out TaskCompletionSource<SubverseMessage>? tcs))
-            {
-                messageBag.Add(tcs = new());
-            }
             await Task.Delay(1000);
-            tcs.SetResult(new SubverseMessage
+            messageQueue.Enqueue(new SubverseMessage
             {
                 MessageId = new(CallProperties.CreateNewCallId(), await bootstrapperService.GetPeerIdAsync()),
 
