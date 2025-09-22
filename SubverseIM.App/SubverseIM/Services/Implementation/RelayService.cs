@@ -13,9 +13,9 @@ namespace SubverseIM.Services.Implementation
 {
     public class RelayService : IRelayService, IInjectable, IDisposableService
     {
-        private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>> recvMessageBag;
-
-        private readonly ConcurrentQueue<SIPMessageBase> sendMessageQueue;
+        private readonly ConcurrentQueue<SIPMessageBase> 
+            recvMessageQueue,
+            sendMessageQueue;
 
         private WebSocket? webSocket;
 
@@ -23,18 +23,14 @@ namespace SubverseIM.Services.Implementation
 
         public RelayService()
         {
-            recvMessageBag = new();
+            recvMessageQueue = new();
             sendMessageQueue = new();
         }
 
-        public Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken)
+        public Task<SIPMessageBase?> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
-            if (!recvMessageBag.TryPeek(out TaskCompletionSource<SIPMessageBase>? tcs))
-            {
-                recvMessageBag.Add(tcs = new());
-            }
-
-            return tcs.Task.WaitAsync(cancellationToken);
+            recvMessageQueue.TryDequeue(out SIPMessageBase? sipMessage);
+            return Task.FromResult(sipMessage);
         }
 
         public Task QueueMessageAsync(SIPMessageBase sipMessage)
@@ -115,11 +111,7 @@ namespace SubverseIM.Services.Implementation
                     return;
             }
 
-            if (!recvMessageBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage))
-            {
-                recvMessageBag.Add(tcs = new());
-                tcs.SetResult(sipMessage);
-            }
+            recvMessageQueue.Enqueue(sipMessage);
         }
 
         protected virtual void Dispose(bool disposing)
