@@ -7,6 +7,7 @@ using SubverseIM.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -19,6 +20,8 @@ namespace SubverseIM.Services.Implementation;
 public class MessageService : IMessageService, IDisposableService
 {
     private const int MAX_RESEND_ATTEMPTS = 5;
+
+    private const string SIP_HEADER_DATE_FMT = "ddd, dd MMM yyyy HH:mm:ss ";
 
     private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
 
@@ -99,7 +102,10 @@ public class MessageService : IMessageService, IDisposableService
                 .Zip(remoteRecipientNames)
                 .Select(x => x.First ?? x.Second)
                 .ToArray(),
-            DateSignedOn = DateTime.Parse(sipRequest.Header.Date),
+            DateSignedOn = DateTime.TryParseExact(
+                sipRequest.Header.Date.Substring(0, SIP_HEADER_DATE_FMT.Length), 
+                SIP_HEADER_DATE_FMT, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal,
+                out DateTime result) ? result : DateTime.UtcNow,
             TopicName = sipRequest.URI.Parameters.Get("topic"),
         };
 
@@ -376,7 +382,7 @@ public class MessageService : IMessageService, IDisposableService
                 }
 
                 sipRequest.Header.Date = message.DateSignedOn.ToUniversalTime()
-                    .ToString("ddd, dd MMM yyyy HH:mm:ss ") + "GMT";
+                    .ToString(SIP_HEADER_DATE_FMT, CultureInfo.InvariantCulture) + "GMT";
 
                 sipRequest.Header.Contact = new();
                 for (int i = 0; i < message.Recipients.Length; i++)
@@ -424,7 +430,7 @@ public class MessageService : IMessageService, IDisposableService
                     {
                         flag = requestMap.ContainsKey(messageId);
                     }
-                } while (flag && ++numAttempts < MAX_RESEND_ATTEMPTS && 
+                } while (flag && ++numAttempts < MAX_RESEND_ATTEMPTS &&
                     !cancellationToken.IsCancellationRequested);
             }));
 
