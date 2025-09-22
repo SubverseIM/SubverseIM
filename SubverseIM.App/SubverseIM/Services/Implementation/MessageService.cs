@@ -272,19 +272,15 @@ public class MessageService : IMessageService, IDisposableService
         while (!cancellationToken.IsCancellationRequested)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            try
-            {
-                SIPMessageBase sipMessage = await relayService.ReceiveMessageAsync(cancellationToken);
+            SIPMessageBase sipMessage = await relayService.ReceiveMessageAsync(cancellationToken);
 
-                Task dispatchMessageTask = sipMessage switch
-                {
-                    SIPRequest sipRequest => SIPTransportRequestReceived(sipRequest.LocalSIPEndPoint, sipRequest.RemoteSIPEndPoint, sipRequest),
-                    SIPResponse sipResponse => SIPTransportResponseReceived(sipResponse.LocalSIPEndPoint, sipResponse.RemoteSIPEndPoint, sipResponse),
-                    _ => Task.CompletedTask,
-                };
-                await dispatchMessageTask;
-            }
-            catch { }
+            Task dispatchMessageTask = sipMessage switch
+            {
+                SIPRequest sipRequest => SIPTransportRequestReceived(sipRequest.LocalSIPEndPoint, sipRequest.RemoteSIPEndPoint, sipRequest),
+                SIPResponse sipResponse => SIPTransportResponseReceived(sipResponse.LocalSIPEndPoint, sipResponse.RemoteSIPEndPoint, sipResponse),
+                _ => Task.CompletedTask,
+            };
+            await dispatchMessageTask;
         }
     }
 
@@ -293,14 +289,11 @@ public class MessageService : IMessageService, IDisposableService
         while (!cancellationToken.IsCancellationRequested)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            try
-            {
-                bool flag = await relayService.SendMessageAsync(cancellationToken);
-                if (flag) continue;
 
-                await Task.Delay(150);
-            }
-            catch { }
+            bool flag = await relayService.SendMessageAsync(cancellationToken);
+            if (flag) continue;
+
+            await Task.Delay(150);
         }
     }
 
