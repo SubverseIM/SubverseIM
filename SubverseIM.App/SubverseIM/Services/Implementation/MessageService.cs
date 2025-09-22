@@ -104,7 +104,7 @@ public class MessageService : IMessageService, IDisposableService
                 .ToArray(),
             DateSignedOn = DateTime.TryParseExact(
                 sipRequest.Header.Date.Substring(0, SIP_HEADER_DATE_FMT.Length), 
-                SIP_HEADER_DATE_FMT, null, DateTimeStyles.AssumeUniversal, 
+                SIP_HEADER_DATE_FMT, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal,
                 out DateTime result) ? result : DateTime.UtcNow,
             TopicName = sipRequest.URI.Parameters.Get("topic"),
         };
@@ -382,7 +382,7 @@ public class MessageService : IMessageService, IDisposableService
                 }
 
                 sipRequest.Header.Date = message.DateSignedOn.ToUniversalTime()
-                    .ToString(SIP_HEADER_DATE_FMT) + "GMT";
+                    .ToString(SIP_HEADER_DATE_FMT, CultureInfo.InvariantCulture) + "GMT";
 
                 sipRequest.Header.Contact = new();
                 for (int i = 0; i < message.Recipients.Length; i++)
