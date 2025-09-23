@@ -10,10 +10,12 @@ using SubverseIM.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -429,21 +431,41 @@ namespace SubverseIM.Services.Implementation
         public async Task SendInviteAsync(Visual? sender, CancellationToken cancellationToken)
         {
             IServiceManager serviceManager = await serviceManagerTcs.Task.WaitAsync(cancellationToken);
+            IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>(cancellationToken);
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
 
             string[] pickerItems = expireTimes.Keys.ToArray();
             string? expireTimeKey = await launcherService.ShowPickerDialogAsync("Link should expire in...", pickerItems[0], pickerItems);
+
             if (expireTimeKey is null || !expireTimes.TryGetValue(expireTimeKey, out TimeSpan expireTimeValue)) return;
-
             SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
-            UriBuilder builder = new($"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite") 
-            { 
-                Query = $"?p={thisPeer}&t={HttpUtility.UrlEncode(expireTimeValue.TotalHours.ToString())}"
-            };
-            string inviteId = await http.GetFromJsonAsync<string>(builder.Uri, cancellationToken) ??
-                throw new InvalidOperationException("Failed to resolve inviteId!");
 
-            await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT}/invite/{inviteId}");
+            SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
+            config.DefaultContactName = await launcherService.ShowInputDialogAsync("Suggest contact name for recipient?", config.DefaultContactName);
+            await configurationService.PersistConfigAsync(cancellationToken);
+
+            string bootstrapperUri = config.BootstrapperUriList?.FirstOrDefault() ??
+                IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT;
+            StringBuilder requestUriBuilder = new(bootstrapperUri);
+
+            requestUriBuilder.Append("/invite?p=");
+            requestUriBuilder.Append(thisPeer);
+
+            requestUriBuilder.Append("&t=");
+            requestUriBuilder.Append(HttpUtility.UrlEncode(expireTimeValue
+                .TotalHours.ToString(CultureInfo.InvariantCulture)));
+
+            if (!string.IsNullOrEmpty(config.DefaultContactName)) 
+            {
+                requestUriBuilder.Append("&n=");
+                requestUriBuilder.Append(
+                    HttpUtility.UrlEncode(config.DefaultContactName)
+                    );
+            }
+
+            string inviteId = await http.GetFromJsonAsync<string>(requestUriBuilder.ToString(), cancellationToken) ??
+                throw new InvalidOperationException("Failed to resolve inviteId!");
+            await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{bootstrapperUri}/invite/{inviteId}");
         }
 
         #endregion

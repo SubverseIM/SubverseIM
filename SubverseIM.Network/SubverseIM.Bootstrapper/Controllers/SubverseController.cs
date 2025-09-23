@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
 
 namespace SubverseIM.Bootstrapper.Controllers
 {
@@ -61,11 +62,24 @@ namespace SubverseIM.Bootstrapper.Controllers
 
         [HttpGet("invite")]
         [Produces("application/json")]
-        public async Task<string> CreateInviteAsync([FromQuery(Name = "p")] string peerIdStr, [FromQuery(Name = "t")] double expireTimeHrs, CancellationToken cancellationToken)
+        public async Task<string> CreateInviteAsync(
+            [FromQuery(Name = "p")] string peerIdStr, 
+            [FromQuery(Name = "t")] double expireTimeHrs, 
+            [FromQuery(Name = "n")] string? contactName, 
+            CancellationToken cancellationToken)
         {
+            StringBuilder inviteUri = new("sv://");
+            inviteUri.Append(peerIdStr);
+            if (!string.IsNullOrEmpty(contactName)) 
+            {
+                inviteUri.Append("?name=");
+                inviteUri.Append(HttpUtility
+                    .UrlEncode(contactName));
+            }
+
             string inviteId = Guid.NewGuid().ToString();
             await _cache.SetStringAsync(
-                    $"INV-{inviteId}", $"sv://{peerIdStr}",
+                    $"INV-{inviteId}", inviteUri.ToString(),
                     new DistributedCacheEntryOptions
                     {
                         AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(expireTimeHrs)
