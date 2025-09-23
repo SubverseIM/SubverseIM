@@ -103,7 +103,7 @@ public class MessageService : IMessageService, IDisposableService
                 .Select(x => x.First ?? x.Second)
                 .ToArray(),
             DateSignedOn = DateTime.TryParseExact(
-                sipRequest.Header.Date.Substring(0, SIP_HEADER_DATE_FMT.Length), 
+                sipRequest.Header.Date.Substring(0, SIP_HEADER_DATE_FMT.Length),
                 SIP_HEADER_DATE_FMT, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal,
                 out DateTime result) ? result : DateTime.UtcNow,
             TopicName = sipRequest.URI.Parameters.Get("topic"),
@@ -320,17 +320,14 @@ public class MessageService : IMessageService, IDisposableService
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-        PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMinutes(1.5));
         while (!cancellationToken.IsCancellationRequested)
         {
             int unsentCount = 0;
-
-            List<Task> subTasks = new();
             foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
             {
-                subTasks.Add(SendMessageAsync(unsentCount++ * 333, message, cancellationToken));
+                _ = SendMessageAsync(unsentCount++ * 333, message, cancellationToken);
             }
-            await Task.WhenAll(subTasks);
 
             await timer.WaitForNextTickAsync();
         }
