@@ -19,7 +19,7 @@ namespace SubverseIM.Services.Implementation;
 
 public class MessageService : IMessageService, IDisposableService
 {
-    private const int MAX_RESEND_ATTEMPTS = 5;
+    private const int MAX_SEND_ATTEMPTS = 10;
 
     private const string SIP_HEADER_DATE_FMT = "ddd, dd MMM yyyy HH:mm:ss ";
 
@@ -430,7 +430,7 @@ public class MessageService : IMessageService, IDisposableService
                     {
                         flag = requestMap.ContainsKey(messageId);
                     }
-                } while (flag && ++numAttempts < MAX_RESEND_ATTEMPTS &&
+                } while (flag && ++numAttempts < MAX_SEND_ATTEMPTS &&
                     !cancellationToken.IsCancellationRequested);
             }));
 
