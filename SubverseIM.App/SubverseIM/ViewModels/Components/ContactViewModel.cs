@@ -14,6 +14,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace SubverseIM.ViewModels.Components
 {
@@ -235,6 +236,24 @@ namespace SubverseIM.ViewModels.Components
 
                 contactContainer?.RemoveContact(this);
                 ShouldShowOptions = false;
+            }
+        }
+
+        public async Task CopyCommand()
+        {
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+            TopLevel topLevel = await serviceManager.GetWithAwaitAsync<TopLevel>();
+
+            if (topLevel.Clipboard is not null)
+            {
+                await topLevel.Clipboard.SetTextAsync(
+                    $"sv://{innerContact.OtherPeer}?name={HttpUtility.UrlEncode(innerContact.DisplayName)}"
+                    );
+                await launcherService.ShowAlertDialogAsync("Information", "Contact link copied to the clipboard.");
+            }
+            else
+            {
+                await launcherService.ShowAlertDialogAsync("Error", "Could not copy contact link to the clipboard.");
             }
         }
 

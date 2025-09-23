@@ -97,6 +97,13 @@
 										AutomationProperties.Name="Edit Contact">
 									<PathIcon Data="{StaticResource edit_regular}" />
 								</Button>
+								<Button DockPanel.Dock="Right"
+										VerticalAlignment="Stretch"
+										IsVisible="{Binding ShouldShowOptions}"
+										Command="{Binding CopyCommand}"
+										AutomationProperties.Name="Copy Contact Link">
+									<PathIcon Data="{StaticResource clipboard_link_regular}" />
+								</Button>
 								<TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}">
 									<Classes.offscreen>
 										<MultiBinding Converter="{x:Static BoolConverters.And}">

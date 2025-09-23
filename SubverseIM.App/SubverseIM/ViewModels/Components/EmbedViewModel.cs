@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace SubverseIM.ViewModels.Components
 {
@@ -16,10 +17,14 @@ namespace SubverseIM.ViewModels.Components
 
         public Uri AbsoluteUri { get; }
 
-        public string DisplayName => MagnetLink.TryParse(
-            AbsoluteUri.OriginalString, out MagnetLink? magnetLink) ?
-            (magnetLink.Name ?? "Untitled") + UnitHelpers.ByteCountToString(magnetLink.Size) :
-            AbsoluteUri.Host;
+        public string DisplayName => AbsoluteUri.Scheme switch
+        {
+            "magnet" => MagnetLink.TryParse(AbsoluteUri.OriginalString, out MagnetLink? magnetLink) ?
+                "Attachment: " + (magnetLink.Name ?? "Untitled") + UnitHelpers.ByteCountToString(magnetLink.Size) : null,
+            "sv" => "Contact: " + (HttpUtility.ParseQueryString(AbsoluteUri.Query)["name"] ?? "Anonymous"),
+            "http" or "https" => "Link: " + AbsoluteUri.Host,
+            _ => null
+        } ?? AbsoluteUri.ToString();
 
         public Task<Bitmap?> FetchedBitmapAsync => GetBitmapAsync();
 
