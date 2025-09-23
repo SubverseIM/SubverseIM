@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
 
 namespace SubverseIM.Bootstrapper.Controllers
 {
@@ -72,7 +73,8 @@ namespace SubverseIM.Bootstrapper.Controllers
             if (!string.IsNullOrEmpty(contactName)) 
             {
                 inviteUri.Append("?name=");
-                inviteUri.Append(contactName);
+                inviteUri.Append(HttpUtility
+                    .UrlEncode(contactName));
             }
 
             string inviteId = Guid.NewGuid().ToString();

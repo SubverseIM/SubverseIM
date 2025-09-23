@@ -459,7 +459,9 @@ namespace SubverseIM.Services.Implementation
             if (!string.IsNullOrEmpty(config.DefaultContactName)) 
             {
                 requestUriBuilder.Append("&n=");
-                requestUriBuilder.Append(config.DefaultContactName);
+                requestUriBuilder.Append(
+                    HttpUtility.UrlEncode(config.DefaultContactName)
+                    );
             }
 
             string inviteId = await http.GetFromJsonAsync<string>(requestUriBuilder.ToString(), cancellationToken) ??
