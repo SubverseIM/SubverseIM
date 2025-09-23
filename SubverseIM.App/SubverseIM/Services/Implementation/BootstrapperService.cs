@@ -1,5 +1,4 @@
 ﻿using Avalonia;
-using LiteDB;
 using MonoTorrent;
 using MonoTorrent.Client;
 using MonoTorrent.Connections.Dht;
@@ -443,7 +442,7 @@ namespace SubverseIM.Services.Implementation
 
             SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
             config.DefaultContactName = await launcherService.ShowInputDialogAsync("Suggest contact name for recipient?", config.DefaultContactName);
-            await configurationService.PersistConfigAsync();
+            await configurationService.PersistConfigAsync(cancellationToken);
 
             string bootstrapperUri = config.BootstrapperUriList?.FirstOrDefault() ??
                 IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT;
