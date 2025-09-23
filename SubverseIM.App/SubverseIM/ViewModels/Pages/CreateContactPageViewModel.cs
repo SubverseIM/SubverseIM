@@ -5,6 +5,7 @@ using SubverseIM.ViewModels.Components;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace SubverseIM.ViewModels.Pages
 {
@@ -24,8 +25,12 @@ namespace SubverseIM.ViewModels.Pages
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
             SubversePeerId otherPeer = SubversePeerId.FromString(contactUri.DnsSafeHost);
-            Contact = new(ServiceManager, null, dbService.GetContact(otherPeer) ??
-                new SubverseContact() { OtherPeer = otherPeer });
+            Contact = new(ServiceManager, null, dbService.GetContact(otherPeer) ?? 
+                new SubverseContact() 
+                { 
+                    OtherPeer = otherPeer, 
+                    DisplayName = HttpUtility.ParseQueryString(contactUri.Query)["name"],
+                });
             await Contact.LoadPhotoAsync(cancellationToken);
         }
     }

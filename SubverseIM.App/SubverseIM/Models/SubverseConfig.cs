@@ -35,5 +35,7 @@ namespace SubverseIM.Models
         public DateTime DateLastPrompted { get; set; }
 
         public int? PromptFreqIndex { get; set; }
+
+        public string? DefaultContactName { get; set; }
     }
 }
