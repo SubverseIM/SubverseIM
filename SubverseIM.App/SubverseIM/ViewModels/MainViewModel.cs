@@ -15,6 +15,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace SubverseIM.ViewModels;
 
@@ -366,7 +367,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
             messagePageViewModel.ShouldRefreshContacts = false;
         }
 
-        await createContactPage.InitializeAsync(new Uri($"sv://{contact.OtherPeer}"));
+        await createContactPage.InitializeAsync(new Uri($"sv://{contact.OtherPeer}?name={HttpUtility.UrlEncode(contact.DisplayName)}"));
         CurrentPage = createContactPage;
     }
 
