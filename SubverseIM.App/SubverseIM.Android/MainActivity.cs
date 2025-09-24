@@ -129,7 +129,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
         serviceManager?.GetOrRegister<IDbService>(
-            new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
+            new DbService($"Filename={dbFilePath};Password={IDbService.SECRET_PASSWORD}")
             );
 
         if (!peerServiceConn.IsConnected)
@@ -215,6 +215,11 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         {
             frontendService?.NavigateContactView();
         }
+    }
+
+    public string? GetDeviceToken()
+    {
+        return null;
     }
 
     public Uri? GetLaunchedUri()

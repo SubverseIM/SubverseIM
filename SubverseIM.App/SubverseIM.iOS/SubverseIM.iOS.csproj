@@ -3,6 +3,7 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net9.0-ios</TargetFramework>
 		<Nullable>enable</Nullable>
+		<ApplicationId>com.chosenfewsoftware.SubverseIM</ApplicationId>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -17,6 +18,7 @@
 	  <None Remove="Resources\*.aif" />
 	  <None Remove="Resources\sv_512.png" />
 	</ItemGroup>
+	
 	<ItemGroup>
 	  <iTunesArtwork Include="iTunesArtwork" />
 	  <iTunesArtwork Include="iTunesArtwork@2x" />
@@ -30,7 +32,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
 		<ProjectReference Include="..\SubverseIM\SubverseIM.csproj" />
+		<ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
+		<ProjectReference Include="..\SubverseIM.iOS.NotificationService\SubverseIM.iOS.NotificationService.csproj">
+			<IsAppExtension>true</IsAppExtension>
+		</ProjectReference>
 	</ItemGroup>
 	
 </Project>

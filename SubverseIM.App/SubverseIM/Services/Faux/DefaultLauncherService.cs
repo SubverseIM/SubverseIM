@@ -12,6 +12,8 @@ namespace SubverseIM.Services.Faux
 
         public bool NotificationsAllowed { get; } = false;
 
+        public string? GetDeviceToken() => null;
+
         public Uri? GetLaunchedUri() => null;
 
         public Task ShareFileToAppAsync(Visual? sender, string title, string path) => Task.CompletedTask;

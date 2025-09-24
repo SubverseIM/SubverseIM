@@ -3,7 +3,6 @@ using Microsoft.Extensions.Caching.Distributed;
 using PgpCore;
 using SubverseIM.Bootstrapper.Services;
 using SubverseIM.Core;
-using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -17,11 +16,15 @@ namespace SubverseIM.Bootstrapper.Controllers
     {
         private readonly IDistributedCache _cache;
 
+        private readonly IPushService _pushService;
+
         private readonly ILogger<SubverseController> _logger;
 
-        public SubverseController(IConfiguration configuration, IDistributedCache cache, ILogger<SubverseController> logger)
+        public SubverseController(IDistributedCache cache, IPushService pushService, ILogger<SubverseController> logger)
         {
             _cache = cache;
+            _pushService = pushService;
+
             _logger = logger;
         }
 
@@ -32,7 +35,7 @@ namespace SubverseIM.Bootstrapper.Controllers
             {
                 using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
                 SubversePeerId peerId = SubversePeerId.FromString(peerIdStr);
-                PeerService peer = new PeerService(webSocket, peerId);
+                PeerService peer = new PeerService(_pushService, webSocket, peerId);
 
                 await Task.WhenAll(
                     peer.ListenSocketAsync(cancellationToken),
@@ -137,7 +140,7 @@ namespace SubverseIM.Bootstrapper.Controllers
         [HttpPost("nodes")]
         [Consumes("application/octet-stream")]
         [Produces("application/json")]
-        public async Task<bool> PostNodesAsync([FromQuery(Name = "p")] string peerIdStr, CancellationToken cancellationToken)
+        public async Task<bool> PostNodesAsync([FromQuery(Name = "p")] string peerIdStr, [FromQuery(Name = "tkn")] string? deviceToken, CancellationToken cancellationToken)
         {
             try
             {
@@ -166,6 +169,11 @@ namespace SubverseIM.Bootstrapper.Controllers
                     if (verifySuccess)
                     {
                         SubversePeerId peerId = new(keyContainer.PublicKey.GetFingerprint());
+                        if (!string.IsNullOrEmpty(deviceToken))
+                        {
+                            await _pushService.RegisterPeerAsync(peerId, deviceToken);
+                        }
+
                         await _cache.SetAsync($"DAT-{peerId}", nodesBytes,
                             new DistributedCacheEntryOptions { AbsoluteExpiration = null }
                             );

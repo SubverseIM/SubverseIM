@@ -7,3 +7,6 @@
 [submodule "CoreRPC"]
 	path = CoreRPC
 	url = https://github.com/SubverseIM/CoreRPC.git
+[submodule "apns-dotnet"]
+	path = apns-dotnet
+	url = https://github.com/SubverseIM/apns-dotnet.git

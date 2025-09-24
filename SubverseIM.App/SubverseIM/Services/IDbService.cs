@@ -10,6 +10,14 @@ namespace SubverseIM.Services
 {
     public interface IDbService : IDisposableService
     {
+        public const string SECRET_PASSWORD = "#FreeTheInternet";
+
+        public const string PUBLIC_KEY_PATH = "$/pkx/public.key";
+
+        public const string PRIVATE_KEY_PATH = "$/pkx/private.key";
+
+        public const string NODES_LIST_PATH = "$/pkx/nodes.list";
+
         SubverseConfig? GetConfig();
 
         bool UpdateConfig(SubverseConfig config);

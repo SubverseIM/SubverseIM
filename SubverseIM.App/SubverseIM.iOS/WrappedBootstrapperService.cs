@@ -44,8 +44,8 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
 
         UNMutableNotificationContent content = new()
         {
-            Title = message.TopicName is null ? contact?.DisplayName ?? "Anonymous" :
-                $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})",
+            Title = message.TopicName ?? "Direct Message",
+            Subtitle = contact?.DisplayName ?? "Anonymous",
             Body = message.Content ?? string.Empty,
         };
 

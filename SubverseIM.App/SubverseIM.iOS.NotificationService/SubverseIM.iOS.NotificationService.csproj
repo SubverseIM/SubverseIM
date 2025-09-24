@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0-ios</TargetFramework>
+		<OutputType>Library</OutputType>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>true</ImplicitUsings>
+		<IsAppExtension>true</IsAppExtension>
+		
+		<!-- The bundle identifier (aka ApplicationId) for an app extension must be the main app's bundle identifier + ".<something>" -->
+		<ApplicationId>com.chosenfewsoftware.SubverseIM.NotificationService</ApplicationId>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
+		<UseInterpreter>true</UseInterpreter>
+		<ProvisioningType>manual</ProvisioningType>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<CustomEntitlements Include="aps-environment" Type="String" Value="development" Condition="'$(Configuration)' != 'Release'" />
+		<CustomEntitlements Include="aps-environment" Type="String" Value="production" Condition="'$(Configuration)' == 'Release'" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\SubverseIM\SubverseIM.csproj" />
+		<ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
+	</ItemGroup>
+</Project>

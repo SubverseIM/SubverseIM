@@ -30,14 +30,6 @@ namespace SubverseIM.Services.Implementation
 
         private const string TRACKERS_LIST_URI = "https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt";
 
-        private const string SECRET_PASSWORD = "#FreeTheInternet";
-
-        private const string PUBLIC_KEY_PATH = "$/pkx/public.key";
-
-        private const string PRIVATE_KEY_PATH = "$/pkx/private.key";
-
-        private const string NODES_LIST_PATH = "$/pkx/nodes.list";
-
         private static readonly IReadOnlyDictionary<string, TimeSpan> expireTimes =
             new Dictionary<string, TimeSpan>()
             {
@@ -98,8 +90,8 @@ namespace SubverseIM.Services.Implementation
 
         private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
         {
-            if (dbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? publicKeyStream) &&
-                dbService.TryGetReadStream(PRIVATE_KEY_PATH, out Stream? privateKeyStream))
+            if (dbService.TryGetReadStream(IDbService.PUBLIC_KEY_PATH, out Stream? publicKeyStream) &&
+                dbService.TryGetReadStream(IDbService.PRIVATE_KEY_PATH, out Stream? privateKeyStream))
             {
                 return (publicKeyStream, privateKeyStream);
             }
@@ -113,12 +105,12 @@ namespace SubverseIM.Services.Implementation
                     pgp.GenerateKey(
                         publicKeyStream,
                         privateKeyStream,
-                        password: SECRET_PASSWORD
+                        password: IDbService.SECRET_PASSWORD
                         );
                 }
 
-                using (Stream publicKeyStoreStream = dbService.CreateWriteStream(PUBLIC_KEY_PATH))
-                using (Stream privateKeyStoreStream = dbService.CreateWriteStream(PRIVATE_KEY_PATH))
+                using (Stream publicKeyStoreStream = dbService.CreateWriteStream(IDbService.PUBLIC_KEY_PATH))
+                using (Stream privateKeyStoreStream = dbService.CreateWriteStream(IDbService.PRIVATE_KEY_PATH))
                 {
                     publicKeyStream.Position = 0;
                     publicKeyStream.CopyTo(publicKeyStoreStream);
@@ -139,6 +131,7 @@ namespace SubverseIM.Services.Implementation
             IDhtEngine dhtEngine = await dhtEngineTcs.Task;
             IServiceManager serviceManager = await serviceManagerTcs.Task;
 
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             IMessageService messageService = await serviceManager.GetWithAwaitAsync<IMessageService>();
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
@@ -152,7 +145,7 @@ namespace SubverseIM.Services.Implementation
                 }
 
                 ReadOnlyMemory<byte> nodesBytes = await dhtEngine.SaveNodesAsync();
-                using (Stream cacheStream = dbService.CreateWriteStream(NODES_LIST_PATH))
+                using (Stream cacheStream = dbService.CreateWriteStream(IDbService.NODES_LIST_PATH))
                 {
                     cacheStream.Write(nodesBytes.Span);
                 }
@@ -166,10 +159,21 @@ namespace SubverseIM.Services.Implementation
                     requestBytes = outputStream.ToArray();
                 }
 
+                Uri requestUri;
+                string? deviceToken = launcherService.GetDeviceToken();
+                if (deviceToken is null)
+                {
+                    requestUri = new Uri(bootstrapperUri, $"nodes?p={thisPeer}");
+                }
+                else
+                {
+                    requestUri = new Uri(bootstrapperUri, $"nodes?p={thisPeer}&tkn={deviceToken}");
+                }
+
                 using (ByteArrayContent requestContent = new(requestBytes)
                 { Headers = { ContentType = new("application/octet-stream") } })
                 {
-                    HttpResponseMessage response = await http.PostAsync(new Uri(bootstrapperUri, $"nodes?p={thisPeer}"), requestContent, cancellationToken);
+                    HttpResponseMessage response = await http.PostAsync(requestUri, requestContent, cancellationToken);
                     return await response.Content.ReadFromJsonAsync<bool>(cancellationToken);
                 }
             }
@@ -215,7 +219,7 @@ namespace SubverseIM.Services.Implementation
             await dhtEngine.SetListenerAsync(dhtListener);
             using (MemoryStream bufferStream = new())
             {
-                if (dbService.TryGetReadStream(NODES_LIST_PATH, out Stream? cacheStream))
+                if (dbService.TryGetReadStream(IDbService.NODES_LIST_PATH, out Stream? cacheStream))
                 {
                     await cacheStream.CopyToAsync(bufferStream);
                     await dhtEngine.StartAsync(bufferStream.ToArray());
@@ -229,7 +233,7 @@ namespace SubverseIM.Services.Implementation
             }
 
             // Announce public key on bootstrapper
-            if (dbService.TryGetReadStream(PUBLIC_KEY_PATH, out Stream? pkStream))
+            if (dbService.TryGetReadStream(IDbService.PUBLIC_KEY_PATH, out Stream? pkStream))
             {
                 foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
                 {
@@ -372,9 +376,9 @@ namespace SubverseIM.Services.Implementation
                     catch (HttpRequestException) { }
                 }
 
-                if (dbService.TryGetReadStream(PRIVATE_KEY_PATH, out Stream? privateKeyStream))
+                if (dbService.TryGetReadStream(IDbService.PRIVATE_KEY_PATH, out Stream? privateKeyStream))
                 {
-                    peerKeys = new(publicKeyStream, privateKeyStream, SECRET_PASSWORD);
+                    peerKeys = new(publicKeyStream, privateKeyStream, IDbService.SECRET_PASSWORD);
                     peer.KeyContainer = peerKeys;
 
                     publicKeyStream.Dispose();
@@ -417,8 +421,8 @@ namespace SubverseIM.Services.Implementation
                     if (!string.IsNullOrEmpty(topicIdStr))
                     {
                         SubversePeerId newTopicId = SubversePeerId.FromString(topicIdStr);
-                        cachedTopicIds.AddOrUpdate(bootstrapperUri.OriginalString, 
-                            (x, t) => new(t, newTopicId), (x, oldValue, t) => new(t, newTopicId), 
+                        cachedTopicIds.AddOrUpdate(bootstrapperUri.OriginalString,
+                            (x, t) => new(t, newTopicId), (x, oldValue, t) => new(t, newTopicId),
                             DateTime.UtcNow);
                         topicIds.Add(newTopicId);
                     }
@@ -455,7 +459,7 @@ namespace SubverseIM.Services.Implementation
             requestUriBuilder.Append(HttpUtility.UrlEncode(expireTimeValue
                 .TotalHours.ToString(CultureInfo.InvariantCulture)));
 
-            if (!string.IsNullOrEmpty(config.DefaultContactName)) 
+            if (!string.IsNullOrEmpty(config.DefaultContactName))
             {
                 requestUriBuilder.Append("&n=");
                 requestUriBuilder.Append(
@@ -486,7 +490,7 @@ namespace SubverseIM.Services.Implementation
 
             (Stream publicKeyStream, Stream privateKeyStream) =
                 GenerateKeysIfNone(dbService);
-            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, SECRET_PASSWORD);
+            EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, IDbService.SECRET_PASSWORD);
 
             publicKeyStream.Dispose();
             privateKeyStream.Dispose();
