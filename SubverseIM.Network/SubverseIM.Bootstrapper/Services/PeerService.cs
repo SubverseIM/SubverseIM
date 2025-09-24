@@ -18,11 +18,13 @@ namespace SubverseIM.Bootstrapper.Services
 
         private readonly ConcurrentDictionary<SubversePeerId, IPeerService> _peerProxies;
 
+        private readonly IPushService _pushService;
+
         private readonly WebSocket _webSocket;
 
         private readonly SubversePeerId _peerId;
 
-        public PeerService(WebSocket webSocket, SubversePeerId peerId)
+        public PeerService(IPushService pushService, WebSocket webSocket, SubversePeerId peerId)
         {
             _engine = new Engine();
 
@@ -31,6 +33,8 @@ namespace SubverseIM.Bootstrapper.Services
 
             _webSocket = webSocket;
             _peerId = peerId;
+
+            _pushService = pushService;
         }
 
         private IPeerService GetPeerProxy(SubversePeerId peerId)
@@ -155,8 +159,9 @@ namespace SubverseIM.Bootstrapper.Services
                     throw new PeerServiceException("Could not parse unknown message type.");
             }
 
+
             _messageQueue.Enqueue(sipMessage);
-            return Task.CompletedTask;
+            return _pushService.SendPushNotificationAsync(_peerId);
         }
     }
 }
