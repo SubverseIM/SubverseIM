@@ -3,6 +3,7 @@ using Fitomad.Apns;
 using Fitomad.Apns.Entities;
 using Fitomad.Apns.Entities.Settings;
 using Fitomad.Apns.Extensions;
+using SubverseIM.Bootstrapper.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,8 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddSingleton<IPushService, PushService>();
 
 string? jwtContent, jwtKey, teamId;
 jwtContent = builder.Configuration.GetValue<string>("Apns:JwtContent");

@@ -11,10 +11,16 @@ namespace SubverseIM.Bootstrapper.Services
 
         private readonly IApnsClient? _apnsClient;
 
-        public PushService(IDistributedCache cache, IApnsClient? apnsClient = null)
+        public PushService(IDistributedCache cache, IApnsClient apnsClient)
         {
             _cache = cache;
             _apnsClient = apnsClient;
+        }
+
+        public PushService(IDistributedCache cache)
+        {
+            _cache = cache;
+            _apnsClient = null;
         }
 
         public Task RegisterPeerAsync(SubversePeerId peerId, string deviceToken, CancellationToken cancellationToken)
