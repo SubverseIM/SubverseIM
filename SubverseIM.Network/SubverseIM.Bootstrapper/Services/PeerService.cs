@@ -14,7 +14,7 @@ namespace SubverseIM.Bootstrapper.Services
 
         private readonly Engine _engine;
 
-        private readonly ConcurrentBag<TaskCompletionSource<SIPMessageBase>> _messageTcsBag;
+        private readonly ConcurrentQueue<SIPMessageBase> _messageQueue;
 
         private readonly ConcurrentDictionary<SubversePeerId, IPeerService> _peerProxies;
 
@@ -26,7 +26,7 @@ namespace SubverseIM.Bootstrapper.Services
         {
             _engine = new Engine();
 
-            _messageTcsBag = new();
+            _messageQueue = new();
             _peerProxies = new();
 
             _webSocket = webSocket;
@@ -35,7 +35,7 @@ namespace SubverseIM.Bootstrapper.Services
 
         private IPeerService GetPeerProxy(SubversePeerId peerId)
         {
-            return _peerProxies.GetOrAdd(peerId, x => 
+            return _peerProxies.GetOrAdd(peerId, x =>
             {
                 var transport = new NamedPipeClientTransport($"PEER-{x}");
                 var proxy = _engine.CreateProxy<IPeerService>(transport);
@@ -107,12 +107,12 @@ namespace SubverseIM.Bootstrapper.Services
             while (!cancellationToken.IsCancellationRequested)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!_messageTcsBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs))
+                if (!_messageQueue.TryDequeue(out SIPMessageBase? sipMessage))
                 {
-                    _messageTcsBag.Add(tcs = new());
+                    await Task.Delay(150);
+                    continue;
                 }
 
-                SIPMessageBase sipMessage = await tcs.Task.WaitAsync(cancellationToken);
                 byte[] sipMessageBuffer = sipMessage switch
                 {
                     SIPRequest sipRequest => sipRequest.GetBytes(),
@@ -155,13 +155,7 @@ namespace SubverseIM.Bootstrapper.Services
                     throw new PeerServiceException("Could not parse unknown message type.");
             }
 
-
-            if (!_messageTcsBag.TryTake(out TaskCompletionSource<SIPMessageBase>? tcs) || !tcs.TrySetResult(sipMessage))
-            {
-                _messageTcsBag.Add(tcs = new());
-                tcs.SetResult(sipMessage);
-            }
-
+            _messageQueue.Enqueue(sipMessage);
             return Task.CompletedTask;
         }
     }
