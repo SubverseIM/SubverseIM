@@ -280,7 +280,7 @@ public class MessageService : IMessageService, IDisposableService
             SIPMessageBase? sipMessage = await relayService.ReceiveMessageAsync(cancellationToken);
             if (sipMessage is null)
             {
-                await Task.Delay(150);
+                await Task.Delay(1500);
                 continue;
             }
 
@@ -303,7 +303,7 @@ public class MessageService : IMessageService, IDisposableService
             bool flag = await relayService.SendMessageAsync(cancellationToken);
             if (flag) continue;
 
-            await Task.Delay(150);
+            await Task.Delay(1500);
         }
     }
 
