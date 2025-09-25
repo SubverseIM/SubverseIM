@@ -109,7 +109,7 @@ namespace SubverseIM.Bootstrapper.Services
                 cancellationToken.ThrowIfCancellationRequested();
                 if (!_messageQueue.TryDequeue(out SIPMessageBase? sipMessage))
                 {
-                    await Task.Delay(150);
+                    await Task.Delay(1500);
                     continue;
                 }
 

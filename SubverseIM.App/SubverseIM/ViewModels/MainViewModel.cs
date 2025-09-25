@@ -177,7 +177,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 SubverseMessage? message = await messageService.ReceiveMessageAsync(cancellationToken);
                 if (message is null)
                 {
-                    await Task.Delay(150);
+                    await Task.Delay(1500);
                     continue;
                 }
 
