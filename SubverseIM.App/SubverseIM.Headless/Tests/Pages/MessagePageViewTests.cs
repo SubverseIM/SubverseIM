@@ -110,7 +110,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
 
         Assert.Equal(messagePageViewModel.ContactsList
             .Select(x => x.UserNote)
-            .Contains(checkToken), permanent);
+            .Contains(checkToken), !permanent);
     }
 
     [AvaloniaTheory]

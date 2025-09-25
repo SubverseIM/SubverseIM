@@ -49,8 +49,9 @@ public class MainViewFixture : IDisposable
         return bootstrapperService;
     }
 
-    private IDbService RegisterDbService()
+    private async Task<IDbService> RegisterDbService()
     {
+        IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
         IDbService dbService = serviceManager.GetOrRegister<DbService, IDbService>();
 
         // Initialize contacts
@@ -68,7 +69,7 @@ public class MainViewFixture : IDisposable
         }
 
         // Initialize messages
-        SubversePeerId thisPeer = new(RandomNumberGenerator.GetBytes(20));
+        SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync();
         SubverseMessage message = new SubverseMessage
         {
             MessageId = new(CallProperties.CreateNewCallId(), thisPeer),
