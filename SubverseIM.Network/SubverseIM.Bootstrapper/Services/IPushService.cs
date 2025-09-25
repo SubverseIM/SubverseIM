@@ -1,4 +1,5 @@
-﻿using SubverseIM.Core;
+﻿using SIPSorcery.SIP;
+using SubverseIM.Core;
 
 namespace SubverseIM.Bootstrapper.Services
 {
@@ -6,6 +7,6 @@ namespace SubverseIM.Bootstrapper.Services
     {
         Task RegisterPeerAsync(SubversePeerId peerId, string deviceToken, CancellationToken cancellationToken = default);
 
-        Task SendPushNotificationAsync(SubversePeerId peerId, CancellationToken cancellationToken = default);
+        Task SendPushNotificationAsync(SIPRequest sipRequest, CancellationToken cancellationToken = default);
     }
 }

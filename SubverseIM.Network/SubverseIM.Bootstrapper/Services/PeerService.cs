@@ -1,5 +1,6 @@
 ﻿using CoreRPC;
 using CoreRPC.Routing;
+using CoreRPC.Transport;
 using CoreRPC.Transport.NamedPipe;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
@@ -47,7 +48,7 @@ namespace SubverseIM.Bootstrapper.Services
             });
         }
 
-        private Task DispatchMessageAsync(byte[] messageBytes)
+        private async Task DispatchMessageAsync(byte[] messageBytes)
         {
             SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, SIPEndPoint.Empty, SIPEndPoint.Empty);
 
@@ -56,6 +57,7 @@ namespace SubverseIM.Bootstrapper.Services
             {
                 case SIPMessageTypesEnum.Request:
                     sipMessage = SIPRequest.ParseSIPRequest(sipMessageBuffer);
+                    await _pushService.SendPushNotificationAsync((SIPRequest)sipMessage);
                     break;
                 case SIPMessageTypesEnum.Response:
                     sipMessage = SIPResponse.ParseSIPResponse(sipMessageBuffer);
@@ -67,7 +69,7 @@ namespace SubverseIM.Bootstrapper.Services
             SubversePeerId toPeerId = SubversePeerId.FromString(sipMessage.Header.To.ToURI.User);
             IPeerService toPeer = GetPeerProxy(toPeerId);
 
-            return toPeer.ReceiveMessageAsync(sipMessageBuffer.RawMessage);
+            await toPeer.ReceiveMessageAsync(sipMessageBuffer.RawMessage);
         }
 
         public async Task ListenSocketAsync(CancellationToken cancellationToken)
@@ -159,9 +161,8 @@ namespace SubverseIM.Bootstrapper.Services
                     throw new PeerServiceException("Could not parse unknown message type.");
             }
 
-
             _messageQueue.Enqueue(sipMessage);
-            return _pushService.SendPushNotificationAsync(_peerId);
+            return Task.CompletedTask;
         }
     }
 }
