@@ -34,7 +34,7 @@ public class MainViewFixture : IDisposable
         serviceManager = new SubverseIM.Services.Implementation.ServiceManager();
 
         RegisterBootstrapperService();
-        RegisterDbService();
+        RegisterDbService().Wait();
         RegisterLauncherService();
 
         mainViewModel = new(serviceManager);

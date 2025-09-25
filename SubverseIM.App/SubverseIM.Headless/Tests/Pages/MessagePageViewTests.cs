@@ -163,6 +163,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
             await EnsureIsOnMessagePageView();
 
         messagePageViewModel.SendMessageTopicName = MainViewFixture.EXPECTED_TOPIC_NAME;
+        await messagePageViewModel.InitializeAsync();
 
         Assert.NotEmpty(messagePageViewModel.MessageList);
     }
