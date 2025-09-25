@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using ReactiveUI;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
@@ -174,6 +175,7 @@ namespace SubverseIM.ViewModels.Pages
             IBootstrapperService bootstrapperService = await ServiceManager.GetWithAwaitAsync<IBootstrapperService>(cancellationToken);
             IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>(cancellationToken);
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>(cancellationToken);
             IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>(cancellationToken);
 
             SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
@@ -184,6 +186,12 @@ namespace SubverseIM.ViewModels.Pages
             {
                 TopicsList.Remove(string.Empty);
                 await AddTopicCommand();
+
+                if (string.IsNullOrEmpty(SendMessageTopicName)) 
+                {
+                    Dispatcher.UIThread.Post(() => frontendService.NavigatePreviousView());
+                    return;
+                }
             }
             else if (participantIds.Count == 1 && !TopicsList.Contains(string.Empty))
             {
