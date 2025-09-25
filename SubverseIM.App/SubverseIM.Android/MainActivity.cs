@@ -207,7 +207,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         {
             frontendService?.NavigateLaunchedUri();
         }
-        else if (contacts is not null)
+        else if (contacts?.Any() ?? false)
         {
             frontendService?.NavigateMessageView(contacts, topicName);
         }
