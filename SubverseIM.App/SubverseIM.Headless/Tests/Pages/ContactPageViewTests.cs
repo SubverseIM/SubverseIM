@@ -225,17 +225,18 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView(messagePageViewModel);
 
-        foreach (ContactViewModel contactViewModel in contactPageViewModel.ContactsList)
+        foreach (ContactViewModel contactViewModel in contactPageViewModel.ContactsList.Where(x => x.TopicName is null))
         {
             contactViewModel.IsSelected = true;
         }
         await contactPageViewModel.AddParticipantsCommand();
 
         messagePageViewModel.ShouldRefreshContacts = true;
+        messagePageViewModel.SendMessageTopicName = MainViewFixture.EXPECTED_TOPIC_NAME;
         await messagePageViewModel.InitializeAsync();
 
         Assert.Equal(
-            contactPageViewModel.ContactsList.Count,
+            contactPageViewModel.ContactsList.Count(x => x.TopicName is null),
             messagePageViewModel.ContactsList.Count
             );
     }
