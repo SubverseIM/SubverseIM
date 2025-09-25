@@ -89,7 +89,7 @@ public partial class ContactPageView : UserControl
             !isLongPress &&
             dataContext is not null &&
             dataContext.Parent is null &&
-            contacts.SelectedItems?.Count > 0)
+            contacts.SelectedItems?.Count == 1)
         {
             await Dispatcher.UIThread.InvokeAsync(dataContext.MessageCommand);
         }
@@ -171,10 +171,14 @@ public partial class ContactPageView : UserControl
                 item.ShouldShowOptions = false;
             }
 
-            item.IsSelected = !isLongPress &&
-                launcherService?.IsAccessibilityEnabled == false &&
-                ((ContactPageViewModel)DataContext!).Parent is null;
+            item.IsSelected = false;
             selectionStack.Remove(item);
+        }
+
+        if (e.RemovedItems.Count > 0) 
+        {
+            tapTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            lock (tapTimerState) { tapTimerState.TapCount = 0; }
         }
 
         if (!contacts.Items.Cast<ContactViewModel>().Any(x => x.ShouldShowOptions) && selectionStack.Count > 0)
