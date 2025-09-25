@@ -32,7 +32,9 @@ namespace SubverseIM.Bootstrapper.Services
 
         public Task RegisterPeerAsync(SubversePeerId peerId, string deviceToken, CancellationToken cancellationToken)
         {
-            return _cache.SetStringAsync($"TKN-{peerId}", deviceToken, cancellationToken);
+            return _cache.SetStringAsync($"TKN-{peerId}", deviceToken, 
+                new DistributedCacheEntryOptions { AbsoluteExpiration = null }, 
+                cancellationToken);
         }
 
         public async Task SendPushNotificationAsync(SIPRequest sipRequest, CancellationToken cancellationToken)
