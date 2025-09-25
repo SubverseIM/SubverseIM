@@ -65,7 +65,7 @@
 						</ListBox.Styles>
 						<ListBox.ItemTemplate>
 							<DataTemplate>
-								<DockPanel AutomationProperties.HelpText="{Binding DisplayName}">
+								<DockPanel>
 									<Button DockPanel.Dock="Right"
 										VerticalAlignment="Stretch"
 										IsVisible="{Binding ShouldShowOptions}"
@@ -82,7 +82,7 @@
 										AutomationProperties.Name="Save/Edit Contact">
 										<PathIcon Data="{StaticResource edit_regular}" />
 									</Button>
-									<TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" />
+									<TextBlock Focusable="True" Text="{Binding DisplayName}" TextWrapping="Wrap" />
 								</DockPanel>
 							</DataTemplate>
 						</ListBox.ItemTemplate>
@@ -256,6 +256,7 @@
 								</Button>
 								<DockPanel>
 									<TextBlock
+											Focusable="True"
 											TextWrapping="Wrap" DockPanel.Dock="Top"
 											HorizontalAlignment="{Binding ContentAlignmentAsync^}"
 											Text="{Binding FromHeading}"
@@ -271,6 +272,7 @@
 										</Classes.offscreen>
 									</TextBlock>
 									<TextBlock
+										Focusable="True"
 										DockPanel.Dock="Top"
 										VerticalAlignment="Top"
 										HorizontalAlignment="{Binding ContentAlignmentAsync^}"
@@ -287,7 +289,9 @@
 											</MultiBinding>
 										</Classes.offscreen>
 									</TextBlock>
-									<TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap"
+									<TextBlock 
+										Focusable="True"
+										DockPanel.Dock="Bottom" TextWrapping="Wrap"
 										IsVisible="{Binding IsGroupMessage}"
 										HorizontalAlignment="{Binding ContentAlignmentAsync^}"
 										Text="{Binding CcFooter}" Margin="2" FontSize="12" FontStyle="Italic">
@@ -344,7 +348,7 @@
 													<Binding Path="IsDropDownOpen" ElementName="topicBox" />
 												</MultiBinding>
 											</Classes.offscreen>
-											<TextBlock Text="{Binding ContentString}"
+											<TextBlock Focusable="True" Text="{Binding ContentString}"
 													   IsVisible="{Binding !DataContext.IsFormattingAllowedAsync^, ElementName='splitView'}"
 													   Foreground="White" TextWrapping="Wrap" />
 											<ItemsControl IsVisible="{Binding DataContext.IsFormattingAllowedAsync^, ElementName='splitView'}" ItemsSource="{Binding Content}">
@@ -409,12 +413,13 @@
 						</DataTemplate>
 					</ListBox.ItemTemplate>
 				</ListBox>
-				<TextBlock IsVisible="{Binding !MessageList.Count}"
-						   HorizontalAlignment="Center"
-						   VerticalAlignment="Center"
-						   TextWrapping="Wrap"
-						   TextAlignment="Center"
-						   Margin="5" FontSize="16">
+				<TextBlock 
+					IsVisible="{Binding !MessageList.Count}"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center"
+					TextWrapping="Wrap"
+					TextAlignment="Center"
+					Margin="5" FontSize="16">
 					<Classes.offscreen>
 						<MultiBinding Converter="{x:Static BoolConverters.Or}">
 							<MultiBinding Converter="{x:Static BoolConverters.And}">
