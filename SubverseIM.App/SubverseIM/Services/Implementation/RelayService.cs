@@ -26,17 +26,20 @@ namespace SubverseIM.Services.Implementation
             sendMessageQueue = new();
         }
 
-        private async Task ConnectToSocketAsync()
+        private Task ConnectToSocketAsync()
         {
-            webSocket?.Close();
-            while (webSocket?.IsAlive == false)
+            return Task.Run(async Task? () =>
             {
-                webSocket.Connect();
-                if (!webSocket.IsAlive)
+                webSocket?.Close();
+                while (webSocket?.IsAlive == false)
                 {
-                    await Task.Delay(5000);
+                    webSocket.Connect();
+                    if (!webSocket.IsAlive)
+                    {
+                        await Task.Delay(5000);
+                    }
                 }
-            }
+            });
         }
 
         public Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken)
