@@ -1,4 +1,12 @@
 
+using Fitomad.Apns;
+using Fitomad.Apns.Entities;
+using Fitomad.Apns.Entities.Settings;
+using Fitomad.Apns.Extensions;
+using Microsoft.EntityFrameworkCore;
+using SubverseIM.Bootstrapper.Models;
+using SubverseIM.Bootstrapper.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables("Subverse_");
@@ -9,14 +17,24 @@ if (builder.Environment.IsProduction())
     builder.Services.AddDistributedSqlServerCache(options =>
     {
         options.ConnectionString = builder
-            .Configuration.GetConnectionString("cacheDb");
+            .Configuration.GetConnectionString("serviceDb");
         options.SchemaName = "dbo";
-        options.TableName = "CFSCache";
+        options.TableName = "ServiceCache";
+    });
+
+    builder.Services.AddDbContext<SubverseContext>(options => 
+    {
+        options.UseSqlServer("serviceDb");
     });
 }
 else
 {
     builder.Services.AddDistributedMemoryCache();
+
+    builder.Services.AddDbContext<SubverseContext>(options => 
+    {
+        options.UseInMemoryDatabase("serviceDb");
+    });
 }
 
 builder.Services.AddControllers();
@@ -24,6 +42,33 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+string? jwtContent, jwtKey, teamId;
+jwtContent = builder.Configuration.GetValue<string>("Apns:JwtContent");
+jwtKey = builder.Configuration.GetValue<string>("Apns:JwtKey");
+teamId = builder.Configuration.GetValue<string>("Apns:TeamId");
+
+if (!string.IsNullOrEmpty(jwtContent) && !string.IsNullOrEmpty(jwtKey) && !string.IsNullOrEmpty(teamId))
+{
+    var jwtInformation = new ApnsJsonToken
+    {
+        Content = jwtContent,
+        KeyId = jwtKey,
+        TeamId = teamId
+    };
+
+    // Set APNS connection settings
+    var developmentSettings = new ApnsSettingsBuilder()
+        .InEnvironment(builder.Environment.IsProduction() ? 
+            ApnsEnvironment.Production : ApnsEnvironment.Development)
+        .SetTopic("com.chosenfewsoftware.SubverseIM")
+        .WithJsonToken(jwtInformation)
+        .Build();
+
+    builder.Services.AddApns(developmentSettings);
+}
+
+builder.Services.AddScoped<IPushService, PushService>();
 
 var app = builder.Build();
 
