@@ -2,7 +2,7 @@
 {
     public class AwaitableQueue<T>
     {
-        private readonly HashSet<TaskCompletionSource<T>> _items;
+        private readonly Dictionary<Task, TaskCompletionSource<T>> _items;
 
         public AwaitableQueue()
         {
@@ -17,7 +17,7 @@
                 Task<T>[] itemTasks;
                 lock (_items)
                 {
-                    itemTasks = _items.Select(x => x.Task).ToArray();
+                    itemTasks = _items.Values.Select(x => x.Task).ToArray();
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -25,13 +25,13 @@
             }
             catch (ArgumentException)
             {
-                TaskCompletionSource<T> tcs;
+                TaskCompletionSource<T> item = new();
                 lock (_items)
                 {
-                    _items.Add(tcs = new());
+                    _items.Add(item.Task, item);
                 }
 
-                itemTask = tcs.Task;
+                itemTask = item.Task;
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -39,22 +39,22 @@
 
             lock (_items)
             {
-                _items.RemoveWhere(x => x.Task == itemTask);
+                _items.Remove(itemTask);
             }
 
             return resultItem;
         }
 
-        public void Enqueue(T item)
+        public void Enqueue(T value)
         {
             lock (_items)
             {
                 bool shouldAddFlag = true;
                 if (_items.Count > 0)
                 {
-                    foreach (TaskCompletionSource<T> tcs in _items)
+                    foreach (TaskCompletionSource<T> item in _items.Values)
                     {
-                        if (tcs.TrySetResult(item))
+                        if (item.TrySetResult(value))
                         {
                             shouldAddFlag = false;
                             break;
@@ -64,10 +64,10 @@
 
                 if (shouldAddFlag)
                 {
-                    TaskCompletionSource<T> tcs = new();
-                    tcs.SetResult(item);
+                    TaskCompletionSource<T> item = new();
+                    item.SetResult(value);
 
-                    _items.Add(tcs);
+                    _items.Add(item.Task, item);
                 }
             }
         }
