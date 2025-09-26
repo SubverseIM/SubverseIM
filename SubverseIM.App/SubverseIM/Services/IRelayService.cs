@@ -6,7 +6,7 @@ namespace SubverseIM.Services
 {
     public interface IRelayService
     {
-        Task<SIPMessageBase?> ReceiveMessageAsync(CancellationToken cancellationToken = default);
+        Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken = default);
 
         Task<bool> SendMessageAsync(CancellationToken cancellationToken = default);
 

@@ -174,12 +174,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                SubverseMessage? message = await messageService.ReceiveMessageAsync(cancellationToken);
-                if (message is null)
-                {
-                    await Task.Delay(1500);
-                    continue;
-                }
+                SubverseMessage message = await messageService.ReceiveMessageAsync(cancellationToken);
 
                 SubversePeerId? topicId = message.TopicName is null || message.TopicName == "#system" ?
                     null : new(SHA1.HashData(Encoding.UTF8.GetBytes(message.TopicName)));

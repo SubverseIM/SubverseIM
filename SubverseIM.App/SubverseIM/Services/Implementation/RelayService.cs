@@ -2,7 +2,6 @@
 using SubverseIM.Core;
 using SubverseIM.Models;
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Authentication;
 using System.Threading;
@@ -13,7 +12,7 @@ namespace SubverseIM.Services.Implementation
 {
     public class RelayService : IRelayService, IInjectable, IDisposableService
     {
-        private readonly ConcurrentQueue<SIPMessageBase> 
+        private readonly AwaitableQueue<SIPMessageBase> 
             recvMessageQueue,
             sendMessageQueue;
 
@@ -40,10 +39,9 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
-        public Task<SIPMessageBase?> ReceiveMessageAsync(CancellationToken cancellationToken)
+        public Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
-            recvMessageQueue.TryDequeue(out SIPMessageBase? sipMessage);
-            return Task.FromResult(sipMessage);
+            return recvMessageQueue.DequeueAsync(cancellationToken);
         }
 
         public Task QueueMessageAsync(SIPMessageBase sipMessage)
@@ -54,8 +52,7 @@ namespace SubverseIM.Services.Implementation
 
         public async Task<bool> SendMessageAsync(CancellationToken cancellationToken = default)
         {
-            if (!sendMessageQueue.TryDequeue(out SIPMessageBase? sipMessage)) return false;
-
+            SIPMessageBase sipMessage = await sendMessageQueue.DequeueAsync(cancellationToken);
             byte[]? sipMessageBuffer = sipMessage switch
             {
                 SIPRequest sipRequest => sipRequest.GetBytes(),
