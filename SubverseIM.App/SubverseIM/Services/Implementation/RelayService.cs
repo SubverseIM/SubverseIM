@@ -27,6 +27,19 @@ namespace SubverseIM.Services.Implementation
             sendMessageQueue = new();
         }
 
+        private async Task ConnectToSocketAsync()
+        {
+            webSocket?.Close();
+            while (webSocket?.IsAlive == false)
+            {
+                webSocket.Connect();
+                if (!webSocket.IsAlive)
+                {
+                    await Task.Delay(5000);
+                }
+            }
+        }
+
         public Task<SIPMessageBase?> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
             recvMessageQueue.TryDequeue(out SIPMessageBase? sipMessage);
@@ -89,12 +102,13 @@ namespace SubverseIM.Services.Implementation
 
             webSocket.OnError += OnSocketError;
             webSocket.OnMessage += OnSocketMessage;
-            webSocket.Connect();
+
+            await ConnectToSocketAsync();
         }
 
         private void OnSocketError(object? sender, ErrorEventArgs e)
         {
-            ((WebSocket?)sender)?.Connect();
+            _ = ConnectToSocketAsync();
         }
 
         private void OnSocketMessage(object? sender, MessageEventArgs e)
