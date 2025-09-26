@@ -25,7 +25,7 @@ public class MessageService : IMessageService, IDisposableService
 
     private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
 
-    private readonly ConcurrentQueue<SubverseMessage> messageQueue;
+    private readonly AwaitableQueue<SubverseMessage> messageQueue;
 
     private readonly SIPUDPChannel sipChannel;
 
@@ -277,13 +277,7 @@ public class MessageService : IMessageService, IDisposableService
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            SIPMessageBase? sipMessage = await relayService.ReceiveMessageAsync(cancellationToken);
-            if (sipMessage is null)
-            {
-                await Task.Delay(1500);
-                continue;
-            }
-
+            SIPMessageBase sipMessage = await relayService.ReceiveMessageAsync(cancellationToken);
             Task dispatchMessageTask = sipMessage switch
             {
                 SIPRequest sipRequest => SIPTransportRequestReceived(sipRequest.LocalSIPEndPoint, sipRequest.RemoteSIPEndPoint, sipRequest),
@@ -299,11 +293,7 @@ public class MessageService : IMessageService, IDisposableService
         while (!cancellationToken.IsCancellationRequested)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            bool flag = await relayService.SendMessageAsync(cancellationToken);
-            if (flag) continue;
-
-            await Task.Delay(1500);
+            await relayService.SendMessageAsync(cancellationToken);
         }
     }
 
@@ -333,11 +323,9 @@ public class MessageService : IMessageService, IDisposableService
         }
     }
 
-    public Task<SubverseMessage?> ReceiveMessageAsync(CancellationToken cancellationToken)
+    public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        messageQueue.TryDequeue(out SubverseMessage? message);
-        return Task.FromResult(message);
+        return messageQueue.DequeueAsync(cancellationToken);
     }
 
     private Task SendMessageAsync(int delayMs, SubverseMessage message, CancellationToken cancellationToken)

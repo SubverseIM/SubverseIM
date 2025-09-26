@@ -14,7 +14,7 @@ namespace SubverseIM.Bootstrapper.Services
 
         private readonly Engine _engine;
 
-        private readonly ConcurrentQueue<SIPMessageBase> _messageQueue;
+        private readonly AwaitableQueue<SIPMessageBase> _messageQueue;
 
         private readonly ConcurrentDictionary<SubversePeerId, IPeerService> _peerProxies;
 
@@ -107,12 +107,8 @@ namespace SubverseIM.Bootstrapper.Services
             while (!cancellationToken.IsCancellationRequested)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!_messageQueue.TryDequeue(out SIPMessageBase? sipMessage))
-                {
-                    await Task.Delay(1500);
-                    continue;
-                }
 
+                SIPMessageBase sipMessage = await _messageQueue.DequeueAsync(cancellationToken);
                 byte[] sipMessageBuffer = sipMessage switch
                 {
                     SIPRequest sipRequest => sipRequest.GetBytes(),

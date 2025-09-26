@@ -14,7 +14,7 @@ namespace SubverseIM.Services
 
         Task ResendAllUndeliveredMessagesAsync(CancellationToken cancellationToken = default);
 
-        Task<SubverseMessage?> ReceiveMessageAsync(CancellationToken cancellationToken = default);
+        Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default);
 
         Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default);
     }

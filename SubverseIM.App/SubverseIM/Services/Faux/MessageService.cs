@@ -2,7 +2,6 @@
 using SubverseIM.Core;
 using SubverseIM.Models;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
@@ -12,7 +11,7 @@ namespace SubverseIM.Services.Faux
 {
     public class MessageService : IMessageService
     {
-        private readonly ConcurrentQueue<SubverseMessage> messageQueue;
+        private readonly AwaitableQueue<SubverseMessage> messageQueue;
 
         private readonly IServiceManager serviceManager;
 
@@ -39,11 +38,9 @@ namespace SubverseIM.Services.Faux
             return Task.CompletedTask;
         }
 
-        public Task<SubverseMessage?> ReceiveMessageAsync(CancellationToken cancellationToken = default)
+        public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            messageQueue.TryDequeue(out SubverseMessage? message);
-            return Task.FromResult(message);
+            return messageQueue.DequeueAsync(cancellationToken);
         }
 
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
