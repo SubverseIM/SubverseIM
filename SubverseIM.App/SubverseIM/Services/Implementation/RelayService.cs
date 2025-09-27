@@ -140,7 +140,7 @@ namespace SubverseIM.Services.Implementation
             {
                 if (disposing)
                 {
-                    webSocket?.Close();
+                    ((IDisposable?)webSocket)?.Dispose();
                 }
 
                 webSocket = null;
