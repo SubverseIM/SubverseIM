@@ -5,13 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Faux
 {
     public class MessageService : IMessageService
     {
-        private readonly AwaitableQueue<SubverseMessage> messageQueue;
+        private readonly Channel<SubverseMessage> messageQueue;
 
         private readonly IServiceManager serviceManager;
 
@@ -21,7 +22,7 @@ namespace SubverseIM.Services.Faux
 
         public MessageService(IServiceManager serviceManager)
         {
-            messageQueue = new();
+            messageQueue = Channel.CreateUnbounded<SubverseMessage>();
             this.serviceManager = serviceManager;
 
             LocalEndPoint = new IPEndPoint(IPAddress.Loopback, IBootstrapperService.DEFAULT_PORT_NUMBER);
@@ -38,16 +39,16 @@ namespace SubverseIM.Services.Faux
             return Task.CompletedTask;
         }
 
-        public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
+        public async Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
-            return messageQueue.DequeueAsync(cancellationToken);
+            return await messageQueue.Reader.ReadAsync(cancellationToken);
         }
 
         public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
         {
             IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
             await Task.Delay(1000);
-            messageQueue.Enqueue(new SubverseMessage
+            await messageQueue.Writer.WriteAsync(new SubverseMessage
             {
                 MessageId = new(CallProperties.CreateNewCallId(), await bootstrapperService.GetPeerIdAsync()),
 

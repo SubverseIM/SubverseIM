@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Security.Authentication;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using WebSocketSharp;
 
@@ -12,7 +13,7 @@ namespace SubverseIM.Services.Implementation
 {
     public class RelayService : IRelayService, IInjectable, IDisposableService
     {
-        private readonly AwaitableQueue<SIPMessageBase> 
+        private readonly Channel<SIPMessageBase>
             recvMessageQueue,
             sendMessageQueue;
 
@@ -22,8 +23,8 @@ namespace SubverseIM.Services.Implementation
 
         public RelayService()
         {
-            recvMessageQueue = new();
-            sendMessageQueue = new();
+            recvMessageQueue = Channel.CreateUnbounded<SIPMessageBase>();
+            sendMessageQueue = Channel.CreateUnbounded<SIPMessageBase>();
         }
 
         private Task ConnectToSocketAsync()
@@ -42,20 +43,19 @@ namespace SubverseIM.Services.Implementation
             });
         }
 
-        public Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken)
+        public async Task<SIPMessageBase> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
-            return recvMessageQueue.DequeueAsync(cancellationToken);
+            return await recvMessageQueue.Reader.ReadAsync(cancellationToken);
         }
 
-        public Task QueueMessageAsync(SIPMessageBase sipMessage)
+        public async Task QueueMessageAsync(SIPMessageBase sipMessage, CancellationToken cancellationToken)
         {
-            sendMessageQueue.Enqueue(sipMessage);
-            return Task.CompletedTask;
+            await sendMessageQueue.Writer.WriteAsync(sipMessage, cancellationToken);
         }
 
-        public async Task<bool> SendMessageAsync(CancellationToken cancellationToken = default)
+        public async Task<bool> SendMessageAsync(CancellationToken cancellationToken)
         {
-            SIPMessageBase sipMessage = await sendMessageQueue.DequeueAsync(cancellationToken);
+            SIPMessageBase sipMessage = await sendMessageQueue.Reader.ReadAsync(cancellationToken);
             byte[]? sipMessageBuffer = sipMessage switch
             {
                 SIPRequest sipRequest => sipRequest.GetBytes(),
@@ -74,7 +74,7 @@ namespace SubverseIM.Services.Implementation
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            await QueueMessageAsync(sipMessage);
+            await QueueMessageAsync(sipMessage, cancellationToken);
 
             return false;
         }
@@ -111,7 +111,7 @@ namespace SubverseIM.Services.Implementation
             _ = ConnectToSocketAsync();
         }
 
-        private void OnSocketMessage(object? sender, MessageEventArgs e)
+        private async void OnSocketMessage(object? sender, MessageEventArgs e)
         {
             byte[] rawMessageBuffer = new byte[e.RawData.Length];
             Array.Copy(e.RawData, rawMessageBuffer, rawMessageBuffer.Length);
@@ -131,7 +131,7 @@ namespace SubverseIM.Services.Implementation
                     return;
             }
 
-            recvMessageQueue.Enqueue(sipMessage);
+            await recvMessageQueue.Writer.WriteAsync(sipMessage);
         }
 
         protected virtual void Dispose(bool disposing)
