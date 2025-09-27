@@ -5,7 +5,6 @@ using SIPSorcery.SIP;
 using SubverseIM.Core;
 using SubverseIM.Models;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -13,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Implementation;
@@ -25,7 +25,7 @@ public class MessageService : IMessageService, IDisposableService
 
     private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
 
-    private readonly AwaitableQueue<SubverseMessage> messageQueue;
+    private readonly Channel<SubverseMessage> messageQueue;
 
     private readonly SIPUDPChannel sipChannel;
 
@@ -38,7 +38,7 @@ public class MessageService : IMessageService, IDisposableService
     public MessageService(IServiceManager serviceManager)
     {
         requestMap = new();
-        messageQueue = new();
+        messageQueue = Channel.CreateUnbounded<SubverseMessage>();
 
         sipChannel = new SIPUDPChannel(IPAddress.Any, IBootstrapperService.DEFAULT_PORT_NUMBER);
         sipTransport = new SIPTransport(stateless: true);
@@ -139,7 +139,7 @@ public class MessageService : IMessageService, IDisposableService
         message.WasDecrypted = (message.WasDelivered = hasReachedDestination) && wasDecrypted;
         if (hasReachedDestination)
         {
-            messageQueue.Enqueue(message);
+            await messageQueue.Writer.WriteAsync(message);
 
             SIPResponse sipResponse = SIPResponse.GetResponse(
                 sipRequest, SIPResponseStatusCodesEnum.Ok, "Message was delivered."
@@ -323,9 +323,9 @@ public class MessageService : IMessageService, IDisposableService
         }
     }
 
-    public Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
+    public async Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
     {
-        return messageQueue.DequeueAsync(cancellationToken);
+        return await messageQueue.Reader.ReadAsync(cancellationToken);
     }
 
     private Task SendMessageAsync(int delayMs, SubverseMessage message, CancellationToken cancellationToken)

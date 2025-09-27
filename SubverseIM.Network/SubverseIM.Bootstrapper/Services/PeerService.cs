@@ -5,6 +5,7 @@ using SIPSorcery.SIP;
 using SubverseIM.Core;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
+using System.Threading.Channels;
 
 namespace SubverseIM.Bootstrapper.Services
 {
@@ -14,7 +15,7 @@ namespace SubverseIM.Bootstrapper.Services
 
         private readonly Engine _engine;
 
-        private readonly AwaitableQueue<SIPMessageBase> _messageQueue;
+        private readonly Channel<SIPMessageBase> _messageQueue;
 
         private readonly ConcurrentDictionary<SubversePeerId, IPeerService> _peerProxies;
 
@@ -26,7 +27,7 @@ namespace SubverseIM.Bootstrapper.Services
         {
             _engine = new Engine();
 
-            _messageQueue = new();
+            _messageQueue = Channel.CreateUnbounded<SIPMessageBase>();
             _peerProxies = new();
 
             _webSocket = webSocket;
@@ -43,7 +44,7 @@ namespace SubverseIM.Bootstrapper.Services
             });
         }
 
-        private Task DispatchMessageAsync(byte[] messageBytes)
+        private Task DispatchMessageAsync(byte[] messageBytes, CancellationToken cancellationToken)
         {
             SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, SIPEndPoint.Empty, SIPEndPoint.Empty);
 
@@ -63,7 +64,7 @@ namespace SubverseIM.Bootstrapper.Services
             SubversePeerId toPeerId = SubversePeerId.FromString(sipMessage.Header.To.ToURI.User);
             IPeerService toPeer = GetPeerProxy(toPeerId);
 
-            return toPeer.ReceiveMessageAsync(sipMessageBuffer.RawMessage);
+            return toPeer.ReceiveMessageAsync(sipMessageBuffer.RawMessage, cancellationToken);
         }
 
         public async Task ListenSocketAsync(CancellationToken cancellationToken)
@@ -97,7 +98,7 @@ namespace SubverseIM.Bootstrapper.Services
 
                 memoryStream.SetLength(bytesRead);
 
-                _ = DispatchMessageAsync(memoryStream.ToArray());
+                _ = DispatchMessageAsync(memoryStream.ToArray(), cancellationToken);
             }
         }
 
@@ -108,7 +109,7 @@ namespace SubverseIM.Bootstrapper.Services
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                SIPMessageBase sipMessage = await _messageQueue.DequeueAsync(cancellationToken);
+                SIPMessageBase sipMessage = await _messageQueue.Reader.ReadAsync(cancellationToken);
                 byte[] sipMessageBuffer = sipMessage switch
                 {
                     SIPRequest sipRequest => sipRequest.GetBytes(),
@@ -134,7 +135,7 @@ namespace SubverseIM.Bootstrapper.Services
             }
         }
 
-        public Task ReceiveMessageAsync(string rawMessage)
+        public async Task ReceiveMessageAsync(string rawMessage, CancellationToken cancellationToken)
         {
             SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(rawMessage, SIPEndPoint.Empty, SIPEndPoint.Empty);
 
@@ -151,8 +152,7 @@ namespace SubverseIM.Bootstrapper.Services
                     throw new PeerServiceException("Could not parse unknown message type.");
             }
 
-            _messageQueue.Enqueue(sipMessage);
-            return Task.CompletedTask;
+            await _messageQueue.Writer.WriteAsync(sipMessage, cancellationToken);
         }
     }
 }
