@@ -2,6 +2,7 @@
 using SubverseIM.Core;
 using SubverseIM.Models;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Authentication;
 using System.Threading;
@@ -19,6 +20,8 @@ namespace SubverseIM.Services.Implementation
 
         private WebSocket? webSocket;
 
+        private Task? connectTask;
+
         private bool disposedValue;
 
         public RelayService()
@@ -27,15 +30,35 @@ namespace SubverseIM.Services.Implementation
             sendMessageQueue = Channel.CreateUnbounded<SIPMessageBase>();
         }
 
-        private Task ConnectToSocketAsync()
+        private Task ConnectWithRetryAsync(bool initial = true)
         {
-            return Task.Run(async Task? () =>
+            return connectTask ??= Task.Run(async Task? () =>
             {
-                webSocket?.Close();
-                while (webSocket?.IsAlive == false)
+                Debug.Assert(webSocket is not null);
+
+                if (!initial)
                 {
-                    webSocket.Connect();
-                    if (!webSocket.IsAlive)
+                    await Task.Delay(5000);
+                }
+
+                while (!webSocket.IsAlive)
+                {
+                    try
+                    {
+                        webSocket.Connect();
+                    }
+                    catch
+                    { 
+                        webSocket.Close();
+                        continue;
+                    }
+
+                    if (webSocket.IsAlive)
+                    {
+                        connectTask = null;
+                        break;
+                    }
+                    else
                     {
                         await Task.Delay(5000);
                     }
@@ -100,15 +123,15 @@ namespace SubverseIM.Services.Implementation
             webSocket = new WebSocket(relayUri.AbsoluteUri);
             webSocket.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls12;
 
-            webSocket.OnError += OnSocketError;
+            webSocket.OnClose += OnSocketClose;
             webSocket.OnMessage += OnSocketMessage;
 
-            await ConnectToSocketAsync();
+            await ConnectWithRetryAsync(initial: true);
         }
 
-        private void OnSocketError(object? sender, ErrorEventArgs e)
+        private void OnSocketClose(object? sender, CloseEventArgs e)
         {
-            _ = ConnectToSocketAsync();
+            _ = ConnectWithRetryAsync(initial: false);
         }
 
         private async void OnSocketMessage(object? sender, MessageEventArgs e)
