@@ -4,7 +4,6 @@ using MonoTorrent;
 using MonoTorrent.BEncoding;
 using MonoTorrent.Client;
 using SubverseIM.Models;
-using SubverseIM.Services.Faux;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
@@ -89,7 +88,7 @@ namespace SubverseIM.Services.Implementation
                 {
                     await timer.WaitForNextTickAsync();
 
-                    if (manager.HasMetadata) 
+                    if (manager.HasMetadata)
                     {
                         torrent.TorrentBytes = File.ReadAllBytes(manager.MetadataPath);
                         dbService.InsertOrUpdateItem(torrent);
@@ -136,12 +135,30 @@ namespace SubverseIM.Services.Implementation
             else if (torrent.TorrentBytes is not null)
             {
                 Torrent torrentMetaData = await Torrent.LoadAsync(torrent.TorrentBytes);
-                manager = await engine.AddAsync(torrentMetaData, cacheDirPath);
+                try
+                {
+                    manager = await engine.AddAsync(torrentMetaData, cacheDirPath);
+                }
+                catch (TorrentException)
+                {
+                    manager = engine.Torrents.Single(x =>
+                        x.InfoHashes == torrentMetaData.InfoHashes
+                        );
+                }
             }
             else
             {
                 MagnetLink magnetLink = MagnetLink.Parse(torrent.MagnetUri);
-                manager = await engine.AddAsync(magnetLink, cacheDirPath);
+                try
+                {
+                    manager = await engine.AddAsync(magnetLink, cacheDirPath);
+                }
+                catch (TorrentException)
+                {
+                    manager = engine.Torrents.Single(x =>
+                        x.InfoHashes == magnetLink.InfoHashes
+                        );
+                }
             }
 
             lock (managerMap)
