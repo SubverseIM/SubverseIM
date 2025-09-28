@@ -314,7 +314,7 @@ namespace SubverseIM.ViewModels.Pages
                 dbService.InsertOrUpdateItem(contact);
 
                 _ = nativeService.RunInBackgroundAsync(
-                    ct => messageService.SendMessageAsync(message, ct)
+                    ct => messageService.SendMessageAsync(message, cancellationToken: ct)
                     );
             }
         }

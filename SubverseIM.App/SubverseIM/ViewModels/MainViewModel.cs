@@ -165,7 +165,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 DateSignedOn = DateTime.UtcNow,
             };
 
-            await messageService.SendMessageAsync(joinMessage, cancellationToken); 
+            await messageService.SendMessageAsync(joinMessage, cancellationToken: cancellationToken); 
         }));
 
         try

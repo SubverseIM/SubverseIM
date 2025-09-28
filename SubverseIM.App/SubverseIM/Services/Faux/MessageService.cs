@@ -29,22 +29,22 @@ namespace SubverseIM.Services.Faux
             CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
         }
 
-        public Task ProcessRelayAsync(CancellationToken cancellationToken = default)
+        public Task ProcessRelayAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
 
-        public Task ResendAllUndeliveredMessagesAsync(CancellationToken cancellationToken = default)
+        public Task ResendAllUndeliveredMessagesAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
 
-        public async Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default)
+        public async Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
             return await messageQueue.Reader.ReadAsync(cancellationToken);
         }
 
-        public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
+        public async Task SendMessageAsync(SubverseMessage message, int maxSendAttempts, CancellationToken cancellationToken)
         {
             IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
             await Task.Delay(1000);
