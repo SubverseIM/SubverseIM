@@ -105,7 +105,7 @@ namespace SubverseIM.Services.Implementation
 
             return messages.Query()
                 .Where(x => !x.WasDelivered)
-                .OrderBy(x => x.DateSignedOn)
+                .OrderByDescending(x => x.DateSignedOn)
                 .ToEnumerable();
         }
 
