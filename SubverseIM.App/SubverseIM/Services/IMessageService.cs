@@ -8,6 +8,8 @@ namespace SubverseIM.Services
 {
     public interface IMessageService
     {
+        public const int DEFAULT_MAX_SEND_ATTEMPTS = 10;
+
         public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
 
         Task ProcessRelayAsync(CancellationToken cancellationToken = default);
@@ -16,6 +18,6 @@ namespace SubverseIM.Services
 
         Task<SubverseMessage> ReceiveMessageAsync(CancellationToken cancellationToken = default);
 
-        Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default);
+        Task SendMessageAsync(SubverseMessage message, int maxSendAttempts = DEFAULT_MAX_SEND_ATTEMPTS, CancellationToken cancellationToken = default);
     }
 }

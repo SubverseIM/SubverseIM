@@ -19,8 +19,6 @@ namespace SubverseIM.Services.Implementation;
 
 public class MessageService : IMessageService, IDisposableService
 {
-    private const int MAX_SEND_ATTEMPTS = 10;
-
     private const string SIP_HEADER_DATE_FMT = "ddd, dd MMM yyyy HH:mm:ss ";
 
     private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
@@ -310,13 +308,15 @@ public class MessageService : IMessageService, IDisposableService
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-        PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMinutes(1.5));
+        PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromMinutes(5));
         while (!cancellationToken.IsCancellationRequested)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             int unsentCount = 0;
             foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
             {
-                _ = SendMessageAsync(unsentCount++ * 333, message, cancellationToken);
+                _ = SendMessageAsync(unsentCount++ * 333, message, maxSendAttempts: 3, cancellationToken: cancellationToken);
             }
 
             await timer.WaitForNextTickAsync();
@@ -328,16 +328,16 @@ public class MessageService : IMessageService, IDisposableService
         return await messageQueue.Reader.ReadAsync(cancellationToken);
     }
 
-    private Task SendMessageAsync(int delayMs, SubverseMessage message, CancellationToken cancellationToken)
+    private Task SendMessageAsync(int delayMs, SubverseMessage message, int maxSendAttempts, CancellationToken cancellationToken)
     {
         return Task.Run(async Task? () =>
         {
             await Task.Delay(delayMs, cancellationToken);
-            await SendMessageAsync(message, cancellationToken);
+            await SendMessageAsync(message, maxSendAttempts, cancellationToken);
         }, cancellationToken);
     }
 
-    public async Task SendMessageAsync(SubverseMessage message, CancellationToken cancellationToken = default)
+    public async Task SendMessageAsync(SubverseMessage message, int maxSendAttempts, CancellationToken cancellationToken)
     {
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
 
@@ -415,7 +415,7 @@ public class MessageService : IMessageService, IDisposableService
                     {
                         flag = requestMap.ContainsKey(messageId);
                     }
-                } while (flag && ++numAttempts < MAX_SEND_ATTEMPTS &&
+                } while (flag && ++numAttempts < maxSendAttempts &&
                     !cancellationToken.IsCancellationRequested);
             }));
 
