@@ -50,6 +50,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.Core", "Subverse
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.Bootstrapper.Tests", "SubverseIM.Network\SubverseIM.Bootstrapper.Tests\SubverseIM.Bootstrapper.Tests.csproj", "{E76B44AD-651A-40DB-8A6D-F8755E39193F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CoreRPC", "CoreRPC", "{322F9077-58A0-403D-A6CB-2B2E0E3889DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreRPC", "CoreRPC\CoreRPC\CoreRPC.csproj", "{9A7D786A-5E2E-7783-52E9-1D6EE8608223}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -136,6 +140,10 @@ Global
 		{E76B44AD-651A-40DB-8A6D-F8755E39193F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E76B44AD-651A-40DB-8A6D-F8755E39193F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E76B44AD-651A-40DB-8A6D-F8755E39193F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A7D786A-5E2E-7783-52E9-1D6EE8608223}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A7D786A-5E2E-7783-52E9-1D6EE8608223}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A7D786A-5E2E-7783-52E9-1D6EE8608223}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A7D786A-5E2E-7783-52E9-1D6EE8608223}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -159,6 +167,7 @@ Global
 		{0972AD48-5E83-2791-4B70-E863242F557C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{18FE281B-3509-E680-1559-3AAE4791D835} = {4343168E-E066-4F17-8C65-AD4A7F88F002}
 		{E76B44AD-651A-40DB-8A6D-F8755E39193F} = {E88628A0-A007-4C04-A0C3-769CB725B02F}
+		{9A7D786A-5E2E-7783-52E9-1D6EE8608223} = {322F9077-58A0-403D-A6CB-2B2E0E3889DB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ED9AFDBC-58C4-4923-950B-DC7E362C8C9C}
