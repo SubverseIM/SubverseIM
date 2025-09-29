@@ -4,3 +4,6 @@
 [submodule "Avalonia"]
 	path = Avalonia
 	url = https://github.com/SubverseIM/Avalonia.git
+[submodule "CoreRPC"]
+	path = CoreRPC
+	url = https://github.com/SubverseIM/CoreRPC.git

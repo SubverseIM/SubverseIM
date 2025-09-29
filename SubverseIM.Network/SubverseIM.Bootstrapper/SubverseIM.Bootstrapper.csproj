@@ -8,7 +8,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CoreRPC" Version="0.6.3" />
 		<PackageReference Include="Microsoft.Extensions.Caching.SqlServer" Version="9.0.7" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="PgpCore" Version="6.5.2" />
@@ -17,6 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\..\CoreRPC\CoreRPC\CoreRPC.csproj" />
 	  <ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>
 
