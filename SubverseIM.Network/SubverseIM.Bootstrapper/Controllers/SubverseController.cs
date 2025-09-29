@@ -30,8 +30,7 @@ namespace SubverseIM.Bootstrapper.Controllers
         {
             if (HttpContext.WebSockets.IsWebSocketRequest && !string.IsNullOrEmpty(peerIdStr))
             {
-                WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-
+                using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
                 SubversePeerId peerId = SubversePeerId.FromString(peerIdStr);
                 PeerService peer = new PeerService(webSocket, peerId);
 
@@ -63,14 +62,14 @@ namespace SubverseIM.Bootstrapper.Controllers
         [HttpGet("invite")]
         [Produces("application/json")]
         public async Task<string> CreateInviteAsync(
-            [FromQuery(Name = "p")] string peerIdStr, 
-            [FromQuery(Name = "t")] double expireTimeHrs, 
-            [FromQuery(Name = "n")] string? contactName, 
+            [FromQuery(Name = "p")] string peerIdStr,
+            [FromQuery(Name = "t")] double expireTimeHrs,
+            [FromQuery(Name = "n")] string? contactName,
             CancellationToken cancellationToken)
         {
             StringBuilder inviteUri = new("sv://");
             inviteUri.Append(peerIdStr);
-            if (!string.IsNullOrEmpty(contactName)) 
+            if (!string.IsNullOrEmpty(contactName))
             {
                 inviteUri.Append("?name=");
                 inviteUri.Append(HttpUtility
