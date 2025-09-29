@@ -38,7 +38,7 @@ namespace SubverseIM.Bootstrapper.Services
         {
             return _peerProxies.GetOrAdd(peerId, x =>
             {
-                var transport = new NamedPipeClientTransport($"PEER-{x}");
+                var transport = new NamedPipeClientTransport($"PEER-{x}", timeout: 150);
                 var proxy = _engine.CreateProxy<IPeerService>(transport);
                 return proxy;
             });
@@ -69,13 +69,11 @@ namespace SubverseIM.Bootstrapper.Services
 
         public async Task ListenSocketAsync(CancellationToken cancellationToken)
         {
-            using CancellationTokenSource cts = new();
-
             var router = new DefaultTargetSelector();
             router.Register<IPeerService, PeerService>(this);
 
             var handler = _engine.CreateRequestHandler(router);
-            new NamedPipeHost(handler).StartListening($"PEER-{_peerId}", cts.Token);
+            new NamedPipeHost(handler).StartListening($"PEER-{_peerId}", cancellationToken);
 
             byte[] buffer = new byte[MSG_BUFFER_SIZE];
             using MemoryStream memoryStream = new MemoryStream();
