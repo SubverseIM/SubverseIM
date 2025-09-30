@@ -12,6 +12,8 @@ namespace SubverseIM.Services
 
         bool IsAccessibilityEnabled { get; }
 
+        string? GetDeviceToken();
+
         Uri? GetLaunchedUri();
 
         Task<bool> ShowConfirmationDialogAsync(string title, string message);

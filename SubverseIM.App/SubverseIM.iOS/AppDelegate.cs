@@ -6,10 +6,12 @@ using Avalonia.ReactiveUI;
 using BackgroundTasks;
 using CoreGraphics;
 using Foundation;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UIKit;
@@ -29,6 +31,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     private ServiceManager? serviceManager;
 
     private WrappedBootstrapperService? wrappedBootstrapperService;
+
+    private string? deviceToken;
 
     private Uri? launchedUri;
 
@@ -81,7 +85,35 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         }
         else
         {
+            UIApplication.SharedApplication.RegisterForRemoteNotifications();
             NotificationsAllowed = true;
+        }
+
+        IDbService dbService = await serviceManager!.GetWithAwaitAsync<IDbService>();
+
+        NSUrl? appGroupContainer = NSFileManager.DefaultManager.GetContainerUrl("group.com.chosenfewsoftware.SubverseIM");
+        string? baseFilePath = appGroupContainer?.Path;
+
+        if (baseFilePath is not null)
+        {
+            string csvFilePath = Path.Combine(baseFilePath, "contacts.csv");
+            using (StreamWriter csvWriter = File.CreateText(csvFilePath))
+            {
+                foreach (SubverseContact contact in dbService.GetContacts())
+                {
+                    await csvWriter.WriteLineAsync($"{contact.OtherPeer},{contact.DisplayName ?? "Anonymous"}");
+                }
+            }
+
+            if (dbService.TryGetReadStream(IDbService.PRIVATE_KEY_PATH, out Stream? privateKeyDbStream))
+            {
+                string privateKeyFilePath = Path.Combine(baseFilePath, "private-key.data");
+                using (FileStream privateKeyFileStream = File.Create(privateKeyFilePath))
+                {
+                    await privateKeyDbStream.CopyToAsync(privateKeyFileStream);
+                }
+                privateKeyDbStream.Dispose();
+            }
         }
 
         Task<IFrontendService>? resolveServiceTask = serviceManager?.GetWithAwaitAsync<IFrontendService>();
@@ -112,23 +144,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         }
     }
 
-    private async void HandleAppDeactivated(object? sender, ActivatedEventArgs ev)
+    private void HandleAppDeactivated(object? sender, ActivatedEventArgs ev)
     {
         IsInForeground = false;
         ScheduleAppRefresh(out NSError? _);
-
-        UNMutableNotificationContent content = new()
-        {
-            Title = "Still There?",
-            Body = "SubverseIM has stopped monitoring the network for new messages. We'll try our best to keep you posted!",
-        };
-
-        UNNotificationTrigger trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(30.0, false);
-        UNNotificationRequest request = UNNotificationRequest.FromIdentifier(
-            reminderNotificationId = Guid.NewGuid().ToString(), content, trigger
-            );
-
-        await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request);
     }
 
     protected override AppBuilder CreateAppBuilder()
@@ -143,10 +162,22 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .UseReactiveUI();
     }
 
+    public string? GetDeviceToken()
+    {
+        return deviceToken;
+    }
+
     public Uri? GetLaunchedUri()
     {
         return launchedUri;
     }
+
+    [Export("application:didRegisterForRemoteNotificationsWithDeviceToken:")]
+    public void DidRegisterForRemoteNotificationsWithDeviceToken(UIApplication application, NSData deviceToken)
+    {
+        this.deviceToken = new string(deviceToken.SelectMany(x => x.ToString("x2")).ToArray());
+    }
+
 
     [Export("application:didFinishLaunchingWithOptions:")]
     new public bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
@@ -155,8 +186,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         serviceManager = new();
 
         base.FinishedLaunching(application, launchOptions);
-
-        UNUserNotificationCenter.Current.RemoveAllPendingNotificationRequests();
 
         ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
         ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
@@ -171,14 +200,16 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             );
         Directory.CreateDirectory(appDataPath);
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
+
         serviceManager.GetOrRegister<IDbService>(
-            new DbService($"Filename={dbFilePath};Password=#FreeTheInternet")
+            new DbService($"Filename={dbFilePath};Password={IDbService.SECRET_PASSWORD}")
             );
 
         wrappedBootstrapperService = new(serviceManager, application);
         serviceManager.GetOrRegister<IBootstrapperService>(
             (BootstrapperService)wrappedBootstrapperService
             );
+
         UNUserNotificationCenter.Current.Delegate = wrappedBootstrapperService;
 
         BGTaskScheduler.Shared.Register(BG_TASK_ID, null, task =>
