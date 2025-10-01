@@ -9,6 +9,10 @@ namespace NotificationServiceExtension
     [Register("NotificationService")]
     public class NotificationService : UNNotificationServiceExtension
     {
+        public const string EXTRA_CONTENT_ID = "BODY_CONTENT";
+
+        public const string EXTRA_SENDER_ID = "SENDER_ID";
+
         protected NotificationService(NativeHandle handle) : base(handle)
         {
             // Note: this .ctor should not contain any initialization logic,
@@ -17,62 +21,52 @@ namespace NotificationServiceExtension
 
         public override void DidReceiveNotificationRequest(UNNotificationRequest request, Action<UNNotificationContent> contentHandler)
         {
+            NSUrl? appGroupContainer = NSFileManager.DefaultManager.GetContainerUrl("group.com.chosenfewsoftware.SubverseIM");
+            string? baseFilePath = appGroupContainer?.Path;
+
+            EncryptionKeys? myKeyContainer;
+            Dictionary<SubversePeerId, string> contacts = new();
+            if (baseFilePath is not null)
+            {
+                string csvFilePath = Path.Combine(baseFilePath, "contacts.csv");
+                using (StreamReader csvReader = File.OpenText(csvFilePath))
+                {
+                    string? entryFullStr = csvReader.ReadLine();
+                    while (!string.IsNullOrEmpty(entryFullStr))
+                    {
+                        string entryPeerIdStr = entryFullStr.Substring(0, 40);
+                        SubversePeerId entryPeerId = SubversePeerId.FromString(entryPeerIdStr);
+
+                        string entryNameStr = entryFullStr.Substring(41);
+                        contacts.Add(entryPeerId, entryNameStr);
+
+                        entryFullStr = csvReader.ReadLine();
+                    }
+                }
+
+                string privateKeyFilePath = Path.Combine(baseFilePath, "private-key.data");
+                using (FileStream privateKeyFileStream = File.OpenRead(privateKeyFilePath))
+                {
+                    myKeyContainer = new(privateKeyFileStream, IDbService.SECRET_PASSWORD);
+                }
+            }
+            else
+            {
+                myKeyContainer = null;
+            }
+
             var mutableRequest = (UNMutableNotificationContent)request.Content.MutableCopy();
-            try
+
+            SubversePeerId peerId = SubversePeerId.FromString((NSString)request.Content.UserInfo[EXTRA_SENDER_ID]);
+            contacts.TryGetValue(peerId, out string? displayName);
+
+            mutableRequest.Subtitle = displayName ?? "Anonymous";
+            using (PGP pgp = new(myKeyContainer))
             {
-                NSUrl? appGroupContainer = NSFileManager.DefaultManager.GetContainerUrl("group.com.chosenfewsoftware.SubverseIM");
-                string? baseFilePath = appGroupContainer?.Path;
-
-                EncryptionKeys? myKeyContainer;
-                Dictionary<SubversePeerId, string> contacts = new();
-                if (baseFilePath is not null)
-                {
-                    string csvFilePath = Path.Combine(baseFilePath, "contacts.csv");
-                    using (StreamReader csvReader = File.OpenText(csvFilePath))
-                    {
-                        string? entryFullStr = csvReader.ReadLine();
-                        while (!string.IsNullOrEmpty(entryFullStr))
-                        {
-                            string entryPeerIdStr = entryFullStr.Substring(0, 40);
-                            SubversePeerId entryPeerId = SubversePeerId.FromString(entryPeerIdStr);
-
-                            string entryNameStr = entryFullStr.Substring(41);
-                            contacts.Add(entryPeerId, entryNameStr);
-
-                            entryFullStr = csvReader.ReadLine();
-                        }
-                    }
-
-                    string privateKeyFilePath = Path.Combine(baseFilePath, "private-key.data");
-                    using (FileStream privateKeyFileStream = File.OpenRead(privateKeyFilePath))
-                    {
-                        myKeyContainer = new(privateKeyFileStream, IDbService.SECRET_PASSWORD);
-                    }
-                }
-                else
-                {
-                    myKeyContainer = null;
-                }
-
-                SubversePeerId peerId = SubversePeerId.FromString(request.Content.Subtitle);
-                contacts.TryGetValue(peerId, out string? displayName);
-
-                mutableRequest.Subtitle = displayName ?? "Anonymous";
-                using (PGP pgp = new(myKeyContainer))
-                {
-                    mutableRequest.Body = pgp.Decrypt(request.Content.Body);
-                }
+                mutableRequest.Body = pgp.Decrypt((NSString)request.Content.UserInfo[EXTRA_CONTENT_ID]);
             }
-            catch
-            {
-                mutableRequest.Subtitle = "Somebody";
-                mutableRequest.Body = "[Contents Encrypted]";
-                throw;
-            }
-            finally
-            {
-                contentHandler(mutableRequest);
-            }
+
+            contentHandler(mutableRequest);
         }
 
         public override void TimeWillExpire()

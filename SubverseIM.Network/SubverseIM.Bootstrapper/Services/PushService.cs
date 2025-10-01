@@ -68,20 +68,34 @@ namespace SubverseIM.Bootstrapper.Services
                     }
                 }
 
+                string? topicName = sipRequest.URI.Parameters.Get("topic");
+
                 Notification notification = new NotificationBuilder()
                     .WithAlert(new Alert()
                     {
-                        Title = sipRequest.URI.Parameters.Get("topic") 
-                            ?? "Direct Message",
-                        Subtitle = sipRequest.Header.From.FromURI.User,
-                        Body = sipRequest.Body,
+                        Title = topicName ?? "Direct Message",
+                        Subtitle = "Somebody",
+                        Body = "[Contents Encrypted]",
                     })
-                    .PlaySound("notifMessage.aif")
+                    .PlaySound(topicName == "#system" ? "notifSystem.aif" : "notifMessage.aif")
                     .EnableAppExtensionModification()
                     .Build();
 
+                CustomNotificationContainer container = new()
+                {
+                    Notification = notification,
+
+                    BodyContent = sipRequest.Body,
+                    MessageTopic = topicName,
+                    ParticipantsList = string.Join(';', [
+                        sipRequest.Header.From.FromURI.User, ..
+                        sipRequest.Header.Contact.Select(x => x.ContactURI.User)
+                        ]),
+                    SenderId = sipRequest.Header.From.FromURI.User,
+                };
+
                 cancellationToken.ThrowIfCancellationRequested();
-                await _apnsClient.SendAsync(notification, deviceToken);
+                await _apnsClient.SendAsync(container, deviceToken);
             }
         }
     }

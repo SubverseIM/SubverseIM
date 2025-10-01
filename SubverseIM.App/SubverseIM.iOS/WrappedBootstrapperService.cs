@@ -16,11 +16,11 @@ namespace SubverseIM.iOS;
 
 public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INativeService
 {
-    public const string EXTRA_PARTICIPANTS_ID = "com.ChosenFewSoftware.SubverseIM.ConversationParticipants";
+    public const string EXTRA_PARTICIPANTS_ID = "PARTICIPANTS_LIST";
 
-    public const string EXTRA_TOPIC_ID = "com.ChosenFewSoftware.SubverseIM.MessageTopic";
+    public const string EXTRA_TOPIC_ID = "MESSAGE_TOPIC";
 
-    public const string EXTRA_URI_ID = "com.ChosenFewSoftware.SubverseIM.LaunchUri";
+    public const string EXTRA_URI_ID = "LAUNCH_URI";
 
     private readonly IServiceManager serviceManager;
 
