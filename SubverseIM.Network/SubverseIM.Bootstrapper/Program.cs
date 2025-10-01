@@ -58,14 +58,14 @@ if (!string.IsNullOrEmpty(jwtContent) && !string.IsNullOrEmpty(jwtKey) && !strin
     };
 
     // Set APNS connection settings
-    var developmentSettings = new ApnsSettingsBuilder()
+    var settings = new ApnsSettingsBuilder()
         .InEnvironment(builder.Environment.IsProduction() ? 
             ApnsEnvironment.Production : ApnsEnvironment.Development)
         .SetTopic("com.chosenfewsoftware.SubverseIM")
         .WithJsonToken(jwtInformation)
         .Build();
 
-    builder.Services.AddApns(developmentSettings);
+    builder.Services.AddApns(settings);
 }
 
 builder.Services.AddSingleton<IPushService, PushService>();
