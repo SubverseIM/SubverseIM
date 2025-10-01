@@ -36,8 +36,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     private Uri? launchedUri;
 
-    private string? reminderNotificationId;
-
     public bool IsInForeground { get; private set; }
 
     public bool NotificationsAllowed { get; private set; }
@@ -69,11 +67,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         {
             await Task.Yield();
             Window!.MakeKeyAndVisible();
-        }
-
-        if (reminderNotificationId is not null)
-        {
-            UNUserNotificationCenter.Current.RemovePendingNotificationRequests([reminderNotificationId]);
         }
 
         UNNotificationSettings settings = await UNUserNotificationCenter.Current.GetNotificationSettingsAsync();
