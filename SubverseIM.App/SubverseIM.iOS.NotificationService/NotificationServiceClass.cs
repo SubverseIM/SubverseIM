@@ -9,9 +9,9 @@ namespace NotificationServiceExtension
     [Register("NotificationService")]
     public class NotificationService : UNNotificationServiceExtension
     {
-        public const string EXTRA_CONTENT_ID = "com.ChosenFewSoftware.SubverseIM.BodyContent";
+        public const string EXTRA_CONTENT_ID = "BODY_CONTENT";
 
-        public const string EXTRA_SENDER_ID = "com.ChosenFewSoftware.SubverseIM.SenderId";
+        public const string EXTRA_SENDER_ID = "SENDER_ID";
 
         protected NotificationService(NativeHandle handle) : base(handle)
         {

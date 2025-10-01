@@ -5,16 +5,16 @@ namespace SubverseIM.Bootstrapper.Models
 {
     public class CustomNotificationContainer : NotificationContainer 
     {
-        [JsonPropertyName("com.ChosenFewSoftware.SubverseIM.BodyContent")]
+        [JsonPropertyName("BODY_CONTENT")]
         public string? BodyContent { get; init; }
 
-        [JsonPropertyName("com.ChosenFewSoftware.SubverseIM.ConversationParticipants")]
-        public string? ConversationParticipants { get; init; }
+        [JsonPropertyName("PARTICIPANTS_LIST")]
+        public string? ParticipantsList { get; init; }
 
-        [JsonPropertyName("com.ChosenFewSoftware.SubverseIM.MessageTopic")]
+        [JsonPropertyName("MESSAGE_TOPIC")]
         public string? MessageTopic { get; init; }
 
-        [JsonPropertyName("com.ChosenFewSoftware.SubverseIM.SenderId")]
+        [JsonPropertyName("SENDER_ID")]
         public string? SenderId { get; init; }
     }
 }

@@ -81,13 +81,13 @@ namespace SubverseIM.Bootstrapper.Services
                     .EnableAppExtensionModification()
                     .Build();
 
-                NotificationContainer container = new CustomNotificationContainer
+                CustomNotificationContainer container = new()
                 {
                     Notification = notification,
 
                     BodyContent = sipRequest.Body,
                     MessageTopic = topicName,
-                    ConversationParticipants = string.Join(';', [
+                    ParticipantsList = string.Join(';', [
                         sipRequest.Header.From.FromURI.User, ..
                         sipRequest.Header.Contact.Select(x => x.ContactURI.User)
                         ]),
