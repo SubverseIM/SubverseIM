@@ -338,7 +338,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 CurrentPage = torrentPage;
                 break;
             case null:
-                CurrentPage = contactPage;
                 break;
         }
 
