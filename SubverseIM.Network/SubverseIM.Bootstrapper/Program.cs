@@ -24,7 +24,8 @@ if (builder.Environment.IsProduction())
 
     builder.Services.AddDbContext<SubverseContext>(options => 
     {
-        options.UseSqlServer("serviceDb");
+        options.UseSqlServer(builder
+            .Configuration.GetConnectionString("serviceDb"));
     }, ServiceLifetime.Singleton);
 }
 else
