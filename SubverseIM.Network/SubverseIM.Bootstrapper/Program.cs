@@ -28,8 +28,6 @@ if (builder.Environment.IsProduction())
         options.UseSqlServer(builder
             .Configuration.GetConnectionString("serviceDb"));
     }, ServiceLifetime.Singleton);
-
-    builder.Services.AddDataProtection();
 }
 else
 {
