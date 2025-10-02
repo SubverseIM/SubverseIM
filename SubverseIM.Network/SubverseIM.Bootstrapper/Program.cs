@@ -3,6 +3,7 @@ using Fitomad.Apns;
 using Fitomad.Apns.Entities;
 using Fitomad.Apns.Entities.Settings;
 using Fitomad.Apns.Extensions;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using SubverseIM.Bootstrapper.Models;
 using SubverseIM.Bootstrapper.Services;
@@ -27,6 +28,8 @@ if (builder.Environment.IsProduction())
         options.UseSqlServer(builder
             .Configuration.GetConnectionString("serviceDb"));
     }, ServiceLifetime.Singleton);
+
+    builder.Services.AddDataProtection();
 }
 else
 {
