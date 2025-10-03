@@ -51,7 +51,7 @@ if (File.Exists(certFilePath) && certPassword is not null)
 {
     // Set APNS connection settings
     var settings = new ApnsSettingsBuilder()
-        .InEnvironment(!builder.Environment.IsProduction() ?
+        .InEnvironment(builder.Environment.IsProduction() ?
             ApnsEnvironment.Production : ApnsEnvironment.Development)
         .SetTopic("com.chosenfewsoftware.SubverseIM")
         .WithPathToX509Certificate2(certFilePath, certPassword)
