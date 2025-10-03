@@ -1,9 +1,7 @@
 
 using Fitomad.Apns;
 using Fitomad.Apns.Entities;
-using Fitomad.Apns.Entities.Settings;
 using Fitomad.Apns.Extensions;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using SubverseIM.Bootstrapper.Models;
 using SubverseIM.Bootstrapper.Services;
@@ -45,32 +43,24 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-string? jwtContent, jwtKey, teamId;
-jwtContent = builder.Configuration.GetValue<string>("Apns:JwtContent");
-jwtKey = builder.Configuration.GetValue<string>("Apns:JwtKey");
-teamId = builder.Configuration.GetValue<string>("Apns:TeamId");
+string? certFilePath, certPassword;
+certFilePath = builder.Configuration.GetValue<string>("Apns:CertFilePath");
+certPassword = builder.Configuration.GetValue<string>("Apns:CertPassword");
 
-if (!string.IsNullOrEmpty(jwtContent) && !string.IsNullOrEmpty(jwtKey) && !string.IsNullOrEmpty(teamId))
+if (File.Exists(certFilePath) && certPassword is not null)
 {
-    var jwtInformation = new ApnsJsonToken
-    {
-        Content = jwtContent,
-        KeyId = jwtKey,
-        TeamId = teamId
-    };
-
     // Set APNS connection settings
     var settings = new ApnsSettingsBuilder()
-        .InEnvironment(builder.Environment.IsProduction() ? 
+        .InEnvironment(!builder.Environment.IsProduction() ?
             ApnsEnvironment.Production : ApnsEnvironment.Development)
         .SetTopic("com.chosenfewsoftware.SubverseIM")
-        .WithJsonToken(jwtInformation)
+        .WithPathToX509Certificate2(certFilePath, certPassword)
         .Build();
 
     builder.Services.AddApns(settings);
 }
 
-builder.Services.AddSingleton<IPushService, PushService>();
+    builder.Services.AddSingleton<IPushService, PushService>();
 
 int? listenPortNum = builder.Configuration.GetValue<int?>("Hosting:ListenPortNum");
 if (builder.Environment.IsDevelopment() && listenPortNum.HasValue)
