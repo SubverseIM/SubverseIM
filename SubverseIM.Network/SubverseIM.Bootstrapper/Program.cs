@@ -5,6 +5,9 @@ using Fitomad.Apns.Extensions;
 using Microsoft.EntityFrameworkCore;
 using SubverseIM.Bootstrapper.Models;
 using SubverseIM.Bootstrapper.Services;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +24,7 @@ if (builder.Environment.IsProduction())
         options.TableName = "ServiceCache";
     });
 
-    builder.Services.AddDbContext<SubverseContext>(options => 
+    builder.Services.AddDbContext<SubverseContext>(options =>
     {
         options.UseSqlServer(builder
             .Configuration.GetConnectionString("serviceDb"));
@@ -31,7 +34,7 @@ else
 {
     builder.Services.AddDistributedMemoryCache();
 
-    builder.Services.AddDbContext<SubverseContext>(options => 
+    builder.Services.AddDbContext<SubverseContext>(options =>
     {
         options.UseInMemoryDatabase("serviceDb");
     }, ServiceLifetime.Singleton);
@@ -43,24 +46,59 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-string? certFilePath, certPassword;
+string? certFilePath, certPassword, keyFilePath;
 certFilePath = builder.Configuration.GetValue<string>("Apns:CertFilePath");
 certPassword = builder.Configuration.GetValue<string>("Apns:CertPassword");
+keyFilePath = builder.Configuration.GetValue<string>("Apns:KeyFilePath");
 
-if (File.Exists(certFilePath) && certPassword is not null)
+if (File.Exists(certFilePath))
 {
+    // Get private key from key container if possible
+    X509Certificate2 certificateWithKey;
+    if (builder.Environment.IsProduction() && OperatingSystem.IsWindows())
+    {
+        if (File.Exists(keyFilePath))
+        {
+            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048, new CspParameters
+            {
+                Flags = CspProviderFlags.UseMachineKeyStore,
+                KeyContainerName = "SubverseIM"
+            }))
+            {
+                rsa.FromXmlString(File.ReadAllText(keyFilePath));
+                rsa.PersistKeyInCsp = true;
+            }
+        }
+
+        using (X509Certificate2 certificate = X509CertificateLoader.LoadCertificateFromFile(certFilePath))
+        using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048, new CspParameters
+        {
+            Flags =
+            CspProviderFlags.UseMachineKeyStore |
+            CspProviderFlags.UseExistingKey,
+            KeyContainerName = "SubverseIM"
+        }))
+        {
+            certificateWithKey = certificate.CopyWithPrivateKey(rsa);
+        }
+    }
+    else
+    {
+        certificateWithKey = X509CertificateLoader.LoadPkcs12FromFile(certFilePath, certPassword);
+    }
+
     // Set APNS connection settings
     var settings = new ApnsSettingsBuilder()
         .InEnvironment(builder.Environment.IsProduction() ?
             ApnsEnvironment.Production : ApnsEnvironment.Development)
+        .WithX509Certificate2(certificateWithKey)
         .SetTopic("com.chosenfewsoftware.SubverseIM")
-        .WithPathToX509Certificate2(certFilePath, certPassword)
         .Build();
 
     builder.Services.AddApns(settings);
 }
 
-    builder.Services.AddSingleton<IPushService, PushService>();
+builder.Services.AddSingleton<IPushService, PushService>();
 
 int? listenPortNum = builder.Configuration.GetValue<int?>("Hosting:ListenPortNum");
 if (builder.Environment.IsDevelopment() && listenPortNum.HasValue)
@@ -70,7 +108,7 @@ if (builder.Environment.IsDevelopment() && listenPortNum.HasValue)
         options.ListenAnyIP(listenPortNum.Value, options =>
         {
             options.UseHttps(
-                builder.Configuration.GetValue<string>("Privacy:CertFilePath") ?? "localhost.pfx", 
+                builder.Configuration.GetValue<string>("Privacy:CertFilePath") ?? "localhost.pfx",
                 builder.Configuration.GetValue<string>("Privacy:CertPassword")
                 );
         });
