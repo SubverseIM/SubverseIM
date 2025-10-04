@@ -27,8 +27,8 @@
 			   Classes.overlay="{Binding IsSidebarOverlay}"
 		   	   Classes.inline="{Binding !IsSidebarOverlay}">
 		<DockPanel>
-			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, *, *, *, *, *" 
-				  DockPanel.Dock="Top" IsVisible="{Binding Parent, Converter={x:Static ObjectConverters.IsNull}}" 
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, *, *, *, *, *"
+				  DockPanel.Dock="Top" IsVisible="{Binding Parent, Converter={x:Static ObjectConverters.IsNull}}"
 				  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 				<Button Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" Command="{Binding InviteCommand}" CommandParameter="{Binding $self}">
 					<TextBlock FontSize="16" HorizontalAlignment="Center">
@@ -99,10 +99,15 @@
 								</Button>
 								<Button DockPanel.Dock="Right"
 										VerticalAlignment="Stretch"
-										IsVisible="{Binding ShouldShowOptions}"
 										Command="{Binding CopyCommand}"
 										AutomationProperties.Name="Copy Contact Link">
 									<PathIcon Data="{StaticResource clipboard_link_regular}" />
+									<Button.IsVisible>
+										<MultiBinding Converter="{x:Static BoolConverters.And}">
+											<Binding Path="ShouldShowOptions" />
+											<Binding Path="TopicName" Converter="{x:Static ObjectConverters.IsNull}" />
+										</MultiBinding>
+									</Button.IsVisible>
 								</Button>
 								<TextBlock Focusable="True" TextWrapping="Wrap" VerticalAlignment="Center" Margin="10" Text="{Binding DisplayName}">
 									<Classes.offscreen>
