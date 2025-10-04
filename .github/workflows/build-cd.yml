@@ -86,8 +86,13 @@ jobs:
       run: rm -f /home/tc/publish/web/*
     - name: Test SubverseIM.Bootstrapper
       run: dotnet test SubverseIM.Network/SubverseIM.Bootstrapper.Tests/SubverseIM.Bootstrapper.Tests.csproj
-    - name: Update database to most recent migration
-      run: cd SubverseIM.Network/SubverseIM.Bootstrapper && dotnet tool restore && dotnet ef database update
+    - name: Restore EF Core tools
+      run: cd SubverseIM.Network/SubverseIM.Bootstrapper && dotnet tool restore
+    - name: Run EF Core migrations
+      run: dotnet ef database update --project SubverseIM.Network/SubverseIM.Bootstrapper/SubverseIM.Bootstrapper.csproj --startup-project SubverseIM.Network/SubverseIM.Bootstrapper/SubverseIM.Bootstrapper.csproj --configuration Release --verbose
+      env:
+        DOTNET_ENVIRONMENT: Production
+        Subverse_ConnectionStrings__serviceDb: ${{ secrets.CONNECTION_STRING }}
     - name: Publish SubverseIM.Bootstrapper
       run: dotnet publish SubverseIM.Network/SubverseIM.Bootstrapper/SubverseIM.Bootstrapper.csproj --configuration Release --runtime win-x64 --no-self-contained --output /home/tc/publish/web -p:PublishReadyToRun=true -m:1
     - name: Final Web deployment

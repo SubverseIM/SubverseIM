@@ -5,7 +5,6 @@ using Fitomad.Apns.Extensions;
 using Microsoft.EntityFrameworkCore;
 using SubverseIM.Bootstrapper.Models;
 using SubverseIM.Bootstrapper.Services;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
