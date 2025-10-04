@@ -89,7 +89,7 @@ jobs:
     - name: Restore EF Core tools
       run: cd SubverseIM.Network/SubverseIM.Bootstrapper && dotnet tool restore
     - name: Run EF Core migrations
-      run: dotnet ef database update --project SubverseIM.Network/SubverseIM.Bootstrapper/SubverseIM.Bootstrapper.csproj --startup-project SubverseIM.Network/SubverseIM.Bootstrapper/SubverseIM.Bootstrapper.csproj --configuration Release --verbose
+      run: cd SubverseIM.Network/SubverseIM.Bootstrapper && dotnet ef database update --configuration Release --verbose
       env:
         DOTNET_ENVIRONMENT: Production
         Subverse_ConnectionStrings__serviceDb: ${{ secrets.CONNECTION_STRING }}
