@@ -117,7 +117,7 @@ namespace SubverseIM.ViewModels.Pages
             filteredText = Regex.Match(filteredText, @"\#?(\w[\w\-]*\w)").Value;
             filteredText = filteredText.Length > 0 ? $"#{filteredText.ToLowerInvariant()}" : string.Empty;
 
-            if (!string.IsNullOrEmpty(filteredText) && !TopicsList.Contains(filteredText))
+            if (!string.IsNullOrEmpty(filteredText) && !TopicsList.Contains(filteredText) && filteredText != "#system")
             {
                 TopicsList.Insert(0, filteredText);
                 SendMessageTopicName = filteredText;
