@@ -42,11 +42,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     public bool IsAccessibilityEnabled => UIAccessibility.IsVoiceOverRunning;
 
-    public AppDelegate()
-    {
-        UIApplication.Notifications.ObserveDidBecomeActive(HandleAppActivated);
-    }
-
     private bool ScheduleAppRefresh(out NSError? error)
     {
         BGAppRefreshTaskRequest request = new(BG_TASK_ID)
@@ -56,18 +51,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         return BGTaskScheduler.Shared.Submit(request, out error);
     }
 
-    private void HandleAppActivated(object? sender, EventArgs ev)
-    {
-        HandleAppActivated(this, new ActivatedEventArgs(ActivationKind.Background));
-    }
-
     private async void HandleAppActivated(object? sender, ActivatedEventArgs ev)
     {
-        if (IsInForeground = ev is not AppRefreshActivatedEventArgs)
-        {
-            await Task.Yield();
-            Window!.MakeKeyAndVisible();
-        }
+        IsInForeground = ev is not AppRefreshActivatedEventArgs;
 
         UNNotificationSettings settings = await UNUserNotificationCenter.Current.GetNotificationSettingsAsync();
         if (settings.AuthorizationStatus != UNAuthorizationStatus.Authorized)
@@ -82,30 +68,33 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             NotificationsAllowed = true;
         }
 
-        IDbService dbService = await serviceManager!.GetWithAwaitAsync<IDbService>();
-
-        NSUrl? appGroupContainer = NSFileManager.DefaultManager.GetContainerUrl("group.com.chosenfewsoftware.SubverseIM");
-        string? baseFilePath = appGroupContainer?.Path;
-
-        if (baseFilePath is not null)
+        if (ev is not ProtocolActivatedEventArgs)
         {
-            string csvFilePath = Path.Combine(baseFilePath, "contacts.csv");
-            using (StreamWriter csvWriter = File.CreateText(csvFilePath))
-            {
-                foreach (SubverseContact contact in dbService.GetContacts())
-                {
-                    await csvWriter.WriteLineAsync($"{contact.OtherPeer},{contact.DisplayName ?? "Anonymous"}");
-                }
-            }
+            IDbService dbService = await serviceManager!.GetWithAwaitAsync<IDbService>();
 
-            if (dbService.TryGetReadStream(IDbService.PRIVATE_KEY_PATH, out Stream? privateKeyDbStream))
+            NSUrl? appGroupContainer = NSFileManager.DefaultManager.GetContainerUrl("group.com.chosenfewsoftware.SubverseIM");
+            string? baseFilePath = appGroupContainer?.Path;
+
+            if (baseFilePath is not null)
             {
-                string privateKeyFilePath = Path.Combine(baseFilePath, "private-key.data");
-                using (FileStream privateKeyFileStream = File.Create(privateKeyFilePath))
+                string csvFilePath = Path.Combine(baseFilePath, "contacts.csv");
+                using (StreamWriter csvWriter = File.CreateText(csvFilePath))
                 {
-                    await privateKeyDbStream.CopyToAsync(privateKeyFileStream);
+                    foreach (SubverseContact contact in dbService.GetContacts())
+                    {
+                        await csvWriter.WriteLineAsync($"{contact.OtherPeer},{contact.DisplayName ?? "Anonymous"}");
+                    }
                 }
-                privateKeyDbStream.Dispose();
+
+                if (dbService.TryGetReadStream(IDbService.PRIVATE_KEY_PATH, out Stream? privateKeyDbStream))
+                {
+                    string privateKeyFilePath = Path.Combine(baseFilePath, "private-key.data");
+                    using (FileStream privateKeyFileStream = File.Create(privateKeyFilePath))
+                    {
+                        await privateKeyDbStream.CopyToAsync(privateKeyFileStream);
+                    }
+                    privateKeyDbStream.Dispose();
+                }
             }
         }
 
