@@ -8,5 +8,7 @@ namespace SubverseIM.Bootstrapper.Services
         Task RegisterPeerAsync(SubversePeerId peerId, string deviceToken, CancellationToken cancellationToken = default);
 
         Task SendPushNotificationAsync(SIPMessageBase sipMessage, CancellationToken cancellationToken = default);
+
+        bool TryStoreMessage(SIPMessageBase sipMessage);
     }
 }
