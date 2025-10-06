@@ -85,7 +85,7 @@ namespace SubverseIM.Services.Implementation
             IEnumerable<SubverseMessage> topicMessages = otherPeers
                 .SelectMany(otherPeer => messages.Query()
                 .Where(x => x.WasDecrypted ?? true)
-                .Where(x => otherPeer == x.Sender || x.Recipients.Contains(otherPeer))
+                .Where(x => otherPeer == x.Sender || ((IEnumerable<SubversePeerId>)x.Recipients).Contains(otherPeer))
                 .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
                 .ToEnumerable())
                 .DistinctBy(x => x.MessageId);
