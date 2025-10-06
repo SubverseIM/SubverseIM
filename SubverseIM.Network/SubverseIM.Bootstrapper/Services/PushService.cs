@@ -69,6 +69,7 @@ namespace SubverseIM.Bootstrapper.Services
                 }
 
                 string? topicName = sipRequest.URI.Parameters.Get("topic");
+                bool isSystemTopic = topicName == "#system";
 
                 Notification notification = new NotificationBuilder()
                     .WithAlert(new Alert()
@@ -77,7 +78,7 @@ namespace SubverseIM.Bootstrapper.Services
                         Subtitle = "Somebody",
                         Body = "[Contents Encrypted]",
                     })
-                    .PlaySound(topicName == "#system" ? "notifSystem.aif" : "notifMessage.aif")
+                    .PlaySound(isSystemTopic ? "notifSystem.aif" : "notifMessage.aif")
                     .EnableAppExtensionModification()
                     .Build();
 
@@ -86,8 +87,8 @@ namespace SubverseIM.Bootstrapper.Services
                     Notification = notification,
 
                     BodyContent = sipRequest.Body,
-                    MessageTopic = topicName,
-                    ParticipantsList = string.Join(';', [
+                    MessageTopic = isSystemTopic ? null : topicName,
+                    ParticipantsList = isSystemTopic ? null : string.Join(';', [
                         sipRequest.Header.From.FromURI.User, ..
                         sipRequest.Header.Contact.Select(x => x.ContactURI.User)
                         ]),
