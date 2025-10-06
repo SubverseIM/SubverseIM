@@ -53,21 +53,6 @@ namespace SubverseIM.Bootstrapper.Services
 
             if (!string.IsNullOrEmpty(deviceToken))
             {
-                SubverseMessage message = new SubverseMessage
-                { CallId = sipRequest.Header.CallId, OtherPeer = toPeer };
-                lock (_context)
-                {
-                    if (_context.Messages.Any(x => x.CallId == message.CallId && x.OtherPeer == message.OtherPeer))
-                    {
-                        throw new PushServiceException("Will not send push notification for duplicate message.");
-                    }
-                    else
-                    {
-                        _context.Messages.Add(message);
-                        _context.SaveChanges();
-                    }
-                }
-
                 string? topicName = sipRequest.URI.Parameters.Get("topic");
 
                 Notification notification = new NotificationBuilder()
@@ -96,6 +81,26 @@ namespace SubverseIM.Bootstrapper.Services
 
                 cancellationToken.ThrowIfCancellationRequested();
                 await _apnsClient.SendAsync(container, deviceToken);
+            }
+        }
+
+        public bool TryStoreMessage(SIPMessageBase sipMessage)
+        {
+            SubversePeerId toPeer = SubversePeerId.FromString(sipMessage.Header.To.ToURI.User);
+            SubverseMessage message = new SubverseMessage
+            { CallId = sipMessage.Header.CallId, OtherPeer = toPeer };
+            lock (_context)
+            {
+                if (_context.Messages.Any(x => x.CallId == message.CallId && x.OtherPeer == message.OtherPeer))
+                {
+                    return false;
+                }
+                else
+                {
+                    _context.Messages.Add(message);
+                    _context.SaveChanges();
+                    return true;
+                }
             }
         }
     }

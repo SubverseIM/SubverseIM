@@ -68,11 +68,13 @@ namespace SubverseIM.Bootstrapper.Services
             SubversePeerId toPeerId = SubversePeerId.FromString(sipMessage.Header.To.ToURI.User);
             IPeerService toPeer = GetPeerProxy(toPeerId);
 
+            bool didStoreMessage = false;
             try
             {
+                didStoreMessage = _pushService.TryStoreMessage(sipMessage);
                 await toPeer.ReceiveMessageAsync(sipMessageBuffer.RawMessage);
             }
-            catch (TimeoutException) 
+            catch (TimeoutException) when (didStoreMessage)
             {
                 await _pushService.SendPushNotificationAsync(sipMessage);
                 throw;
