@@ -130,6 +130,9 @@ public partial class MessagePageView : UserControl
                 DispatcherPriority.Loaded
                 );
         }
+
+        splitView.IsPaneOpen = true;
+        splitView.IsPaneOpen = false;
     }
 
     protected override async void OnSizeChanged(SizeChangedEventArgs e)
