@@ -93,18 +93,19 @@ namespace SubverseIM.Bootstrapper.Services
             SubversePeerId toPeer = SubversePeerId.FromString(sipMessage.Header.To.ToURI.User);
             SubverseMessage message = new SubverseMessage
             { CallId = sipMessage.Header.CallId, OtherPeer = toPeer };
-            try
+            lock (_context)
             {
-                lock (_context)
+                try
                 {
                     _context.Messages.Add(message);
                     _context.SaveChanges();
                     return true;
                 }
-            }
-            catch (DbUpdateException) 
-            {
-                return false;
+                catch (DbUpdateException)
+                {
+                    _context.ChangeTracker.Clear();
+                    return false;
+                }
             }
         }
     }
