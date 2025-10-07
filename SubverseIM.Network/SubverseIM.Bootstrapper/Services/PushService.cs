@@ -1,5 +1,6 @@
 ﻿using Fitomad.Apns;
 using Fitomad.Apns.Entities.Notification;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using SIPSorcery.SIP;
 using SubverseIM.Bootstrapper.Models;
@@ -31,8 +32,8 @@ namespace SubverseIM.Bootstrapper.Services
 
         public Task RegisterPeerAsync(SubversePeerId peerId, string deviceToken, CancellationToken cancellationToken)
         {
-            return _cache.SetStringAsync($"TKN-{peerId}", deviceToken, 
-                new DistributedCacheEntryOptions { AbsoluteExpiration = null }, 
+            return _cache.SetStringAsync($"TKN-{peerId}", deviceToken,
+                new DistributedCacheEntryOptions { AbsoluteExpiration = null },
                 cancellationToken);
         }
 
@@ -87,21 +88,23 @@ namespace SubverseIM.Bootstrapper.Services
 
         public bool TryStoreMessage(SIPMessageBase sipMessage)
         {
+            if (sipMessage is not SIPRequest) return false;
+
             SubversePeerId toPeer = SubversePeerId.FromString(sipMessage.Header.To.ToURI.User);
             SubverseMessage message = new SubverseMessage
             { CallId = sipMessage.Header.CallId, OtherPeer = toPeer };
-            lock (_context)
+            try
             {
-                if (_context.Messages.Any(x => x.CallId == message.CallId && x.OtherPeer == message.OtherPeer))
-                {
-                    return false;
-                }
-                else
+                lock (_context)
                 {
                     _context.Messages.Add(message);
                     _context.SaveChanges();
                     return true;
                 }
+            }
+            catch (DbUpdateException) 
+            {
+                return false;
             }
         }
     }
