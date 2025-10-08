@@ -128,7 +128,7 @@ namespace SubverseIM.Services.Implementation
                     .Distinct());
         }
 
-        public SubverseMessage? GetMessageById(SubverseMessage.Identifier messageId)
+        public SubverseMessage? GetMessageById(MessageId messageId)
         {
             var messages = db.GetCollection<SubverseMessage>();
 

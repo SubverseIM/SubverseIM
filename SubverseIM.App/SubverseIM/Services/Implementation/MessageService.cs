@@ -21,7 +21,7 @@ public class MessageService : IMessageService, IDisposableService
 {
     private const string SIP_HEADER_DATE_FMT = "ddd, dd MMM yyyy HH:mm:ss ";
 
-    private readonly Dictionary<SubverseMessage.Identifier, SIPRequest> requestMap;
+    private readonly Dictionary<MessageId, SIPRequest> requestMap;
 
     private readonly Channel<SubverseMessage> messageQueue;
 
@@ -184,7 +184,7 @@ public class MessageService : IMessageService, IDisposableService
         SubversePeer? peer;
         if (sipResponse.Status == SIPResponseStatusCodesEnum.Ok)
         {
-            SubverseMessage.Identifier messageId = new(sipResponse.Header.CallId,
+            MessageId messageId = new(sipResponse.Header.CallId,
                 SubversePeerId.FromString(sipResponse.Header.To.ToURI.User));
 
             SubverseMessage? message = dbService.GetMessageById(messageId);
@@ -390,7 +390,7 @@ public class MessageService : IMessageService, IDisposableService
                     sipRequest.Body = message.Content;
                 }
 
-                SubverseMessage.Identifier messageId = new(sipRequest.Header.CallId, recipient);
+                MessageId messageId = new(sipRequest.Header.CallId, recipient);
                 lock (requestMap)
                 {
                     if (!requestMap.ContainsKey(messageId))

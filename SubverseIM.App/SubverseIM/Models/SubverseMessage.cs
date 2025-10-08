@@ -6,8 +6,6 @@ namespace SubverseIM.Models
 {
     public class SubverseMessage
     {
-        public record Identifier(string CallId, SubversePeerId OtherPeer);
-
         public SubverseMessage()
         {
             Recipients = [];
@@ -16,7 +14,7 @@ namespace SubverseIM.Models
 
         public ObjectId? Id { get; set; }
 
-        public Identifier? MessageId { get; set; }
+        public MessageId? MessageId { get; set; }
 
         public string? TopicName { get; set; }
 

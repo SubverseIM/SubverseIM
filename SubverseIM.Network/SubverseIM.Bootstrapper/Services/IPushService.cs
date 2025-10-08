@@ -9,6 +9,6 @@ namespace SubverseIM.Bootstrapper.Services
 
         Task SendPushNotificationAsync(SIPMessageBase sipMessage, CancellationToken cancellationToken = default);
 
-        bool TryStoreMessage(SIPMessageBase sipMessage);
+        Task<bool> TryStoreMessageAsync(SIPMessageBase sipMessage, CancellationToken cancellationToken = default);
     }
 }

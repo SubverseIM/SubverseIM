@@ -2,8 +2,6 @@
 using Fitomad.Apns;
 using Fitomad.Apns.Entities;
 using Fitomad.Apns.Extensions;
-using Microsoft.EntityFrameworkCore;
-using SubverseIM.Bootstrapper.Models;
 using SubverseIM.Bootstrapper.Services;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -18,25 +16,14 @@ if (builder.Environment.IsProduction())
     builder.Services.AddDistributedSqlServerCache(options =>
     {
         options.ConnectionString = builder
-            .Configuration.GetConnectionString("serviceDb");
+            .Configuration.GetConnectionString("ServiceDb");
         options.SchemaName = "dbo";
         options.TableName = "ServiceCache";
     });
-
-    builder.Services.AddDbContext<SubverseContext>(options =>
-    {
-        options.UseSqlServer(builder
-            .Configuration.GetConnectionString("serviceDb"));
-    }, ServiceLifetime.Singleton);
 }
 else
 {
     builder.Services.AddDistributedMemoryCache();
-
-    builder.Services.AddDbContext<SubverseContext>(options =>
-    {
-        options.UseInMemoryDatabase("serviceDb");
-    }, ServiceLifetime.Singleton);
 }
 
 builder.Services.AddControllers();
@@ -96,6 +83,8 @@ if (File.Exists(certFilePath))
 
     builder.Services.AddApns(settings);
 }
+
+builder.Services.AddSingleton<IDbService, DbService>();
 
 builder.Services.AddSingleton<IPushService, PushService>();
 

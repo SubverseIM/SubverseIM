@@ -1,6 +1,5 @@
 ﻿using Fitomad.Apns;
 using Fitomad.Apns.Entities.Notification;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using SIPSorcery.SIP;
 using SubverseIM.Bootstrapper.Models;
@@ -10,24 +9,23 @@ namespace SubverseIM.Bootstrapper.Services
 {
     public class PushService : IPushService
     {
-        private readonly SubverseContext _context;
-
         private readonly IDistributedCache _cache;
+
+        private readonly IDbService _dbService;
 
         private readonly IApnsClient? _apnsClient;
 
-        public PushService(SubverseContext context, IDistributedCache cache, IApnsClient apnsClient)
+        public PushService(IDistributedCache cache, IDbService dbService, IApnsClient apnsClient)
         {
-            _context = context;
             _cache = cache;
+            _dbService = dbService;
             _apnsClient = apnsClient;
         }
 
-        public PushService(SubverseContext context, IDistributedCache cache)
+        public PushService(IDistributedCache cache, IDbService dbService)
         {
-            _context = context;
             _cache = cache;
-            _apnsClient = null;
+            _dbService = dbService;
         }
 
         public Task RegisterPeerAsync(SubversePeerId peerId, string deviceToken, CancellationToken cancellationToken)
@@ -86,27 +84,18 @@ namespace SubverseIM.Bootstrapper.Services
             }
         }
 
-        public bool TryStoreMessage(SIPMessageBase sipMessage)
+        public Task<bool> TryStoreMessageAsync(SIPMessageBase sipMessage, CancellationToken cancellationToken)
         {
-            if (sipMessage is not SIPRequest) return false;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (sipMessage is not SIPRequest) return Task.FromResult(false);
 
             SubversePeerId toPeer = SubversePeerId.FromString(sipMessage.Header.To.ToURI.User);
-            SubverseMessage message = new SubverseMessage
-            { CallId = sipMessage.Header.CallId, OtherPeer = toPeer };
-            lock (_context)
+            SubverseMessage message = new()
             {
-                try
-                {
-                    _context.Messages.Add(message);
-                    _context.SaveChanges();
-                    return true;
-                }
-                catch (DbUpdateException)
-                {
-                    _context.ChangeTracker.Clear();
-                    return false;
-                }
-            }
+                MessageId = new (sipMessage.Header.CallId, toPeer)
+            };
+
+            return Task.FromResult(_dbService.InsertMessage(message));
         }
     }
 }

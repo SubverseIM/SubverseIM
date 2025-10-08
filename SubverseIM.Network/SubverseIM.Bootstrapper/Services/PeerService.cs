@@ -48,7 +48,7 @@ namespace SubverseIM.Bootstrapper.Services
             });
         }
 
-        private async Task DispatchMessageAsync(byte[] messageBytes)
+        private async Task DispatchMessageAsync(byte[] messageBytes, CancellationToken cancellationToken)
         {
             SIPMessageBuffer sipMessageBuffer = SIPMessageBuffer.ParseSIPMessage(messageBytes, SIPEndPoint.Empty, SIPEndPoint.Empty);
 
@@ -71,7 +71,7 @@ namespace SubverseIM.Bootstrapper.Services
             bool didStoreMessage = false;
             try
             {
-                didStoreMessage = _pushService.TryStoreMessage(sipMessage);
+                didStoreMessage = await _pushService.TryStoreMessageAsync(sipMessage, cancellationToken);
                 await toPeer.ReceiveMessageAsync(sipMessageBuffer.RawMessage);
             }
             catch (TimeoutException) when (didStoreMessage)
@@ -112,7 +112,7 @@ namespace SubverseIM.Bootstrapper.Services
 
                 try
                 {
-                    await DispatchMessageAsync(memoryStream.ToArray());
+                    await DispatchMessageAsync(memoryStream.ToArray(), cancellationToken);
                 }
                 catch (TimeoutException) { }
                 catch (PushServiceException) { }
