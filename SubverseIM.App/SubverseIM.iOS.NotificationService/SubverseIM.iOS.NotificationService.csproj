@@ -4,7 +4,6 @@
 		<OutputType>Library</OutputType>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>true</ImplicitUsings>
-		<IsAppExtension>true</IsAppExtension>
 		
 		<!-- The bundle identifier (aka ApplicationId) for an app extension must be the main app's bundle identifier + ".<something>" -->
 		<ApplicationId>com.chosenfewsoftware.SubverseIM.NotificationService</ApplicationId>
@@ -13,7 +12,7 @@
 	<PropertyGroup>
 		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
 		<UseInterpreter>true</UseInterpreter>
-		<ProvisioningType>manual</ProvisioningType>
+		<IsAppExtension>true</IsAppExtension>
 	</PropertyGroup>
 	
 	<ItemGroup>
