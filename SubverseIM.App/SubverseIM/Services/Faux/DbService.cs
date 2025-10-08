@@ -17,7 +17,7 @@ namespace SubverseIM.Services.Faux
 
         private readonly Dictionary<SubversePeerId, SubverseContact> contacts = new();
 
-        private readonly Dictionary<SubverseMessage.Identifier, SubverseMessage> messages = new();
+        private readonly Dictionary<MessageId, SubverseMessage> messages = new();
 
         private readonly Dictionary<string, SubverseTorrent> torrents = new();
 
@@ -108,7 +108,7 @@ namespace SubverseIM.Services.Faux
             }
         }
 
-        public SubverseMessage? GetMessageById(SubverseMessage.Identifier messageId)
+        public SubverseMessage? GetMessageById(MessageId messageId)
         {
             lock (messages)
             {
@@ -252,7 +252,7 @@ namespace SubverseIM.Services.Faux
                 case "SubverseIM.Models.SubverseMessage":
                     lock (messages)
                     {
-                        foreach ((SubverseMessage.Identifier messageId, SubverseMessage _) in messages
+                        foreach ((MessageId messageId, SubverseMessage _) in messages
                             .Where(x => x.Value.Id == id.AsObjectId).ToHashSet())
                         {
                             removedFlag |= messages.Remove(messageId);

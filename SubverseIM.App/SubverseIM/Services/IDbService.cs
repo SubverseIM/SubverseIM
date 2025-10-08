@@ -36,7 +36,7 @@ namespace SubverseIM.Services
 
         IReadOnlyDictionary<string, IEnumerable<SubversePeerId>> GetAllMessageTopics();
 
-        SubverseMessage? GetMessageById(SubverseMessage.Identifier messageId);
+        SubverseMessage? GetMessageById(MessageId messageId);
 
         bool InsertOrUpdateItem(SubverseContact newItem);
 
