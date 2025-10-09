@@ -4,9 +4,13 @@ using MonoTorrent.Client;
 using MonoTorrent.Connections.Dht;
 using MonoTorrent.Dht;
 using MonoTorrent.PortForwarding;
+using MonoTorrent.TrackerServer;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Tls;
 using PgpCore;
 using SubverseIM.Core;
 using SubverseIM.Models;
+using SubverseIM.Services.Faux;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -159,17 +163,7 @@ namespace SubverseIM.Services.Implementation
                     requestBytes = outputStream.ToArray();
                 }
 
-                Uri requestUri;
-                string? deviceToken = launcherService.GetDeviceToken();
-                if (deviceToken is null)
-                {
-                    requestUri = new Uri(bootstrapperUri, $"nodes?p={thisPeer}");
-                }
-                else
-                {
-                    requestUri = new Uri(bootstrapperUri, $"nodes?p={thisPeer}&tkn={deviceToken}");
-                }
-
+                Uri requestUri = new Uri(bootstrapperUri, $"nodes?p={thisPeer}");
                 using (ByteArrayContent requestContent = new(requestBytes)
                 { Headers = { ContentType = new("application/octet-stream") } })
                 {
@@ -193,6 +187,48 @@ namespace SubverseIM.Services.Implementation
                 dhtEngine.Add([responseBytes]);
 
                 return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task<bool> SubmitDeviceTokenAsync(Uri bootstrapperUri, CancellationToken cancellationToken) 
+        {
+            IServiceManager serviceManager = await serviceManagerTcs.Task;
+
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+            IMessageService messageService = await serviceManager.GetWithAwaitAsync<IMessageService>();
+
+            byte[]? deviceToken = launcherService.GetDeviceToken();
+            if (deviceToken is null) return false;
+
+            try
+            {
+                SubversePeer peer;
+                SubversePeerId thisPeer = await GetPeerIdAsync(cancellationToken);
+                lock (messageService.CachedPeers)
+                {
+                    peer = messageService.CachedPeers[thisPeer];
+                }
+
+                byte[] requestBytes;
+                using (PGP pgp = new(peer.KeyContainer))
+                using (MemoryStream inputStream = new(deviceToken))
+                using (MemoryStream outputStream = new())
+                {
+                    await pgp.SignAsync(inputStream, outputStream);
+                    requestBytes = outputStream.ToArray();
+                }
+
+                Uri requestUri = new Uri(bootstrapperUri, $"token?p={thisPeer}");
+                using (ByteArrayContent requestContent = new(requestBytes)
+                { Headers = { ContentType = new("application/octet-stream") } })
+                {
+                    HttpResponseMessage response = await http.PostAsync(requestUri, requestContent, cancellationToken);
+                    return await response.Content.ReadFromJsonAsync<bool>(cancellationToken);
+                }
             }
             catch
             {
@@ -244,6 +280,12 @@ namespace SubverseIM.Services.Implementation
                         await http.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent, cancellationToken);
                     }
                 }
+            }
+
+            // Submit device token to bootstrapper
+            foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
+            {
+                await SubmitDeviceTokenAsync(bootstrapperUri, cancellationToken);
             }
 
             // Forward SIP ports

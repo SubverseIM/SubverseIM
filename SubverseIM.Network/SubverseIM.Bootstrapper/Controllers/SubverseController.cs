@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using PgpCore;
+using SubverseIM.Bootstrapper.Extensions;
 using SubverseIM.Bootstrapper.Services;
 using SubverseIM.Core;
+using System.Globalization;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -140,7 +142,7 @@ namespace SubverseIM.Bootstrapper.Controllers
         [HttpPost("nodes")]
         [Consumes("application/octet-stream")]
         [Produces("application/json")]
-        public async Task<bool> PostNodesAsync([FromQuery(Name = "p")] string peerIdStr, [FromQuery(Name = "tkn")] string? deviceToken, CancellationToken cancellationToken)
+        public async Task<bool> PostNodesAsync([FromQuery(Name = "p")] string peerIdStr, CancellationToken cancellationToken)
         {
             try
             {
@@ -169,14 +171,55 @@ namespace SubverseIM.Bootstrapper.Controllers
                     if (verifySuccess)
                     {
                         SubversePeerId peerId = new(keyContainer.PublicKey.GetFingerprint());
-                        if (!string.IsNullOrEmpty(deviceToken))
-                        {
-                            await _pushService.RegisterPeerAsync(peerId, deviceToken);
-                        }
-
                         await _cache.SetAsync($"DAT-{peerId}", nodesBytes,
                             new DistributedCacheEntryOptions { AbsoluteExpiration = null }
                             );
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, null);
+            }
+
+            return false;
+        }
+
+        [HttpPost("token")]
+        [Consumes("application/octet-stream")]
+        [Produces("application/json")]
+        public async Task<bool> PostTokenAsync([FromQuery(Name = "p")] string peerIdStr, CancellationToken cancellationToken)
+        {
+            try
+            {
+                byte[]? pkBytes = await _cache.GetAsync($"PKX-{peerIdStr}", cancellationToken);
+                if (pkBytes is not null)
+                {
+                    EncryptionKeys keyContainer;
+                    using (MemoryStream ms = new(pkBytes))
+                    {
+                        keyContainer = new(ms);
+                    }
+
+                    byte[] deviceToken;
+                    bool verifySuccess;
+                    using (PGP pgp = new(keyContainer))
+                    using (MemoryStream inputStream = new())
+                    using (MemoryStream outputStream = new())
+                    {
+                        await Request.Body.CopyToAsync(inputStream);
+                        inputStream.Position = 0;
+
+                        verifySuccess = await pgp.VerifyAsync(inputStream, outputStream);
+                        deviceToken = outputStream.ToArray();
+                    }
+
+                    if (verifySuccess)
+                    {
+                        SubversePeerId peerId = new(keyContainer.PublicKey.GetFingerprint());
+                        await _pushService.RegisterPeerAsync(peerId, deviceToken);
+
                         return true;
                     }
                 }

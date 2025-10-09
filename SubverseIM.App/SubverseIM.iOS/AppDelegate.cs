@@ -32,7 +32,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
     private WrappedBootstrapperService? wrappedBootstrapperService;
 
-    private string? deviceToken;
+    private byte[]? deviceToken;
 
     private Uri? launchedUri;
 
@@ -64,8 +64,12 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         }
         else
         {
-            UIApplication.SharedApplication.RegisterForRemoteNotifications();
             NotificationsAllowed = true;
+        }
+
+        if (NotificationsAllowed) 
+        {
+            UIApplication.SharedApplication.RegisterForRemoteNotifications();
         }
 
         if (ev is not ProtocolActivatedEventArgs)
@@ -144,7 +148,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .UseReactiveUI();
     }
 
-    public string? GetDeviceToken()
+    public byte[]? GetDeviceToken()
     {
         return deviceToken;
     }
@@ -157,7 +161,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
     [Export("application:didRegisterForRemoteNotificationsWithDeviceToken:")]
     public void DidRegisterForRemoteNotificationsWithDeviceToken(UIApplication application, NSData deviceToken)
     {
-        this.deviceToken = new string(deviceToken.SelectMany(x => x.ToString("x2")).ToArray());
+        this.deviceToken = deviceToken.ToArray();
     }
 
 

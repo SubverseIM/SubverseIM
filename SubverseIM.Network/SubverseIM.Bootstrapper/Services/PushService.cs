@@ -2,6 +2,7 @@
 using Fitomad.Apns.Entities.Notification;
 using Microsoft.Extensions.Caching.Distributed;
 using SIPSorcery.SIP;
+using SubverseIM.Bootstrapper.Extensions;
 using SubverseIM.Bootstrapper.Models;
 using SubverseIM.Core;
 
@@ -28,9 +29,9 @@ namespace SubverseIM.Bootstrapper.Services
             _dbService = dbService;
         }
 
-        public Task RegisterPeerAsync(SubversePeerId peerId, string deviceToken, CancellationToken cancellationToken)
+        public Task RegisterPeerAsync(SubversePeerId peerId, byte[] deviceToken, CancellationToken cancellationToken)
         {
-            return _cache.SetStringAsync($"TKN-{peerId}", deviceToken,
+            return _cache.SetAsync($"TKN-{peerId}", deviceToken,
                 new DistributedCacheEntryOptions { AbsoluteExpiration = null },
                 cancellationToken);
         }
@@ -38,7 +39,7 @@ namespace SubverseIM.Bootstrapper.Services
         public async Task SendPushNotificationAsync(SIPMessageBase sipMessage, CancellationToken cancellationToken)
         {
             SubversePeerId toPeer;
-            string? deviceToken;
+            byte[]? deviceToken;
 
             if (_apnsClient is null || sipMessage is not SIPRequest sipRequest)
             {
@@ -47,10 +48,10 @@ namespace SubverseIM.Bootstrapper.Services
             else
             {
                 toPeer = SubversePeerId.FromString(sipRequest.Header.To.ToURI.User);
-                deviceToken = await _cache.GetStringAsync($"TKN-{toPeer}", cancellationToken);
+                deviceToken = await _cache.GetAsync($"TKN-{toPeer}", cancellationToken);
             }
 
-            if (!string.IsNullOrEmpty(deviceToken))
+            if (deviceToken is not null)
             {
                 string? topicName = sipRequest.URI.Parameters.Get("topic");
                 bool isSystemTopic = topicName == "#system";
@@ -80,7 +81,7 @@ namespace SubverseIM.Bootstrapper.Services
                 };
 
                 cancellationToken.ThrowIfCancellationRequested();
-                await _apnsClient.SendAsync(container, deviceToken);
+                await _apnsClient.SendAsync(container, deviceToken.ToHexString());
             }
         }
 
