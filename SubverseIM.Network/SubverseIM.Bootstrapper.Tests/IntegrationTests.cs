@@ -100,6 +100,41 @@ public class IntegrationTests
     }
 
     [Fact]
+    public async Task Post_SubmitDeviceTokenReturnsSuccessAndJson()
+    {
+        var client = _factory.CreateClient();
+
+        EncryptionKeys myKeys;
+        SubversePeerId myPeerId;
+        using (var pgp = new PGP())
+        using (var publicKeyStream = new MemoryStream())
+        using (var privateKeyStream = new MemoryStream())
+        {
+            await pgp.GenerateKeyAsync(publicKeyStream, privateKeyStream, password: "#FreeTheInternet");
+            publicKeyStream.Position = 0;
+            privateKeyStream.Position = 0;
+
+            myKeys = new EncryptionKeys(publicKeyStream, privateKeyStream, "#FreeTheInternet");
+            myPeerId = new(myKeys.PublicKey.GetFingerprint());
+        }
+
+        using (var pgp = new PGP(myKeys))
+        using (var inputStream = new MemoryStream(RandomNumberGenerator.GetBytes(1024)))
+        using (var outputStream = new MemoryStream())
+        {
+            await pgp.SignStreamAsync(inputStream, outputStream);
+            outputStream.Position = 0;
+
+            var response = await client.PostAsync($"/token?p={myPeerId}", new StreamContent(outputStream)
+            { Headers = { ContentType = new("application/octet-stream") } });
+            response.EnsureSuccessStatusCode();
+
+            bool? result = await response.Content.ReadFromJsonAsync<bool>();
+            Assert.Equal(false, result);
+        }
+    }
+
+    [Fact]
     public async Task Get_SynchronizeNodesReturnsSuccessAndBytes() 
     {
         var client = _factory.CreateClient();
