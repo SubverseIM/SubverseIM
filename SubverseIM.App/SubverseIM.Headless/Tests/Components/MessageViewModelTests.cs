@@ -40,7 +40,7 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        mainViewModel.NavigateMessageView(dbService.GetContacts(), null);
+        mainViewModel.NavigateMessageView(await dbService.GetContactsAsync(), null);
 
         MessagePageViewModel? messagePageViewModel = mainViewModel.CurrentPage as MessagePageViewModel;
         Assert.NotNull(messagePageViewModel);
@@ -90,8 +90,8 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        IEnumerable<SubverseContact> contacts = dbService.GetContacts();
-        IEnumerable<SubverseMessage> messages = dbService.GetMessagesWithPeersOnTopic(
+        IEnumerable<SubverseContact> contacts = await dbService.GetContactsAsync();
+        IEnumerable<SubverseMessage> messages = await dbService.GetMessagesWithPeersOnTopicAsync(
             contacts.Select(x => x.OtherPeer).ToHashSet(), MainViewFixture.EXPECTED_TOPIC_NAME
             );
         Assert.DoesNotContain(checkToken, messages.Select(x => x.Content));

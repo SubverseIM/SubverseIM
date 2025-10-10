@@ -20,7 +20,7 @@ namespace SubverseIM.Services.Faux
         public async Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync()
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            return dbService.GetTorrents().ToFrozenDictionary(
+            return (await dbService.GetTorrentsAsync()).ToFrozenDictionary(
                 x => x, x => new Progress<TorrentStatus>()
                 );
         }
@@ -33,7 +33,7 @@ namespace SubverseIM.Services.Faux
         public async Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            return !dbService.InsertOrUpdateItem(new SubverseTorrent(magnetUri) { TorrentBytes = torrentBytes });
+            return !await dbService.InsertOrUpdateItemAsync(new SubverseTorrent(magnetUri) { TorrentBytes = torrentBytes });
         }
 
         public Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
@@ -45,8 +45,8 @@ namespace SubverseIM.Services.Faux
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-            SubverseTorrent? storedTorrent = dbService.GetTorrent(torrent.MagnetUri);
-            return storedTorrent is not null && dbService.DeleteItemById<SubverseTorrent>(storedTorrent.Id);
+            SubverseTorrent? storedTorrent = await dbService.GetTorrentAsync(torrent.MagnetUri);
+            return storedTorrent is not null && await dbService.DeleteItemByIdAsync<SubverseTorrent>(storedTorrent.Id);
         }
 
         public Task<Progress<TorrentStatus>?> StartAsync(SubverseTorrent torrent)

@@ -3,12 +3,13 @@ using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Serializers;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SubverseIM.Services
 {
-    public interface IDbService : IDisposableService
+    public interface IDbService : IInjectable, IDisposableService
     {
         public const string SECRET_PASSWORD = "#FreeTheInternet";
 
@@ -18,40 +19,40 @@ namespace SubverseIM.Services
 
         public const string NODES_LIST_PATH = "$/pkx/nodes.list";
 
-        SubverseConfig? GetConfig();
+        Task<SubverseConfig?> GetConfigAsync(CancellationToken cancellationToken = default);
 
-        bool UpdateConfig(SubverseConfig config);
+        Task<bool> UpdateConfigAsync(SubverseConfig config, CancellationToken cancellationToken = default);
 
-        IEnumerable<SubverseContact> GetContacts();
+        Task<IEnumerable<SubverseContact>> GetContactsAsync(CancellationToken cancellationToken = default);
 
-        SubverseContact? GetContact(SubversePeerId otherPeer);
+        Task<SubverseContact?> GetContactAsync(SubversePeerId otherPeer, CancellationToken cancellationToken = default);
 
-        IEnumerable<SubverseTorrent> GetTorrents();
+        Task<IEnumerable<SubverseTorrent>> GetTorrentsAsync(CancellationToken cancellationToken = default);
 
-        SubverseTorrent? GetTorrent(string magnetUri);
+        Task<SubverseTorrent?> GetTorrentAsync(string magnetUri, CancellationToken cancellationToken = default);
 
-        IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName = null, bool orderFlag = false);
+        Task<IEnumerable<SubverseMessage>> GetMessagesWithPeersOnTopicAsync(HashSet<SubversePeerId> otherPeers, string? topicName = null, bool orderFlag = false, CancellationToken cancellationToken = default);
 
-        IEnumerable<SubverseMessage> GetAllUndeliveredMessages();
+        Task<IEnumerable<SubverseMessage>> GetAllUndeliveredMessagesAsync(CancellationToken cancellationToken = default);
 
-        IReadOnlyDictionary<string, IEnumerable<SubversePeerId>> GetAllMessageTopics();
+        Task<IReadOnlyDictionary<string, IEnumerable<SubversePeerId>>> GetAllMessageTopicsAsync(CancellationToken cancellationToken = default);
 
-        SubverseMessage? GetMessageById(MessageId messageId);
+        Task<SubverseMessage?> GetMessageByIdAsync(MessageId messageId, CancellationToken cancellationToken = default);
 
-        bool InsertOrUpdateItem(SubverseContact newItem);
+        Task<bool> InsertOrUpdateItemAsync(SubverseContact newItem, CancellationToken cancellationToken = default);
 
-        bool InsertOrUpdateItem(SubverseTorrent newItem);
+        Task<bool> InsertOrUpdateItemAsync(SubverseTorrent newItem, CancellationToken cancellationToken = default);
 
-        bool InsertOrUpdateItem(SubverseMessage newItem);
+        Task<bool> InsertOrUpdateItemAsync(SubverseMessage newItem, CancellationToken cancellationToken = default);
 
-        bool DeleteItemById<T>(BsonValue id);
+        Task<bool> DeleteItemByIdAsync<T>(BsonValue id, CancellationToken cancellationToken = default);
 
-        void DeleteAllMessagesOfTopic(string topicName);
+        Task DeleteAllMessagesOfTopicAsync(string topicName, CancellationToken cancellationToken = default);
 
-        void WriteAllMessagesOfTopic(ISerializer<SubverseMessage> serializer, string topicName);
+        Task WriteAllMessagesOfTopicAsync(ISerializer<SubverseMessage> serializer, string topicName, CancellationToken cancellationToken = default);
 
-        bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream);
+        Task<Stream?> GetReadStreamAsync(string path, CancellationToken cancellationToken = default);
 
-        Stream CreateWriteStream(string path);
+        Task<Stream> CreateWriteStreamAsync(string path, CancellationToken cancellationToken = default);
     }
 }

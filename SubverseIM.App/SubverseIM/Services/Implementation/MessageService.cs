@@ -83,8 +83,9 @@ public class MessageService : IMessageService, IDisposableService
         IEnumerable<SubversePeerId> recipients = [toPeer, ..sipRequest.Header.Contact
                         .Select(x => SubversePeerId.FromString(x.ContactURI.User))];
 
-        IEnumerable<string?> localRecipientNames = recipients
-            .Select(x => dbService.GetContact(x)?.DisplayName);
+        IEnumerable<string?> localRecipientNames = (await Task.WhenAll(recipients
+            .Select(x => dbService.GetContactAsync(x))))
+            .Select(x => x?.DisplayName);
 
         IEnumerable<string> remoteRecipientNames =
             [toName, .. sipRequest.Header.Contact.Select(x => x.ContactName)];
@@ -159,7 +160,7 @@ public class MessageService : IMessageService, IDisposableService
                 sipRequest.Header.Vias.PushViaHeader(viaHeader);
             }
 
-            dbService.InsertOrUpdateItem(message);
+            await dbService.InsertOrUpdateItemAsync(message);
             await SendSIPRequestAsync(sipRequest, useRelay:
                 remoteEndPoint != SIPEndPoint.Empty);
 
@@ -187,11 +188,11 @@ public class MessageService : IMessageService, IDisposableService
             MessageId messageId = new(sipResponse.Header.CallId,
                 SubversePeerId.FromString(sipResponse.Header.To.ToURI.User));
 
-            SubverseMessage? message = dbService.GetMessageById(messageId);
+            SubverseMessage? message = await dbService.GetMessageByIdAsync(messageId);
             if (message is not null)
             {
                 message.WasDelivered = true;
-                dbService.InsertOrUpdateItem(message);
+                await dbService.InsertOrUpdateItemAsync(message);
             }
 
             lock (CachedPeers)
@@ -314,7 +315,7 @@ public class MessageService : IMessageService, IDisposableService
             cancellationToken.ThrowIfCancellationRequested();
 
             int unsentCount = 0;
-            foreach (SubverseMessage message in dbService.GetAllUndeliveredMessages())
+            foreach (SubverseMessage message in await dbService.GetAllUndeliveredMessagesAsync())
             {
                 _ = SendMessageAsync(unsentCount++ * 333, message, maxSendAttempts: 3, cancellationToken: cancellationToken);
             }

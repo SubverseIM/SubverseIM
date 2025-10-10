@@ -40,7 +40,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
     public async Task SendPushNotificationAsync(IServiceManager serviceManager, SubverseMessage message)
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        SubverseContact? contact = dbService.GetContact(message.Sender);
+        SubverseContact? contact = await dbService.GetContactAsync(message.Sender);
 
         UNMutableNotificationContent content = new()
         {
@@ -135,11 +135,11 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
         }
         else if (extraDataKeys.Contains(EXTRA_PARTICIPANTS_ID))
         {
-            IEnumerable<SubverseContact>? participants =
+            IEnumerable<SubverseContact>? participants = (await Task.WhenAll(
                 ((string)(NSString)content.UserInfo
                 [EXTRA_PARTICIPANTS_ID]).Split(';')
                 .Select(SubversePeerId.FromString)
-                .Select(dbService.GetContact)
+                .Select(x => dbService.GetContactAsync(x))))
                 .Where(x => x is not null)
                 .Cast<SubverseContact>();
             string? topicName = content.UserInfo[EXTRA_TOPIC_ID] as NSString;

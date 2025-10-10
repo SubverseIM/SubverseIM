@@ -145,7 +145,7 @@ namespace SubverseIM.ViewModels.Pages
             {
                 using CsvMessageSerializer serializer = new(await outputFile.OpenWriteAsync());
                 IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
-                dbService.WriteAllMessagesOfTopic(serializer, SendMessageTopicName);
+                await dbService.WriteAllMessagesOfTopicAsync(serializer, SendMessageTopicName);
             }
         }
 
@@ -218,7 +218,7 @@ namespace SubverseIM.ViewModels.Pages
             }
 
             MessageList.Clear();
-            foreach (SubverseMessage message in dbService.GetMessagesWithPeersOnTopic(participantIds, null, config.MessageOrderFlag))
+            foreach (SubverseMessage message in await dbService.GetMessagesWithPeersOnTopicAsync(participantIds, null, config.MessageOrderFlag, cancellationToken))
             {
                 if (message.TopicName == "#system") continue;
 
@@ -229,7 +229,7 @@ namespace SubverseIM.ViewModels.Pages
                     SendMessageTopicName = currentTopicName;
                 }
 
-                SubverseContact sender = dbService.GetContact(message.Sender) ??
+                SubverseContact sender = await dbService.GetContactAsync(message.Sender, cancellationToken) ??
                     new() { OtherPeer = message.Sender, DisplayName = message.SenderName, };
 
                 bool isEmptyTopic = string.IsNullOrEmpty(SendMessageTopicName);
@@ -245,7 +245,7 @@ namespace SubverseIM.ViewModels.Pages
                     {
                         if (otherPeer == thisPeer) continue;
 
-                        SubverseContact participant = dbService.GetContact(otherPeer) ??
+                        SubverseContact participant = await dbService.GetContactAsync(otherPeer, cancellationToken) ??
                             new() { OtherPeer = otherPeer, DisplayName = contactName, };
                         AddUniqueParticipant(participant, false);
                     }
@@ -272,7 +272,7 @@ namespace SubverseIM.ViewModels.Pages
             IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>();
 
             SubversePeerId thisPeer = await peerService.GetPeerIdAsync();
-            SubverseContact? thisContact = dbService.GetContact(thisPeer);
+            SubverseContact? thisContact = await dbService.GetContactAsync(thisPeer);
             SubverseConfig config = await configurationService.GetConfigAsync();
 
             SubverseMessage message = new SubverseMessage()
@@ -292,7 +292,7 @@ namespace SubverseIM.ViewModels.Pages
                 DateSignedOn = DateTime.UtcNow,
             };
 
-            dbService.InsertOrUpdateItem(message);
+            await dbService.InsertOrUpdateItemAsync(message);
 
             if (messageText == SendMessageText)
             {
@@ -311,7 +311,7 @@ namespace SubverseIM.ViewModels.Pages
             foreach (SubverseContact contact in permContactsList.Select(x => x.innerContact))
             {
                 contact.DateLastChattedWith = message.DateSignedOn;
-                dbService.InsertOrUpdateItem(contact);
+                await dbService.InsertOrUpdateItemAsync(contact);
 
                 _ = nativeService.RunInBackgroundAsync(
                     ct => messageService.SendMessageAsync(message, cancellationToken: ct)

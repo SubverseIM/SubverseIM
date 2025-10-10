@@ -151,7 +151,7 @@ namespace SubverseIM.ViewModels.Components
             Stream? contactPhotoStream = null;
             if (innerContact.ImagePath is not null)
             {
-                dbService.TryGetReadStream(innerContact.ImagePath, out contactPhotoStream);
+                contactPhotoStream = await dbService.GetReadStreamAsync(innerContact.ImagePath, cancellationToken);
             }
 
             ContactPhoto = Bitmap.DecodeToHeight(contactPhotoStream ??
@@ -184,14 +184,14 @@ namespace SubverseIM.ViewModels.Components
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             if (ContactPhoto is not null)
             {
-                using Stream dbFileStream = dbService.CreateWriteStream(
+                using Stream dbFileStream = await dbService.CreateWriteStreamAsync(
                     innerContact.ImagePath = $"$/img/{innerContact.OtherPeer}.jpg"
                     );
                 ContactPhoto.Save(dbFileStream);
             }
 
             innerContact.ChatColorCode = BubbleColor.ToUInt32();
-            dbService.InsertOrUpdateItem(innerContact);
+            await dbService.InsertOrUpdateItemAsync(innerContact);
 
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             if (!frontendService.NavigatePreviousView())
@@ -218,7 +218,7 @@ namespace SubverseIM.ViewModels.Components
                 if (deleteFromDb)
                 {
                     IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-                    dbService.DeleteItemById<SubverseContact>(innerContact.Id);
+                    await dbService.DeleteItemByIdAsync<SubverseContact>(innerContact.Id);
                 }
 
                 contactContainer?.RemoveContact(this);
@@ -227,11 +227,11 @@ namespace SubverseIM.ViewModels.Components
             else if (!string.IsNullOrEmpty(TopicName) && await launcherService.ShowConfirmationDialogAsync(DELETE_CONFIRM_TITLE, DELETE_CONFIRM_MESSAGE))
             {
                 IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-                dbService.DeleteAllMessagesOfTopic(TopicName);
+                await dbService.DeleteAllMessagesOfTopicAsync(TopicName);
 
                 if (deleteFromDb)
                 {
-                    dbService.DeleteItemById<SubverseContact>(innerContact.Id);
+                    await dbService.DeleteItemByIdAsync<SubverseContact>(innerContact.Id);
                 }
 
                 contactContainer?.RemoveContact(this);

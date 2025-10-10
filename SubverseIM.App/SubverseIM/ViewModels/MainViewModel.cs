@@ -119,7 +119,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>(cancellationToken);
 
         SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
-        SubverseContact? thisContact = dbService.GetContact(thisPeer);
+        SubverseContact? thisContact = await dbService.GetContactAsync(thisPeer);
 
         List<Task> subTasks =
         [
@@ -129,9 +129,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
             Task.Run(torrentPage.InitializeAsync),
         ];
 
+        IEnumerable<SubverseContact> contacts = await dbService.GetContactsAsync(cancellationToken);
         lock (messageService.CachedPeers)
         {
-            foreach (SubverseContact contact in dbService.GetContacts().Where(x => x.TopicName is null))
+            foreach (SubverseContact contact in contacts.Where(x => x.TopicName is null))
             {
                 messageService.CachedPeers.TryAdd(
                     contact.OtherPeer,
@@ -152,11 +153,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 Sender = thisPeer,
                 SenderName = thisContact?.DisplayName ?? "Anonymous",
 
-                Recipients = dbService.GetContacts()
+                Recipients = (await dbService.GetContactsAsync(cancellationToken))
                     .Where(x => x.TopicName is null)
                     .Select(x => x.OtherPeer)
                     .ToArray(),
-                RecipientNames = dbService.GetContacts()
+                RecipientNames = (await dbService.GetContactsAsync(cancellationToken))
                     .Where(x => x.TopicName is null)
                     .Select(x => x.DisplayName ?? "Anonymous")
                     .ToArray(),
@@ -181,7 +182,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 string? topicName = message.TopicName is null || message.TopicName == "#system" ?
                     null : message.TopicName;
 
-                SubverseContact contact = dbService.GetContact(topicId ?? message.Sender) ??
+                SubverseContact contact = await dbService.GetContactAsync(topicId ?? message.Sender, cancellationToken) ??
                     new SubverseContact()
                     {
                         OtherPeer = topicId ?? message.Sender,
@@ -190,7 +191,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                     };
 
                 contact.DateLastChattedWith = message.DateSignedOn;
-                dbService.InsertOrUpdateItem(contact);
+                await dbService.InsertOrUpdateItemAsync(contact, cancellationToken);
 
                 lock (messageService.CachedPeers)
                 {
@@ -204,7 +205,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
                 try
                 {
-                    dbService.InsertOrUpdateItem(message);
+                    await dbService.InsertOrUpdateItemAsync(message, cancellationToken);
                     await contactPage.LoadContactsAsync(cancellationToken);
 
                     bool isCurrentPeer = false;
@@ -220,7 +221,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                             vm.TopicsList.Insert(0, message.TopicName);
                         }
 
-                        SubverseContact sender = dbService.GetContact(message.Sender) ?? new()
+                        SubverseContact sender = await dbService.GetContactAsync(message.Sender, cancellationToken) ?? new()
                         {
                             OtherPeer = message.Sender,
                             DisplayName = message.SenderName
@@ -233,7 +234,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                             vm.AddUniqueParticipant(participant, false);
                         }
 
-                        SubverseConfig config = await configurationService.GetConfigAsync();
+                        SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
                         if (config.MessageMirrorFlag == false)
                         {
                             vm.MessageList.Insert(0, messageViewModel);

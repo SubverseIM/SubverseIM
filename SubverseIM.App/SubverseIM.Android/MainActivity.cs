@@ -123,13 +123,15 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         serviceManager?.GetOrRegister<IBillingService>(new BillingService());
 
+        serviceManager?.GetOrRegister<IEncryptionService>(new DummyEncryptionService());
+
         string appDataPath = System.Environment.GetFolderPath(
             System.Environment.SpecialFolder.ApplicationData
             );
 
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
         serviceManager?.GetOrRegister<IDbService>(
-            new DbService($"Filename={dbFilePath};Password={IDbService.SECRET_PASSWORD}")
+            new DbService(dbFilePath)
             );
 
         if (!peerServiceConn.IsConnected)
@@ -196,9 +198,11 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         IDbService? dbService = serviceManager is null ? null :
             await serviceManager.GetWithAwaitAsync<IDbService>();
 
-        IEnumerable<SubverseContact>? contacts = Intent?
+        IEnumerable<SubverseContact> contacts = (await Task.WhenAll(Intent?
                 .GetStringArrayExtra(WrappedBootstrapperService.EXTRA_PARTICIPANTS_ID)?
-                .Select(x => dbService?.GetContact(SubversePeerId.FromString(x)))
+                .Select(x => dbService?.GetContactAsync(SubversePeerId.FromString(x)))
+                .Where(x => x is not null)
+                .Cast<Task<SubverseContact?>>() ?? []))
                 .Where(x => x is not null)
                 .Cast<SubverseContact>();
         string? topicName = Intent?.GetStringExtra(WrappedBootstrapperService.EXTRA_TOPIC_ID);
@@ -207,7 +211,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         {
             frontendService?.NavigateLaunchedUri();
         }
-        else if (contacts?.Any() ?? false)
+        else if (contacts.Any())
         {
             frontendService?.NavigateMessageView(contacts, topicName);
         }

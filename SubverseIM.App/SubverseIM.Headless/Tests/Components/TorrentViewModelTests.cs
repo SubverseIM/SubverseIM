@@ -121,7 +121,7 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         await torrentViewModel.DeleteCommand();
         
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        Assert.DoesNotContain(checkToken, dbService.GetTorrents().Select(x => x.MagnetUri));
+        Assert.DoesNotContain(checkToken, (await dbService.GetTorrentsAsync()).Select(x => x.MagnetUri));
     }
 
     [AvaloniaFact]
