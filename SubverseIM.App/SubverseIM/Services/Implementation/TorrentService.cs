@@ -58,7 +58,7 @@ namespace SubverseIM.Services.Implementation
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
             // Get all torrents from database
-            IEnumerable<SubverseTorrent> files = dbService.GetTorrents();
+            IEnumerable<SubverseTorrent> files = await dbService.GetTorrentsAsync();
 
             // Add and start all outstanding torrents
             await Task.WhenAll(files.Select(x => AddTorrentAsync(x.MagnetUri, x.TorrentBytes)));
@@ -71,7 +71,7 @@ namespace SubverseIM.Services.Implementation
         {
             // Stop all outstanding torrents
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            await Task.WhenAll(dbService.GetTorrents().Select(StopAsync));
+            await Task.WhenAll((await dbService.GetTorrentsAsync()).Select(StopAsync));
         }
 
         private Progress<TorrentStatus> CreateProgress(TorrentManager manager, SubverseTorrent torrent)
@@ -89,7 +89,7 @@ namespace SubverseIM.Services.Implementation
                     if (manager.HasMetadata)
                     {
                         torrent.TorrentBytes = File.ReadAllBytes(manager.MetadataPath);
-                        dbService.InsertOrUpdateItem(torrent);
+                        await dbService.InsertOrUpdateItemAsync(torrent);
                     }
 
                     ((IProgress<TorrentStatus>)progress)
@@ -114,13 +114,13 @@ namespace SubverseIM.Services.Implementation
         public async Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            SubverseTorrent? torrent = dbService.GetTorrent(magnetUri) ??
+            SubverseTorrent? torrent = await dbService.GetTorrentAsync(magnetUri) ??
                 new SubverseTorrent(magnetUri)
                 {
                     DateLastUpdatedOn = DateTime.UtcNow
                 };
             torrent.TorrentBytes = torrentBytes ?? torrent.TorrentBytes;
-            dbService.InsertOrUpdateItem(torrent);
+            await dbService.InsertOrUpdateItemAsync(torrent);
 
             string cacheDirPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
@@ -232,7 +232,7 @@ namespace SubverseIM.Services.Implementation
                 TorrentBytes = metadataDict.Encode(),
                 DateLastUpdatedOn = DateTime.UtcNow,
             };
-            dbService.InsertOrUpdateItem(torrent);
+            await dbService.InsertOrUpdateItemAsync(torrent);
 
             lock (managerMap)
             {
@@ -251,11 +251,11 @@ namespace SubverseIM.Services.Implementation
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-            SubverseTorrent? storedItem = dbService.GetTorrent(torrent.MagnetUri);
+            SubverseTorrent? storedItem = await dbService.GetTorrentAsync(torrent.MagnetUri);
             while (storedItem is not null)
             {
-                dbService.DeleteItemById<SubverseTorrent>(storedItem.Id);
-                storedItem = dbService.GetTorrent(torrent.MagnetUri);
+                await dbService.DeleteItemByIdAsync<SubverseTorrent>(storedItem.Id);
+                storedItem = await dbService.GetTorrentAsync(torrent.MagnetUri);
             }
 
             TorrentManager? manager;

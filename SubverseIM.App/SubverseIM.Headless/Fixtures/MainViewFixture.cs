@@ -65,7 +65,7 @@ public class MainViewFixture : IDisposable
             };
             contacts.Add(contact);
 
-            dbService.InsertOrUpdateItem(contact);
+            await dbService.InsertOrUpdateItemAsync(contact);
         }
 
         // Initialize messages
@@ -88,7 +88,7 @@ public class MainViewFixture : IDisposable
             WasDecrypted = true,
             WasDelivered = true,
         };
-        dbService.InsertOrUpdateItem(message);
+        await dbService.InsertOrUpdateItemAsync(message);
 
         // Initialize torrents
         for (int i = 0; i < EXPECTED_NUM_TORRENTS; i++)
@@ -97,7 +97,7 @@ public class MainViewFixture : IDisposable
             MagnetLink magnetLink = new(infoHash, name: "Untitled");
 
             SubverseTorrent torrent = new(magnetLink.ToV1String());
-            dbService.InsertOrUpdateItem(torrent);
+            await dbService.InsertOrUpdateItemAsync(torrent);
         }
 
         return dbService;

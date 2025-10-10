@@ -92,10 +92,14 @@ namespace SubverseIM.Services.Implementation
             tcs.TrySetResult(e.Peers);
         }
 
-        private (Stream, Stream) GenerateKeysIfNone(IDbService dbService)
+        private async Task<(Stream, Stream)> GenerateKeysIfNoneAsync()
         {
-            if (dbService.TryGetReadStream(IDbService.PUBLIC_KEY_PATH, out Stream? publicKeyStream) &&
-                dbService.TryGetReadStream(IDbService.PRIVATE_KEY_PATH, out Stream? privateKeyStream))
+            IServiceManager serviceManager = await serviceManagerTcs.Task;
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+
+            Stream? publicKeyStream = await dbService.GetReadStreamAsync(IDbService.PUBLIC_KEY_PATH);
+            Stream? privateKeyStream = await dbService.GetReadStreamAsync(IDbService.PRIVATE_KEY_PATH);
+            if (publicKeyStream is not null && privateKeyStream is not null)
             {
                 return (publicKeyStream, privateKeyStream);
             }
@@ -113,8 +117,8 @@ namespace SubverseIM.Services.Implementation
                         );
                 }
 
-                using (Stream publicKeyStoreStream = dbService.CreateWriteStream(IDbService.PUBLIC_KEY_PATH))
-                using (Stream privateKeyStoreStream = dbService.CreateWriteStream(IDbService.PRIVATE_KEY_PATH))
+                using (Stream publicKeyStoreStream = await dbService.CreateWriteStreamAsync(IDbService.PUBLIC_KEY_PATH))
+                using (Stream privateKeyStoreStream = await dbService.CreateWriteStreamAsync(IDbService.PRIVATE_KEY_PATH))
                 {
                     publicKeyStream.Position = 0;
                     publicKeyStream.CopyTo(publicKeyStoreStream);
@@ -149,7 +153,7 @@ namespace SubverseIM.Services.Implementation
                 }
 
                 ReadOnlyMemory<byte> nodesBytes = await dhtEngine.SaveNodesAsync();
-                using (Stream cacheStream = dbService.CreateWriteStream(IDbService.NODES_LIST_PATH))
+                using (Stream cacheStream = await dbService.CreateWriteStreamAsync(IDbService.NODES_LIST_PATH))
                 {
                     cacheStream.Write(nodesBytes.Span);
                 }
@@ -255,7 +259,8 @@ namespace SubverseIM.Services.Implementation
             await dhtEngine.SetListenerAsync(dhtListener);
             using (MemoryStream bufferStream = new())
             {
-                if (dbService.TryGetReadStream(IDbService.NODES_LIST_PATH, out Stream? cacheStream))
+                Stream? cacheStream = await dbService.GetReadStreamAsync(IDbService.NODES_LIST_PATH);
+                if (cacheStream is not null)
                 {
                     await cacheStream.CopyToAsync(bufferStream);
                     await dhtEngine.StartAsync(bufferStream.ToArray());
@@ -269,7 +274,8 @@ namespace SubverseIM.Services.Implementation
             }
 
             // Announce public key on bootstrapper
-            if (dbService.TryGetReadStream(IDbService.PUBLIC_KEY_PATH, out Stream? pkStream))
+            Stream? pkStream = await dbService.GetReadStreamAsync(IDbService.PUBLIC_KEY_PATH);
+            if (pkStream is not null)
             {
                 foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
                 {
@@ -418,7 +424,8 @@ namespace SubverseIM.Services.Implementation
                     catch (HttpRequestException) { }
                 }
 
-                if (dbService.TryGetReadStream(IDbService.PRIVATE_KEY_PATH, out Stream? privateKeyStream))
+                Stream? privateKeyStream = await dbService.GetReadStreamAsync(IDbService.PRIVATE_KEY_PATH);
+                if (privateKeyStream is not null)
                 {
                     peerKeys = new(publicKeyStream, privateKeyStream, IDbService.SECRET_PASSWORD);
                     peer.KeyContainer = peerKeys;
@@ -528,10 +535,10 @@ namespace SubverseIM.Services.Implementation
             // DB service init
 
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            dbService.GetMessagesWithPeersOnTopic([], null);
+            await dbService.GetMessagesWithPeersOnTopicAsync([], null);
 
             (Stream publicKeyStream, Stream privateKeyStream) =
-                GenerateKeysIfNone(dbService);
+                await GenerateKeysIfNoneAsync();
             EncryptionKeys myKeys = new(publicKeyStream, privateKeyStream, IDbService.SECRET_PASSWORD);
 
             publicKeyStream.Dispose();

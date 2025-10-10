@@ -11,7 +11,6 @@ using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UIKit;
@@ -84,13 +83,14 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
                 string csvFilePath = Path.Combine(baseFilePath, "contacts.csv");
                 using (StreamWriter csvWriter = File.CreateText(csvFilePath))
                 {
-                    foreach (SubverseContact contact in dbService.GetContacts())
+                    foreach (SubverseContact contact in await dbService.GetContactsAsync())
                     {
                         await csvWriter.WriteLineAsync($"{contact.OtherPeer},{contact.DisplayName ?? "Anonymous"}");
                     }
                 }
 
-                if (dbService.TryGetReadStream(IDbService.PRIVATE_KEY_PATH, out Stream? privateKeyDbStream))
+                Stream? privateKeyDbStream = await dbService.GetReadStreamAsync(IDbService.PRIVATE_KEY_PATH);
+                if (privateKeyDbStream is not null)
                 {
                     string privateKeyFilePath = Path.Combine(baseFilePath, "private-key.data");
                     using (FileStream privateKeyFileStream = File.Create(privateKeyFilePath))
@@ -181,6 +181,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         serviceManager.GetOrRegister<IBillingService>(new BillingService());
 
+        serviceManager.GetOrRegister<IEncryptionService>(new DummyEncryptionService());
+
         string appDataPath = Environment.GetFolderPath(
             Environment.SpecialFolder.ApplicationData
             );
@@ -188,7 +190,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
 
         serviceManager.GetOrRegister<IDbService>(
-            new DbService($"Filename={dbFilePath};Password={IDbService.SECRET_PASSWORD}")
+            new DbService(dbFilePath)
             );
 
         wrappedBootstrapperService = new(serviceManager, application);

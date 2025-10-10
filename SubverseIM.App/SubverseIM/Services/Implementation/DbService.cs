@@ -5,42 +5,59 @@ using SubverseIM.Serializers;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Implementation
 {
     public class DbService : IDbService
     {
-        private readonly LiteDatabase db;
+        private readonly string dbFilePath;
+
+        private readonly BsonMapper mapper;
+
+        private readonly TaskCompletionSource<LiteDatabase> dbTcs;
 
         private bool disposedValue;
 
-        public DbService(string dbConnectionString)
+        public DbService(string dbFilePath)
         {
+            this.dbFilePath = dbFilePath;
+
             BsonMapper mapper = new();
             mapper.RegisterType(
                 serialize: (peerId) => peerId.ToString(),
                 deserialize: (bson) => SubversePeerId.FromString(bson.AsString)
             );
+            this.mapper = mapper;
 
-            db = new(dbConnectionString, mapper);
+            dbTcs = new();
         }
 
-        public SubverseConfig? GetConfig()
+        public async Task<SubverseConfig?> GetConfigAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             return db.GetCollection<SubverseConfig>()
                 .FindAll().SingleOrDefault();
         }
 
-        public bool UpdateConfig(SubverseConfig config) 
+        public async Task<bool> UpdateConfigAsync(SubverseConfig config, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             return db.GetCollection<SubverseConfig>().Upsert(config);
         }
 
-        public IEnumerable<SubverseContact> GetContacts()
+        public async Task<IEnumerable<SubverseContact>> GetContactsAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var contacts = db.GetCollection<SubverseContact>();
             contacts.EnsureIndex(x => x.OtherPeer, unique: true);
             return contacts.Query()
@@ -48,15 +65,21 @@ namespace SubverseIM.Services.Implementation
                 .ToEnumerable();
         }
 
-        public SubverseContact? GetContact(SubversePeerId otherPeer)
+        public async Task<SubverseContact?> GetContactAsync(SubversePeerId otherPeer, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var contacts = db.GetCollection<SubverseContact>();
             contacts.EnsureIndex(x => x.OtherPeer, unique: true);
             return contacts.FindOne(x => x.OtherPeer == otherPeer);
         }
 
-        public IEnumerable<SubverseTorrent> GetTorrents()
+        public async Task<IEnumerable<SubverseTorrent>> GetTorrentsAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var torrents = db.GetCollection<SubverseTorrent>();
             torrents.EnsureIndex(x => x.MagnetUri, unique: true);
 
@@ -65,16 +88,22 @@ namespace SubverseIM.Services.Implementation
                 .ToEnumerable();
         }
 
-        public SubverseTorrent? GetTorrent(string magnetUri)
+        public async Task<SubverseTorrent?> GetTorrentAsync(string magnetUri, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var torrents = db.GetCollection<SubverseTorrent>();
             torrents.EnsureIndex(x => x.MagnetUri, unique: true);
 
             return torrents.FindOne(x => x.MagnetUri == magnetUri);
         }
 
-        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName, bool orderFlag)
+        public async Task<IEnumerable<SubverseMessage>> GetMessagesWithPeersOnTopicAsync(HashSet<SubversePeerId> otherPeers, string? topicName, bool orderFlag, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var messages = db.GetCollection<SubverseMessage>();
 
             messages.EnsureIndex(x => x.Sender);
@@ -90,12 +119,15 @@ namespace SubverseIM.Services.Implementation
                 .ToEnumerable())
                 .DistinctBy(x => x.MessageId);
 
-            return orderFlag ? topicMessages.OrderBy(x => x.DateSignedOn) : 
+            return orderFlag ? topicMessages.OrderBy(x => x.DateSignedOn) :
                 topicMessages.OrderByDescending(x => x.DateSignedOn);
         }
 
-        public IEnumerable<SubverseMessage> GetAllUndeliveredMessages()
+        public async Task<IEnumerable<SubverseMessage>> GetAllUndeliveredMessagesAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var messages = db.GetCollection<SubverseMessage>();
 
             messages.EnsureIndex(x => x.Sender);
@@ -109,8 +141,11 @@ namespace SubverseIM.Services.Implementation
                 .ToEnumerable();
         }
 
-        public IReadOnlyDictionary<string, IEnumerable<SubversePeerId>> GetAllMessageTopics()
+        public async Task<IReadOnlyDictionary<string, IEnumerable<SubversePeerId>>> GetAllMessageTopicsAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var messages = db.GetCollection<SubverseMessage>();
 
             messages.EnsureIndex(x => x.Sender);
@@ -128,8 +163,11 @@ namespace SubverseIM.Services.Implementation
                     .Distinct());
         }
 
-        public SubverseMessage? GetMessageById(MessageId messageId)
+        public async Task<SubverseMessage?> GetMessageByIdAsync(MessageId messageId, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var messages = db.GetCollection<SubverseMessage>();
 
             messages.EnsureIndex(x => x.Sender);
@@ -140,40 +178,55 @@ namespace SubverseIM.Services.Implementation
             return messages.FindOne(x => x.MessageId == messageId);
         }
 
-        public bool InsertOrUpdateItem(SubverseContact newItem)
+        public async Task<bool> InsertOrUpdateItemAsync(SubverseContact newItem, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var contacts = db.GetCollection<SubverseContact>();
 
-            SubverseContact? storedItem = GetContact(newItem.OtherPeer);
+            SubverseContact? storedItem = await GetContactAsync(newItem.OtherPeer, cancellationToken);
             newItem.Id = storedItem?.Id;
 
             return contacts.Upsert(newItem);
         }
 
-        public bool InsertOrUpdateItem(SubverseTorrent newItem)
+        public async Task<bool> InsertOrUpdateItemAsync(SubverseTorrent newItem, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var torrents = db.GetCollection<SubverseTorrent>();
 
-            SubverseTorrent? storedItem = GetTorrent(newItem.MagnetUri);
+            SubverseTorrent? storedItem = await GetTorrentAsync(newItem.MagnetUri, cancellationToken);
             newItem.Id = storedItem?.Id;
 
             return torrents.Upsert(newItem);
         }
 
-        public bool InsertOrUpdateItem(SubverseMessage newItem)
+        public async Task<bool> InsertOrUpdateItemAsync(SubverseMessage newItem, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var messages = db.GetCollection<SubverseMessage>();
             return messages.Upsert(newItem);
         }
 
-        public bool DeleteItemById<T>(BsonValue id)
+        public async Task<bool> DeleteItemByIdAsync<T>(BsonValue id, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var collection = db.GetCollection<T>();
             return collection.Delete(id);
         }
 
-        public void DeleteAllMessagesOfTopic(string topicName)
+        public async Task DeleteAllMessagesOfTopicAsync(string topicName, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var messages = db.GetCollection<SubverseMessage>();
 
             messages.EnsureIndex(x => x.Sender);
@@ -184,8 +237,11 @@ namespace SubverseIM.Services.Implementation
             messages.DeleteMany(x => x.TopicName == topicName);
         }
 
-        public void WriteAllMessagesOfTopic(ISerializer<SubverseMessage> serializer, string topicName)
+        public async Task WriteAllMessagesOfTopicAsync(ISerializer<SubverseMessage> serializer, string topicName, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             var messages = db.GetCollection<SubverseMessage>();
 
             messages.EnsureIndex(x => x.Sender);
@@ -196,29 +252,44 @@ namespace SubverseIM.Services.Implementation
             foreach (SubverseMessage message in messages.Query()
                 .Where(x => x.TopicName == topicName)
                 .OrderByDescending(x => x.DateSignedOn)
-                .ToEnumerable()) 
+                .ToEnumerable())
             {
                 serializer.Serialize(message);
             }
         }
 
-        public bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream)
+        public async Task<Stream?> GetReadStreamAsync(string path, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             if (db.GetStorage<string>().Exists(path))
             {
-                stream = db.GetStorage<string>().OpenRead(path);
-                return true;
+                return db.GetStorage<string>().OpenRead(path);
             }
             else
             {
-                stream = null;
-                return false;
+                return null;
             }
         }
 
-        public Stream CreateWriteStream(string path)
+        public async Task<Stream> CreateWriteStreamAsync(string path, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
+
             return db.GetStorage<string>().OpenWrite(path, Path.GetFileName(path));
+        }
+
+        public async Task InjectAsync(IServiceManager serviceManager)
+        {
+            IEncryptionService? encryptionService = serviceManager.Get<IEncryptionService>();
+            string? dbPassword = encryptionService is null ? null : await encryptionService.GetEncryptionKeyAsync();
+            dbTcs.SetResult(new LiteDatabase(new ConnectionString
+            {
+                Filename = dbFilePath,
+                Password = dbPassword,
+            }, mapper));
         }
 
         protected virtual void Dispose(bool disposing)
@@ -227,7 +298,10 @@ namespace SubverseIM.Services.Implementation
             {
                 if (disposing)
                 {
-                    db.Dispose();
+                    if (dbTcs.Task.IsCompletedSuccessfully)
+                    {
+                        dbTcs.Task.Result.Dispose();
+                    }
                 }
 
                 disposedValue = true;

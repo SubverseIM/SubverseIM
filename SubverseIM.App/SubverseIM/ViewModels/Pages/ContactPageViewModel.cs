@@ -45,24 +45,24 @@ namespace SubverseIM.ViewModels.Pages
         {
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
 
-            foreach ((string topicName, IEnumerable<SubversePeerId> participants) in dbService.GetAllMessageTopics())
+            foreach ((string topicName, IEnumerable<SubversePeerId> participants) in await dbService.GetAllMessageTopicsAsync(cancellationToken))
             {
                 SubversePeerId topicId = new(SHA1.HashData(Encoding.UTF8.GetBytes(topicName)));
                 SubverseContact newContact =
-                    dbService.GetContact(topicId) ?? new()
+                    await dbService.GetContactAsync(topicId, cancellationToken) ?? new()
                     {
                         OtherPeer = topicId,
                         TopicName = topicName,
                     };
 
-                IEnumerable<SubverseMessage> messages = dbService.GetMessagesWithPeersOnTopic(participants.ToHashSet(), topicName);
+                IEnumerable<SubverseMessage> messages = await dbService.GetMessagesWithPeersOnTopicAsync(participants.ToHashSet(), topicName, cancellationToken: cancellationToken);
                 newContact.DateLastChattedWith = messages.FirstOrDefault()?.DateSignedOn ?? DateTime.MinValue;
 
-                dbService.InsertOrUpdateItem(newContact);
+                await dbService.InsertOrUpdateItemAsync(newContact, cancellationToken);
             }
 
             ContactsList.Clear();
-            foreach (SubverseContact contact in dbService.GetContacts()
+            foreach (SubverseContact contact in (await dbService.GetContactsAsync(cancellationToken))
                 .Where(x => Parent is null || x.TopicName is null))
             {
                 ContactViewModel vm = new(ServiceManager, this, contact);
@@ -101,9 +101,9 @@ namespace SubverseIM.ViewModels.Pages
                         frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
 
                         string topicName = contacts.Single().TopicName!;
-                        IEnumerable<SubverseContact> participants =
-                            dbService.GetAllMessageTopics()[topicName]
-                            .Select(dbService.GetContact)
+                        IEnumerable<SubverseContact> participants = (await Task.WhenAll(
+                            (await dbService.GetAllMessageTopicsAsync())[topicName]
+                            .Select(x => dbService.GetContactAsync(x))))
                             .Where(x => x is not null)
                             .Cast<SubverseContact>();
                         frontendService.NavigateMessageView(participants, topicName);

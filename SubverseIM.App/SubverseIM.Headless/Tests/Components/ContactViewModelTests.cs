@@ -69,7 +69,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         IDbService? dbService = serviceManager.Get<IDbService>();
         Assert.NotNull(dbService);
 
-        SubverseContact? contact = dbService.GetContacts().FirstOrDefault();
+        SubverseContact? contact = (await dbService.GetContactsAsync()).FirstOrDefault();
         Assert.NotNull(contact);
 
         mainViewModel.NavigateContactView(contact);
@@ -92,7 +92,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        mainViewModel.NavigateMessageView(dbService.GetContacts(), null);
+        mainViewModel.NavigateMessageView(await dbService.GetContactsAsync(), null);
 
         MessagePageViewModel? messagePageViewModel = mainViewModel.CurrentPage as MessagePageViewModel;
         Assert.NotNull(messagePageViewModel);
@@ -254,7 +254,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        Assert.Contains(checkToken, dbService.GetContacts().Select(x => x.UserNote));
+        Assert.Contains(checkToken, (await dbService.GetContactsAsync()).Select(x => x.UserNote));
 
         contactViewModel.UserNote = null;
     }

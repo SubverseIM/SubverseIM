@@ -5,9 +5,10 @@ using SubverseIM.Serializers;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SubverseIM.Services.Faux
 {
@@ -23,26 +24,40 @@ namespace SubverseIM.Services.Faux
 
         private readonly Dictionary<string, Stream> fileStreams = new();
 
-        public SubverseConfig? GetConfig()
+        public Task<SubverseConfig?> GetConfigAsync(CancellationToken cancellationToken)
         {
-            lock (config)
+            if (cancellationToken.IsCancellationRequested)
             {
-                return config.Id is null ? null : config;
+                return Task.FromCanceled<SubverseConfig?>(cancellationToken);
+            }
+            else
+            {
+                lock (config)
+                {
+                    return Task.FromResult(config.Id is null ? null : config);
+                }
             }
         }
 
-        public bool UpdateConfig(SubverseConfig config)
+        public Task<bool> UpdateConfigAsync(SubverseConfig config, CancellationToken cancellationToken)
         {
-            lock (config)
+            if (cancellationToken.IsCancellationRequested)
             {
-                bool flag = this.config.Id is not null;
-                this.config.Id ??= ObjectId.NewObjectId();
-                this.config.BootstrapperUriList = config.BootstrapperUriList;
-                return flag;
+                return Task.FromCanceled<bool>(cancellationToken);
+            }
+            else
+            {
+                lock (config)
+                {
+                    bool flag = this.config.Id is not null;
+                    this.config.Id ??= ObjectId.NewObjectId();
+                    this.config.BootstrapperUriList = config.BootstrapperUriList;
+                    return Task.FromResult(flag);
+                }
             }
         }
 
-        public IEnumerable<SubverseContact> GetContacts()
+        private IEnumerable<SubverseContact> GetContactsCore()
         {
             lock (contacts)
             {
@@ -54,30 +69,57 @@ namespace SubverseIM.Services.Faux
             }
         }
 
-        public SubverseContact? GetContact(SubversePeerId otherPeer)
+        public Task<IEnumerable<SubverseContact>> GetContactsAsync(CancellationToken cancellationToken)
         {
-            lock (contacts)
+            if (cancellationToken.IsCancellationRequested)
             {
-                contacts.TryGetValue(otherPeer, out SubverseContact? contact);
-                return contact;
+                return Task.FromCanceled<IEnumerable<SubverseContact>>(cancellationToken);
+            }
+            else
+            {
+                return Task.FromResult(GetContactsCore());
             }
         }
 
-        public IReadOnlyDictionary<string, IEnumerable<SubversePeerId>> GetAllMessageTopics()
+        public Task<SubverseContact?> GetContactAsync(SubversePeerId otherPeer, CancellationToken cancellationToken)
         {
-            lock (messages)
+            if (cancellationToken.IsCancellationRequested)
             {
-                return messages.Values
-                    .OrderByDescending(x => x.DateSignedOn)
-                    .Where(x => !string.IsNullOrEmpty(x.TopicName) && x.TopicName != "#system")
-                    .GroupBy(x => x.TopicName!)
-                    .ToFrozenDictionary(g => g.Key, g => g
-                        .SelectMany(x => x.Recipients)
-                        .Distinct());
+                return Task.FromCanceled<SubverseContact?>(cancellationToken);
+            }
+            else
+            {
+                lock (contacts)
+                {
+                    contacts.TryGetValue(otherPeer, out SubverseContact? contact);
+                    return Task.FromResult(contact);
+                }
             }
         }
 
-        public IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopic(HashSet<SubversePeerId> otherPeers, string? topicName, bool orderFlag)
+        public Task<IReadOnlyDictionary<string, IEnumerable<SubversePeerId>>> GetAllMessageTopicsAsync(CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromCanceled<IReadOnlyDictionary<string, IEnumerable<SubversePeerId>>>(cancellationToken);
+            }
+            else
+            {
+                lock (messages)
+                {
+                    return Task.FromResult<IReadOnlyDictionary<string, IEnumerable<SubversePeerId>>>
+                        (messages.Values
+                        .OrderByDescending(x => x.DateSignedOn)
+                        .Where(x => !string.IsNullOrEmpty(x.TopicName) && x.TopicName != "#system")
+                        .GroupBy(x => x.TopicName!)
+                        .ToFrozenDictionary(g => g.Key, g => g
+                            .SelectMany(x => x.Recipients)
+                            .Distinct()));
+                }
+            }
+        }
+
+        private IEnumerable<SubverseMessage> GetMessagesWithPeersOnTopicCore(HashSet<SubversePeerId> otherPeers, string? topicName, bool orderFlag)
         {
             lock (messages)
             {
@@ -96,37 +138,76 @@ namespace SubverseIM.Services.Faux
             }
         }
 
-        public IEnumerable<SubverseMessage> GetAllUndeliveredMessages()
+        public Task<IEnumerable<SubverseMessage>> GetMessagesWithPeersOnTopicAsync(HashSet<SubversePeerId> otherPeers, string? topicName, bool orderFlag, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromCanceled<IEnumerable<SubverseMessage>>(cancellationToken);
+            }
+            else
+            {
+                return Task.FromResult(GetMessagesWithPeersOnTopicCore(otherPeers, topicName, orderFlag));
+            }
+        }
+
+        private IEnumerable<SubverseMessage> GetAllUndeliveredMessagesCore()
         {
             lock (messages)
             {
                 foreach (SubverseMessage message in messages.Values
-                    .Where(x => !x.WasDelivered))
+                    .Where(x => x.WasDecrypted != false && x.WasDelivered == false)
+                    .OrderBy(x => x.DateSignedOn))
                 {
                     yield return message;
                 }
             }
         }
 
-        public SubverseMessage? GetMessageById(MessageId messageId)
+        public Task<IEnumerable<SubverseMessage>> GetAllUndeliveredMessagesAsync(CancellationToken cancellationToken)
         {
-            lock (messages)
+            if (cancellationToken.IsCancellationRequested) 
+            { 
+                return Task.FromCanceled<IEnumerable<SubverseMessage>>(cancellationToken); 
+            }
+            else
             {
-                messages.TryGetValue(messageId, out SubverseMessage? message);
-                return message;
+                return Task.FromResult(GetAllUndeliveredMessagesCore());
             }
         }
 
-        public SubverseTorrent? GetTorrent(string magnetUri)
+        public Task<SubverseMessage?> GetMessageByIdAsync(MessageId messageId, CancellationToken cancellationToken)
         {
-            lock (torrents)
+            if (cancellationToken.IsCancellationRequested) 
+            { 
+                return Task.FromCanceled<SubverseMessage?>(cancellationToken); 
+            }
+            else
             {
-                torrents.TryGetValue(magnetUri, out SubverseTorrent? torrent);
-                return torrent;
+                lock (messages)
+                {
+                    messages.TryGetValue(messageId, out SubverseMessage? message);
+                    return Task.FromResult(message);
+                }
             }
         }
 
-        public IEnumerable<SubverseTorrent> GetTorrents()
+        public Task<SubverseTorrent?> GetTorrentAsync(string magnetUri, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested) 
+            {
+                return Task.FromCanceled<SubverseTorrent?>(cancellationToken); 
+            }
+            else
+            {
+                lock (torrents)
+                {
+                    torrents.TryGetValue(magnetUri, out SubverseTorrent? torrent);
+                    return Task.FromResult(torrent);
+                }
+            }
+        }
+
+        private IEnumerable<SubverseTorrent> GetTorrentsCore()
         {
             lock (torrents)
             {
@@ -138,191 +219,268 @@ namespace SubverseIM.Services.Faux
             }
         }
 
-        public bool InsertOrUpdateItem(SubverseContact newItem)
+        public Task<IEnumerable<SubverseTorrent>> GetTorrentsAsync(CancellationToken cancellationToken)
         {
-            lock (contacts)
+            if (cancellationToken.IsCancellationRequested) 
+            { 
+                return Task.FromCanceled<IEnumerable<SubverseTorrent>>(cancellationToken); 
+            }
+            else
             {
-                if (contacts.TryGetValue(newItem.OtherPeer, out SubverseContact? oldItem))
+                return Task.FromResult(GetTorrentsCore());
+            }
+        }
+
+        public Task<bool> InsertOrUpdateItemAsync(SubverseContact newItem, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested) 
+            { 
+                return Task.FromCanceled<bool>(cancellationToken); 
+            }
+            else
+            {
+                lock (contacts)
                 {
-                    oldItem.ChatColorCode = newItem.ChatColorCode;
-                    oldItem.DateLastChattedWith = newItem.DateLastChattedWith;
-                    oldItem.DisplayName = newItem.DisplayName;
-                    oldItem.ImagePath = newItem.ImagePath;
-                    oldItem.UserNote = newItem.UserNote;
-                    return true;
-                }
-                else
-                {
-                    newItem.Id ??= ObjectId.NewObjectId();
-                    contacts.Add(newItem.OtherPeer, newItem);
-                    return false;
+                    if (contacts.TryGetValue(newItem.OtherPeer, out SubverseContact? oldItem))
+                    {
+                        oldItem.ChatColorCode = newItem.ChatColorCode;
+                        oldItem.DateLastChattedWith = newItem.DateLastChattedWith;
+                        oldItem.DisplayName = newItem.DisplayName;
+                        oldItem.ImagePath = newItem.ImagePath;
+                        oldItem.UserNote = newItem.UserNote;
+                        return Task.FromResult(true);
+                    }
+                    else
+                    {
+                        newItem.Id ??= ObjectId.NewObjectId();
+                        contacts.Add(newItem.OtherPeer, newItem);
+                        return Task.FromResult(false);
+                    }
                 }
             }
         }
 
-        public bool InsertOrUpdateItem(SubverseTorrent newItem)
+        public Task<bool> InsertOrUpdateItemAsync(SubverseTorrent newItem, CancellationToken cancellationToken)
         {
-            lock (torrents)
+            if (cancellationToken.IsCancellationRequested)
             {
-                if (torrents.TryGetValue(newItem.MagnetUri, out SubverseTorrent? oldItem))
+                return Task.FromCanceled<bool>(cancellationToken);
+            }
+            else
+            {
+                lock (torrents)
                 {
-                    oldItem.DateLastUpdatedOn = newItem.DateLastUpdatedOn;
-                    oldItem.TorrentBytes = newItem.TorrentBytes;
-                    return true;
-                }
-                else
-                {
-                    newItem.Id ??= ObjectId.NewObjectId();
-                    torrents.Add(newItem.MagnetUri, newItem);
-                    return false;
+                    if (torrents.TryGetValue(newItem.MagnetUri, out SubverseTorrent? oldItem))
+                    {
+                        oldItem.DateLastUpdatedOn = newItem.DateLastUpdatedOn;
+                        oldItem.TorrentBytes = newItem.TorrentBytes;
+                        return Task.FromResult(true);
+                    }
+                    else
+                    {
+                        newItem.Id ??= ObjectId.NewObjectId();
+                        torrents.Add(newItem.MagnetUri, newItem);
+                        return Task.FromResult(false);
+                    }
                 }
             }
         }
 
-        public bool InsertOrUpdateItem(SubverseMessage newItem)
+        public Task<bool> InsertOrUpdateItemAsync(SubverseMessage newItem, CancellationToken cancellationToken)
         {
-            lock (messages)
+            if (cancellationToken.IsCancellationRequested)
             {
-                if (newItem.MessageId is not null && messages
-                    .TryGetValue(newItem.MessageId, out SubverseMessage? oldItem))
+                return Task.FromCanceled<bool>(cancellationToken);
+            }
+            else
+            {
+                lock (messages)
                 {
-                    oldItem.Content = newItem.Content;
-                    oldItem.DateSignedOn = newItem.DateSignedOn;
-                    oldItem.RecipientNames = newItem.RecipientNames;
-                    oldItem.Recipients = newItem.Recipients;
-                    oldItem.Sender = newItem.Sender;
-                    oldItem.SenderName = newItem.SenderName;
-                    oldItem.TopicName = newItem.TopicName;
-                    oldItem.WasDecrypted = newItem.WasDecrypted;
-                    oldItem.WasDelivered = newItem.WasDelivered;
-                    return true;
-                }
-                else if (newItem.MessageId is not null)
-                {
-                    newItem.Id ??= ObjectId.NewObjectId();
-                    messages.Add(newItem.MessageId, newItem);
-                    return false;
-                }
-                else
-                {
-                    throw new ArgumentNullException(nameof(newItem.MessageId));
+                    if (newItem.MessageId is not null && messages
+                        .TryGetValue(newItem.MessageId, out SubverseMessage? oldItem))
+                    {
+                        oldItem.Content = newItem.Content;
+                        oldItem.DateSignedOn = newItem.DateSignedOn;
+                        oldItem.RecipientNames = newItem.RecipientNames;
+                        oldItem.Recipients = newItem.Recipients;
+                        oldItem.Sender = newItem.Sender;
+                        oldItem.SenderName = newItem.SenderName;
+                        oldItem.TopicName = newItem.TopicName;
+                        oldItem.WasDecrypted = newItem.WasDecrypted;
+                        oldItem.WasDelivered = newItem.WasDelivered;
+                        return Task.FromResult(true);
+                    }
+                    else if (newItem.MessageId is not null)
+                    {
+                        newItem.Id ??= ObjectId.NewObjectId();
+                        messages.Add(newItem.MessageId, newItem);
+                        return Task.FromResult(false);
+                    }
+                    else
+                    {
+                        throw new ArgumentNullException(nameof(newItem.MessageId));
+                    }
                 }
             }
         }
 
-        public void DeleteAllMessagesOfTopic(string topicName)
+        public Task DeleteAllMessagesOfTopicAsync(string topicName, CancellationToken cancellationToken)
         {
-            lock (messages)
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromCanceled(cancellationToken);
+            }
+            else
+            {
+                lock (messages)
+                {
+                    foreach (SubverseMessage message in messages.Values
+                        .Where(x => x.TopicName == topicName)
+                        .Where(x => x.MessageId is not null))
+                    {
+                        messages.Remove(message.MessageId!);
+                    }
+                }
+
+                return Task.CompletedTask;
+            }
+        }
+
+        public Task WriteAllMessagesOfTopicAsync(ISerializer<SubverseMessage> serializer, string topicName, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromCanceled(cancellationToken);
+            }
+            else
             {
                 foreach (SubverseMessage message in messages.Values
-                    .Where(x => x.TopicName == topicName)
-                    .Where(x => x.MessageId is not null))
+                        .Where(x => x.TopicName == topicName)
+                        .Where(x => x.MessageId is not null)
+                        .OrderByDescending(x => x.DateSignedOn))
                 {
-                    messages.Remove(message.MessageId!);
+                    serializer.Serialize(message);
                 }
+
+                return Task.CompletedTask;
             }
         }
 
-        public void WriteAllMessagesOfTopic(ISerializer<SubverseMessage> serializer, string topicName)
+        public Task<bool> DeleteItemByIdAsync<T>(BsonValue id, CancellationToken cancellationToken)
         {
-            foreach (SubverseMessage message in messages.Values
-                    .Where(x => x.TopicName == topicName)
-                    .Where(x => x.MessageId is not null)
-                    .OrderByDescending(x => x.DateSignedOn))
+            if (cancellationToken.IsCancellationRequested)
             {
-                serializer.Serialize(message);
+                return Task.FromCanceled<bool>(cancellationToken);
             }
-        }
-
-        public bool DeleteItemById<T>(BsonValue id)
-        {
-            bool removedFlag = false;
-            switch (typeof(T).FullName)
+            else
             {
-                case "SubverseIM.Models.SubverseContact":
-                    lock (contacts)
-                    {
-                        foreach ((SubversePeerId otherPeer, SubverseContact _) in contacts
-                            .Where(x => x.Value.Id == id.AsObjectId).ToHashSet())
+                bool removedFlag = false;
+                switch (typeof(T).FullName)
+                {
+                    case "SubverseIM.Models.SubverseContact":
+                        lock (contacts)
                         {
-                            removedFlag |= contacts.Remove(otherPeer);
+                            foreach ((SubversePeerId otherPeer, SubverseContact _) in contacts
+                                .Where(x => x.Value.Id == id.AsObjectId).ToHashSet())
+                            {
+                                removedFlag |= contacts.Remove(otherPeer);
+                            }
+                            break;
                         }
-                        break;
-                    }
-                case "SubverseIM.Models.SubverseMessage":
-                    lock (messages)
-                    {
-                        foreach ((MessageId messageId, SubverseMessage _) in messages
-                            .Where(x => x.Value.Id == id.AsObjectId).ToHashSet())
+                    case "SubverseIM.Models.SubverseMessage":
+                        lock (messages)
                         {
-                            removedFlag |= messages.Remove(messageId);
+                            foreach ((MessageId messageId, SubverseMessage _) in messages
+                                .Where(x => x.Value.Id == id.AsObjectId).ToHashSet())
+                            {
+                                removedFlag |= messages.Remove(messageId);
+                            }
+                            break;
                         }
-                        break;
-                    }
-                case "SubverseIM.Models.SubverseTorrent":
-                    lock (torrents)
-                    {
-                        foreach ((string magnetUri, SubverseTorrent _) in torrents
-                            .Where(x => x.Value.Id == id.AsObjectId).ToHashSet())
+                    case "SubverseIM.Models.SubverseTorrent":
+                        lock (torrents)
                         {
-                            removedFlag |= torrents.Remove(magnetUri);
+                            foreach ((string magnetUri, SubverseTorrent _) in torrents
+                                .Where(x => x.Value.Id == id.AsObjectId).ToHashSet())
+                            {
+                                removedFlag |= torrents.Remove(magnetUri);
+                            }
+                            break;
                         }
-                        break;
-                    }
-                default:
-                    throw new ArgumentException($"{nameof(DbService)} does not manage a collection of type: \"{typeof(T).FullName}\"", nameof(T));
-            }
-            return removedFlag;
-        }
-
-        public bool TryGetReadStream(string path, [NotNullWhen(true)] out Stream? stream)
-        {
-            lock (fileStreams)
-            {
-                if (fileStreams.TryGetValue(path, out stream))
-                {
-                    try
-                    {
-                        stream.Position = 0;
-                        return true;
-                    }
-                    catch (ObjectDisposedException) 
-                    {
-                        stream = new MemoryStream();
-                        return true;
-                    }
+                    default:
+                        throw new ArgumentException($"{nameof(DbService)} does not manage a collection of type: \"{typeof(T).FullName}\"", nameof(T));
                 }
-                else
-                {
-                    return false;
-                }
+                return Task.FromResult(removedFlag);
             }
         }
 
-        public Stream CreateWriteStream(string path)
+        public Task<Stream?> GetReadStreamAsync(string path, CancellationToken cancellationToken)
         {
-            lock (fileStreams)
+            if (cancellationToken.IsCancellationRequested)
             {
-                if (fileStreams.TryGetValue(path, out Stream? fileStream))
+                return Task.FromCanceled<Stream?>(cancellationToken);
+            }
+            else
+            {
+                lock (fileStreams)
                 {
-                    try
+                    if (fileStreams.TryGetValue(path, out Stream? stream))
                     {
-                        fileStream.Position = 0;
-                        fileStream.SetLength(0);
-                        return fileStream;
+                        try
+                        {
+                            stream.Position = 0;
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            stream = new MemoryStream();
+                        }
+
+                        return Task.FromResult<Stream?>(stream);
                     }
-                    catch (ObjectDisposedException) 
+                    else
                     {
-                        return fileStream = new MemoryStream();
+                        return Task.FromResult<Stream?>(null);
                     }
-                }
-                else
-                {
-                    fileStream = new MemoryStream();
-                    fileStreams.Add(path, fileStream);
-                    return fileStream;
                 }
             }
+        }
+
+        public Task<Stream> CreateWriteStreamAsync(string path, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromCanceled<Stream>(cancellationToken);
+            }
+            else
+            {
+                lock (fileStreams)
+                {
+                    if (fileStreams.TryGetValue(path, out Stream? fileStream))
+                    {
+                        try
+                        {
+                            fileStream.Position = 0;
+                            fileStream.SetLength(0);
+                            return Task.FromResult(fileStream);
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            return Task.FromResult(fileStream = new MemoryStream());
+                        }
+                    }
+                    else
+                    {
+                        fileStream = new MemoryStream();
+                        fileStreams.Add(path, fileStream);
+                        return Task.FromResult(fileStream);
+                    }
+                }
+            }
+        }
+
+        public Task InjectAsync(IServiceManager serviceManager)
+        {
+            return Task.CompletedTask;
         }
 
         private bool disposedValue;

@@ -39,7 +39,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        mainViewModel.NavigateMessageView(dbService.GetContacts().Where(x => x.TopicName is null), null);
+        mainViewModel.NavigateMessageView((await dbService.GetContactsAsync()).Where(x => x.TopicName is null), null);
 
         MessagePageViewModel? messagePageViewModel = mainViewModel.CurrentPage as MessagePageViewModel;
         Assert.NotNull(messagePageViewModel);
@@ -126,7 +126,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-        SubverseContact? contact = dbService.GetContacts().FirstOrDefault(x => x.TopicName is null);
+        SubverseContact? contact = (await dbService.GetContactsAsync()).FirstOrDefault(x => x.TopicName is null);
         Debug.Assert(contact is not null); // should always be non-null, test should be rewritten otherwise.
 
         int countBefore = messagePageViewModel.ContactsList.Count(x => x.TopicName is null);

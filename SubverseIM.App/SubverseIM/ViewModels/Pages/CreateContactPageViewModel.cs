@@ -23,9 +23,9 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task InitializeAsync(Uri contactUri, CancellationToken cancellationToken = default)
         {
-            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
+            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             SubversePeerId otherPeer = SubversePeerId.FromString(contactUri.DnsSafeHost);
-            Contact = new(ServiceManager, null, dbService.GetContact(otherPeer) ?? 
+            Contact = new(ServiceManager, null, await dbService.GetContactAsync(otherPeer, cancellationToken) ?? 
                 new SubverseContact() 
                 { 
                     OtherPeer = otherPeer, 

@@ -26,7 +26,7 @@ public class ConfigurationService : IConfigurationService
     public async Task<SubverseConfig> GetConfigAsync(CancellationToken cancellationToken)
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        return config ??= dbService.GetConfig() ?? new SubverseConfig
+        return config ??= await dbService.GetConfigAsync(cancellationToken) ?? new SubverseConfig
         { BootstrapperUriList = [IBootstrapperService.DEFAULT_BOOTSTRAPPER_ROOT] };
     }
 
@@ -35,7 +35,7 @@ public class ConfigurationService : IConfigurationService
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
         SubverseConfig config = await GetConfigAsync(cancellationToken);
-        dbService.UpdateConfig(config);
+        await dbService.UpdateConfigAsync(config, cancellationToken);
 
         return true;
     }
