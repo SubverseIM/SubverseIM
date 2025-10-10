@@ -142,11 +142,11 @@ namespace SubverseIM.Android
             int notificationId = message.TopicName?.GetHashCode() ?? message.Sender.GetHashCode();
 
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            SubverseContact? contact = dbService.GetContact(message.Sender);
+            SubverseContact? contact = await dbService.GetContactAsync(message.Sender);
 
+            Stream? avatarStream;
             Bitmap? avatarBitmap;
-            if (contact?.ImagePath is not null && dbService
-                .TryGetReadStream(contact.ImagePath, out Stream? avatarStream))
+            if (contact?.ImagePath is not null && (avatarStream = await dbService.GetReadStreamAsync(contact.ImagePath)) is not null)
             {
                 avatarBitmap = await BitmapFactory.DecodeStreamAsync(avatarStream);
             }
