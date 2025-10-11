@@ -21,6 +21,7 @@
 		<PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Plugin.InAppBilling" Version="9.1.0" />
 		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.110" />
+		<PackageReference Include="Xamarin.AndroidX.Biometric" Version="1.1.0.30" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -123,7 +123,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         serviceManager?.GetOrRegister<IBillingService>(new BillingService());
 
-        serviceManager?.GetOrRegister<IEncryptionService>(new DummyEncryptionService());
+        serviceManager?.GetOrRegister<IEncryptionService>(new AndroidEncryptionService(this));
 
         string appDataPath = System.Environment.GetFolderPath(
             System.Environment.SpecialFolder.ApplicationData
@@ -308,10 +308,10 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
     public Task ShareUrlToAppAsync(Visual? sender, string title, string content)
     {
-        new ShareCompat.IntentBuilder(this)
-            .SetType("text/plain")
-            .SetChooserTitle(title)
-            .SetText(content)
+        new ShareCompat.IntentBuilder(this)?
+            .SetType("text/plain")?
+            .SetChooserTitle(title)?
+            .SetText(content)?
             .StartChooser();
 
         return Task.CompletedTask;
