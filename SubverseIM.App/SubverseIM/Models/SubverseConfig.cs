@@ -37,5 +37,7 @@ namespace SubverseIM.Models
         public int? PromptFreqIndex { get; set; }
 
         public string? DefaultContactName { get; set; }
+
+        public bool IsPushNotificationsEnabled { get; set; }
     }
 }

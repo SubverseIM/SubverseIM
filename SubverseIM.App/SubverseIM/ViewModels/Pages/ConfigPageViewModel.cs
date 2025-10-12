@@ -15,25 +15,27 @@ namespace SubverseIM.ViewModels.Pages
 
         public override string Title => "Settings View";
 
+        public bool IsRunningOnIOS => OperatingSystem.IsIOS();
+
         public ObservableCollection<string> BootstrapperUriList { get; }
 
         public ObservableCollection<string> SelectedUriList { get; }
 
         private bool isFormattingAllowed;
-        public bool IsFormattingAllowed 
+        public bool IsFormattingAllowed
         {
             get => isFormattingAllowed;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref isFormattingAllowed, value);
             }
         }
 
         private bool messageOrderFlag;
-        public bool MessageOrderFlag 
-        { 
+        public bool MessageOrderFlag
+        {
             get => messageOrderFlag;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref messageOrderFlag, value);
             }
@@ -53,7 +55,7 @@ namespace SubverseIM.ViewModels.Pages
         public Color DefaultChatColor
         {
             get => defaultChatColor;
-            set 
+            set
             {
                 IsChatColorDefault = false;
                 this.RaiseAndSetIfChanged(ref defaultChatColor, value);
@@ -61,22 +63,32 @@ namespace SubverseIM.ViewModels.Pages
         }
 
         private bool isChatColorDefault;
-        public bool IsChatColorDefault 
+        public bool IsChatColorDefault
         {
             get => isChatColorDefault;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref isChatColorDefault, value);
             }
         }
 
         private int? promptFreqIndex;
-        public int? PromptFreqIndex 
+        public int? PromptFreqIndex
         {
             get => promptFreqIndex;
-            set 
+            set
             {
                 this.RaiseAndSetIfChanged(ref promptFreqIndex, value);
+            }
+        }
+
+        private bool isPushNotificationsEnabled;
+        public bool IsPushNotificationsEnabled
+        {
+            get => isPushNotificationsEnabled;
+            set 
+            {
+                this.RaiseAndSetIfChanged(ref isPushNotificationsEnabled, value);
             }
         }
 
@@ -103,11 +115,13 @@ namespace SubverseIM.ViewModels.Pages
 
             MessageMirrorFlag = config.MessageMirrorFlag;
 
-            DefaultChatColor = config.DefaultChatColorCode is null ? Colors.MediumPurple : 
+            DefaultChatColor = config.DefaultChatColorCode is null ? Colors.MediumPurple :
                 Color.FromUInt32(config.DefaultChatColorCode.Value);
             IsChatColorDefault = config.DefaultChatColorCode is null;
 
             PromptFreqIndex = config.PromptFreqIndex;
+
+            IsPushNotificationsEnabled = config.IsPushNotificationsEnabled;
         }
 
         public async Task AddBootstrapperUriCommand(string? defaultText = null)
@@ -163,6 +177,8 @@ namespace SubverseIM.ViewModels.Pages
 
                 config.PromptFreqIndex = PromptFreqIndex == 3 ? null : PromptFreqIndex;
 
+                config.IsPushNotificationsEnabled = IsPushNotificationsEnabled;
+
                 return await peerService.PersistConfigAsync() && frontendService.NavigatePreviousView();
             }
             catch (SubverseConfig.ValidationException ex)
@@ -173,7 +189,7 @@ namespace SubverseIM.ViewModels.Pages
             return false;
         }
 
-        public void ResetDefaultChatColorCommand() 
+        public void ResetDefaultChatColorCommand()
         {
             DefaultChatColor = Colors.MediumPurple;
             IsChatColorDefault = true;
