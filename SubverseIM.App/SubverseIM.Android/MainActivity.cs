@@ -132,9 +132,8 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         serviceManager?.GetOrRegister<IEncryptionService>(new AndroidEncryptionService(this));
 
-        string appDataPath = System.Environment.GetFolderPath(
-            System.Environment.SpecialFolder.ApplicationData
-            );
+        string appDataPath = GetPersistentStoragePath();
+        Directory.CreateDirectory(appDataPath);
 
         string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
         serviceManager?.GetOrRegister<IDbService>(
@@ -238,6 +237,12 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
     {
         return Intent?.DataString is null ?
             null : new Uri(Intent.DataString);
+    }
+
+    public string GetPersistentStoragePath()
+    {
+        return GetExternalFilesDir(null)?.AbsolutePath ?? System.Environment
+            .GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
     }
 
     public Task<bool> ShowConfirmationDialogAsync(string title, string message)

@@ -16,6 +16,8 @@ namespace SubverseIM.Services.Faux
 
         public Uri? GetLaunchedUri() => null;
 
+        public string GetPersistentStoragePath() => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
         public Task ShareFileToAppAsync(Visual? sender, string title, string path) => Task.CompletedTask;
 
         public Task ShareUrlToAppAsync(Visual? sender, string title, string content) => Task.CompletedTask;

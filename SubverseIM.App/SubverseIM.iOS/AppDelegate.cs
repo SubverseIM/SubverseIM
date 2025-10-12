@@ -148,16 +148,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .UseReactiveUI();
     }
 
-    public byte[]? GetDeviceToken()
-    {
-        return deviceToken;
-    }
-
-    public Uri? GetLaunchedUri()
-    {
-        return launchedUri;
-    }
-
     [Export("application:didRegisterForRemoteNotificationsWithDeviceToken:")]
     public void DidRegisterForRemoteNotificationsWithDeviceToken(UIApplication application, NSData deviceToken)
     {
@@ -183,12 +173,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         serviceManager.GetOrRegister<IEncryptionService>(new DummyEncryptionService());
 
-        string appDataPath = Environment.GetFolderPath(
-            Environment.SpecialFolder.ApplicationData
-            );
+        string appDataPath = GetPersistentStoragePath();
         Directory.CreateDirectory(appDataPath);
-        string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
 
+        string dbFilePath = Path.Combine(appDataPath, "SubverseIM.db");
         serviceManager.GetOrRegister<IDbService>(
             new DbService(dbFilePath)
             );
@@ -208,6 +196,26 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         HandleAppActivated(this, new ActivatedEventArgs(ActivationKind.Background));
 
         return true;
+    }
+
+    public void ExitApplication()
+    {
+        return;
+    }
+
+    public byte[]? GetDeviceToken()
+    {
+        return deviceToken;
+    }
+
+    public Uri? GetLaunchedUri()
+    {
+        return launchedUri;
+    }
+
+    public string GetPersistentStoragePath()
+    {
+        return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     }
 
     public async Task<bool> ShowConfirmationDialogAsync(string title, string message)

@@ -16,6 +16,8 @@ namespace SubverseIM.Services
 
         Uri? GetLaunchedUri();
 
+        string GetPersistentStoragePath();
+
         Task<bool> ShowConfirmationDialogAsync(string title, string message);
 
         Task ShowAlertDialogAsync(string title, string message);
