@@ -17,7 +17,11 @@ namespace SubverseIM.Android
     {
         private const string KEY_NAME = "com.chosenfewsoftware.SubverseIM";
 
-        private const string DEFAULT_PROVIDER = "AndroidKeyStore";
+        private const string ANDROID_KEY_STORE = "AndroidKeyStore";
+
+        private const int VALIDITY_DURATION_SECONDS = 30;
+
+        private const int KEY_SIZE = 256;
 
         private class AuthenticationCallback : BiometricPrompt.AuthenticationCallback
         {
@@ -52,19 +56,30 @@ namespace SubverseIM.Android
             public override void OnAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result)
             {
                 base.OnAuthenticationSucceeded(result);
+
+                Cipher? cipher = GetCipher();
+                IKey? secretKey = GetSecretKey() ?? GenerateSecretKey();
+
                 if (File.Exists(passwordFilePath))
                 {
-                    byte[] encryptedKey = File.ReadAllBytes(passwordFilePath)[..^16];
-                    byte[]? decryptedKey = result.CryptoObject?.Cipher?.DoFinal(encryptedKey);
+                    byte[] passwordFileBytes = File.ReadAllBytes(passwordFilePath);
+                    cipher?.Init(Javax.Crypto.CipherMode.DecryptMode, secretKey,
+                            new IvParameterSpec(passwordFileBytes[^16..])
+                            );
+
+                    byte[] encryptedKey = passwordFileBytes[..^16];
+                    byte[]? decryptedKey = cipher?.DoFinal(encryptedKey);
 
                     string? password = decryptedKey is null ? null : Convert.ToBase64String(decryptedKey);
                     resultTcs.SetResult(password);
                 }
                 else
                 {
+                    cipher?.Init(Javax.Crypto.CipherMode.EncryptMode, secretKey);
                     byte[] decryptedKey = RandomNumberGenerator.GetBytes(32);
-                    byte[]? encryptedKey = result.CryptoObject?.Cipher?.DoFinal(decryptedKey);
-                    byte[]? initializationVector = result.CryptoObject?.Cipher?.GetIV();
+
+                    byte[]? encryptedKey = cipher?.DoFinal(decryptedKey);
+                    byte[]? initializationVector = cipher?.GetIV();
 
                     if (encryptedKey is not null && initializationVector is not null)
                     {
@@ -93,31 +108,47 @@ namespace SubverseIM.Android
             biometricPrompt = new BiometricPrompt(mainActivity, authenticationCallback);
         }
 
-        private IKey? GenerateSecretKey()
+        private static IKey? GenerateSecretKey()
         {
-            var spec = new KeyGenParameterSpec.Builder(KEY_NAME,
+            KeyGenParameterSpec.Builder builder =
+                new KeyGenParameterSpec.Builder(KEY_NAME,
                  KeyStorePurpose.Encrypt | KeyStorePurpose.Decrypt)
                 .SetBlockModes(KeyProperties.BlockModeCbc)
                 .SetEncryptionPaddings(KeyProperties.EncryptionPaddingPkcs7)
-                .SetKeySize(256)
-                .SetUserAuthenticationRequired(true)
-                .Build();
+                .SetKeySize(KEY_SIZE)
+                .SetUserAuthenticationRequired(true);
+
+            KeyGenParameterSpec spec;
+            if (OperatingSystem.IsAndroidVersionAtLeast(30)) 
+            {
+                spec = builder
+                    .SetUserAuthenticationParameters(VALIDITY_DURATION_SECONDS, (int)
+                        (KeyPropertiesAuthType.BiometricStrong | 
+                        KeyPropertiesAuthType.DeviceCredential))
+                    .Build();
+            }
+            else
+            {
+                spec = builder
+                    .SetUserAuthenticationValidityDurationSeconds(VALIDITY_DURATION_SECONDS)
+                    .Build();
+            }
 
             KeyGenerator? keyGenerator = KeyGenerator.GetInstance(
-                    KeyProperties.KeyAlgorithmAes, DEFAULT_PROVIDER);
+                    KeyProperties.KeyAlgorithmAes, ANDROID_KEY_STORE);
             keyGenerator?.Init(spec);
             return keyGenerator?.GenerateKey();
         }
 
-        private IKey? GetSecretKey()
+        private static IKey? GetSecretKey()
         {
-            using KeyStore? keyStore = KeyStore.GetInstance(DEFAULT_PROVIDER);
+            KeyStore? keyStore = KeyStore.GetInstance(ANDROID_KEY_STORE);
             keyStore?.Load(null);
 
             return keyStore?.GetKey(KEY_NAME, null);
         }
 
-        private Cipher? GetCipher()
+        private static Cipher? GetCipher()
         {
             return Cipher.GetInstance(KeyProperties.KeyAlgorithmAes + "/"
                     + KeyProperties.BlockModeCbc + "/"
@@ -126,29 +157,15 @@ namespace SubverseIM.Android
 
         public async Task<string?> GetEncryptionKeyAsync(CancellationToken cancellationToken)
         {
-            Cipher cipher = GetCipher()!;
-            IKey secretKey = GetSecretKey() ?? GenerateSecretKey()!;
-
-            if (File.Exists(passwordFilePath))
-            {
-                byte[] initializationVector = File.ReadAllBytes(passwordFilePath)[^16..];
-                cipher.Init(Javax.Crypto.CipherMode.DecryptMode, secretKey, new IvParameterSpec(initializationVector));
-            }
-            else
-            {
-                cipher.Init(Javax.Crypto.CipherMode.EncryptMode, secretKey);
-            }
-
             var promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .SetTitle("Authenticate SubverseIM")
                 .SetSubtitle("Please authenticate to decrypt your data.")
                 .SetDescription("SubverseIM uses the device's lock screen credentials to keep your data private and safe.")
                 .SetAllowedAuthenticators(
                     BiometricManager.Authenticators.BiometricStrong |
-                    BiometricManager.Authenticators.DeviceCredential
-                    )
+                    BiometricManager.Authenticators.DeviceCredential)
                 .Build();
-            biometricPrompt.Authenticate(promptInfo, new BiometricPrompt.CryptoObject(cipher));
+            biometricPrompt.Authenticate(promptInfo);
 
             return await authenticationCallback.GetResultAsync(cancellationToken);
         }
