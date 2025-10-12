@@ -113,7 +113,9 @@ namespace SubverseIM.Services.Implementation
 
         public async Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes)
         {
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+
             SubverseTorrent? torrent = await dbService.GetTorrentAsync(magnetUri) ??
                 new SubverseTorrent(magnetUri)
                 {
@@ -123,7 +125,7 @@ namespace SubverseIM.Services.Implementation
             await dbService.InsertOrUpdateItemAsync(torrent);
 
             string cacheDirPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
+                    launcherService.GetPersistentStoragePath(), "torrent", "files"
                     );
             Directory.CreateDirectory(cacheDirPath);
 
@@ -182,11 +184,12 @@ namespace SubverseIM.Services.Implementation
 
         public async Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
         {
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
             string cacheDirPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
+                    launcherService.GetPersistentStoragePath(), "torrent", "files"
                     );
             string cacheFilePath = Path.Combine(cacheDirPath, file.Name);
             if (!File.Exists(cacheFilePath))

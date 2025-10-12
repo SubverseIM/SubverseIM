@@ -130,15 +130,15 @@ namespace SubverseIM.ViewModels.Components
 
         public async Task ShareCommand(Visual? sender)
         {
+            ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             string cacheDirPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
+                        launcherService.GetPersistentStoragePath(), "torrent", "files"
                         );
             string cacheFilePath = Path.Combine(cacheDirPath,
                 DisplayName ?? throw new InvalidOperationException("No display name was provided for this file!")
                 );
             try
             {
-                ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
                 await launcherService.ShareFileToAppAsync(sender, "Save File As", cacheFilePath);
             }
             catch (PlatformNotSupportedException)
@@ -164,6 +164,7 @@ namespace SubverseIM.ViewModels.Components
 
         public async Task ExportCommand(Visual? sender)
         {
+            ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             IDbService dbService = await parent.ServiceManager.GetWithAwaitAsync<IDbService>();
 
             SubverseTorrent? torrent = await dbService.GetTorrentAsync(innerTorrent.MagnetUri);
@@ -175,7 +176,7 @@ namespace SubverseIM.ViewModels.Components
             }
 
             string exportDirPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "exported"
+                launcherService.GetPersistentStoragePath(), "torrent", "exported"
                 );
             Directory.CreateDirectory(exportDirPath);
 
@@ -186,7 +187,6 @@ namespace SubverseIM.ViewModels.Components
 
             try
             {
-                ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
                 await launcherService.ShareFileToAppAsync(sender, "Export Torrent", exportFilePath);
             }
             catch (PlatformNotSupportedException)
