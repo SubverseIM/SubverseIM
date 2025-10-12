@@ -15,11 +15,9 @@ namespace SubverseIM.Android
 {
     public class AndroidEncryptionService : IEncryptionService
     {
-        private const string KEY_NAME = "SubverseIM-Database";
+        private const string KEY_NAME = "com.chosenfewsoftware.SubverseIM";
 
         private const string DEFAULT_PROVIDER = "AndroidKeyStore";
-
-        private const int VALID_KEY_DURATION_SECONDS = 30;
 
         private class AuthenticationCallback : BiometricPrompt.AuthenticationCallback
         {
@@ -56,21 +54,21 @@ namespace SubverseIM.Android
                 base.OnAuthenticationSucceeded(result);
                 if (File.Exists(passwordFilePath))
                 {
-                    byte[] encryptedKey = File.ReadAllBytes(passwordFilePath);
+                    byte[] encryptedKey = File.ReadAllBytes(passwordFilePath)[..^16];
                     byte[]? decryptedKey = result.CryptoObject?.Cipher?.DoFinal(encryptedKey);
 
                     string? password = decryptedKey is null ? null : Convert.ToBase64String(decryptedKey);
                     resultTcs.SetResult(password);
                 }
-                else 
+                else
                 {
                     byte[] decryptedKey = RandomNumberGenerator.GetBytes(32);
                     byte[]? encryptedKey = result.CryptoObject?.Cipher?.DoFinal(decryptedKey);
                     byte[]? initializationVector = result.CryptoObject?.Cipher?.GetIV();
 
-                    if (encryptedKey is not null && initializationVector is not null) 
+                    if (encryptedKey is not null && initializationVector is not null)
                     {
-                        File.WriteAllBytes(passwordFilePath, [..encryptedKey, ..initializationVector]);
+                        File.WriteAllBytes(passwordFilePath, [.. encryptedKey, .. initializationVector]);
                     }
 
                     string password = Convert.ToBase64String(decryptedKey);
@@ -99,8 +97,8 @@ namespace SubverseIM.Android
         {
             var spec = new KeyGenParameterSpec.Builder(KEY_NAME,
                  KeyStorePurpose.Encrypt | KeyStorePurpose.Decrypt)
-                .SetBlockModes(KeyProperties.BlockModeGcm)
-                .SetEncryptionPaddings(KeyProperties.EncryptionPaddingNone)
+                .SetBlockModes(KeyProperties.BlockModeCbc)
+                .SetEncryptionPaddings(KeyProperties.EncryptionPaddingPkcs7)
                 .SetKeySize(256)
                 .SetUserAuthenticationRequired(true)
                 .Build();
@@ -122,35 +120,36 @@ namespace SubverseIM.Android
         private Cipher? GetCipher()
         {
             return Cipher.GetInstance(KeyProperties.KeyAlgorithmAes + "/"
-                    + KeyProperties.BlockModeGcm + "/"
-                    + KeyProperties.EncryptionPaddingNone);
+                    + KeyProperties.BlockModeCbc + "/"
+                    + KeyProperties.EncryptionPaddingPkcs7);
         }
 
         public async Task<string?> GetEncryptionKeyAsync(CancellationToken cancellationToken)
         {
-            var promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                        .SetTitle("Authenticate SubverseIM")
-                        .SetSubtitle("Please authenticate to decrypt your data.")
-                        .SetDescription("SubverseIM uses the device's lock screen credentials to keep your data private and safe.")
-                        .SetAllowedAuthenticators(
-                            BiometricManager.Authenticators.BiometricStrong | 
-                            BiometricManager.Authenticators.DeviceCredential
-                            )
-                        .Build();
-
             Cipher cipher = GetCipher()!;
             IKey secretKey = GetSecretKey() ?? GenerateSecretKey()!;
+
             if (File.Exists(passwordFilePath))
             {
                 byte[] initializationVector = File.ReadAllBytes(passwordFilePath)[^16..];
-                cipher.Init(Javax.Crypto.CipherMode.DecryptMode, secretKey, new GCMParameterSpec(128, initializationVector));
+                cipher.Init(Javax.Crypto.CipherMode.DecryptMode, secretKey, new IvParameterSpec(initializationVector));
             }
             else
             {
                 cipher.Init(Javax.Crypto.CipherMode.EncryptMode, secretKey);
             }
 
+            var promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                .SetTitle("Authenticate SubverseIM")
+                .SetSubtitle("Please authenticate to decrypt your data.")
+                .SetDescription("SubverseIM uses the device's lock screen credentials to keep your data private and safe.")
+                .SetAllowedAuthenticators(
+                    BiometricManager.Authenticators.BiometricStrong |
+                    BiometricManager.Authenticators.DeviceCredential
+                    )
+                .Build();
             biometricPrompt.Authenticate(promptInfo, new BiometricPrompt.CryptoObject(cipher));
+
             return await authenticationCallback.GetResultAsync(cancellationToken);
         }
     }
