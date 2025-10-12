@@ -72,13 +72,13 @@ namespace SubverseIM.Android
                 this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
                 PendingIntentFlags.Immutable);
 
-            Notification notif = new NotificationCompat.Builder(this, SRV_CHANNEL_ID)
-                .SetSmallIcon(Resource.Drawable.Icon)
-                .SetPriority(NotificationCompat.PriorityLow)
-                .SetContentTitle("SubverseIM Peer Services")
-                .SetContentText("Participating in ongoing network activities...")
-                .SetOngoing(true)
-                .SetContentIntent(pendingIntent)
+            Notification? notif = new NotificationCompat.Builder(this, SRV_CHANNEL_ID)?
+                .SetSmallIcon(Resource.Drawable.Icon)?
+                .SetPriority(NotificationCompat.PriorityLow)?
+                .SetContentTitle("SubverseIM Peer Services")?
+                .SetContentText("Participating in ongoing network activities...")?
+                .SetOngoing(true)?
+                .SetContentIntent(pendingIntent)?
                 .Build();
 
             StartForeground(1000, notif);
@@ -201,14 +201,14 @@ namespace SubverseIM.Android
                 this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
                 PendingIntentFlags.Immutable);
 
-            Notification notif = new NotificationCompat.Builder(this, channelId)
-                .SetPriority(NotificationCompat.PriorityHigh)
-                .SetAutoCancel(true)
-                .SetContentIntent(pendingIntent)
-                .SetSmallIcon(Resource.Drawable.Icon)
-                .SetLargeIcon(avatarBitmap)
-                .SetSound(soundUri)
-                .SetStyle(messagingStyle)
+            Notification? notif = new NotificationCompat.Builder(this, channelId)?
+                .SetPriority(NotificationCompat.PriorityHigh)?
+                .SetAutoCancel(true)?
+                .SetContentIntent(pendingIntent)?
+                .SetSmallIcon(Resource.Drawable.Icon)?
+                .SetLargeIcon(avatarBitmap)?
+                .SetSound(soundUri)?
+                .SetStyle(messagingStyle)?
                 .Build();
 
             NotificationManager? manager = NotificationManager.FromContext(this);
@@ -230,14 +230,14 @@ namespace SubverseIM.Android
                 this, 0, notifyIntent, PendingIntentFlags.UpdateCurrent |
                 PendingIntentFlags.Immutable);
 
-            Notification notif = new NotificationCompat.Builder(this, TRN_CHANNEL_ID)
-                .SetContentTitle(MagnetLink.Parse(torrent.MagnetUri).Name)
-                .SetContentText("File was downloaded successfully.")
-                .SetPriority(NotificationCompat.PriorityHigh)
-                .SetAutoCancel(true)
-                .SetContentIntent(pendingIntent)
-                .SetSmallIcon(Resource.Drawable.Icon)
-                .SetSound(soundUri)
+            Notification? notif = new NotificationCompat.Builder(this, TRN_CHANNEL_ID)?
+                .SetContentTitle(MagnetLink.Parse(torrent.MagnetUri).Name)?
+                .SetContentText("File was downloaded successfully.")?
+                .SetPriority(NotificationCompat.PriorityHigh)?
+                .SetAutoCancel(true)?
+                .SetContentIntent(pendingIntent)?
+                .SetSmallIcon(Resource.Drawable.Icon)?
+                .SetSound(soundUri)?
                 .Build();
 
             NotificationManager? manager = NotificationManager.FromContext(this);

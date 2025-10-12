@@ -5,6 +5,6 @@ namespace SubverseIM.Services
 {
     public interface IEncryptionService
     {
-        Task<string> GetEncryptionKeyAsync(CancellationToken cancellationToken = default);
+        Task<string?> GetEncryptionKeyAsync(CancellationToken cancellationToken = default);
     }
 }

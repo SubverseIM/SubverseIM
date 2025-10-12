@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using SubverseIM.Exceptions;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
@@ -195,11 +196,19 @@ public partial class ContactPageView : UserControl
         pressTimerState.DataContext = DataContext;
         tapTimerState.DataContext = DataContext;
 
-        await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
-
         ILauncherService launcherService = await ((ContactPageViewModel)DataContext!)
             .ServiceManager.GetWithAwaitAsync<ILauncherService>();
         this.launcherService = launcherService;
+
+        try
+        {
+            await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
+        }
+        catch (DbServiceException) 
+        {
+            await launcherService.ShowAlertDialogAsync("Error", "Could not decrypt application database. Exiting now.");
+            Environment.Exit(1);
+        }
     }
 
     protected override void OnUnloaded(RoutedEventArgs e)

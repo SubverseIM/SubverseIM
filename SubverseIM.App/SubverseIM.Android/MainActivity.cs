@@ -69,6 +69,8 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         }
     }
 
+    private readonly Dictionary<int, TaskCompletionSource> requestPermissionsTcsMap;
+
     private readonly ServiceConnection<IBootstrapperService> peerServiceConn;
 
     private readonly CancellationTokenSource cancellationTokenSource;
@@ -96,6 +98,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
     {
         peerServiceConn = new();
         cancellationTokenSource = new();
+        requestPermissionsTcsMap = new();
     }
 
     protected override async void OnCreate(Bundle? savedInstanceState)
@@ -112,7 +115,11 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
             CheckSelfPermission(Manifest.Permission.PostNotifications) == Permission.Denied)
         {
+            TaskCompletionSource requestPermissionsTcs = new();
+            requestPermissionsTcsMap.Add(REQUEST_NOTIFICATION_PERMISSION, requestPermissionsTcs);
+
             RequestPermissions([Manifest.Permission.PostNotifications], REQUEST_NOTIFICATION_PERMISSION);
+            await requestPermissionsTcs.Task;
         }
         else
         {
@@ -123,7 +130,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         serviceManager?.GetOrRegister<IBillingService>(new BillingService());
 
-        serviceManager?.GetOrRegister<IEncryptionService>(new DummyEncryptionService());
+        serviceManager?.GetOrRegister<IEncryptionService>(new AndroidEncryptionService(this));
 
         string appDataPath = System.Environment.GetFolderPath(
             System.Environment.SpecialFolder.ApplicationData
@@ -184,6 +191,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         {
             case REQUEST_NOTIFICATION_PERMISSION:
                 NotificationsAllowed = grantResults.All(x => x == Permission.Granted);
+                requestPermissionsTcsMap[REQUEST_NOTIFICATION_PERMISSION].SetResult();
                 break;
         }
     }
@@ -308,10 +316,10 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
     public Task ShareUrlToAppAsync(Visual? sender, string title, string content)
     {
-        new ShareCompat.IntentBuilder(this)
-            .SetType("text/plain")
-            .SetChooserTitle(title)
-            .SetText(content)
+        new ShareCompat.IntentBuilder(this)?
+            .SetType("text/plain")?
+            .SetChooserTitle(title)?
+            .SetText(content)?
             .StartChooser();
 
         return Task.CompletedTask;
