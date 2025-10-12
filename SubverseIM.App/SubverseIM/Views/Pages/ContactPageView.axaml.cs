@@ -204,10 +204,10 @@ public partial class ContactPageView : UserControl
         {
             await ((ContactPageViewModel)DataContext!).LoadContactsAsync();
         }
-        catch (DbServiceException) 
+        catch
         {
             await launcherService.ShowAlertDialogAsync("Error", "Could not decrypt application database. Exiting now.");
-            Environment.Exit(1);
+            launcherService.ExitApplication();
         }
     }
 

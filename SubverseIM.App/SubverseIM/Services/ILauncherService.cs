@@ -12,6 +12,8 @@ namespace SubverseIM.Services
 
         bool IsAccessibilityEnabled { get; }
 
+        void ExitApplication();
+
         byte[]? GetDeviceToken();
 
         Uri? GetLaunchedUri();
