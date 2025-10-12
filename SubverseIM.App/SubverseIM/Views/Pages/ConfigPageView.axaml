@@ -46,6 +46,13 @@
 			<ColorPicker HorizontalAlignment="Left" Color="{Binding DefaultChatColor}" ColorModel="Hsva" IsAlphaVisible="False" />
 			<Button Command="{Binding ResetDefaultChatColorCommand}" IsEnabled="{Binding !IsChatColorDefault}">Reset to default</Button>
 		</StackPanel>
+		<Label IsVisible="{Binding IsRunningOnIOS}" FontWeight="Bold">Toggle Apple Push Services</Label>
+		<CheckBox IsVisible="{Binding IsRunningOnIOS}" IsChecked="{Binding IsPushNotificationsEnabled}">
+			<Panel>
+				<TextBlock IsVisible="{Binding !IsPushNotificationsEnabled}">Notifications only arrive when I'm active</TextBlock>
+				<TextBlock IsVisible="{Binding IsPushNotificationsEnabled}">Notifications arrive even when I'm away</TextBlock>
+			</Panel>
+		</CheckBox>
 		<Label FontWeight="Bold">Remind me to donate</Label>
 		<TextBlock TextWrapping="Wrap">As a FOSS passion project, we need help to pay the bills and make sure that we continue to deliver the best user experience. A one-time donation will unlock the "Never" option and contribute to future development of SubverseIM.</TextBlock>
 		<ComboBox x:Name="promptFreqBox"
@@ -56,9 +63,9 @@
 		</ComboBox>
 		<Button Command="{Binding SaveConfigurationCommand}">Save All Changes</Button>
 		<TextBlock TextWrapping="Wrap" FontStyle="Italic">
-			SubverseIM depends on the MonoTorrent project
+			SubverseIM depends on Avalonia, and the MonoTorrent project
 			<LineBreak/>
-			Copyright (C) 2006 Alan McGovern, Olivier Dufour
+			Copyright (C) AvaloniaUI OÜ; Copyright (C) 2006 Alan McGovern, Olivier Dufour
 		</TextBlock>
 	</StackPanel>
 </UserControl>

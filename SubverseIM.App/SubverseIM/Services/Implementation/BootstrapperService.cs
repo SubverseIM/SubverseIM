@@ -289,9 +289,12 @@ namespace SubverseIM.Services.Implementation
             }
 
             // Submit device token to bootstrapper
-            foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
+            if (config.IsPushNotificationsEnabled)
             {
-                await SubmitDeviceTokenAsync(bootstrapperUri, cancellationToken);
+                foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
+                {
+                    await SubmitDeviceTokenAsync(bootstrapperUri, cancellationToken);
+                }
             }
 
             // Forward SIP ports
