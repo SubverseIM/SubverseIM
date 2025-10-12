@@ -1,5 +1,6 @@
 ﻿using LiteDB;
 using SubverseIM.Core;
+using SubverseIM.Exceptions;
 using SubverseIM.Models;
 using SubverseIM.Serializers;
 using System;
@@ -284,12 +285,35 @@ namespace SubverseIM.Services.Implementation
         public async Task InjectAsync(IServiceManager serviceManager)
         {
             IEncryptionService? encryptionService = serviceManager.Get<IEncryptionService>();
-            string? dbPassword = encryptionService is null ? null : await encryptionService.GetEncryptionKeyAsync();
-            dbTcs.SetResult(new LiteDatabase(new ConnectionString
+            string? dbPassword;
+            try
             {
-                Filename = dbFilePath,
-                Password = dbPassword,
-            }, mapper));
+                if (encryptionService is null)
+                {
+                    dbPassword = IDbService.SECRET_PASSWORD;
+                }
+                else
+                {
+                    dbPassword = await encryptionService.GetEncryptionKeyAsync();
+                }
+            }
+            catch
+            {
+                dbPassword = null;
+            }
+
+            if (dbPassword is null)
+            {
+                dbTcs.SetException(new DbServiceException("Could not decrypt the application database, possibly because the user denied authentication."));
+            }
+            else
+            {
+                dbTcs.SetResult(new LiteDatabase(new ConnectionString
+                {
+                    Filename = dbFilePath,
+                    Password = dbPassword,
+                }, mapper));
+            }
         }
 
         protected virtual void Dispose(bool disposing)
