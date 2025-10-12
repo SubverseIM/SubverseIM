@@ -12,6 +12,11 @@ namespace SubverseIM.Services.Faux
 
         public bool NotificationsAllowed { get; } = false;
 
+        public void ExitApplication()
+        {
+            return;
+        }
+
         public byte[]? GetDeviceToken() => null;
 
         public Uri? GetLaunchedUri() => null;

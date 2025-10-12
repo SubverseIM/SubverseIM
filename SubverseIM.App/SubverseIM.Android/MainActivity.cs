@@ -228,6 +228,11 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         }
     }
 
+    public void ExitApplication()
+    {
+        Finish();
+    }
+
     public byte[]? GetDeviceToken()
     {
         return null;
