@@ -119,6 +119,8 @@ public partial class MessagePageView : UserControl
         base.OnLoaded(e);
         loadTaskSource.TrySetResult(e);
 
+        await ((MessagePageViewModel)DataContext!).ApplyThemeOverrideAsync();
+
         IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
         IConfigurationService configurationService = await serviceManager.GetWithAwaitAsync<IConfigurationService>();
         SubverseConfig config = await configurationService.GetConfigAsync();

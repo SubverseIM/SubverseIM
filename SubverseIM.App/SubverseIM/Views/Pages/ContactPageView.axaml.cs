@@ -193,6 +193,8 @@ public partial class ContactPageView : UserControl
         base.OnLoaded(e);
         loadTaskSource.TrySetResult(e);
 
+        await ((ContactPageViewModel)DataContext!).ApplyThemeOverrideAsync();
+
         pressTimerState.DataContext = DataContext;
         tapTimerState.DataContext = DataContext;
 

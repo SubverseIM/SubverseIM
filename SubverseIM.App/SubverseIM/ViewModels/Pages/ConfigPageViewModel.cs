@@ -21,6 +21,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public ObservableCollection<string> SelectedUriList { get; }
 
+        public ObservableCollection<string> ThemeVariantList { get; }
+
         private bool isFormattingAllowed;
         public bool IsFormattingAllowed
         {
@@ -96,6 +98,7 @@ namespace SubverseIM.ViewModels.Pages
         {
             BootstrapperUriList = new();
             SelectedUriList = new();
+            ThemeVariantList = new() { "Default", "Light", "Dark" };
         }
 
         public async Task InitializeAsync()
@@ -122,6 +125,8 @@ namespace SubverseIM.ViewModels.Pages
             PromptFreqIndex = config.PromptFreqIndex;
 
             IsPushNotificationsEnabled = config.IsPushNotificationsEnabled;
+
+            UseThemeOverride = config.UseThemeOverride ?? "Default";
         }
 
         public async Task AddBootstrapperUriCommand(string? defaultText = null)
@@ -178,6 +183,8 @@ namespace SubverseIM.ViewModels.Pages
                 config.PromptFreqIndex = PromptFreqIndex == 3 ? null : PromptFreqIndex;
 
                 config.IsPushNotificationsEnabled = IsPushNotificationsEnabled;
+
+                config.UseThemeOverride = UseThemeOverride;
 
                 return await peerService.PersistConfigAsync() && frontendService.NavigatePreviousView();
             }

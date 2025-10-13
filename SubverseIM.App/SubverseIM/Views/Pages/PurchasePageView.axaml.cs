@@ -22,6 +22,8 @@ public partial class PurchasePageView : UserControl
         base.OnLoaded(e);
         loadTaskSource.TrySetResult(e);
 
+        await ((PurchasePageViewModel)DataContext!).ApplyThemeOverrideAsync();
+
         await ((PurchasePageViewModel)DataContext!).InitializeAsync();
     }
 }

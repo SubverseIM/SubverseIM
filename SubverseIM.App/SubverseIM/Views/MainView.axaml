@@ -1,35 +1,37 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:SubverseIM.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SubverseIM.Views.MainView"
-             x:DataType="vm:MainViewModel">
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:SubverseIM.ViewModels"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="SubverseIM.Views.MainView"
+			 x:DataType="vm:MainViewModel">
 	<Design.DataContext>
 		<!-- This only sets the DataContext for the previewer in an IDE,
-         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:MainViewModel />
 	</Design.DataContext>
-	<DockPanel>
-		<Border Background="Transparent" BorderThickness="0" DockPanel.Dock="Top" HorizontalAlignment="Stretch">
-			<Panel>
-			<TextBlock Margin="10" Text="{Binding CurrentPage.Title}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" />
-			<DockPanel>
-				<Button DockPanel.Dock="Left" IsVisible="{Binding HasPreviousView}" Command="{Binding NavigatePreviousView}"
-						AutomationProperties.Name="Previous View">
-					<PathIcon Data="{StaticResource caret_left_regular}" />
-				</Button>
-				<Button DockPanel.Dock="Right" IsVisible="{Binding CurrentPage.HasSidebar}" Command="{Binding CurrentPage.ToggleSidebarCommand}"
-						AutomationProperties.Name="Sidebar Menu">
-					<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
-				</Button>
-				<Panel />
-			</DockPanel>
-			</Panel>
-		</Border>
-		<Grid RowDefinitions="*,Auto">
-			<TransitioningContentControl x:Name="contentControl" Content="{Binding CurrentPage}" />
-		</Grid>
-	</DockPanel>
+	<ThemeVariantScope RequestedThemeVariant="{Binding CurrentPage.UseThemeOverride}">
+		<DockPanel Background="{DynamicResource SystemRegionBrush}">
+			<Border BorderThickness="0" DockPanel.Dock="Top" HorizontalAlignment="Stretch">
+				<Panel>
+					<TextBlock Margin="10" Text="{Binding CurrentPage.Title}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" />
+					<DockPanel>
+						<Button DockPanel.Dock="Left" IsVisible="{Binding HasPreviousView}" Command="{Binding NavigatePreviousView}"
+								AutomationProperties.Name="Previous View">
+							<PathIcon Data="{StaticResource caret_left_regular}" />
+						</Button>
+						<Button DockPanel.Dock="Right" IsVisible="{Binding CurrentPage.HasSidebar}" Command="{Binding CurrentPage.ToggleSidebarCommand}"
+								AutomationProperties.Name="Sidebar Menu">
+							<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
+						</Button>
+						<Panel />
+					</DockPanel>
+				</Panel>
+			</Border>
+			<Grid RowDefinitions="*,Auto">
+				<TransitioningContentControl x:Name="contentControl" Content="{Binding CurrentPage}" />
+			</Grid>
+		</DockPanel>
+	</ThemeVariantScope>
 </UserControl>

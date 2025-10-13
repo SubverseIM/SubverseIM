@@ -53,6 +53,8 @@
 				<TextBlock IsVisible="{Binding IsPushNotificationsEnabled}">Notifications arrive even when I'm away</TextBlock>
 			</Panel>
 		</CheckBox>
+		<Label FontWeight="Bold">Select application theme</Label>
+		<ComboBox ItemsSource="{Binding ThemeVariantList}" SelectedItem="{Binding UseThemeOverride}" />
 		<Label FontWeight="Bold">Remind me to donate</Label>
 		<TextBlock TextWrapping="Wrap">As a FOSS passion project, we need help to pay the bills and make sure that we continue to deliver the best user experience. A one-time donation will unlock the "Never" option and contribute to future development of SubverseIM.</TextBlock>
 		<ComboBox x:Name="promptFreqBox"
@@ -63,7 +65,7 @@
 		</ComboBox>
 		<Button Command="{Binding SaveConfigurationCommand}">Save All Changes</Button>
 		<TextBlock TextWrapping="Wrap" FontStyle="Italic">
-			SubverseIM depends on Avalonia, and the MonoTorrent project
+			SubverseIM depends on Avalonia and the MonoTorrent project
 			<LineBreak/>
 			Copyright (C) AvaloniaUI OÜ; Copyright (C) 2006 Alan McGovern, Olivier Dufour
 		</TextBlock>

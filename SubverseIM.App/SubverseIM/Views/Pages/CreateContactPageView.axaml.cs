@@ -48,6 +48,8 @@ public partial class CreateContactPageView : UserControl
     {
         base.OnLoaded(e);
 
+        await ((CreateContactPageViewModel)DataContext!).ApplyThemeOverrideAsync();
+
         IServiceManager serviceManager = ((CreateContactPageViewModel)DataContext!).ServiceManager;
         TopLevel topLevel = await serviceManager.GetWithAwaitAsync<TopLevel>();
         if (topLevel.InputPane is not null)
