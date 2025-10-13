@@ -22,6 +22,8 @@ public partial class TorrentPageView : UserControl
         base.OnLoaded(e);
         loadTaskSource.TrySetResult(e);
 
+        await ((TorrentPageViewModel)DataContext!).ApplyThemeOverrideAsync();
+
         await ((TorrentPageViewModel)DataContext!).InitializeAsync();
     }
 }

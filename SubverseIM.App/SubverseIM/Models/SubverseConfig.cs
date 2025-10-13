@@ -39,5 +39,7 @@ namespace SubverseIM.Models
         public string? DefaultContactName { get; set; }
 
         public bool IsPushNotificationsEnabled { get; set; }
+
+        public string? UseThemeOverride { get; set; }
     }
 }

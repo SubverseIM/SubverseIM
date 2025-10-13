@@ -2,6 +2,7 @@
 using Avalonia.Platform;
 using ReactiveUI;
 using SubverseIM.Services;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
@@ -11,6 +12,8 @@ namespace SubverseIM.ViewModels.Pages
         public abstract bool HasSidebar { get; }
 
         public abstract string Title { get; }
+
+        public abstract string UseThemeOverride { get; set; }
 
         public IServiceManager ServiceManager { get; }
 
@@ -29,6 +32,8 @@ namespace SubverseIM.ViewModels.Pages
         public abstract void OnOrientationChanged(TopLevel? topLevel);
 
         public abstract void ToggleSidebarCommand();
+
+        public abstract Task ApplyThemeOverrideAsync(CancellationToken cancellationToken = default);
     }
 
     public abstract class PageViewModelBase<TSelf> : PageViewModelBase
@@ -54,8 +59,19 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
+        private string useThemeOverride;
+        public override string UseThemeOverride
+        {
+            get => useThemeOverride;
+            set
+            {
+                ((TSelf)this).RaiseAndSetIfChanged(ref useThemeOverride, value);
+            }
+        }
+
         protected PageViewModelBase(IServiceManager serviceManager) : base(serviceManager)
         {
+            useThemeOverride = "Default";
         }
 
         public override void OnOrientationChanged(TopLevel? topLevel)
@@ -77,6 +93,12 @@ namespace SubverseIM.ViewModels.Pages
         public override void ToggleSidebarCommand()
         {
             IsSidebarOpen = !IsSidebarOpen;
+        }
+
+        public override async Task ApplyThemeOverrideAsync(CancellationToken cancellationToken = default)
+        {
+            IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>(cancellationToken);
+            UseThemeOverride = (await configurationService.GetConfigAsync()).UseThemeOverride ?? "Default";
         }
     }
 }
