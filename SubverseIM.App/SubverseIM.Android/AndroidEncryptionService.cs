@@ -119,11 +119,11 @@ namespace SubverseIM.Android
                 .SetUserAuthenticationRequired(true);
 
             KeyGenParameterSpec spec;
-            if (OperatingSystem.IsAndroidVersionAtLeast(30)) 
+            if (OperatingSystem.IsAndroidVersionAtLeast(30))
             {
                 spec = builder
                     .SetUserAuthenticationParameters(VALIDITY_DURATION_SECONDS, (int)
-                        (KeyPropertiesAuthType.BiometricStrong | 
+                        (KeyPropertiesAuthType.BiometricStrong |
                         KeyPropertiesAuthType.DeviceCredential))
                     .Build();
             }
@@ -163,6 +163,7 @@ namespace SubverseIM.Android
                 .SetDescription("SubverseIM uses the device's lock screen credentials to keep your data private and safe.")
                 .SetAllowedAuthenticators(
                     BiometricManager.Authenticators.BiometricStrong |
+                    BiometricManager.Authenticators.BiometricWeak |
                     BiometricManager.Authenticators.DeviceCredential)
                 .Build();
             biometricPrompt.Authenticate(promptInfo);
