@@ -62,7 +62,7 @@ namespace SubverseIM.ViewModels.Pages
             get => sendMessageText;
             set
             {
-                this.RaiseAndSetIfChanged(ref sendMessageText, value?.Trim());
+                this.RaiseAndSetIfChanged(ref sendMessageText, value);
             }
         }
 
@@ -72,7 +72,7 @@ namespace SubverseIM.ViewModels.Pages
             get => sendMessageTopicName;
             set
             {
-                this.RaiseAndSetIfChanged(ref sendMessageTopicName, value?.Trim());
+                this.RaiseAndSetIfChanged(ref sendMessageTopicName, value);
             }
         }
 
@@ -260,8 +260,8 @@ namespace SubverseIM.ViewModels.Pages
 
         private async Task SendMessageAsync(string? messageText = null, string? messageTopicName = null)
         {
-            messageText ??= SendMessageText;
-            messageTopicName ??= SendMessageTopicName;
+            messageText = (messageText ?? SendMessageText)?.Trim();
+            messageTopicName = (messageTopicName ?? SendMessageTopicName)?.Trim();
 
             if (string.IsNullOrEmpty(messageText)) return;
 
