@@ -1,73 +1,75 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="using:SubverseIM.ViewModels.Pages"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SubverseIM.Views.Pages.ConfigPageView"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="SubverseIM.Views.Pages.ConfigPageView"
 			 x:DataType="vm:ConfigPageViewModel">
 	<Design.DataContext>
 		<vm:ConfigPageViewModel />
 	</Design.DataContext>
-	<StackPanel Orientation="Vertical">
-		<Label FontWeight="Bold">Bootstrapper URIs</Label>
-		<TextBlock TextWrapping="Wrap">A list of addresses the app uses to synchronize networking activities amongst peers</TextBlock>
-		<ListBox Height="75" ItemsSource="{Binding BootstrapperUriList}"
-				 SelectedItems="{Binding SelectedUriList}" SelectionMode="Multiple,Toggle" />
-		<WrapPanel Orientation="Horizontal">
-			<Button Command="{Binding AddBootstrapperUriCommand}">Add URI</Button>
-			<Button Command="{Binding RemoveBootstrapperUriCommand}" IsEnabled="{Binding !!SelectedUriList.Count}">Remove Selected URIs</Button>
-		</WrapPanel>
-		<Label FontWeight="Bold">Message formatting (does not affect embeds)</Label>
-		<CheckBox IsChecked="{Binding IsFormattingAllowed}" 
-				  IsEnabled="{Binding !IsAccessibilityEnabledAsync^}">
-			<Panel>
-				<TextBlock IsVisible="{Binding !IsFormattingAllowed}">Display all messages as plaintext</TextBlock>
-				<TextBlock IsVisible="{Binding IsFormattingAllowed}">Display messages with formatting</TextBlock>
-			</Panel>
-		</CheckBox>
-		<Label FontWeight="Bold">Reverse message order</Label>
-		<CheckBox IsChecked="{Binding MessageOrderFlag}">
-			<Panel>
-				<TextBlock IsVisible="{Binding !MessageOrderFlag}">Topmost is most recent</TextBlock>
-				<TextBlock IsVisible="{Binding MessageOrderFlag}">Topmost is least recent</TextBlock>
-			</Panel>
-		</CheckBox>
-		<Label FontWeight="Bold">Mirror conversation view</Label>
-		<CheckBox IsChecked="{Binding MessageMirrorFlag}">
-			<Panel>
-				<TextBlock IsVisible="{Binding !MessageMirrorFlag}">Left is "You"</TextBlock>
-				<TextBlock IsVisible="{Binding MessageMirrorFlag}">Left is "Them"</TextBlock>
-			</Panel>
-		</CheckBox>
-		<Label FontWeight="Bold">Default message color</Label>
-		<TextBlock TextWrapping="Wrap">Your messages will display as this color</TextBlock>
-		<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-			<ColorPicker HorizontalAlignment="Left" Color="{Binding DefaultChatColor}" ColorModel="Hsva" IsAlphaVisible="False" />
-			<Button Command="{Binding ResetDefaultChatColorCommand}" IsEnabled="{Binding !IsChatColorDefault}">Reset to default</Button>
+	<ScrollViewer>
+		<StackPanel Orientation="Vertical">
+			<Label FontWeight="Bold">Bootstrapper URIs</Label>
+			<TextBlock TextWrapping="Wrap">A list of addresses the app uses to synchronize networking activities amongst peers</TextBlock>
+			<ListBox Height="75" ItemsSource="{Binding BootstrapperUriList}"
+					 SelectedItems="{Binding SelectedUriList}" SelectionMode="Multiple,Toggle" />
+			<WrapPanel Orientation="Horizontal">
+				<Button Command="{Binding AddBootstrapperUriCommand}">Add URI</Button>
+				<Button Command="{Binding RemoveBootstrapperUriCommand}" IsEnabled="{Binding !!SelectedUriList.Count}">Remove Selected URIs</Button>
+			</WrapPanel>
+			<Label FontWeight="Bold">Message formatting (does not affect embeds)</Label>
+			<CheckBox IsChecked="{Binding IsFormattingAllowed}"
+					  IsEnabled="{Binding !IsAccessibilityEnabledAsync^}">
+				<Panel>
+					<TextBlock IsVisible="{Binding !IsFormattingAllowed}">Display all messages as plaintext</TextBlock>
+					<TextBlock IsVisible="{Binding IsFormattingAllowed}">Display messages with formatting</TextBlock>
+				</Panel>
+			</CheckBox>
+			<Label FontWeight="Bold">Reverse message order</Label>
+			<CheckBox IsChecked="{Binding MessageOrderFlag}">
+				<Panel>
+					<TextBlock IsVisible="{Binding !MessageOrderFlag}">Topmost is most recent</TextBlock>
+					<TextBlock IsVisible="{Binding MessageOrderFlag}">Topmost is least recent</TextBlock>
+				</Panel>
+			</CheckBox>
+			<Label FontWeight="Bold">Mirror conversation view</Label>
+			<CheckBox IsChecked="{Binding MessageMirrorFlag}">
+				<Panel>
+					<TextBlock IsVisible="{Binding !MessageMirrorFlag}">Left is "You"</TextBlock>
+					<TextBlock IsVisible="{Binding MessageMirrorFlag}">Left is "Them"</TextBlock>
+				</Panel>
+			</CheckBox>
+			<Label FontWeight="Bold">Default message color</Label>
+			<TextBlock TextWrapping="Wrap">Your messages will display as this color</TextBlock>
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+				<ColorPicker HorizontalAlignment="Left" Color="{Binding DefaultChatColor}" ColorModel="Hsva" IsAlphaVisible="False" />
+				<Button Command="{Binding ResetDefaultChatColorCommand}" IsEnabled="{Binding !IsChatColorDefault}">Reset to default</Button>
+			</StackPanel>
+			<Label IsVisible="{Binding IsRunningOnIOS}" FontWeight="Bold">Toggle Apple Push Services</Label>
+			<CheckBox IsVisible="{Binding IsRunningOnIOS}" IsChecked="{Binding IsPushNotificationsEnabled}">
+				<Panel>
+					<TextBlock IsVisible="{Binding !IsPushNotificationsEnabled}">Notifications only arrive when I'm active</TextBlock>
+					<TextBlock IsVisible="{Binding IsPushNotificationsEnabled}">Notifications arrive even when I'm away</TextBlock>
+				</Panel>
+			</CheckBox>
+			<Label FontWeight="Bold">Select application theme</Label>
+			<ComboBox ItemsSource="{Binding ThemeVariantList}" SelectedItem="{Binding UseThemeOverride}" />
+			<Label FontWeight="Bold">Remind me to donate</Label>
+			<TextBlock TextWrapping="Wrap">As a FOSS passion project, we need help to pay the bills and make sure that we continue to deliver the best user experience. A one-time donation will unlock the "Never" option and contribute to future development of SubverseIM.</TextBlock>
+			<ComboBox x:Name="promptFreqBox"
+					  SelectedIndex="{Binding PromptFreqIndex, TargetNullValue=3}">
+				<ComboBoxItem>Every 3 days</ComboBoxItem>
+				<ComboBoxItem>Every 5 days</ComboBoxItem>
+				<ComboBoxItem>Every 7 days</ComboBoxItem>
+			</ComboBox>
+			<Button Command="{Binding SaveConfigurationCommand}">Save All Changes</Button>
+			<TextBlock TextWrapping="Wrap" FontStyle="Italic">
+				SubverseIM depends on Avalonia and the MonoTorrent project
+				<LineBreak/>
+				Copyright (C) AvaloniaUI OÜ; Copyright (C) 2006 Alan McGovern, Olivier Dufour
+			</TextBlock>
 		</StackPanel>
-		<Label IsVisible="{Binding IsRunningOnIOS}" FontWeight="Bold">Toggle Apple Push Services</Label>
-		<CheckBox IsVisible="{Binding IsRunningOnIOS}" IsChecked="{Binding IsPushNotificationsEnabled}">
-			<Panel>
-				<TextBlock IsVisible="{Binding !IsPushNotificationsEnabled}">Notifications only arrive when I'm active</TextBlock>
-				<TextBlock IsVisible="{Binding IsPushNotificationsEnabled}">Notifications arrive even when I'm away</TextBlock>
-			</Panel>
-		</CheckBox>
-		<Label FontWeight="Bold">Select application theme</Label>
-		<ComboBox ItemsSource="{Binding ThemeVariantList}" SelectedItem="{Binding UseThemeOverride}" />
-		<Label FontWeight="Bold">Remind me to donate</Label>
-		<TextBlock TextWrapping="Wrap">As a FOSS passion project, we need help to pay the bills and make sure that we continue to deliver the best user experience. A one-time donation will unlock the "Never" option and contribute to future development of SubverseIM.</TextBlock>
-		<ComboBox x:Name="promptFreqBox"
-			SelectedIndex="{Binding PromptFreqIndex, TargetNullValue=3}">
-			<ComboBoxItem>Every 3 days</ComboBoxItem>
-			<ComboBoxItem>Every 5 days</ComboBoxItem>
-			<ComboBoxItem>Every 7 days</ComboBoxItem>
-		</ComboBox>
-		<Button Command="{Binding SaveConfigurationCommand}">Save All Changes</Button>
-		<TextBlock TextWrapping="Wrap" FontStyle="Italic">
-			SubverseIM depends on Avalonia and the MonoTorrent project
-			<LineBreak/>
-			Copyright (C) AvaloniaUI OÜ; Copyright (C) 2006 Alan McGovern, Olivier Dufour
-		</TextBlock>
-	</StackPanel>
+	</ScrollViewer>
 </UserControl>
