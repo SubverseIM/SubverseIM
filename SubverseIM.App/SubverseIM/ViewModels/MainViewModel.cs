@@ -56,7 +56,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 HasPreviousView = true;
             }
 
+            PageViewModelBase previousPage = currentPage;
             this.RaiseAndSetIfChanged(ref currentPage, value);
+
+            currentPage.UseThemeOverride = previousPage.UseThemeOverride;
             ScreenOrientationChangedDelegate?.Invoke();
         }
     }
@@ -312,6 +315,8 @@ public class MainViewModel : ViewModelBase, IFrontendService
     {
         if (previousPages.TryPop(out PageViewModelBase? previousPage))
         {
+            previousPage.UseThemeOverride = currentPage.UseThemeOverride;
+
             this.RaiseAndSetIfChanged(ref currentPage, previousPage, nameof(CurrentPage));
             HasPreviousView = previousPages.Count > 0;
             return true;
