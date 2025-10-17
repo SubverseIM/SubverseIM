@@ -100,7 +100,8 @@ namespace SubverseIM.Android
 
         public AndroidEncryptionService(MainActivity mainActivity)
         {
-            string appDataDirPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string? appDataDirPath = mainActivity.GetExternalFilesDir(null)?.AbsolutePath ??
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             passwordFilePath = Path.Combine(appDataDirPath, "SubverseIM.key");
 
             authenticationCallback = new(passwordFilePath);
