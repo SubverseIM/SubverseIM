@@ -8,6 +8,7 @@ using SubverseIM.Services;
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,6 +23,13 @@ namespace SubverseIM.Android
         private const int VALIDITY_DURATION_SECONDS = 30;
 
         private const int KEY_SIZE = 256;
+
+        private class AuthenticationKeyData 
+        {
+            public string? CipherText { get; set; }
+
+            public string? IV { get; set; }
+        }
 
         private class AuthenticationCallback : BiometricPrompt.AuthenticationCallback
         {
@@ -62,12 +70,18 @@ namespace SubverseIM.Android
 
                 if (File.Exists(passwordFilePath))
                 {
-                    byte[] passwordFileBytes = File.ReadAllBytes(passwordFilePath);
-                    cipher?.Init(Javax.Crypto.CipherMode.DecryptMode, secretKey,
-                            new IvParameterSpec(passwordFileBytes[^16..])
-                            );
+                    string jsonStr = File.ReadAllText(passwordFilePath);
+                    AuthenticationKeyData? authenticationKeyData = 
+                        JsonSerializer.Deserialize<AuthenticationKeyData>(jsonStr);
 
-                    byte[] encryptedKey = passwordFileBytes[..^16];
+                    byte[]? encryptedKey = authenticationKeyData?.CipherText is null ?
+                        null : Convert.FromBase64String(authenticationKeyData.CipherText);
+                    byte[]? iv = authenticationKeyData?.IV is null ? 
+                        null : Convert.FromBase64String(authenticationKeyData.IV);
+
+                    cipher?.Init(Javax.Crypto.CipherMode.DecryptMode, secretKey,
+                            new IvParameterSpec(iv)
+                            );
                     byte[]? decryptedKey = cipher?.DoFinal(encryptedKey);
 
                     string? password = decryptedKey is null ? null : Convert.ToBase64String(decryptedKey);
@@ -83,7 +97,14 @@ namespace SubverseIM.Android
 
                     if (encryptedKey is not null && initializationVector is not null)
                     {
-                        File.WriteAllBytes(passwordFilePath, [.. encryptedKey, .. initializationVector]);
+                        AuthenticationKeyData authenticationKeyData = new()
+                        {
+                            CipherText = Convert.ToBase64String(encryptedKey),
+                            IV = Convert.ToBase64String(initializationVector)
+                        };
+
+                        string jsonStr = JsonSerializer.Serialize(authenticationKeyData);
+                        File.WriteAllText(passwordFilePath, jsonStr);
                     }
 
                     string password = Convert.ToBase64String(decryptedKey);
@@ -102,7 +123,7 @@ namespace SubverseIM.Android
         {
             string? appDataDirPath = mainActivity.GetExternalFilesDir(null)?.AbsolutePath ??
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            passwordFilePath = Path.Combine(appDataDirPath, "SubverseIM.key");
+            passwordFilePath = Path.Combine(appDataDirPath, "SubverseIM-key.json");
 
             authenticationCallback = new(passwordFilePath);
 
