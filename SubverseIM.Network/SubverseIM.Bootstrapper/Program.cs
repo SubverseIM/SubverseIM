@@ -95,10 +95,12 @@ if (builder.Environment.IsDevelopment() && listenPortNum.HasValue)
     {
         options.ListenAnyIP(listenPortNum.Value, options =>
         {
-            options.UseHttps(
-                builder.Configuration.GetValue<string>("Privacy:CertFilePath") ?? "localhost.pfx",
-                builder.Configuration.GetValue<string>("Privacy:CertPassword")
-                );
+            string? certFilePath = builder.Configuration.GetValue<string>("Privacy:CertFilePath");
+            string? certPassword = builder.Configuration.GetValue<string>("Privacy:CertPassword");
+            if (certFilePath is not null)
+            {
+                options.UseHttps(certFilePath, certPassword);
+            }
         });
     });
 }
