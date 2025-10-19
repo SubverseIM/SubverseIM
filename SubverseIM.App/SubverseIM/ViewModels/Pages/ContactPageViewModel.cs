@@ -20,6 +20,8 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override string Title => "Contacts View";
 
+        public override bool ShouldConfirmBackNavigation => false;
+
         public override bool HasSidebar => false;
 
         public ObservableCollection<ContactViewModel> ContactsList { get; }
@@ -150,7 +152,7 @@ namespace SubverseIM.ViewModels.Pages
             }
 
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigatePreviousView();
+            await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: false);
         }
 
         public void RemoveContact(ContactViewModel contact)

@@ -11,6 +11,8 @@ namespace SubverseIM.ViewModels.Pages
     {
         public abstract bool HasSidebar { get; }
 
+        public abstract bool ShouldConfirmBackNavigation { get; }
+
         public abstract string Title { get; }
 
         public abstract string UseThemeOverride { get; set; }
@@ -98,7 +100,7 @@ namespace SubverseIM.ViewModels.Pages
         public override async Task ApplyThemeOverrideAsync(CancellationToken cancellationToken = default)
         {
             IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>(cancellationToken);
-            UseThemeOverride = (await configurationService.GetConfigAsync()).UseThemeOverride ?? "Default";
+            UseThemeOverride = (await configurationService.GetConfigAsync(cancellationToken)).UseThemeOverride ?? "Default";
         }
     }
 }

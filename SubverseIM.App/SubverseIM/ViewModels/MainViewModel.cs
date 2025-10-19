@@ -311,9 +311,23 @@ public class MainViewModel : ViewModelBase, IFrontendService
         }
     }
 
-    public bool NavigatePreviousView()
+    public async Task<bool> NavigatePreviousViewAsync(bool shouldForceNavigation)
     {
-        if (previousPages.TryPop(out PageViewModelBase? previousPage))
+        bool confirm;
+        if (!shouldForceNavigation && currentPage.ShouldConfirmBackNavigation)
+        {
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
+            confirm = await launcherService.ShowConfirmationDialogAsync(
+                "Confirm Navigation",
+                "Are you sure you want to go back? Unsaved changes may be lost."
+                );
+        }
+        else 
+        {
+            confirm = true;
+        }
+
+        if (confirm && previousPages.TryPop(out PageViewModelBase? previousPage))
         {
             previousPage.UseThemeOverride = currentPage.UseThemeOverride;
 

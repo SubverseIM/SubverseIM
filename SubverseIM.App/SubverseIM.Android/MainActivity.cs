@@ -65,7 +65,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         {
             IFrontendService? frontendService = serviceManager is null ? null :
                 await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService?.NavigatePreviousView();
+            _ = frontendService?.NavigatePreviousViewAsync(shouldForceNavigation: false);
         }
     }
 

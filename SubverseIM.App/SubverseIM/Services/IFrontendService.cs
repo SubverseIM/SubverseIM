@@ -2,6 +2,7 @@
 using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Services
@@ -12,7 +13,7 @@ namespace SubverseIM.Services
 
         Task PromptForPurchaseAsync();
 
-        bool NavigatePreviousView();
+        Task<bool> NavigatePreviousViewAsync(bool shouldForceNavigation);
 
         void NavigateLaunchedUri(Uri? overrideUri = null);
 
