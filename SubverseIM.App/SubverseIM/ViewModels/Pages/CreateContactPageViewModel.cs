@@ -13,7 +13,7 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override string Title => "Edit Contact";
 
-        public override bool ShouldConfirmBackNavigation => Contact?.innerContact.Id is not null;
+        public override bool ShouldConfirmBackNavigation => true;
 
         public override bool HasSidebar => false;
 
