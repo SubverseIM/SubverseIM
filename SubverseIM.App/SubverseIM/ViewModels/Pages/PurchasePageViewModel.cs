@@ -9,6 +9,8 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override bool HasSidebar => false;
 
+        public override bool ShouldConfirmBackNavigation => false;
+
         public override string Title => "Products View";
 
         public ObservableCollection<InAppBillingProduct> ProductsList { get; }

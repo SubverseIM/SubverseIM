@@ -65,7 +65,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         {
             IFrontendService? frontendService = serviceManager is null ? null :
                 await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService?.NavigatePreviousView();
+            _ = frontendService?.NavigatePreviousViewAsync(shouldForceNavigation: false);
         }
     }
 
@@ -216,15 +216,15 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         if (Intent?.DataString is not null)
         {
-            frontendService?.NavigateLaunchedUri();
+            _ = frontendService?.NavigateLaunchedUriAsync();
         }
         else if (contacts.Any())
         {
-            frontendService?.NavigateMessageView(contacts, topicName);
+            _ = frontendService?.NavigateMessageViewAsync(contacts, topicName);
         }
         else
         {
-            frontendService?.NavigateContactView();
+            _ = frontendService?.NavigateContactViewAsync();
         }
     }
 

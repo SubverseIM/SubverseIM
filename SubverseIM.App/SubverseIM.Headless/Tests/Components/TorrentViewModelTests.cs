@@ -36,9 +36,9 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        mainViewModel.NavigateTorrentView();
+        await mainViewModel.NavigateTorrentViewAsync();
 
         TorrentPageViewModel? torrentPageViewModel = mainViewModel.CurrentPage as TorrentPageViewModel;
         Assert.NotNull(torrentPageViewModel);

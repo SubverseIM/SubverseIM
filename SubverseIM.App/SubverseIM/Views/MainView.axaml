@@ -17,8 +17,8 @@
 				<Panel>
 					<TextBlock Margin="10" Text="{Binding CurrentPage.Title}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" />
 					<DockPanel>
-						<Button DockPanel.Dock="Left" IsVisible="{Binding HasPreviousView}" Command="{Binding NavigatePreviousView}"
-								AutomationProperties.Name="Previous View">
+						<Button DockPanel.Dock="Left" IsVisible="{Binding HasPreviousView}" Command="{Binding NavigatePreviousViewAsync}"
+								CommandParameter="{x:False}" AutomationProperties.Name="Previous View">
 							<PathIcon Data="{StaticResource caret_left_regular}" />
 						</Button>
 						<Button DockPanel.Dock="Right" IsVisible="{Binding CurrentPage.HasSidebar}" Command="{Binding CurrentPage.ToggleSidebarCommand}"

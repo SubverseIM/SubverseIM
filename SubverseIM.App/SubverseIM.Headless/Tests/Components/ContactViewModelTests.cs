@@ -36,9 +36,9 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        mainViewModel.NavigateContactView(parentOrNull);
+        await mainViewModel.NavigateContactViewAsync(parentOrNull);
 
         ContactPageViewModel? contactPageViewModel = mainViewModel.CurrentPage as ContactPageViewModel;
         Assert.NotNull(contactPageViewModel);
@@ -63,7 +63,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService? dbService = serviceManager.Get<IDbService>();
@@ -72,7 +72,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         SubverseContact? contact = (await dbService.GetContactsAsync()).FirstOrDefault();
         Assert.NotNull(contact);
 
-        mainViewModel.NavigateContactView(contact);
+        await mainViewModel.NavigateContactViewAsync(contact);
 
         CreateContactPageViewModel? createContactPageViewModel = mainViewModel.CurrentPage as CreateContactPageViewModel;
         Assert.NotNull(createContactPageViewModel);
@@ -88,11 +88,11 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        mainViewModel.NavigateMessageView(await dbService.GetContactsAsync(), null);
+        await mainViewModel.NavigateMessageViewAsync(await dbService.GetContactsAsync(), null);
 
         MessagePageViewModel? messagePageViewModel = mainViewModel.CurrentPage as MessagePageViewModel;
         Assert.NotNull(messagePageViewModel);

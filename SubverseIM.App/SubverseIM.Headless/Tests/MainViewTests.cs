@@ -57,7 +57,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         Assert.IsType<ContactPageViewModel>(mainViewModel.CurrentPage);
     }
@@ -68,7 +68,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        mainViewModel.NavigateConfigView();
+        await mainViewModel.NavigateConfigViewAsync();
 
         Assert.IsType<ConfigPageViewModel>(mainViewModel.CurrentPage);
     }
@@ -79,7 +79,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        mainViewModel.NavigateContactView(parentOrNull: null);
+        await mainViewModel.NavigateContactViewAsync(parentOrNull: null);
 
         Assert.IsType<ContactPageViewModel>(mainViewModel.CurrentPage);
     }
@@ -90,7 +90,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        mainViewModel.NavigateContactView(new SubverseContact 
+        await mainViewModel.NavigateContactViewAsync(new SubverseContact 
         { 
             OtherPeer = new(RandomNumberGenerator.GetBytes(20)) 
         });
@@ -104,7 +104,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        mainViewModel.NavigateMessageView([], null);
+        await mainViewModel.NavigateMessageViewAsync([], null);
 
         Assert.IsType<MessagePageViewModel>(mainViewModel.CurrentPage);
     }
@@ -115,7 +115,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        mainViewModel.NavigateTorrentView();
+        await mainViewModel.NavigateTorrentViewAsync();
 
         Assert.IsType<TorrentPageViewModel>(mainViewModel.CurrentPage);
     }
@@ -126,7 +126,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        mainViewModel.NavigatePurchaseView();
+        await mainViewModel.NavigatePurchaseViewAsync();
 
         Assert.IsType<PurchasePageViewModel>(mainViewModel.CurrentPage);
     }

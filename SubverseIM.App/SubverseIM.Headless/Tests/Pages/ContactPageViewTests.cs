@@ -33,9 +33,9 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        mainViewModel.NavigateContactView(parentOrNull);
+        await mainViewModel.NavigateContactViewAsync(parentOrNull);
 
         ContactPageViewModel? contactPageViewModel = mainViewModel.CurrentPage as ContactPageViewModel;
         Assert.NotNull(contactPageViewModel);
@@ -252,7 +252,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         Exception? exception = null;
         try
         {
-            frontendService.NavigatePreviousView();
+            await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
         }
         catch (Exception ex) { exception = ex; }
         Assert.Null(exception);
@@ -270,7 +270,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         Exception? exception = null;
         try
         {
-            frontendService.NavigatePreviousView();
+            await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
         }
         catch (Exception ex) { exception = ex; }
         Assert.Null(exception);

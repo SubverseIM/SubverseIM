@@ -13,6 +13,8 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override bool HasSidebar => false;
 
+        public override bool ShouldConfirmBackNavigation => true;
+
         public override string Title => "Settings View";
 
         public bool IsRunningOnIOS => OperatingSystem.IsIOS();
@@ -186,7 +188,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 config.UseThemeOverride = UseThemeOverride;
 
-                return await peerService.PersistConfigAsync() && frontendService.NavigatePreviousView();
+                return await peerService.PersistConfigAsync() && await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
             }
             catch (SubverseConfig.ValidationException ex)
             {

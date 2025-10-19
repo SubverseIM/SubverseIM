@@ -35,11 +35,11 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        mainViewModel.NavigateMessageView((await dbService.GetContactsAsync()).Where(x => x.TopicName is null), null);
+        await mainViewModel.NavigateMessageViewAsync((await dbService.GetContactsAsync()).Where(x => x.TopicName is null), null);
 
         MessagePageViewModel? messagePageViewModel = mainViewModel.CurrentPage as MessagePageViewModel;
         Assert.NotNull(messagePageViewModel);
@@ -202,7 +202,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        frontendService.NavigatePreviousView();
+        await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         Assert.IsNotType<MessagePageViewModel>(mainViewModel.CurrentPage);

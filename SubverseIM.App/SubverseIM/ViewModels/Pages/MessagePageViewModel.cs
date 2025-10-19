@@ -25,6 +25,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public override string Title => $"Conversation View";
 
+        public override bool ShouldConfirmBackNavigation => false;
+
         public override bool HasSidebar => true;
 
         public Task<bool> IsFormattingAllowedAsync => GetIsFormattingAllowedAsync();
@@ -104,7 +106,7 @@ namespace SubverseIM.ViewModels.Pages
         public async Task AddParticipantsCommand()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateContactView(this);
+            await frontendService.NavigateContactViewAsync(this);
         }
 
         public async Task AddTopicCommand(string? defaultTopicName = null)
@@ -189,7 +191,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 if (string.IsNullOrEmpty(SendMessageTopicName)) 
                 {
-                    Dispatcher.UIThread.Post(() => frontendService.NavigatePreviousView());
+                    await Dispatcher.UIThread.InvokeAsync(() => frontendService.NavigatePreviousViewAsync(shouldForceNavigation: false));
                     return;
                 }
             }

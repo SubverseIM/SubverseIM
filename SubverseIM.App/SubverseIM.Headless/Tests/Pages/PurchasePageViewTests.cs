@@ -32,9 +32,9 @@ public class PurchasePageViewTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        mainViewModel.NavigatePurchaseView();
+        await mainViewModel.NavigatePurchaseViewAsync();
 
         PurchasePageViewModel? purchasePageViewModel = mainViewModel.CurrentPage as PurchasePageViewModel;
         Assert.NotNull(purchasePageViewModel);
@@ -55,7 +55,7 @@ public class PurchasePageViewTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        frontendService.NavigatePreviousView();
+        await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         Assert.IsNotType<PurchasePageViewModel>(mainViewModel.CurrentPage);

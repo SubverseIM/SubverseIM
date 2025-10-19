@@ -16,6 +16,8 @@ namespace SubverseIM.ViewModels.Pages
     {
         public override string Title => "File Manager";
 
+        public override bool ShouldConfirmBackNavigation => false;
+
         public override bool HasSidebar => false;
 
         public ObservableCollection<TorrentViewModel> Torrents { get; }

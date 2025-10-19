@@ -2,6 +2,7 @@
 using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SubverseIM.Services
@@ -12,20 +13,20 @@ namespace SubverseIM.Services
 
         Task PromptForPurchaseAsync();
 
-        bool NavigatePreviousView();
+        Task<bool> NavigatePreviousViewAsync(bool shouldForceNavigation);
 
-        void NavigateLaunchedUri(Uri? overrideUri = null);
+        Task NavigateLaunchedUriAsync(Uri? overrideUri = null);
 
-        void NavigateContactView(MessagePageViewModel? parentOrNull = null);
+        Task NavigateContactViewAsync(MessagePageViewModel? parentOrNull = null);
 
-        void NavigateContactView(SubverseContact contact);
+        Task NavigateContactViewAsync(SubverseContact contact);
 
-        void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName = null);
+        Task NavigateMessageViewAsync(IEnumerable<SubverseContact> contacts, string? topicName = null);
 
-        void NavigateTorrentView();
+        Task NavigateTorrentViewAsync();
 
-        void NavigateConfigView();
+        Task NavigateConfigViewAsync();
 
-        void NavigatePurchaseView();
+        Task NavigatePurchaseViewAsync();
     }
 }
