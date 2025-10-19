@@ -216,15 +216,15 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         if (Intent?.DataString is not null)
         {
-            frontendService?.NavigateLaunchedUri();
+            _ = frontendService?.NavigateLaunchedUriAsync();
         }
         else if (contacts.Any())
         {
-            frontendService?.NavigateMessageView(contacts, topicName);
+            _ = frontendService?.NavigateMessageViewAsync(contacts, topicName);
         }
         else
         {
-            frontendService?.NavigateContactView();
+            _ = frontendService?.NavigateContactViewAsync();
         }
     }
 
