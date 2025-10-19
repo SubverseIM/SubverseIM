@@ -106,7 +106,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         IFrontendService? frontendService = resolveServiceTask is null ? null : await resolveServiceTask;
         if ((launchedUri = (ev as ProtocolActivatedEventArgs)?.Uri) is not null)
         {
-            frontendService?.NavigateLaunchedUri();
+            _ = frontendService?.NavigateLaunchedUriAsync();
         }
 
         if (IsInForeground && frontendService is not null)
