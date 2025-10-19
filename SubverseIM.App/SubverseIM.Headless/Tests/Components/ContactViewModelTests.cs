@@ -36,7 +36,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         mainViewModel.NavigateContactView(parentOrNull);
 
@@ -63,7 +63,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService? dbService = serviceManager.Get<IDbService>();
@@ -88,7 +88,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();

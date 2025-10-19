@@ -57,7 +57,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         Assert.IsType<ContactPageViewModel>(mainViewModel.CurrentPage);
     }

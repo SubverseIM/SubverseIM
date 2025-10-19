@@ -33,7 +33,7 @@ public class CreateContactPageViewTests : IClassFixture<MainViewFixture>
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = fixture.GetViewModel();
-        while (mainViewModel.HasPreviousView && mainViewModel.NavigatePreviousView()) ;
+        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService? dbService = serviceManager.Get<IDbService>();
@@ -72,7 +72,7 @@ public class CreateContactPageViewTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        frontendService.NavigatePreviousView();
+        await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
         MainViewModel mainViewModel = fixture.GetViewModel();
         Assert.IsNotType<CreateContactPageViewModel>(mainViewModel.CurrentPage);
