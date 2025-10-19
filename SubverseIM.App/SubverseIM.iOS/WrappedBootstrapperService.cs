@@ -131,7 +131,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
         if (extraDataKeys.Contains(EXTRA_URI_ID))
         {
             string uriString = (string)(NSString)content.UserInfo[EXTRA_URI_ID];
-            frontendService.NavigateLaunchedUri(new(uriString));
+            await frontendService.NavigateLaunchedUriAsync(new(uriString));
         }
         else if (extraDataKeys.Contains(EXTRA_PARTICIPANTS_ID))
         {
@@ -143,7 +143,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
                 .Where(x => x is not null)
                 .Cast<SubverseContact>();
             string? topicName = content.UserInfo[EXTRA_TOPIC_ID] as NSString;
-            frontendService.NavigateMessageView(participants, topicName);
+            await frontendService.NavigateMessageViewAsync(participants, topicName);
         }
 
         completionHandler();
