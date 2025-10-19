@@ -35,7 +35,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         MainViewModel mainViewModel = fixture.GetViewModel();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        mainViewModel.NavigateContactView(parentOrNull);
+        await mainViewModel.NavigateContactViewAsync(parentOrNull);
 
         ContactPageViewModel? contactPageViewModel = mainViewModel.CurrentPage as ContactPageViewModel;
         Assert.NotNull(contactPageViewModel);

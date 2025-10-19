@@ -196,14 +196,14 @@ namespace SubverseIM.ViewModels.Components
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             if (!await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true))
             {
-                frontendService.NavigateContactView();
+                await frontendService.NavigateContactViewAsync();
             }
         }
 
         public async Task EditCommand()
         {
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateContactView(innerContact);
+            await frontendService.NavigateContactViewAsync(innerContact);
 
             ShouldShowOptions = false;
         }
@@ -262,7 +262,7 @@ namespace SubverseIM.ViewModels.Components
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             if (!await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true))
             {
-                frontendService.NavigateContactView();
+                await frontendService.NavigateContactViewAsync();
             }
         }
     }

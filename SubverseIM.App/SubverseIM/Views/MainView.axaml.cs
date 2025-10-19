@@ -40,7 +40,7 @@ public partial class MainView : UserControl
         }
         ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
 
-        ((MainViewModel)DataContext!).NavigateLaunchedUri();
+        _ = ((MainViewModel)DataContext!).NavigateLaunchedUriAsync();
     }
 
     private void InputPaneStateChanged(object? sender, InputPaneStateEventArgs e)

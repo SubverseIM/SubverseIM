@@ -306,7 +306,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
             if (await launcherService.ShowConfirmationDialogAsync(DONATION_PROMPT_TITLE, DONATION_PROMPT_MESSAGE))
             {
-                NavigatePurchaseView();
+                await NavigatePurchaseViewAsync();
             }
         }
     }
@@ -341,7 +341,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         }
     }
 
-    public async void NavigateLaunchedUri(Uri? overrideUri = null)
+    public async Task NavigateLaunchedUriAsync(Uri? overrideUri = null)
     {
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
@@ -366,15 +366,16 @@ public class MainViewModel : ViewModelBase, IFrontendService
         await PromptForPurchaseAsync();
     }
 
-    public void NavigateContactView(MessagePageViewModel? parentOrNull)
+    public Task NavigateContactViewAsync(MessagePageViewModel? parentOrNull)
     {
         contactPage.Parent = parentOrNull;
         contactPage.IsSidebarOpen = false;
 
         CurrentPage = contactPage;
+        return Task.CompletedTask;
     }
 
-    public async void NavigateContactView(SubverseContact contact)
+    public async Task NavigateContactViewAsync(SubverseContact contact)
     {
         if (CurrentPage is MessagePageViewModel messagePageViewModel)
         {
@@ -385,7 +386,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
         CurrentPage = createContactPage;
     }
 
-    public async void NavigateMessageView(IEnumerable<SubverseContact> contacts, string? topicName)
+    public async Task NavigateMessageViewAsync(IEnumerable<SubverseContact> contacts, string? topicName)
     {
         MessagePageViewModel vm = new MessagePageViewModel(serviceManager, contacts);
         if (topicName is null)
@@ -403,19 +404,22 @@ public class MainViewModel : ViewModelBase, IFrontendService
         CurrentPage = vm;
     }
 
-    public void NavigateTorrentView()
+    public Task NavigateTorrentViewAsync()
     {
         CurrentPage = torrentPage;
+        return Task.CompletedTask;
     }
 
-    public void NavigateConfigView()
+    public Task NavigateConfigViewAsync()
     {
         CurrentPage = configPage;
+        return Task.CompletedTask;
     }
 
-    public void NavigatePurchaseView()
+    public Task NavigatePurchaseViewAsync()
     {
         CurrentPage = purchasePage;
+        return Task.CompletedTask;
     }
 
     public void RegisterTopLevel(TopLevel topLevel)

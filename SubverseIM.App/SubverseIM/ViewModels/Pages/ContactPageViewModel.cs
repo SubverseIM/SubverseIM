@@ -92,7 +92,7 @@ namespace SubverseIM.ViewModels.Pages
             if (contacts.Any() && contacts.All(x => x.TopicName is null))
             {
                 frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-                frontendService.NavigateMessageView(contacts);
+                await frontendService.NavigateMessageViewAsync(contacts);
             }
             else
             {
@@ -108,7 +108,7 @@ namespace SubverseIM.ViewModels.Pages
                             .Select(x => dbService.GetContactAsync(x))))
                             .Where(x => x is not null)
                             .Cast<SubverseContact>();
-                        frontendService.NavigateMessageView(participants, topicName);
+                        await frontendService.NavigateMessageViewAsync(participants, topicName);
                         break;
                     case 0:
                         launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
@@ -125,19 +125,19 @@ namespace SubverseIM.ViewModels.Pages
         public async Task OpenFilesCommand()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateTorrentView();
+            await frontendService.NavigateTorrentViewAsync();
         }
 
         public async Task OpenSettingsCommand()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateConfigView();
+            await frontendService.NavigateConfigViewAsync();
         }
 
         public async Task OpenProductsCommand()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigatePurchaseView();
+            await frontendService.NavigatePurchaseViewAsync();
         }
 
         public async Task AddParticipantsCommand()

@@ -35,7 +35,7 @@ public class ConfigPageViewTests : IClassFixture<MainViewFixture>
         MainViewModel mainViewModel = fixture.GetViewModel();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        mainViewModel.NavigateConfigView();
+        await mainViewModel.NavigateConfigViewAsync();
 
         ConfigPageViewModel? configPageViewModel = mainViewModel.CurrentPage as ConfigPageViewModel;
         Assert.NotNull(configPageViewModel);

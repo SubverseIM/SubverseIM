@@ -34,7 +34,7 @@ public class PurchasePageViewTests : IClassFixture<MainViewFixture>
         MainViewModel mainViewModel = fixture.GetViewModel();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        mainViewModel.NavigatePurchaseView();
+        await mainViewModel.NavigatePurchaseViewAsync();
 
         PurchasePageViewModel? purchasePageViewModel = mainViewModel.CurrentPage as PurchasePageViewModel;
         Assert.NotNull(purchasePageViewModel);

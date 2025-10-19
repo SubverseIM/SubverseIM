@@ -40,7 +40,7 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
 
         IServiceManager serviceManager = fixture.GetServiceManager();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        mainViewModel.NavigateMessageView(await dbService.GetContactsAsync(), null);
+        await mainViewModel.NavigateMessageViewAsync(await dbService.GetContactsAsync(), null);
 
         MessagePageViewModel? messagePageViewModel = mainViewModel.CurrentPage as MessagePageViewModel;
         Assert.NotNull(messagePageViewModel);

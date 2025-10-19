@@ -42,7 +42,7 @@ public class CreateContactPageViewTests : IClassFixture<MainViewFixture>
         SubverseContact? contact = (await dbService.GetContactsAsync()).FirstOrDefault();
         Assert.NotNull(contact);
 
-        mainViewModel.NavigateContactView(contact);
+        await mainViewModel.NavigateContactViewAsync(contact);
 
         CreateContactPageViewModel? createContactPageViewModel = mainViewModel.CurrentPage as CreateContactPageViewModel;
         Assert.NotNull(createContactPageViewModel);

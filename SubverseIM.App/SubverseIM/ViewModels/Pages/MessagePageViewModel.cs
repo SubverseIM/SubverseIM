@@ -106,7 +106,7 @@ namespace SubverseIM.ViewModels.Pages
         public async Task AddParticipantsCommand()
         {
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            frontendService.NavigateContactView(this);
+            await frontendService.NavigateContactViewAsync(this);
         }
 
         public async Task AddTopicCommand(string? defaultTopicName = null)
