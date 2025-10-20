@@ -108,6 +108,15 @@ if (builder.Environment.IsDevelopment() && listenPortNum.HasValue)
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+// Add security headers
+app.Use((x, next) =>
+{
+    x.Response.Headers.Append("X-Frame-Options", "DENY");
+    return next();
+});
+
+// Configure Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
