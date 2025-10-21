@@ -2,6 +2,7 @@
 
 using PgpCore;
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 using HttpClient httpClient = new() { BaseAddress = new Uri(args[0]) };
@@ -51,11 +52,7 @@ string? secretKeyStr = blobStoreDetails?.SecretKey is null ?
 
 Debug.Assert(blobHashStr is not null && secretKeyStr is not null);
 
-using (FileStream blobFileStream = File.Create(args[2]))
-using (Stream blobFetchStream = await httpClient.GetStreamAsync($"blob/{blobHashStr}?psk={secretKeyStr}"))
-{
-    await blobFetchStream.CopyToAsync(blobFileStream);
-}
+Console.WriteLine(new Uri(httpClient.BaseAddress, $"blob/{blobHashStr}?psk={secretKeyStr}"));
 
 class BlobStoreDetails
 {

@@ -23,8 +23,4 @@
 	  <ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="App_Data\blob\" />
-	</ItemGroup>
-
 </Project>
