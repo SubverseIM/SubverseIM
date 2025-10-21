@@ -46,7 +46,7 @@ namespace SubverseIM.Bootstrapper.Controllers
                 secretKeyBytes = aes.Key;
 
                 using Stream tempFileStream = System.IO.File.OpenWrite(tempFilePath);
-                await tempFileStream.WriteAsync(aes.IV);
+                await tempFileStream.WriteAsync(aes.IV, 0, BLOCK_SIZE_BYTES);
 
                 using Stream cryptoStream = new CryptoStream(tempFileStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
                 await Request.Body.CopyToAsync(cryptoStream);
@@ -58,7 +58,8 @@ namespace SubverseIM.Bootstrapper.Controllers
                 blobHashBytes = await SHA256.HashDataAsync(tempFileStream);
             }
 
-            string blobFilePath = Path.Combine(_environment.ContentRootPath, "App_Data", "blob", Convert.ToHexStringLower(blobHashBytes));
+            string blobHashStr = Convert.ToHexStringLower(blobHashBytes);
+            string blobFilePath = Path.Combine(_environment.ContentRootPath, "App_Data", "blob", blobHashStr);
             System.IO.File.Move(tempFilePath, blobFilePath);
 
             byte[]? pkBytes = await _cache.GetAsync($"PKX-{peerIdStr}", cancellationToken);
@@ -72,15 +73,15 @@ namespace SubverseIM.Bootstrapper.Controllers
 
                 using (PGP pgp = new PGP(keyContainer))
                 using (Stream inputStream = new MemoryStream())
-                using (Stream outputStream = new MemoryStream())
                 {
                     JsonSerializer.Serialize(inputStream, new
                     {
+                        BlobHash = blobHashBytes,
                         SecretKey = secretKeyBytes,
-                        BlobHash = blobHashBytes
                     });
                     inputStream.Seek(0, SeekOrigin.Begin);
 
+                    Stream outputStream = new MemoryStream();
                     await pgp.EncryptAsync(inputStream, outputStream);
 
                     outputStream.Seek(0, SeekOrigin.Begin);
@@ -94,8 +95,20 @@ namespace SubverseIM.Bootstrapper.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task RetrieveBlobAsync([FromRoute(Name = "id")] byte[] blobHashBytes, [FromQuery(Name = "sk")] byte[] secretKeyBytes, CancellationToken cancellationToken)
+        public async Task FetchBlobAsync([FromRoute(Name = "id")] string blobHashStr, [FromQuery(Name = "psk")] string secretKeyStr, CancellationToken cancellationToken)
         {
+            byte[] secretKeyBytes;
+            try
+            {
+                secretKeyBytes = Convert.FromHexString(secretKeyStr);
+            }
+            catch (FormatException) 
+            {
+                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                await Response.WriteAsync("Secret key is not properly formatted.");
+                return;
+            }
+
             RangeItemHeaderValue? rangeItemHeaderValue;
             try
             {
@@ -108,13 +121,13 @@ namespace SubverseIM.Bootstrapper.Controllers
                 return;
             }
 
-            string blobFilePath = Path.Combine(_environment.ContentRootPath, "App_Data", "blob", Convert.ToHexStringLower(blobHashBytes));
+            string blobFilePath = Path.Combine(_environment.ContentRootPath, "App_Data", "blob", blobHashStr);
             if (System.IO.File.Exists(blobFilePath))
             {
                 using Stream blobFileStream = System.IO.File.OpenRead(blobFilePath);
 
                 long rangeStart = (rangeItemHeaderValue?.From ?? 0) & OFFSET_BITMASK_LEFT;
-                long rangeEnd = rangeItemHeaderValue?.To ?? blobFileStream.Length;
+                long rangeEnd = rangeItemHeaderValue?.To ?? (blobFileStream.Length - BLOCK_SIZE_BYTES);
                 if ((rangeEnd & OFFSET_BITMASK_RIGHT) > 0)
                 {
                     rangeEnd = (rangeEnd & OFFSET_BITMASK_LEFT) + BLOCK_SIZE_BYTES;
@@ -122,7 +135,8 @@ namespace SubverseIM.Bootstrapper.Controllers
 
                 long rangeLength;
                 if (rangeStart < 0 || rangeEnd <= 0 ||
-                    rangeStart >= blobFileStream.Length || rangeEnd > blobFileStream.Length ||
+                    rangeStart >= (blobFileStream.Length - BLOCK_SIZE_BYTES) || 
+                    rangeEnd > (blobFileStream.Length - BLOCK_SIZE_BYTES) ||
                     rangeStart > rangeEnd)
                 {
                     Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -165,7 +179,7 @@ namespace SubverseIM.Bootstrapper.Controllers
             else
             {
                 Response.StatusCode = (int)HttpStatusCode.NotFound;
-                await Response.WriteAsync($"Blob with ID: {Convert.ToBase64String(blobHashBytes)} was not found.", cancellationToken);
+                await Response.WriteAsync($"Blob with ID: {blobHashStr} was not found.", cancellationToken);
             }
         }
     }

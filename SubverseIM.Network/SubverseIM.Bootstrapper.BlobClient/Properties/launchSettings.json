@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SubverseIM.Bootstrapper.BlobClient": {
+      "commandName": "Project",
+      "commandLineArgs": "https://isatower.local:8080/ test_in.png test_out.png"
+    }
+  }
+}
