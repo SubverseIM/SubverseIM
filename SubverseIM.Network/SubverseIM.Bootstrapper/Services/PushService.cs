@@ -2,7 +2,6 @@
 using Fitomad.Apns.Entities.Notification;
 using Microsoft.Extensions.Caching.Distributed;
 using SIPSorcery.SIP;
-using SubverseIM.Bootstrapper.Extensions;
 using SubverseIM.Bootstrapper.Models;
 using SubverseIM.Core;
 
@@ -81,7 +80,7 @@ namespace SubverseIM.Bootstrapper.Services
                 };
 
                 cancellationToken.ThrowIfCancellationRequested();
-                await _apnsClient.SendAsync(container, deviceToken.ToHexString());
+                await _apnsClient.SendAsync(container, Convert.ToHexStringLower(deviceToken));
             }
         }
 

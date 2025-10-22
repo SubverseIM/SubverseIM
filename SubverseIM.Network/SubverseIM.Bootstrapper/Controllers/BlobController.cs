@@ -17,45 +17,91 @@ namespace SubverseIM.Bootstrapper.Controllers
     {
         private const int BLOCK_SIZE_BYTES = 16;
 
-        private const long OFFSET_BITMASK_LEFT = ~(BLOCK_SIZE_BYTES - 1L);
+        private const long OFFSET_BITMASK = ~(BLOCK_SIZE_BYTES - 1L);
 
-        private const long OFFSET_BITMASK_RIGHT = BLOCK_SIZE_BYTES - 1L;
+        private const long MAX_BLOB_SIZE_BYTES = 26_214_400L; // 25 MiB
 
         private readonly IWebHostEnvironment _environment;
+
+        private readonly IConfiguration _configuration;
 
         private readonly IDistributedCache _cache;
 
         private readonly string _blobDirPath;
 
-        public BlobController(IWebHostEnvironment environment, IDistributedCache cache)
+        private readonly double? _maxBlobAgeHours;
+
+        private readonly bool _enableFeatureFlag;
+
+        public BlobController(IWebHostEnvironment environment, IConfiguration configuration, IDistributedCache cache)
         {
             _environment = environment;
+            _configuration = configuration;
             _cache = cache;
 
             _blobDirPath = Path.Combine(_environment.ContentRootPath, "App_Data", "blob");
             Directory.CreateDirectory(_blobDirPath);
+
+            _maxBlobAgeHours = configuration.GetValue<double?>("Storage:BlobExpireHours");
+            _enableFeatureFlag = configuration.GetValue<bool>("Storage:EnableFeature");
+        }
+
+        [HttpGet("expire-all")]
+        public async Task<IActionResult> DeleteExpiredBlobsAsync(CancellationToken cancellationToken)
+        {
+            if (_enableFeatureFlag == false)
+            {
+                return StatusCode((int)HttpStatusCode.Gone, "The server administrator has disabled blob storage.");
+            }
+
+            DateTime now = DateTime.UtcNow;
+            foreach (FileInfo fileInfo in Directory
+                .GetFiles(_blobDirPath)
+                .Select(x => new FileInfo(x))
+                .Where(x => (now - x.CreationTimeUtc).TotalHours >= _maxBlobAgeHours)) 
+            {
+                fileInfo.Delete();
+            }
+
+            return Ok($"Successfully deleted all blobs older than {_maxBlobAgeHours} hours.");
         }
 
         [HttpPost("store")]
         [Consumes("application/octet-stream")]
         [Produces("application/octet-stream")]
+        [RequestSizeLimit(MAX_BLOB_SIZE_BYTES)]
         public async Task StoreBlobAsync([FromQuery(Name = "p")] string peerIdStr, CancellationToken cancellationToken)
         {
+            if (_enableFeatureFlag == false) 
+            {
+                Response.StatusCode = (int)HttpStatusCode.Gone;
+                await Response.WriteAsync("The server administrator has disabled blob storage.");
+                return;
+            }
+
             string tempFilePath = Path.GetTempFileName();
 
             byte[] secretKeyBytes;
-            using (Aes aes = Aes.Create())
+            try
             {
-                aes.GenerateKey();
-                aes.GenerateIV();
+                using (Aes aes = Aes.Create())
+                {
+                    aes.GenerateKey();
+                    aes.GenerateIV();
 
-                secretKeyBytes = aes.Key;
+                    secretKeyBytes = aes.Key;
 
-                using Stream tempFileStream = System.IO.File.OpenWrite(tempFilePath);
-                await tempFileStream.WriteAsync(aes.IV, 0, BLOCK_SIZE_BYTES);
+                    using Stream tempFileStream = System.IO.File.OpenWrite(tempFilePath);
+                    await tempFileStream.WriteAsync(aes.IV, 0, BLOCK_SIZE_BYTES);
 
-                using Stream cryptoStream = new CryptoStream(tempFileStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
-                await Request.Body.CopyToAsync(cryptoStream);
+                    using Stream cryptoStream = new CryptoStream(tempFileStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
+                    await Request.Body.CopyToAsync(cryptoStream);
+                }
+            }
+            catch (BadHttpRequestException) 
+            {
+                System.IO.File.Delete(tempFilePath);
+                throw;
             }
 
             byte[] blobHashBytes;
@@ -107,6 +153,13 @@ namespace SubverseIM.Bootstrapper.Controllers
         [Produces("application/octet-stream")]
         public async Task FetchBlobAsync([FromRoute(Name = "id")] string blobHashStr, [FromQuery(Name = "psk")] string secretKeyStr, CancellationToken cancellationToken)
         {
+            if (_enableFeatureFlag == false)
+            {
+                Response.StatusCode = (int)HttpStatusCode.Gone;
+                await Response.WriteAsync("The server administrator has disabled blob storage.");
+                return;
+            }
+
             byte[] secretKeyBytes;
             try
             {
@@ -136,11 +189,11 @@ namespace SubverseIM.Bootstrapper.Controllers
             {
                 using Stream blobFileStream = System.IO.File.OpenRead(blobFilePath);
 
-                long rangeStart = (rangeItemHeaderValue?.From ?? 0) & OFFSET_BITMASK_LEFT;
+                long rangeStart = (rangeItemHeaderValue?.From ?? 0) & OFFSET_BITMASK;
                 long rangeEnd = rangeItemHeaderValue?.To ?? (blobFileStream.Length - BLOCK_SIZE_BYTES);
-                if ((rangeEnd & OFFSET_BITMASK_RIGHT) > 0)
+                if ((rangeEnd & ~OFFSET_BITMASK) > 0)
                 {
-                    rangeEnd = (rangeEnd & OFFSET_BITMASK_LEFT) + BLOCK_SIZE_BYTES;
+                    rangeEnd = (rangeEnd & OFFSET_BITMASK) + BLOCK_SIZE_BYTES;
                 }
 
                 long rangeLength;

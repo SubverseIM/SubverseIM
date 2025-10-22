@@ -2,7 +2,6 @@
 
 using PgpCore;
 using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Text.Json;
 
 using HttpClient httpClient = new() { BaseAddress = new Uri(args[0]) };
@@ -17,8 +16,8 @@ using (PGP pgp = new PGP())
     await pgp.GenerateKeyAsync(publicKeyStream, privateKeyStream, password: "#FreeTheInternet");
 
     publicKeyStream.Position = 0;
-    using HttpResponseMessage _ = await httpClient.PostAsync("pk", new StreamContent(publicKeyStream)
-    { Headers = { ContentType = new("application/pgp-keys") } });
+    (await httpClient.PostAsync("pk", new StreamContent(publicKeyStream)
+    { Headers = { ContentType = new("application/pgp-keys") } })).Dispose();
 
     publicKeyStream.Position = 0;
     privateKeyStream.Position = 0;
@@ -52,7 +51,8 @@ string? secretKeyStr = blobStoreDetails?.SecretKey is null ?
 
 Debug.Assert(blobHashStr is not null && secretKeyStr is not null);
 
-Console.WriteLine(new Uri(httpClient.BaseAddress, $"blob/{blobHashStr}?psk={secretKeyStr}"));
+Uri blobStoreUri = new Uri(httpClient.BaseAddress, $"blob/{blobHashStr}?psk={secretKeyStr}");
+Console.WriteLine(blobStoreUri.OriginalString);
 
 class BlobStoreDetails
 {
