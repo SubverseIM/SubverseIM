@@ -1,5 +1,5 @@
 ﻿using LiteDB;
-using SubverseIM.Core;
+using SubverseIM.Core.Storage.Messages;
 
 namespace SubverseIM.Bootstrapper.Models
 {

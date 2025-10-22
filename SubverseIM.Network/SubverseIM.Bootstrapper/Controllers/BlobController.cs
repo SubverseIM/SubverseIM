@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Net.Http.Headers;
 using PgpCore;
 using SubverseIM.Bootstrapper.Extensions;
+using SubverseIM.Core.Storage.Blobs;
 using System.IO.Pipelines;
 using System.Net;
 using System.Security.Cryptography;
@@ -128,11 +129,7 @@ namespace SubverseIM.Bootstrapper.Controllers
                 using (Stream inputStream = new MemoryStream())
                 using (Stream outputStream = new MemoryStream())
                 {
-                    JsonSerializer.Serialize(inputStream, new
-                    {
-                        BlobHash = blobHashBytes,
-                        SecretKey = secretKeyBytes,
-                    });
+                    JsonSerializer.Serialize(inputStream, new BlobStoreDetails(blobHashBytes, secretKeyBytes));
                     inputStream.Seek(0, SeekOrigin.Begin);
 
                     await pgp.EncryptAsync(inputStream, outputStream);

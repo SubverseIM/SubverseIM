@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using PgpCore;
+using SubverseIM.Core.Storage.Blobs;
 using System.Diagnostics;
 using System.Text.Json;
 
@@ -53,10 +54,3 @@ Debug.Assert(blobHashStr is not null && secretKeyStr is not null);
 
 Uri blobStoreUri = new Uri(httpClient.BaseAddress, $"blob/{blobHashStr}?psk={secretKeyStr}");
 Console.WriteLine(blobStoreUri.OriginalString);
-
-class BlobStoreDetails
-{
-    public byte[]? BlobHash { get; set; }
-
-    public byte[]? SecretKey { get; set; }
-}

@@ -11,4 +11,8 @@
     <PackageReference Include="PgpCore" Version="6.5.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
+  </ItemGroup>
+
 </Project>
