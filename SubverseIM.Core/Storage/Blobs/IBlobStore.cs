@@ -2,6 +2,6 @@
 {
     public interface IBlobStore<T>
     {
-        Task<BlobStoreDetails?> StoreAsync(IBlobSource<T> source, IProgress<float>? progress = null, CancellationToken cancellationToken = default);
+        Task<BlobStoreDetails> StoreAsync(IBlobSource<T> source, IProgress<float>? progress = null, CancellationToken cancellationToken = default);
     }
 }

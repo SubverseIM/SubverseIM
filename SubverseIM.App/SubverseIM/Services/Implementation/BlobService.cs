@@ -3,6 +3,7 @@ using SubverseIM.Core;
 using SubverseIM.Core.Storage.Blobs;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
@@ -13,6 +14,76 @@ namespace SubverseIM.Services.Implementation
 {
     public class BlobService : IBlobService
     {
+        private class SequentialReadStream : Stream
+        {
+            private readonly Stream inner;
+
+            private readonly IProgress<long>? progress;
+
+            private readonly bool leaveOpen;
+
+            private bool disposedValue;
+
+            public SequentialReadStream(Stream inner, IProgress<long>? progress = null, bool leaveOpen = false) 
+            { 
+                this.inner = inner;
+                this.progress = progress;
+                this.leaveOpen = leaveOpen;
+            }
+
+            public override bool CanRead => true;
+
+            public override bool CanSeek => false;
+
+            public override bool CanWrite => false;
+
+            public override long Length => inner.Length;
+
+            public override long Position { get => inner.Position; set => throw new NotSupportedException(); }
+
+            public override void Flush()
+            {
+                inner.Flush();
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                int result = inner.Read(buffer, offset, count);
+                progress?.Report(Position);
+                return result;
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                throw new NotSupportedException();
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                if (!disposedValue)
+                {
+                    disposedValue = true;
+
+                    if (disposing && !leaveOpen)
+                    {
+                        inner.Dispose();
+                    }
+                }
+
+                base.Dispose(disposing);
+            }
+        }
+
         private class FileSource : IBlobSource<FileInfo>
         {
             private readonly string filePath;
@@ -50,38 +121,36 @@ namespace SubverseIM.Services.Implementation
                 this.hostAddress = hostAddress;
             }
 
-            public async Task<BlobStoreDetails?> StoreAsync(IBlobSource<FileInfo> source, IProgress<float>? progress = null, CancellationToken cancellationToken = default)
+            public async Task<BlobStoreDetails> StoreAsync(IBlobSource<FileInfo> source, IProgress<float>? progress = null, CancellationToken cancellationToken = default)
             {
                 FileInfo sourceFileInfo = await source.RetrieveAsync(cancellationToken);
-                if (sourceFileInfo.Exists)
+                IProgress<long>? sourceFileProgress = progress is null ? null : 
+                    new Progress<long>(x => progress.Report(x * 100f / sourceFileInfo.Length));
+
+                using (FileStream sourceFileStream = sourceFileInfo.OpenRead())
+                using (SequentialReadStream sourceReadStream = new SequentialReadStream(
+                    sourceFileStream, progress: sourceFileProgress, leaveOpen: true))
+                using (StreamContent sourceFileContent = new StreamContent(sourceReadStream))
                 {
-                    using (FileStream sourceFileStream = sourceFileInfo.OpenRead())
-                    using (StreamContent sourceFileContent = new StreamContent(sourceFileStream))
+                    SubversePeerId peerId = await bootstrapperService.GetPeerIdAsync(cancellationToken);
+                    EncryptionKeys keyContainer = await bootstrapperService.GetPeerKeysAsync(peerId, cancellationToken);
+
+                    using (HttpResponseMessage response = await httpClient.PostAsync(new Uri(hostAddress, $"blob/store?p={peerId}"), sourceFileContent))
                     {
-                        SubversePeerId peerId = await bootstrapperService.GetPeerIdAsync(cancellationToken);
-                        EncryptionKeys keyContainer = await bootstrapperService.GetPeerKeysAsync(peerId, cancellationToken);
+                        response.EnsureSuccessStatusCode();
 
-                        BlobStoreDetails? blobStoreDetails;
-                        using (HttpResponseMessage response = await httpClient.PostAsync(new Uri(hostAddress, $"blob/store?p={peerId}"), sourceFileContent))
+                        string decryptedResponseStr, encryptedResponseStr = 
+                            await response.Content.ReadAsStringAsync(cancellationToken);
+                        using (PGP pgp = new PGP(keyContainer))
                         {
-                            response.EnsureSuccessStatusCode();
-
-                            string decryptedResponseStr;
-                            using (PGP pgp = new PGP(keyContainer))
-                            {
-                                string encryptedResponseStr = await response.Content.ReadAsStringAsync(cancellationToken);
-                                decryptedResponseStr = await pgp.DecryptAsync(encryptedResponseStr);
-                            }
-
-                            blobStoreDetails = JsonSerializer.Deserialize<BlobStoreDetails>(decryptedResponseStr);
+                            decryptedResponseStr = await pgp.DecryptAsync(encryptedResponseStr);
                         }
 
+                        BlobStoreDetails? blobStoreDetails = JsonSerializer
+                            .Deserialize<BlobStoreDetails>(decryptedResponseStr);
+                        Debug.Assert(blobStoreDetails is not null);
                         return blobStoreDetails;
                     }
-                }
-                else
-                {
-                    return null;
                 }
             }
         }
