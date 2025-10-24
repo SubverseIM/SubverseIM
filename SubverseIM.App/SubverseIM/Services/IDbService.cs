@@ -1,5 +1,6 @@
 ﻿using LiteDB;
 using SubverseIM.Core;
+using SubverseIM.Core.Storage.Messages;
 using SubverseIM.Models;
 using SubverseIM.Serializers;
 using System.Collections.Generic;

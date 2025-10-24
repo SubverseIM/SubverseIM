@@ -3,6 +3,7 @@ using MonoTorrent;
 using PgpCore;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
+using SubverseIM.Core.Storage.Messages;
 using SubverseIM.Models;
 using System;
 using System.Collections.Generic;
