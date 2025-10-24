@@ -1,3 +1,3 @@
 ﻿namespace SubverseIM.Core.Storage.Blobs;
 
-public record class BlobStoreDetails(byte[] BlobHash, byte[] SecretKey);
+public record BlobStoreDetails(string? HostAddress, long? FileSizeLimit);

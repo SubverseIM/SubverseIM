@@ -67,6 +67,12 @@ namespace SubverseIM.Bootstrapper.Controllers
             return Ok($"Successfully deleted all blobs older than {_maxBlobAgeHours} hours.");
         }
 
+        [HttpGet("details")]
+        public async Task<IActionResult> GetDetailsAsync(CancellationToken cancellationToken) 
+        {
+            return Ok(new BlobStoreDetails(null, _enableFeatureFlag ? MAX_BLOB_SIZE_BYTES : null));
+        }
+
         [HttpPost("store")]
         [Consumes("application/octet-stream")]
         [Produces("application/octet-stream")]
@@ -129,7 +135,7 @@ namespace SubverseIM.Bootstrapper.Controllers
                 using (Stream inputStream = new MemoryStream())
                 using (Stream outputStream = new MemoryStream())
                 {
-                    JsonSerializer.Serialize(inputStream, new BlobStoreDetails(blobHashBytes, secretKeyBytes));
+                    JsonSerializer.Serialize(inputStream, new BlobStoreResponse(blobHashBytes, secretKeyBytes));
                     inputStream.Seek(0, SeekOrigin.Begin);
 
                     await pgp.EncryptAsync(inputStream, outputStream);

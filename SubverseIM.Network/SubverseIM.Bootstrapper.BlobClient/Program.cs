@@ -27,7 +27,7 @@ using (PGP pgp = new PGP())
     peerIdStr = Convert.ToHexStringLower(keyContainer.PublicKey.GetFingerprint());
 }
 
-BlobStoreDetails? blobStoreDetails;
+BlobStoreResponse? blobStoreDetails;
 using (FileStream blobFileStream = File.OpenRead(args[1]))
 {
     string encryptedResponseStr;
@@ -41,7 +41,7 @@ using (FileStream blobFileStream = File.OpenRead(args[1]))
     using (PGP pgp = new PGP(keyContainer))
     {
         string decryptedResponseStr = await pgp.DecryptAsync(encryptedResponseStr);
-        blobStoreDetails = JsonSerializer.Deserialize<BlobStoreDetails>(decryptedResponseStr);
+        blobStoreDetails = JsonSerializer.Deserialize<BlobStoreResponse>(decryptedResponseStr);
     }
 }
 

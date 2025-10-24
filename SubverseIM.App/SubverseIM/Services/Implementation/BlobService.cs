@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -121,7 +122,14 @@ namespace SubverseIM.Services.Implementation
                 this.hostAddress = hostAddress;
             }
 
-            public async Task<BlobStoreDetails> StoreAsync(IBlobSource<FileInfo> source, IProgress<float>? progress = null, CancellationToken cancellationToken = default)
+            public async Task<BlobStoreDetails> GetDetailsAsync(CancellationToken cancellationToken = default)
+            {
+                return (await httpClient.GetFromJsonAsync<BlobStoreDetails>(
+                    new Uri(hostAddress, "blob/details"), cancellationToken) ?? 
+                    new(null, null)) with { HostAddress = hostAddress.OriginalString };
+            }
+
+            public async Task<BlobStoreResponse> StoreBlobAsync(IBlobSource<FileInfo> source, IProgress<float>? progress = null, CancellationToken cancellationToken = default)
             {
                 FileInfo sourceFileInfo = await source.RetrieveAsync(cancellationToken);
                 IProgress<long>? sourceFileProgress = progress is null ? null : 
@@ -146,8 +154,8 @@ namespace SubverseIM.Services.Implementation
                             decryptedResponseStr = await pgp.DecryptAsync(encryptedResponseStr);
                         }
 
-                        BlobStoreDetails? blobStoreDetails = JsonSerializer
-                            .Deserialize<BlobStoreDetails>(decryptedResponseStr);
+                        BlobStoreResponse? blobStoreDetails = JsonSerializer
+                            .Deserialize<BlobStoreResponse>(decryptedResponseStr);
                         Debug.Assert(blobStoreDetails is not null);
                         return blobStoreDetails;
                     }
