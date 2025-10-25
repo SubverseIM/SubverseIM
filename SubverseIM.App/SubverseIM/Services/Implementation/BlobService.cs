@@ -126,7 +126,7 @@ namespace SubverseIM.Services.Implementation
             {
                 return (await httpClient.GetFromJsonAsync<BlobStoreDetails>(
                     new Uri(hostAddress, "blob/details"), cancellationToken) ?? 
-                    new(null, null)) with { HostAddress = hostAddress.OriginalString };
+                    new(null!, null)) with { HostAddress = hostAddress.OriginalString };
             }
 
             public async Task<BlobStoreResponse> StoreBlobAsync(IBlobSource<FileInfo> source, IProgress<float>? progress = null, CancellationToken cancellationToken = default)

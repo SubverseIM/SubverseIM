@@ -28,5 +28,7 @@ namespace SubverseIM.Services
         Task NavigateConfigViewAsync();
 
         Task NavigatePurchaseViewAsync();
+
+        Task<IReadOnlyList<Uri>> ShowUploadDialogAsync(string sourceFilePath);
     }
 }

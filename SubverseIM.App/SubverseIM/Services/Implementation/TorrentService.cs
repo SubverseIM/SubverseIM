@@ -184,9 +184,10 @@ namespace SubverseIM.Services.Implementation
 
         public async Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
         {
-            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
 
             string cacheDirPath = Path.Combine(
                     launcherService.GetPersistentStoragePath(), "torrent", "files"
@@ -223,10 +224,13 @@ namespace SubverseIM.Services.Implementation
                     );
             }
 
+
+            IReadOnlyList<Uri> webSeedUrls = await frontendService.ShowUploadDialogAsync(cacheFilePath);
             string magnetUri = new MagnetLink(
                 infoHashes: metadata.InfoHashes,
                 name: metadata.Name,
                 announceUrls: metadata.AnnounceUrls[0],
+                webSeeds: webSeedUrls.Select(x => x.OriginalString),
                 size: metadata.Size
                 ).ToV1String();
 

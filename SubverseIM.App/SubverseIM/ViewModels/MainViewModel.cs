@@ -422,6 +422,16 @@ public class MainViewModel : ViewModelBase, IFrontendService
         return Task.CompletedTask;
     }
 
+    public async Task<IReadOnlyList<Uri>> ShowUploadDialogAsync(string sourceFilePath)
+    {
+        CurrentPage = new UploadPageViewModel(serviceManager, sourceFilePath);
+
+        IReadOnlyList<Uri> resultUris = await ((UploadPageViewModel)CurrentPage).GetUriListAsync();
+        await NavigatePreviousViewAsync(shouldForceNavigation: true);
+
+        return resultUris;
+    }
+
     public void RegisterTopLevel(TopLevel topLevel)
     {
         serviceManager.GetOrRegister(topLevel);
