@@ -65,8 +65,8 @@ namespace SubverseIM.ViewModels.Pages
         public async Task UploadCommand()
         {
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
-            IEnumerable<UploadTaskViewModel> selectedUploadTasks = UploadTasks.Where(x => x.IsSelected);
-            if (!selectedUploadTasks.Any()) 
+            UploadTaskViewModel[] selectedUploadTasks = UploadTasks.Where(x => x.IsSelected).ToArray();
+            if (selectedUploadTasks.Length == 0) 
             {
                 await launcherService.ShowAlertDialogAsync("Warning", "You must select at least one upload destination.");
                 return;
@@ -79,8 +79,8 @@ namespace SubverseIM.ViewModels.Pages
             List<Uri> resultUris = new();
             foreach ((BlobStoreDetails storeDetails, BlobStoreResponse response) in selectedUploadTasks.Select(x => x.StoreDetails!).Zip(responses))
             {
-                string blobHashStr = Convert.ToBase64String(response.BlobHash);
-                string secretKeyStr = Convert.ToBase64String(response.SecretKey);
+                string blobHashStr = Convert.ToHexStringLower(response.BlobHash);
+                string secretKeyStr = Convert.ToHexStringLower(response.SecretKey);
 
                 Uri hostAddress = new Uri(storeDetails.HostAddress);
                 resultUris.Add(new Uri(hostAddress, $"blob/{blobHashStr}?sk={secretKeyStr}"));

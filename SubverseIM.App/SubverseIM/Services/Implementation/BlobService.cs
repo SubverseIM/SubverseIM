@@ -138,7 +138,8 @@ namespace SubverseIM.Services.Implementation
                 using (FileStream sourceFileStream = sourceFileInfo.OpenRead())
                 using (SequentialReadStream sourceReadStream = new SequentialReadStream(
                     sourceFileStream, progress: sourceFileProgress, leaveOpen: true))
-                using (StreamContent sourceFileContent = new StreamContent(sourceReadStream))
+                using (StreamContent sourceFileContent = new StreamContent(sourceReadStream) 
+                { Headers = { ContentType = new("application/octet-stream") } })
                 {
                     SubversePeerId peerId = await bootstrapperService.GetPeerIdAsync(cancellationToken);
                     EncryptionKeys keyContainer = await bootstrapperService.GetPeerKeysAsync(peerId, cancellationToken);
