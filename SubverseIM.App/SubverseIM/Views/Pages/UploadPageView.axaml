@@ -30,7 +30,7 @@
 				<ListBox.ItemTemplate>
 					<DataTemplate>
 						<DockPanel>
-							<TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="{Binding StoreDetails.HostAddress}" />
+							<TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="{Binding StoreDetails.HostAddress}" TextWrapping="Wrap" />
 							<TextBlock DockPanel.Dock="Top" 
 								Text="{Binding StoreDetails.FileSizeLimit, Converter={StaticResource FileSizeConverter}, ConverterParameter='Size limit: '}" />
 							<TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding UploadProgress, StringFormat=##0\\%}" />
