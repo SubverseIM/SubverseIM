@@ -191,9 +191,10 @@ namespace SubverseIM.Bootstrapper.Controllers
             if (System.IO.File.Exists(blobFilePath))
             {
                 using Stream blobFileStream = System.IO.File.OpenRead(blobFilePath);
+                long fileSize = blobFileStream.Length - BLOCK_SIZE_BYTES;
 
                 long rangeStart = (rangeItemHeaderValue?.From ?? 0) & OFFSET_BITMASK;
-                long rangeEnd = (rangeItemHeaderValue?.To + 1) ?? (blobFileStream.Length - BLOCK_SIZE_BYTES);
+                long rangeEnd = (rangeItemHeaderValue?.To + 1) ?? fileSize;
                 if ((rangeEnd & ~OFFSET_BITMASK) > 0)
                 {
                     rangeEnd = (rangeEnd & OFFSET_BITMASK) + BLOCK_SIZE_BYTES;
@@ -201,8 +202,8 @@ namespace SubverseIM.Bootstrapper.Controllers
 
                 long rangeLength;
                 if (rangeStart < 0 || rangeEnd <= 0 ||
-                    rangeStart >= (blobFileStream.Length - BLOCK_SIZE_BYTES) ||
-                    rangeEnd > (blobFileStream.Length - BLOCK_SIZE_BYTES) ||
+                    rangeStart >= fileSize ||
+                    rangeEnd > fileSize ||
                     rangeStart > rangeEnd)
                 {
                     Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -224,7 +225,6 @@ namespace SubverseIM.Bootstrapper.Controllers
                 {
                     Response.StatusCode = (int)HttpStatusCode.PartialContent;
                     responseHeaders.ContentRange = new ContentRangeHeaderValue(rangeStart, rangeEnd);
-                    responseHeaders.ContentLength = rangeLength;
                 }
                 else
                 {
