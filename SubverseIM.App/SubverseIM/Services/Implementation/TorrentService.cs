@@ -61,9 +61,16 @@ namespace SubverseIM.Services.Implementation
             IEnumerable<SubverseTorrent> files = await dbService.GetTorrentsAsync();
 
             // Add and start all outstanding torrents
-            await Task.WhenAll(files.Select(x => AddTorrentAsync(x.MagnetUri, x.TorrentBytes)));
+            bool[] addedFlags = await Task.WhenAll(files.Select(x => AddTorrentAsync(x.MagnetUri, x.TorrentBytes)));
+            SubverseTorrent[] addedTorrents = files.Zip(addedFlags)
+                .Where(x => x.Second)
+                .Select(x => x.First)
+                .ToArray();
+            await Task.WhenAll(addedTorrents.Select(StartAsync));
 
-            return files.Zip(await Task.WhenAll(files.Select(StartAsync)))
+            return files.Zip(files
+                .Select(x => managerMap[x.MagnetUri])
+                .Select(x => progressMap[x]))
                 .ToFrozenDictionary(x => x.First, x => x.Second!);
         }
 
@@ -171,12 +178,12 @@ namespace SubverseIM.Services.Implementation
 
             lock (managerMap)
             {
-                managerMap.Add(torrent.MagnetUri, manager);
+                managerMap.TryAdd(torrent.MagnetUri, manager);
             }
 
             lock (progressMap)
             {
-                progressMap.Add(manager, CreateProgress(manager, torrent));
+                progressMap.TryAdd(manager, CreateProgress(manager, torrent));
             }
 
             return true;
@@ -296,7 +303,7 @@ namespace SubverseIM.Services.Implementation
                 managerMap.TryGetValue(torrent.MagnetUri, out manager);
             }
 
-            if (manager is not null)
+            if (manager is not null && manager.State == TorrentState.Stopped)
             {
                 lock (progressMap)
                 {
