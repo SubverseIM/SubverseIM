@@ -18,7 +18,7 @@
             }
 
             double result = curr + prev / 1024.0;
-            return $" ({result:F2} {byteCountUnits[idx]})";
+            return $"{result:F2} {byteCountUnits[idx]}";
         }
     }
 }

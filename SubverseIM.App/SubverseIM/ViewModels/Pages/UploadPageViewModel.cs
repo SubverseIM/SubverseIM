@@ -1,4 +1,6 @@
-﻿using SubverseIM.Core.Storage.Blobs;
+﻿using Avalonia.Threading;
+using ReactiveUI;
+using SubverseIM.Core.Storage.Blobs;
 using SubverseIM.Headless.Components;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -7,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,6 +26,13 @@ namespace SubverseIM.ViewModels.Pages
         public override bool ShouldConfirmBackNavigation => true;
 
         public override string Title => "Upload Attachment";
+
+        private bool canUpload;
+        public bool CanUpload
+        {
+            get => canUpload;
+            set => this.RaiseAndSetIfChanged(ref canUpload, value);
+        }
 
         public ObservableCollection<UploadTaskViewModel> UploadTasks { get; }
 
@@ -42,34 +52,45 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
-            IBlobService blobService = await ServiceManager.GetWithAwaitAsync<IBlobService>();
+            IBlobService blobService = await ServiceManager.GetWithAwaitAsync<IBlobService>(cancellationToken);
             IBlobSource<FileInfo> source = await blobService.GetFileSourceAsync(sourceFilePath, cancellationToken);
             long sourceFileSize = (await source.RetrieveAsync(cancellationToken)).Length;
 
-            IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>();
+            IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>(cancellationToken);
             SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
 
             foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
             {
                 IBlobStore<FileInfo> backingStore = await blobService.GetFileStoreAsync(bootstrapperUri, cancellationToken);
                 UploadTaskViewModel uploadTask = new UploadTaskViewModel(backingStore);
-
-                BlobStoreDetails storeDetails = await uploadTask.InitializeAsync(cancellationToken);
-                if (storeDetails.FileSizeLimit >= sourceFileSize)
+                try
                 {
-                    UploadTasks.Add(uploadTask);
+                    using CancellationTokenSource cts = new(1500);
+                    BlobStoreDetails storeDetails = await uploadTask.InitializeAsync(cts.Token);
+                    if (storeDetails.FileSizeLimit >= sourceFileSize)
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(() => UploadTasks.Add(uploadTask), DispatcherPriority.Loaded);
+                    }
                 }
+                catch (OperationCanceledException) { }
+                catch (HttpRequestException) { }
             }
+
+            CanUpload = UploadTasks.Count > 0;
         }
 
         public async Task UploadCommand()
         {
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
             UploadTaskViewModel[] selectedUploadTasks = UploadTasks.Where(x => x.IsSelected).ToArray();
-            if (selectedUploadTasks.Length == 0) 
+            if (selectedUploadTasks.Length == 0)
             {
                 await launcherService.ShowAlertDialogAsync("Warning", "You must select at least one upload destination.");
                 return;
+            }
+            else
+            {
+                CanUpload = false;
             }
 
             IBlobService blobService = await ServiceManager.GetWithAwaitAsync<IBlobService>();
@@ -89,7 +110,7 @@ namespace SubverseIM.ViewModels.Pages
             resultUriListTcs.SetResult(resultUris);
         }
 
-        public Task CancelCommand() 
+        public Task CancelCommand()
         {
             resultUriListTcs.SetResult(Array.Empty<Uri>());
             return Task.CompletedTask;

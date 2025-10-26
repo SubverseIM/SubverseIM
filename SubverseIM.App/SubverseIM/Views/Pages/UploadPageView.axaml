@@ -1,18 +1,25 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="using:SubverseIM.ViewModels.Pages"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SubverseIM.Views.Pages.UploadPageView"
+			 xmlns:cv="using:SubverseIM.Converters"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="SubverseIM.Views.Pages.UploadPageView"
 			 x:DataType="vm:UploadPageViewModel">
+	<UserControl.Resources>
+		<cv:FileSizeConverter x:Key="FileSizeConverter" />
+	</UserControl.Resources>
 	<Design.DataContext>
 		<vm:UploadPageViewModel />
 	</Design.DataContext>
 	<DockPanel>
-		<Button DockPanel.Dock="Bottom" Command="{Binding CancelCommand}">Skip upload (only use BitTorrent)</Button>
-		<Button DockPanel.Dock="Bottom" Command="{Binding UploadCommand}"
-		  IsEnabled="{Binding !!UploadTasks.Count}">Upload to selected</Button>
+		<Button DockPanel.Dock="Bottom" Command="{Binding CancelCommand}" HorizontalAlignment="Stretch">
+			<TextBlock FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center">Skip upload (only use BitTorrent)</TextBlock>
+		</Button>
+		<Button DockPanel.Dock="Bottom" Command="{Binding UploadCommand}" HorizontalAlignment="Stretch" IsEnabled="{Binding CanUpload}">
+			<TextBlock FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center">Upload to selected</TextBlock>
+		</Button>
 		<Panel>
 			<ListBox x:Name="uploadListBox" ItemsSource="{Binding UploadTasks}">
 				<ListBox.Styles>
@@ -23,7 +30,9 @@
 				<ListBox.ItemTemplate>
 					<DataTemplate>
 						<DockPanel>
-							<TextBlock DockPanel.Dock="Top" Text="{Binding StoreDetails.HostAddress}" />
+							<TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="{Binding StoreDetails.HostAddress}" />
+							<TextBlock DockPanel.Dock="Top" 
+								Text="{Binding StoreDetails.FileSizeLimit, Converter={StaticResource FileSizeConverter}, ConverterParameter='Size limit: '}" />
 							<TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding UploadProgress, StringFormat=##0\\%}" />
 							<ProgressBar Value="{Binding UploadProgress}" Margin="5" MinWidth="0" />
 						</DockPanel>
