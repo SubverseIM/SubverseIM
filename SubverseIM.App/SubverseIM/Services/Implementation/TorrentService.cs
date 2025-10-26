@@ -214,6 +214,9 @@ namespace SubverseIM.Services.Implementation
             TorrentCreator torrentCreator = new(TorrentType.V1V2Hybrid);
             torrentCreator.Announces.Add(await bootstrapperService.GetAnnounceUriListAsync(MAX_ANNOUNCE_COUNT, cancellationToken));
 
+            IReadOnlyList<Uri> webSeedUrls = await frontendService.ShowUploadDialogAsync(cacheFilePath);
+            torrentCreator.GetrightHttpSeeds.AddRange(webSeedUrls.Select(x => x.OriginalString));
+
             BEncodedDictionary metadataDict = await torrentCreator.CreateAsync(new TorrentFileSource(cacheFilePath), cancellationToken);
             Torrent metadata = Torrent.Load(metadataDict);
 
@@ -231,13 +234,11 @@ namespace SubverseIM.Services.Implementation
                     );
             }
 
-
-            IReadOnlyList<Uri> webSeedUrls = await frontendService.ShowUploadDialogAsync(cacheFilePath);
             string magnetUri = new MagnetLink(
                 infoHashes: metadata.InfoHashes,
                 name: metadata.Name,
                 announceUrls: metadata.AnnounceUrls[0],
-                webSeeds: webSeedUrls.Select(x => x.OriginalString),
+                webSeeds: metadata.HttpSeeds.Select(x => x.OriginalString),
                 size: metadata.Size
                 ).ToV1String();
 

@@ -104,7 +104,7 @@ namespace SubverseIM.ViewModels.Pages
                 string secretKeyStr = Convert.ToHexStringLower(response.SecretKey);
 
                 Uri hostAddress = new Uri(storeDetails.HostAddress);
-                resultUris.Add(new Uri(hostAddress, $"blob/{blobHashStr}?sk={secretKeyStr}"));
+                resultUris.Add(new Uri(hostAddress, $"blob/{blobHashStr}?psk={secretKeyStr}"));
             }
 
             resultUriListTcs.SetResult(resultUris);

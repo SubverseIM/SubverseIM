@@ -193,7 +193,7 @@ namespace SubverseIM.Bootstrapper.Controllers
                 using Stream blobFileStream = System.IO.File.OpenRead(blobFilePath);
 
                 long rangeStart = (rangeItemHeaderValue?.From ?? 0) & OFFSET_BITMASK;
-                long rangeEnd = rangeItemHeaderValue?.To ?? (blobFileStream.Length - BLOCK_SIZE_BYTES);
+                long rangeEnd = (rangeItemHeaderValue?.To + 1) ?? (blobFileStream.Length - BLOCK_SIZE_BYTES);
                 if ((rangeEnd & ~OFFSET_BITMASK) > 0)
                 {
                     rangeEnd = (rangeEnd & OFFSET_BITMASK) + BLOCK_SIZE_BYTES;

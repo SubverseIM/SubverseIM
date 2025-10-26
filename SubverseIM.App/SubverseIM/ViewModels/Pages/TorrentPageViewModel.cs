@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SubverseIM.ViewModels.Pages
@@ -68,7 +69,12 @@ namespace SubverseIM.ViewModels.Pages
             Torrent torrent;
             torrent = await Torrent.LoadAsync(torrentBytes);
 
-            string magnetUri = new MagnetLink(torrent.InfoHashes, torrent.Name).ToV1String();
+            string magnetUri = new MagnetLink(
+                torrent.InfoHashes, 
+                torrent.Name, 
+                torrent.AnnounceUrls.FirstOrDefault(), 
+                torrent.HttpSeeds.Select(x => x.OriginalString), 
+                torrent.Size).ToV1String();
             await torrentService.AddTorrentAsync(magnetUri, torrentBytes);
 
             await InitializeAsync();

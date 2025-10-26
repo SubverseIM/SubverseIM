@@ -600,8 +600,12 @@ namespace SubverseIM.Services.Implementation
             string cacheDirPath = Path.Combine(launcherService.GetPersistentStoragePath(), "torrent");
             serviceManager.GetOrRegister<ITorrentService>(
                 new TorrentService(serviceManager, new EngineSettingsBuilder
-                { CacheDirectory = cacheDirPath, UsePartialFiles = true }.ToSettings(), factories
-                ));
+                { 
+                    CacheDirectory = cacheDirPath,
+                    UsePartialFiles = true, 
+                    WebSeedDelay = TimeSpan.Zero, 
+                    WebSeedSpeedTrigger = 0
+                }.ToSettings(), factories));
         }
 
         #endregion
