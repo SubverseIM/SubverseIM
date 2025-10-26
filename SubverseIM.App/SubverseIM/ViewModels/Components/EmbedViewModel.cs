@@ -20,7 +20,7 @@ namespace SubverseIM.ViewModels.Components
         public string DisplayName => AbsoluteUri.Scheme switch
         {
             "magnet" => MagnetLink.TryParse(AbsoluteUri.OriginalString, out MagnetLink? magnetLink) ?
-                "Attachment: " + (magnetLink.Name ?? "Untitled") + UnitHelpers.ByteCountToString(magnetLink.Size) : null,
+                $"Attachment: {magnetLink.Name ?? "Untitled"} ({UnitHelpers.ByteCountToString(magnetLink.Size)})" : null,
             "sv" => "Contact: " + (HttpUtility.ParseQueryString(AbsoluteUri.Query)["name"] ?? "Anonymous"),
             "http" or "https" => "Link: " + AbsoluteUri.Host,
             _ => null

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35323.107
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11116.177 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM", "SubverseIM.App\SubverseIM\SubverseIM.csproj", "{8EF02571-EDDE-40F7-A6BC-77E78A7BAFC1}"
 EndProject
@@ -59,6 +59,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apns", "apns-dotnet\Apns\Apns.csproj", "{98EC190A-3900-2C9F-1135-BDBA55509E82}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.iOS.NotificationService", "SubverseIM.App\SubverseIM.iOS.NotificationService\SubverseIM.iOS.NotificationService.csproj", "{9C3E6080-29C9-B7DE-60A3-14417DCDBE18}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.Bootstrapper.BlobClient", "SubverseIM.Network\SubverseIM.Bootstrapper.BlobClient\SubverseIM.Bootstrapper.BlobClient.csproj", "{77002DE0-6CD1-4440-952D-B85AFA429771}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -160,6 +162,10 @@ Global
 		{9C3E6080-29C9-B7DE-60A3-14417DCDBE18}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C3E6080-29C9-B7DE-60A3-14417DCDBE18}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9C3E6080-29C9-B7DE-60A3-14417DCDBE18}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{77002DE0-6CD1-4440-952D-B85AFA429771}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77002DE0-6CD1-4440-952D-B85AFA429771}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77002DE0-6CD1-4440-952D-B85AFA429771}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77002DE0-6CD1-4440-952D-B85AFA429771}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -186,6 +192,7 @@ Global
 		{9A7D786A-5E2E-7783-52E9-1D6EE8608223} = {322F9077-58A0-403D-A6CB-2B2E0E3889DB}
 		{98EC190A-3900-2C9F-1135-BDBA55509E82} = {C9482CFD-04EC-4538-B686-B954175EEFE2}
 		{9C3E6080-29C9-B7DE-60A3-14417DCDBE18} = {4343168E-E066-4F17-8C65-AD4A7F88F002}
+		{77002DE0-6CD1-4440-952D-B85AFA429771} = {E88628A0-A007-4C04-A0C3-769CB725B02F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ED9AFDBC-58C4-4923-950B-DC7E362C8C9C}

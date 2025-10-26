@@ -28,7 +28,7 @@
 				<ListBox.ItemTemplate>
 					<DataTemplate>
 						<DockPanel>
-							<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" />
+							<TextBlock DockPanel.Dock="Top" Text="{Binding DisplayName}" TextWrapping="Wrap" />
 							<TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding CurrentStatus.Progress, StringFormat=##0\\%}" />
 							<Button DockPanel.Dock="Right" Command="{Binding ShareCommand}"
 									IsVisible="{Binding CurrentStatus.Complete}"

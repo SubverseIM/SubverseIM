@@ -4,13 +4,9 @@ using MonoTorrent.Client;
 using MonoTorrent.Connections.Dht;
 using MonoTorrent.Dht;
 using MonoTorrent.PortForwarding;
-using MonoTorrent.TrackerServer;
-using Org.BouncyCastle.Crypto.Engines;
-using Org.BouncyCastle.Tls;
 using PgpCore;
 using SubverseIM.Core;
 using SubverseIM.Models;
-using SubverseIM.Services.Faux;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -44,7 +40,7 @@ namespace SubverseIM.Services.Implementation
 
         private readonly INativeService nativeService;
 
-        private readonly HttpClient http;
+        private readonly HttpClient httpClient;
 
         private readonly ConcurrentDictionary<string, CachedTopicId> cachedTopicIds;
 
@@ -58,15 +54,15 @@ namespace SubverseIM.Services.Implementation
 
         private readonly TaskCompletionSource<IServiceManager> serviceManagerTcs;
 
-        private readonly PeriodicTimer timer;
-
         private readonly TaskCompletionSource<SubversePeerId> thisPeerTcs;
+
+        private readonly PeriodicTimer periodicTimer;
 
         public BootstrapperService(INativeService nativeService)
         {
             this.nativeService = nativeService;
 
-            http = new();
+            httpClient = new();
 
             cachedTopicIds = new();
             peerInfoBag = new();
@@ -77,7 +73,7 @@ namespace SubverseIM.Services.Implementation
             serviceManagerTcs = new();
 
             thisPeerTcs = new();
-            timer = new(TimeSpan.FromSeconds(5));
+            periodicTimer = new(TimeSpan.FromSeconds(5));
         }
 
         #region IBootstrapperService API
@@ -171,7 +167,7 @@ namespace SubverseIM.Services.Implementation
                 using (ByteArrayContent requestContent = new(requestBytes)
                 { Headers = { ContentType = new("application/octet-stream") } })
                 {
-                    HttpResponseMessage response = await http.PostAsync(requestUri, requestContent, cancellationToken);
+                    HttpResponseMessage response = await httpClient.PostAsync(requestUri, requestContent, cancellationToken);
                     return await response.Content.ReadFromJsonAsync<bool>(cancellationToken);
                 }
             }
@@ -186,7 +182,7 @@ namespace SubverseIM.Services.Implementation
             IDhtEngine dhtEngine = await dhtEngineTcs.Task.WaitAsync(cancellationToken);
             try
             {
-                HttpResponseMessage response = await http.GetAsync(new Uri(bootstrapperUri, $"nodes?p={peerId}"), cancellationToken);
+                HttpResponseMessage response = await httpClient.GetAsync(new Uri(bootstrapperUri, $"nodes?p={peerId}"), cancellationToken);
                 byte[] responseBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
                 dhtEngine.Add([responseBytes]);
 
@@ -230,7 +226,7 @@ namespace SubverseIM.Services.Implementation
                 using (ByteArrayContent requestContent = new(requestBytes)
                 { Headers = { ContentType = new("application/octet-stream") } })
                 {
-                    HttpResponseMessage response = await http.PostAsync(requestUri, requestContent, cancellationToken);
+                    HttpResponseMessage response = await httpClient.PostAsync(requestUri, requestContent, cancellationToken);
                     return await response.Content.ReadFromJsonAsync<bool>(cancellationToken);
                 }
             }
@@ -283,7 +279,7 @@ namespace SubverseIM.Services.Implementation
                     using (StreamContent pkStreamContent = new(pkStream)
                     { Headers = { ContentType = new("application/pgp-keys") } })
                     {
-                        await http.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent, cancellationToken);
+                        await httpClient.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent, cancellationToken);
                     }
                 }
             }
@@ -309,7 +305,7 @@ namespace SubverseIM.Services.Implementation
                 if (!portForwarder.Active) break;
 
                 await portForwarder.RegisterMappingAsync(new Mapping(Protocol.Udp, IBootstrapperService.DEFAULT_PORT_NUMBER, portNum));
-                await timer.WaitForNextTickAsync(cancellationToken);
+                await periodicTimer.WaitForNextTickAsync(cancellationToken);
 
                 mapping = portForwarder.Mappings.Created.SingleOrDefault(x =>
                     x.PrivatePort == IBootstrapperService.DEFAULT_PORT_NUMBER
@@ -327,7 +323,7 @@ namespace SubverseIM.Services.Implementation
 
                 foreach (SubversePeerId topicId in await GetTopicIdsAsync(cancellationToken))
                 {
-                    await timer.WaitForNextTickAsync(cancellationToken);
+                    await periodicTimer.WaitForNextTickAsync(cancellationToken);
                     dhtEngine.Announce(new InfoHash(topicId.GetBytes()),
                         mapping?.PublicPort ?? portNum);
                 }
@@ -336,14 +332,14 @@ namespace SubverseIM.Services.Implementation
                 {
                     if (await SynchronizePeersAsync(bootstrapperUri, cancellationToken))
                     {
-                        await timer.WaitForNextTickAsync(cancellationToken);
+                        await periodicTimer.WaitForNextTickAsync(cancellationToken);
                     }
 
                     foreach (SubversePeerId otherPeer in peers)
                     {
                         if (await SynchronizePeersAsync(bootstrapperUri, otherPeer, cancellationToken))
                         {
-                            await timer.WaitForNextTickAsync(cancellationToken);
+                            await periodicTimer.WaitForNextTickAsync(cancellationToken);
                         }
                     }
                 }
@@ -359,7 +355,7 @@ namespace SubverseIM.Services.Implementation
         {
             List<string> announceUriList = new();
 
-            using Stream httpStream = await http.GetStreamAsync(TRACKERS_LIST_URI, cancellationToken);
+            using Stream httpStream = await httpClient.GetStreamAsync(TRACKERS_LIST_URI, cancellationToken);
             using StreamReader reader = new(httpStream);
 
             int i = 0;
@@ -417,7 +413,7 @@ namespace SubverseIM.Services.Implementation
                 {
                     try
                     {
-                        using (Stream responseStream = await http.GetStreamAsync(new Uri(bootstrapperUri, $"pk?p={otherPeer}"), cancellationToken))
+                        using (Stream responseStream = await httpClient.GetStreamAsync(new Uri(bootstrapperUri, $"pk?p={otherPeer}"), cancellationToken))
                         {
                             await responseStream.CopyToAsync(publicKeyStream, cancellationToken);
                             publicKeyStream.Position = 0;
@@ -469,7 +465,7 @@ namespace SubverseIM.Services.Implementation
                 }
                 else
                 {
-                    string? topicIdStr = await http.GetFromJsonAsync<string>(new Uri(bootstrapperUri, "topic"));
+                    string? topicIdStr = await httpClient.GetFromJsonAsync<string>(new Uri(bootstrapperUri, "topic"));
                     if (!string.IsNullOrEmpty(topicIdStr))
                     {
                         SubversePeerId newTopicId = SubversePeerId.FromString(topicIdStr);
@@ -519,7 +515,7 @@ namespace SubverseIM.Services.Implementation
                     );
             }
 
-            string inviteId = await http.GetFromJsonAsync<string>(requestUriBuilder.ToString(), cancellationToken) ??
+            string inviteId = await httpClient.GetFromJsonAsync<string>(requestUriBuilder.ToString(), cancellationToken) ??
                 throw new InvalidOperationException("Failed to resolve inviteId!");
             await launcherService.ShareUrlToAppAsync(sender, "Send Invite Via App", $"{bootstrapperUri}/invite/{inviteId}");
         }
@@ -570,11 +566,18 @@ namespace SubverseIM.Services.Implementation
             }
 
             // Relay service init
+
             IRelayService relayService = serviceManager.GetOrRegister
                 <IRelayService>(new RelayService());
 
+            // Blob service init
+
+            IBlobService blobService = new BlobService(this, httpClient);
+            serviceManager.GetOrRegister(blobService);
+
             // Torrent service init
 
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             Factories factories = Factories.Default
                 .WithDhtCreator(() =>
                 {
@@ -594,11 +597,15 @@ namespace SubverseIM.Services.Implementation
                     portForwarderTcs.SetResult(portForwarder);
                     return portForwarder;
                 });
-            string cacheDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent");
+            string cacheDirPath = Path.Combine(launcherService.GetPersistentStoragePath(), "torrent");
             serviceManager.GetOrRegister<ITorrentService>(
                 new TorrentService(serviceManager, new EngineSettingsBuilder
-                { CacheDirectory = cacheDirPath, UsePartialFiles = true }.ToSettings(), factories
-                ));
+                { 
+                    CacheDirectory = cacheDirPath,
+                    UsePartialFiles = true, 
+                    WebSeedDelay = TimeSpan.Zero, 
+                    WebSeedSpeedTrigger = 0
+                }.ToSettings(), factories));
         }
 
         #endregion
@@ -615,8 +622,8 @@ namespace SubverseIM.Services.Implementation
                 if (disposing)
                 {
                     dhtEngine.Dispose();
-                    http.Dispose();
-                    timer.Dispose();
+                    httpClient.Dispose();
+                    periodicTimer.Dispose();
                 }
 
                 disposedValue = true;
