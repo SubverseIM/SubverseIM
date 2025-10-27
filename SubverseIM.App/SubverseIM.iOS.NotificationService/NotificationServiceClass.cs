@@ -1,7 +1,6 @@
 using ObjCRuntime;
 using PgpCore;
 using SubverseIM.Core;
-using SubverseIM.Services;
 using UserNotifications;
 
 namespace NotificationServiceExtension
@@ -47,7 +46,7 @@ namespace NotificationServiceExtension
                 string privateKeyFilePath = Path.Combine(baseFilePath, "private-key.data");
                 using (FileStream privateKeyFileStream = File.OpenRead(privateKeyFilePath))
                 {
-                    myKeyContainer = new(privateKeyFileStream, IDbService.SECRET_PASSWORD);
+                    myKeyContainer = new(privateKeyFileStream, "#FreeTheInternet");
                 }
             }
             else
