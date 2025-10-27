@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11116.177 d18.0
+VisualStudioVersion = 18.0.11116.177
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM", "SubverseIM.App\SubverseIM\SubverseIM.csproj", "{8EF02571-EDDE-40F7-A6BC-77E78A7BAFC1}"
 EndProject
@@ -54,7 +54,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CoreRPC", "CoreRPC", "{322F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreRPC", "CoreRPC\CoreRPC\CoreRPC.csproj", "{9A7D786A-5E2E-7783-52E9-1D6EE8608223}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apns", "Apns", "{C9482CFD-04EC-4538-B686-B954175EEFE2}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apns-dotnet", "apns-dotnet", "{C9482CFD-04EC-4538-B686-B954175EEFE2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apns", "apns-dotnet\Apns\Apns.csproj", "{98EC190A-3900-2C9F-1135-BDBA55509E82}"
 EndProject

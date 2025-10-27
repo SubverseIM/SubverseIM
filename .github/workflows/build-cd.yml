@@ -13,7 +13,7 @@ jobs:
       contents: write
 
     container: 
-      image: garretech/android-sdk-image:35.0.0
+      image: garretech/android-sdk-image:36.0.0
       
     steps:
     - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
       with:
         dotnet-version: |
           8.0.x
-          9.0.x
+          10.0.x
     - uses: actions/setup-node@v4
       with:
         node-version: 'latest'
@@ -62,7 +62,7 @@ jobs:
       contents: read
 
     container: 
-      image: mcr.microsoft.com/dotnet/sdk:9.0
+      image: mcr.microsoft.com/dotnet/sdk:10.0
       
     steps:
     - uses: actions/checkout@v4
