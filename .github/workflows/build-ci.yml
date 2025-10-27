@@ -14,7 +14,7 @@ jobs:
       contents: read
 
     container: 
-      image: garretech/android-sdk-image:35.0.0
+      image: garretech/android-sdk-image:36.0.0
       
     steps:
     - uses: actions/checkout@v4
@@ -64,7 +64,7 @@ jobs:
       contents: read
     
     container: 
-      image: garretech/android-sdk-image:35.0.0
+      image: garretech/android-sdk-image:36.0.0
       
     steps:
       - uses: actions/checkout@v4
