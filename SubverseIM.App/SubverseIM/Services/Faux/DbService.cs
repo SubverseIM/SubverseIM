@@ -1,4 +1,5 @@
 ﻿using LiteDB;
+using MonoTorrent;
 using SubverseIM.Core;
 using SubverseIM.Core.Storage.Messages;
 using SubverseIM.Models;
@@ -21,7 +22,7 @@ namespace SubverseIM.Services.Faux
 
         private readonly Dictionary<MessageId, SubverseMessage> messages = new();
 
-        private readonly Dictionary<string, SubverseTorrent> torrents = new();
+        private readonly Dictionary<InfoHash, SubverseTorrent> torrents = new();
 
         private readonly Dictionary<string, Stream> fileStreams = new();
 
@@ -192,7 +193,7 @@ namespace SubverseIM.Services.Faux
             }
         }
 
-        public Task<SubverseTorrent?> GetTorrentAsync(string magnetUri, CancellationToken cancellationToken)
+        public Task<SubverseTorrent?> GetTorrentAsync(InfoHash infoHash, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested) 
             {
@@ -202,7 +203,7 @@ namespace SubverseIM.Services.Faux
             {
                 lock (torrents)
                 {
-                    torrents.TryGetValue(magnetUri, out SubverseTorrent? torrent);
+                    torrents.TryGetValue(infoHash, out SubverseTorrent? torrent);
                     return Task.FromResult(torrent);
                 }
             }
@@ -271,7 +272,7 @@ namespace SubverseIM.Services.Faux
             {
                 lock (torrents)
                 {
-                    if (torrents.TryGetValue(newItem.MagnetUri, out SubverseTorrent? oldItem))
+                    if (torrents.TryGetValue(newItem.InfoHash, out SubverseTorrent? oldItem))
                     {
                         oldItem.DateLastUpdatedOn = newItem.DateLastUpdatedOn;
                         oldItem.TorrentBytes = newItem.TorrentBytes;
@@ -280,7 +281,7 @@ namespace SubverseIM.Services.Faux
                     else
                     {
                         newItem.Id ??= ObjectId.NewObjectId();
-                        torrents.Add(newItem.MagnetUri, newItem);
+                        torrents.Add(newItem.InfoHash, newItem);
                         return Task.FromResult(false);
                     }
                 }
@@ -401,10 +402,10 @@ namespace SubverseIM.Services.Faux
                     case "SubverseIM.Models.SubverseTorrent":
                         lock (torrents)
                         {
-                            foreach ((string magnetUri, SubverseTorrent _) in torrents
+                            foreach ((InfoHash infoHash, SubverseTorrent _) in torrents
                                 .Where(x => x.Value.Id == id.AsObjectId).ToHashSet())
                             {
-                                removedFlag |= torrents.Remove(magnetUri);
+                                removedFlag |= torrents.Remove(infoHash);
                             }
                             break;
                         }

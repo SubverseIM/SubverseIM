@@ -1,4 +1,5 @@
 ﻿using LiteDB;
+using MonoTorrent;
 using SubverseIM.Core;
 using SubverseIM.Core.Storage.Messages;
 using SubverseIM.Exceptions;
@@ -32,7 +33,11 @@ namespace SubverseIM.Services.Implementation
             mapper.RegisterType(
                 serialize: (peerId) => peerId.ToString(),
                 deserialize: (bson) => SubversePeerId.FromString(bson.AsString)
-            );
+                );
+            mapper.RegisterType(
+                serialize: (infoHash) => infoHash.ToHex(),
+                deserialize: (bson) => InfoHash.FromHex(bson.AsString)
+                );
             this.mapper = mapper;
 
             dbTcs = new();
@@ -90,15 +95,15 @@ namespace SubverseIM.Services.Implementation
                 .ToEnumerable();
         }
 
-        public async Task<SubverseTorrent?> GetTorrentAsync(string magnetUri, CancellationToken cancellationToken)
+        public async Task<SubverseTorrent?> GetTorrentAsync(InfoHash infoHash, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
 
             var torrents = db.GetCollection<SubverseTorrent>();
-            torrents.EnsureIndex(x => x.MagnetUri, unique: true);
+            torrents.EnsureIndex(x => x.InfoHash, unique: true);
 
-            return torrents.FindOne(x => x.MagnetUri == magnetUri);
+            return torrents.FindOne(x => x.InfoHash == infoHash);
         }
 
         public async Task<IEnumerable<SubverseMessage>> GetMessagesWithPeersOnTopicAsync(HashSet<SubversePeerId> otherPeers, string? topicName, bool orderFlag, CancellationToken cancellationToken)
@@ -200,7 +205,7 @@ namespace SubverseIM.Services.Implementation
 
             var torrents = db.GetCollection<SubverseTorrent>();
 
-            SubverseTorrent? storedItem = await GetTorrentAsync(newItem.MagnetUri, cancellationToken);
+            SubverseTorrent? storedItem = await GetTorrentAsync(newItem.InfoHash, cancellationToken);
             newItem.Id = storedItem?.Id;
 
             return torrents.Upsert(newItem);

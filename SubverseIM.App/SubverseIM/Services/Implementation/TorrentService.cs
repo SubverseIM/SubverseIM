@@ -9,6 +9,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -123,18 +124,29 @@ namespace SubverseIM.Services.Implementation
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-            SubverseTorrent? torrent = await dbService.GetTorrentAsync(magnetUri) ??
-                new SubverseTorrent(magnetUri)
-                {
-                    DateLastUpdatedOn = DateTime.UtcNow
-                };
-            torrent.TorrentBytes = torrentBytes ?? torrent.TorrentBytes;
-            await dbService.InsertOrUpdateItemAsync(torrent);
+            string destDirPath;
+            MagnetLink? magnetLink;
+            SubverseTorrent? torrent;
+            if (MagnetLink.TryParse(magnetUri, out magnetLink))
+            {
+                torrent = await dbService.GetTorrentAsync(magnetLink.InfoHashes.V1OrV2) ??
+                   new SubverseTorrent(magnetLink.InfoHashes.V1OrV2, magnetUri)
+                   {
+                       DateLastUpdatedOn = DateTime.UtcNow
+                   };
+                torrent.TorrentBytes = torrentBytes ?? torrent.TorrentBytes;
+                await dbService.InsertOrUpdateItemAsync(torrent);
 
-            string cacheDirPath = Path.Combine(
-                    launcherService.GetPersistentStoragePath(), "torrent", "files"
+                destDirPath = Path.Combine(
+                    launcherService.GetPersistentStoragePath(), "torrent", "files", 
+                    magnetLink.InfoHashes.V1OrV2.ToHex()
                     );
-            Directory.CreateDirectory(cacheDirPath);
+                Directory.CreateDirectory(destDirPath);
+            }
+            else
+            {
+                throw new ArgumentException("Invalid magnet URI", nameof(magnetUri));
+            }
 
             bool keyExists;
             lock (managerMap)
@@ -152,7 +164,7 @@ namespace SubverseIM.Services.Implementation
                 Torrent torrentMetaData = await Torrent.LoadAsync(torrent.TorrentBytes);
                 try
                 {
-                    manager = await engine.AddAsync(torrentMetaData, cacheDirPath);
+                    manager = await engine.AddAsync(torrentMetaData, destDirPath);
                 }
                 catch (TorrentException)
                 {
@@ -163,10 +175,9 @@ namespace SubverseIM.Services.Implementation
             }
             else
             {
-                MagnetLink magnetLink = MagnetLink.Parse(torrent.MagnetUri);
                 try
                 {
-                    manager = await engine.AddAsync(magnetLink, cacheDirPath);
+                    manager = await engine.AddAsync(magnetLink, destDirPath);
                 }
                 catch (TorrentException)
                 {
@@ -196,19 +207,14 @@ namespace SubverseIM.Services.Implementation
             IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
 
-            string cacheDirPath = Path.Combine(
-                    launcherService.GetPersistentStoragePath(), "torrent", "files"
-                    );
-            string cacheFilePath = Path.Combine(cacheDirPath, file.Name);
-            if (!File.Exists(cacheFilePath))
-            {
-                Directory.CreateDirectory(cacheDirPath);
+            string cacheDirPath = Path.Combine(launcherService.GetPersistentStoragePath(), "torrent", "staging");
+            Directory.CreateDirectory(cacheDirPath);
 
-                using (Stream localFileStream = await file.OpenReadAsync())
-                using (Stream cacheFileStream = File.Create(cacheFilePath))
-                {
-                    await localFileStream.CopyToAsync(cacheFileStream, cancellationToken);
-                }
+            string cacheFilePath = Path.Combine(cacheDirPath, file.Name);
+            using (Stream localFileStream = await file.OpenReadAsync())
+            using (Stream cacheFileStream = File.Create(cacheFilePath))
+            {
+                await localFileStream.CopyToAsync(cacheFileStream, cancellationToken);
             }
 
             TorrentCreator torrentCreator = new(TorrentType.V1V2Hybrid);
@@ -220,10 +226,31 @@ namespace SubverseIM.Services.Implementation
             BEncodedDictionary metadataDict = await torrentCreator.CreateAsync(new TorrentFileSource(cacheFilePath), cancellationToken);
             Torrent metadata = Torrent.Load(metadataDict);
 
+            string magnetUri = new MagnetLink(
+                infoHashes: metadata.InfoHashes,
+                name: metadata.Name,
+                announceUrls: metadata.AnnounceUrls[0],
+                webSeeds: metadata.HttpSeeds.Select(x => x.OriginalString),
+                size: metadata.Size
+                ).ToV1String();
+
+            SubverseTorrent torrent = new SubverseTorrent(metadata.InfoHashes.V1OrV2, magnetUri)
+            {
+                TorrentBytes = metadataDict.Encode(),
+                DateLastUpdatedOn = DateTime.UtcNow,
+            };
+            await dbService.InsertOrUpdateItemAsync(torrent);
+
             TorrentManager manager;
             try
             {
-                manager = await engine.AddAsync(metadata, cacheDirPath,
+                string destDirPath = Path.Combine(cacheDirPath, metadata.InfoHashes.V1OrV2.ToHex());
+                Directory.CreateDirectory(destDirPath);
+
+                string destFilePath = Path.Combine(destDirPath, file.Name);
+                File.Move(cacheFilePath, destFilePath);
+
+                manager = await engine.AddAsync(metadata, destDirPath,
                     new TorrentSettingsBuilder { AllowInitialSeeding = true }
                     .ToSettings());
             }
@@ -233,21 +260,6 @@ namespace SubverseIM.Services.Implementation
                     x.InfoHashes == metadata.InfoHashes
                     );
             }
-
-            string magnetUri = new MagnetLink(
-                infoHashes: metadata.InfoHashes,
-                name: metadata.Name,
-                announceUrls: metadata.AnnounceUrls[0],
-                webSeeds: metadata.HttpSeeds.Select(x => x.OriginalString),
-                size: metadata.Size
-                ).ToV1String();
-
-            SubverseTorrent torrent = new SubverseTorrent(magnetUri)
-            {
-                TorrentBytes = metadataDict.Encode(),
-                DateLastUpdatedOn = DateTime.UtcNow,
-            };
-            await dbService.InsertOrUpdateItemAsync(torrent);
 
             lock (managerMap)
             {
@@ -266,11 +278,11 @@ namespace SubverseIM.Services.Implementation
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-            SubverseTorrent? storedItem = await dbService.GetTorrentAsync(torrent.MagnetUri);
+            SubverseTorrent? storedItem = await dbService.GetTorrentAsync(torrent.InfoHash);
             while (storedItem is not null)
             {
                 await dbService.DeleteItemByIdAsync<SubverseTorrent>(storedItem.Id);
-                storedItem = await dbService.GetTorrentAsync(torrent.MagnetUri);
+                storedItem = await dbService.GetTorrentAsync(torrent.InfoHash);
             }
 
             TorrentManager? manager;

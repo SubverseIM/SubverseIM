@@ -167,7 +167,7 @@ namespace SubverseIM.ViewModels.Components
             ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             IDbService dbService = await parent.ServiceManager.GetWithAwaitAsync<IDbService>();
 
-            SubverseTorrent? torrent = await dbService.GetTorrentAsync(innerTorrent.MagnetUri);
+            SubverseTorrent? torrent = await dbService.GetTorrentAsync(innerTorrent.InfoHash);
             innerTorrent.TorrentBytes ??= torrent?.TorrentBytes;
 
             if (innerTorrent.TorrentBytes is null) 

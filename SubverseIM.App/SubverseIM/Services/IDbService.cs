@@ -1,4 +1,5 @@
 ﻿using LiteDB;
+using MonoTorrent;
 using SubverseIM.Core;
 using SubverseIM.Core.Storage.Messages;
 using SubverseIM.Models;
@@ -30,7 +31,7 @@ namespace SubverseIM.Services
 
         Task<IEnumerable<SubverseTorrent>> GetTorrentsAsync(CancellationToken cancellationToken = default);
 
-        Task<SubverseTorrent?> GetTorrentAsync(string magnetUri, CancellationToken cancellationToken = default);
+        Task<SubverseTorrent?> GetTorrentAsync(InfoHash infoHash, CancellationToken cancellationToken = default);
 
         Task<IEnumerable<SubverseMessage>> GetMessagesWithPeersOnTopicAsync(HashSet<SubversePeerId> otherPeers, string? topicName = null, bool orderFlag = false, CancellationToken cancellationToken = default);
 
