@@ -11,7 +11,6 @@
 
 	<PropertyGroup>
 		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
-		<UseInterpreter>true</UseInterpreter>
 		<IsAppExtension>true</IsAppExtension>
 	</PropertyGroup>
 	
@@ -19,9 +18,12 @@
 		<CustomEntitlements Include="aps-environment" Type="String" Value="development" Condition="'$(Configuration)' != 'Release'" />
 		<CustomEntitlements Include="aps-environment" Type="String" Value="production" Condition="'$(Configuration)' == 'Release'" />
 	</ItemGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="PgpCore" Version="6.5.3" />
+	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\SubverseIM\SubverseIM.csproj" />
 		<ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>
 </Project>
