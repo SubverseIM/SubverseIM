@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net9.0-android</TargetFramework>
+		<TargetFramework>net10.0-android</TargetFramework>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
@@ -20,7 +20,7 @@
 	<ItemGroup>
 		<PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Plugin.InAppBilling" Version="9.1.0" />
-		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.110" />
+		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.120" />
 		<PackageReference Include="Xamarin.AndroidX.Biometric" Version="1.1.0.30" />
 	</ItemGroup>
 
