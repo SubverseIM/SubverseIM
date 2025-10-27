@@ -96,7 +96,7 @@ public class MainViewFixture : IDisposable
             InfoHash infoHash = new(RandomNumberGenerator.GetBytes(20));
             MagnetLink magnetLink = new(infoHash, name: "Untitled");
 
-            SubverseTorrent torrent = new(magnetLink.ToV1String());
+            SubverseTorrent torrent = new(magnetLink.InfoHashes.V1OrV2, magnetLink.ToV1String());
             await dbService.InsertOrUpdateItemAsync(torrent);
         }
 

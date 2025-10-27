@@ -1,4 +1,5 @@
 ﻿using Avalonia.Platform.Storage;
+using MonoTorrent;
 using SubverseIM.Models;
 using System;
 using System.Collections.Frozen;
@@ -33,7 +34,16 @@ namespace SubverseIM.Services.Faux
         public async Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            return !await dbService.InsertOrUpdateItemAsync(new SubverseTorrent(magnetUri) { TorrentBytes = torrentBytes });
+            if (MagnetLink.TryParse(magnetUri, out MagnetLink? magnetLink))
+            {
+                return !await dbService.InsertOrUpdateItemAsync(
+                    new SubverseTorrent(magnetLink.InfoHashes.V1OrV2, magnetUri) { TorrentBytes = torrentBytes }
+                    );
+            }
+            else 
+            {
+                return false;
+            }
         }
 
         public Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
@@ -45,7 +55,7 @@ namespace SubverseIM.Services.Faux
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-            SubverseTorrent? storedTorrent = await dbService.GetTorrentAsync(torrent.MagnetUri);
+            SubverseTorrent? storedTorrent = await dbService.GetTorrentAsync(torrent.InfoHash);
             return storedTorrent is not null && await dbService.DeleteItemByIdAsync<SubverseTorrent>(storedTorrent.Id);
         }
 

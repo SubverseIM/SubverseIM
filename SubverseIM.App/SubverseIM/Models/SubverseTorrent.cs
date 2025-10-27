@@ -1,4 +1,5 @@
 ﻿using LiteDB;
+using MonoTorrent;
 using System;
 
 namespace SubverseIM.Models
@@ -6,6 +7,8 @@ namespace SubverseIM.Models
     public class SubverseTorrent
     {
         public ObjectId? Id { get; set; }
+        
+        public InfoHash InfoHash { get; set; }
 
         public string MagnetUri { get; set; }
 
@@ -13,8 +16,9 @@ namespace SubverseIM.Models
 
         public DateTime DateLastUpdatedOn { get; set; }
 
-        public SubverseTorrent(string magnetUri) 
+        public SubverseTorrent(InfoHash infoHash, string magnetUri) 
         {
+            InfoHash = infoHash;
             MagnetUri = magnetUri;
         }
     }

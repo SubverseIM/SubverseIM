@@ -37,11 +37,14 @@ namespace SubverseIM.ViewModels.Components
         public async Task<Bitmap?> GetBitmapAsync()
         {
             OpenGraph og;
-            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
-            ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
-            Progress<TorrentStatus>? progress = await torrentService.StartAsync(new SubverseTorrent(AbsoluteUri.OriginalString));
-            if (progress is not null && MagnetLink.TryParse(AbsoluteUri.OriginalString, out MagnetLink? magnetLink))
+            if (MagnetLink.TryParse(AbsoluteUri.OriginalString, out MagnetLink? magnetLink))
             {
+                ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
+                Progress<TorrentStatus>? progress = await torrentService.StartAsync(
+                    new SubverseTorrent(magnetLink.InfoHashes.V1OrV2, AbsoluteUri.OriginalString)
+                    );
+                if (progress is null) return null;
+
                 TaskCompletionSource tcs = new();
                 progress.ProgressChanged += (s, ev) =>
                 {
@@ -49,8 +52,10 @@ namespace SubverseIM.ViewModels.Components
                 };
                 await tcs.Task;
 
+                ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
                 string cacheDirPath = Path.Combine(
-                        launcherService.GetPersistentStoragePath(), "torrent", "files"
+                        launcherService.GetPersistentStoragePath(), "torrent", "files",
+                        magnetLink.InfoHashes.V1OrV2.ToHex()
                         );
                 string cacheFilePath = Path.Combine(cacheDirPath,
                     magnetLink.Name ?? throw new InvalidOperationException("No display name was provided for this file!")
