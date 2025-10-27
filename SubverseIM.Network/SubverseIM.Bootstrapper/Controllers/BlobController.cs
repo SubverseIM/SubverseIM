@@ -9,6 +9,7 @@ using System.IO.Pipelines;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace SubverseIM.Bootstrapper.Controllers
 {
@@ -163,12 +164,20 @@ namespace SubverseIM.Bootstrapper.Controllers
                 return;
             }
 
-            byte[] secretKeyBytes;
+            if (!Regex.IsMatch(blobHashStr, @"[A-Fa-f0-9]{64}")) 
+            {
+                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                await Response.WriteAsync("Blob ID is not properly formatted.");
+                return;
+            }
+
+            byte[]? secretKeyBytes;
             try
             {
                 secretKeyBytes = Convert.FromHexString(secretKeyStr);
             }
-            catch (FormatException)
+            catch (FormatException) { secretKeyBytes = null; }
+            if (secretKeyBytes?.Length != 32) 
             {
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await Response.WriteAsync("Secret key is not properly formatted.");
