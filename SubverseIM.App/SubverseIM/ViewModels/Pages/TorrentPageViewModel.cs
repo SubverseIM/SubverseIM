@@ -30,10 +30,10 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task InitializeAsync()
         {
-            Torrents.Clear();
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
             IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>> torrents = await torrentService.InitializeAsync();
-            foreach ((SubverseTorrent torrent, Progress<TorrentStatus> status) in torrents)
+            foreach ((SubverseTorrent torrent, Progress<TorrentStatus> status) in torrents
+                .ExceptBy(Torrents.Select(x => x.innerTorrent.MagnetUri), x => x.Key.MagnetUri))
             {
                 Torrents.Add(new(this, torrent, status));
             }
@@ -70,10 +70,10 @@ namespace SubverseIM.ViewModels.Pages
             torrent = await Torrent.LoadAsync(torrentBytes);
 
             string magnetUri = new MagnetLink(
-                torrent.InfoHashes, 
-                torrent.Name, 
-                torrent.AnnounceUrls.FirstOrDefault(), 
-                torrent.HttpSeeds.Select(x => x.OriginalString), 
+                torrent.InfoHashes,
+                torrent.Name,
+                torrent.AnnounceUrls.FirstOrDefault(),
+                torrent.HttpSeeds.Select(x => x.OriginalString),
                 torrent.Size).ToV1String();
             await torrentService.AddTorrentAsync(magnetUri, torrentBytes);
 
