@@ -37,6 +37,7 @@ namespace SubverseIM.ViewModels.Components
         public async Task<Bitmap?> GetBitmapAsync()
         {
             OpenGraph og;
+            ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
             Progress<TorrentStatus>? progress = await torrentService.StartAsync(new SubverseTorrent(AbsoluteUri.OriginalString));
             if (progress is not null && MagnetLink.TryParse(AbsoluteUri.OriginalString, out MagnetLink? magnetLink))
@@ -49,12 +50,11 @@ namespace SubverseIM.ViewModels.Components
                 await tcs.Task;
 
                 string cacheDirPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "torrent", "files"
+                        launcherService.GetPersistentStoragePath(), "torrent", "files"
                         );
                 string cacheFilePath = Path.Combine(cacheDirPath,
                     magnetLink.Name ?? throw new InvalidOperationException("No display name was provided for this file!")
                     );
-
                 using Stream stream = File.OpenRead(cacheFilePath);
                 return Bitmap.DecodeToWidth(stream, 256);
             }
