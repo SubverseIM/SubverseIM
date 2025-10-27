@@ -304,15 +304,18 @@ namespace SubverseIM.Services.Implementation
                 managerMap.TryGetValue(torrent.MagnetUri, out manager);
             }
 
-            if (manager is not null && manager.State == TorrentState.Stopped)
+            if (manager is not null)
             {
                 lock (progressMap)
                 {
                     progressMap.TryGetValue(manager, out progress);
                 }
 
-                await manager.StartAsync();
-                await manager.DhtAnnounceAsync();
+                if (manager.State == TorrentState.Stopped)
+                {
+                    await manager.StartAsync();
+                    await manager.DhtAnnounceAsync();
+                }
             }
 
             return progress;
