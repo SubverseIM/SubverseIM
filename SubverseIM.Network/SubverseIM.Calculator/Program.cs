@@ -1,7 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using SubverseIM.Calculator;
 using System.Numerics;
-using System.Security.Cryptography;
 
 const int MIN_N = 2, MAX_N = 8;
 const int MIN_K = 1, MAX_K = 16;
