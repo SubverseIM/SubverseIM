@@ -21,20 +21,20 @@ public class MainViewTests : IClassFixture<MainViewFixture>
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        fixture.EnsureWindowShown();
+        await fixture.InitializeOnceAsync();
 
-        MainView mainView = fixture.GetView();
+        MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
 
         return mainView;
     }
-
+    
     [AvaloniaFact]
     public async Task ShouldRegisterTopLevelService() 
     {
         await EnsureMainViewLoaded();
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         TopLevel? topLevel = serviceManager.Get<TopLevel>();
 
         Assert.NotNull(topLevel);
@@ -45,7 +45,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     {
         await EnsureMainViewLoaded();
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IFrontendService? frontendService = serviceManager.Get<IFrontendService>();
 
         Assert.NotNull(frontendService);
@@ -56,7 +56,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     {
         await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         Assert.IsType<ContactPageViewModel>(mainViewModel.CurrentPage);
@@ -67,7 +67,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     {
         await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         await mainViewModel.NavigateConfigViewAsync();
 
         Assert.IsType<ConfigPageViewModel>(mainViewModel.CurrentPage);
@@ -78,7 +78,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     {
         await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         await mainViewModel.NavigateContactViewAsync(parentOrNull: null);
 
         Assert.IsType<ContactPageViewModel>(mainViewModel.CurrentPage);
@@ -89,7 +89,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     {
         await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         await mainViewModel.NavigateContactViewAsync(new SubverseContact 
         { 
             OtherPeer = new(RandomNumberGenerator.GetBytes(20)) 
@@ -103,7 +103,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     {
         await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         await mainViewModel.NavigateMessageViewAsync([], null);
 
         Assert.IsType<MessagePageViewModel>(mainViewModel.CurrentPage);
@@ -114,7 +114,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     {
         await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         await mainViewModel.NavigateTorrentViewAsync();
 
         Assert.IsType<TorrentPageViewModel>(mainViewModel.CurrentPage);
@@ -125,7 +125,7 @@ public class MainViewTests : IClassFixture<MainViewFixture>
     {
         await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         await mainViewModel.NavigatePurchaseViewAsync();
 
         Assert.IsType<PurchasePageViewModel>(mainViewModel.CurrentPage);

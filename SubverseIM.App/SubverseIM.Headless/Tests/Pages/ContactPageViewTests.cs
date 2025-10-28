@@ -20,9 +20,9 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        fixture.EnsureWindowShown();
+        await fixture.InitializeOnceAsync();
 
-        MainView mainView = fixture.GetView();
+        MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
 
         return mainView;
@@ -32,7 +32,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     {
         MainView mainView = await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         await mainViewModel.NavigateContactViewAsync(parentOrNull);
@@ -67,7 +67,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldSetParentIfNotNull()
     {
-        MessagePageViewModel messagePageViewModel = new(fixture.GetServiceManager(), []);
+        MessagePageViewModel messagePageViewModel = new(await fixture.GetServiceManagerAsync(), []);
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView(messagePageViewModel);
 
@@ -82,7 +82,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
 
         await contactPageViewModel.OpenSettingsCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<ConfigPageViewModel>(currentPageViewModel);
     }
 
@@ -94,7 +94,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
 
         await contactPageViewModel.OpenFilesCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<TorrentPageViewModel>(currentPageViewModel);
     }
 
@@ -106,7 +106,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
 
         await contactPageViewModel.OpenProductsCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<PurchasePageViewModel>(currentPageViewModel);
     }
 
@@ -147,7 +147,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         }
         await contactPageViewModel.MessageCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<MessagePageViewModel>(currentPageViewModel);
     }
 
@@ -163,7 +163,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         }
         await contactPageViewModel.MessageCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<MessagePageViewModel>(currentPageViewModel);
     }
 
@@ -179,7 +179,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         }
         await contactPageViewModel.MessageCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<ContactPageViewModel>(currentPageViewModel);
     }
 
@@ -195,7 +195,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         }
         await contactPageViewModel.MessageCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<ContactPageViewModel>(currentPageViewModel);
     }
 
@@ -206,7 +206,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
             await EnsureIsOnContactPageView();
 
         ContactViewModel contactViewModel = new(
-            fixture.GetServiceManager(),
+            await fixture.GetServiceManagerAsync(),
             contactPageViewModel,
             new Models.SubverseContact()
             );
@@ -220,7 +220,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldAddParticipantsWithParent()
     {
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         MessagePageViewModel messagePageViewModel = new(serviceManager, []);
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView(messagePageViewModel);
@@ -247,7 +247,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView();
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         Exception? exception = null;
         try
@@ -261,7 +261,7 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldNavigateToPreviousViewWithParent()
     {
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         MessagePageViewModel messagePageViewModel = new(serviceManager, []);
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView(messagePageViewModel);

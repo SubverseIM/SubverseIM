@@ -22,9 +22,9 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        fixture.EnsureWindowShown();
+        await fixture.InitializeOnceAsync();
 
-        MainView mainView = fixture.GetView();
+        MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
 
         return mainView;
@@ -34,10 +34,10 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
     {
         MainView mainView = await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         await mainViewModel.NavigateMessageViewAsync((await dbService.GetContactsAsync()).Where(x => x.TopicName is null), null);
 
@@ -83,7 +83,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
 
         await messagePageViewModel.AddParticipantsCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<ContactPageViewModel>(currentPageViewModel);
     }
 
@@ -123,7 +123,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
 
         messagePageViewModel.SendMessageTopicName = null;
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
         SubverseContact? contact = (await dbService.GetContactsAsync()).FirstOrDefault(x => x.TopicName is null);
@@ -145,7 +145,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
             await EnsureIsOnMessagePageView();
 
         ContactViewModel contactViewModel = new(
-            fixture.GetServiceManager(),
+            await fixture.GetServiceManagerAsync(),
             messagePageViewModel,
             new SubverseContact()
             );
@@ -200,11 +200,11 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
         (MessagePageView messagePageView, MessagePageViewModel messagePageViewModel) =
             await EnsureIsOnMessagePageView();
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         Assert.IsNotType<MessagePageViewModel>(mainViewModel.CurrentPage);
     }
 }

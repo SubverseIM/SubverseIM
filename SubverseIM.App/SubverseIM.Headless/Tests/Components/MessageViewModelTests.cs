@@ -23,9 +23,9 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        fixture.EnsureWindowShown();
+        await fixture.InitializeOnceAsync();
 
-        MainView mainView = fixture.GetView();
+        MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
 
         return mainView;
@@ -35,10 +35,10 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
     {
         MainView mainView = await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         await mainViewModel.NavigateMessageViewAsync(await dbService.GetContactsAsync(), null);
 
@@ -88,7 +88,7 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
 
         await messageViewModel.DeleteCommand();
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         IEnumerable<SubverseContact> contacts = await dbService.GetContactsAsync();
         IEnumerable<SubverseMessage> messages = await dbService.GetMessagesWithPeersOnTopicAsync(
