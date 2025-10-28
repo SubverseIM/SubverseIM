@@ -23,9 +23,9 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        fixture.EnsureWindowShown();
+        await fixture.InitializeOnceAsync();
 
-        MainView mainView = fixture.GetView();
+        MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
 
         return mainView;
@@ -35,7 +35,7 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
     {
         MainView mainView = await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         await mainViewModel.NavigateTorrentViewAsync();
@@ -82,7 +82,9 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldRemoveTorrentFromViewOnDelete()
     {
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        await fixture.InitializeOnceAsync();
+
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
         
         InfoHash infoHash = new(RandomNumberGenerator.GetBytes(20));
@@ -104,7 +106,9 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldRemoveTorrentFromDatabaseOnDelete()
     {
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        await fixture.InitializeOnceAsync();
+        
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
 
         InfoHash infoHash = new(RandomNumberGenerator.GetBytes(20));

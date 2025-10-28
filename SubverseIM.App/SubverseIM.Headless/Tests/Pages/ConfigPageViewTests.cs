@@ -20,9 +20,9 @@ public class ConfigPageViewTests : IClassFixture<MainViewFixture>
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        fixture.EnsureWindowShown();
+        await fixture.InitializeOnceAsync();
 
-        MainView mainView = fixture.GetView();
+        MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
 
         return mainView;
@@ -32,7 +32,7 @@ public class ConfigPageViewTests : IClassFixture<MainViewFixture>
     {
         MainView mainView = await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         await mainViewModel.NavigateConfigViewAsync();
@@ -134,7 +134,7 @@ public class ConfigPageViewTests : IClassFixture<MainViewFixture>
         bool result = await configPageViewModel.SaveConfigurationCommand();
         Debug.Assert(result == true); // This should always be true. If not, the test needs to be rewritten.
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         Assert.IsNotType<ConfigPageViewModel>(mainViewModel.CurrentPage);
     }
 
@@ -151,7 +151,7 @@ public class ConfigPageViewTests : IClassFixture<MainViewFixture>
 
         configPageViewModel.BootstrapperUriList.Remove("invalid state");
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         Assert.IsType<ConfigPageViewModel>(mainViewModel.CurrentPage);
     }
 
@@ -161,11 +161,11 @@ public class ConfigPageViewTests : IClassFixture<MainViewFixture>
         (ConfigPageView configPageView, ConfigPageViewModel configPageViewModel) =
             await EnsureIsOnConfigPageView();
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
         await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         Assert.IsNotType<ConfigPageViewModel>(mainViewModel.CurrentPage);
     }
 }

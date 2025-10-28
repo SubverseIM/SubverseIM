@@ -23,9 +23,9 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        fixture.EnsureWindowShown();
+        await fixture.InitializeOnceAsync();
 
-        MainView mainView = fixture.GetView();
+        MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
 
         return mainView;
@@ -35,7 +35,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
     {
         MainView mainView = await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         await mainViewModel.NavigateContactViewAsync(parentOrNull);
@@ -62,10 +62,10 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
     {
         MainView mainView = await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService? dbService = serviceManager.Get<IDbService>();
         Assert.NotNull(dbService);
 
@@ -87,10 +87,10 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
     {
         MainView mainView = await EnsureMainViewLoaded();
 
-        MainViewModel mainViewModel = fixture.GetViewModel();
+        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
         while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         await mainViewModel.NavigateMessageViewAsync(await dbService.GetContactsAsync(), null);
 
@@ -218,7 +218,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
 
         await contactViewModel.CancelCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsNotType<CreateContactPageViewModel>(currentPageViewModel);
     }
 
@@ -234,7 +234,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
 
         await contactViewModel.SaveChangesCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsNotType<CreateContactPageViewModel>(currentPageViewModel);
     }
 
@@ -252,7 +252,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         contactViewModel.UserNote = checkToken;
         await contactViewModel.SaveChangesCommand();
 
-        IServiceManager serviceManager = fixture.GetServiceManager();
+        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         Assert.Contains(checkToken, (await dbService.GetContactsAsync()).Select(x => x.UserNote));
 
@@ -270,7 +270,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
 
         await contactViewModel.EditCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<CreateContactPageViewModel>(currentPageViewModel);
     }
 
@@ -285,7 +285,7 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
 
         await contactViewModel.EditCommand();
 
-        PageViewModelBase currentPageViewModel = fixture.GetViewModel().CurrentPage;
+        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
         Assert.IsType<CreateContactPageViewModel>(currentPageViewModel);
     }
 }

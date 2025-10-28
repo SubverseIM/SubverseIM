@@ -13,7 +13,7 @@ using System.Security.Cryptography;
 
 namespace SubverseIM.Headless.Fixtures;
 
-public class MainViewFixture : IDisposable
+public class MainViewFixture
 {
     public const int EXPECTED_NUM_CONTACTS = 5;
 
@@ -21,35 +21,51 @@ public class MainViewFixture : IDisposable
 
     public const string EXPECTED_TOPIC_NAME = "#xunit-testing";
 
-    private readonly IServiceManager serviceManager;
+    private TaskCompletionSource<IServiceManager> serviceManagerTcs;
 
-    private readonly MainViewModel mainViewModel;
+    private TaskCompletionSource<MainViewModel> mainViewModelTcs;
 
-    private readonly MainView mainView;
+    private TaskCompletionSource<MainView> mainViewTcs;
 
     private Window? window;
 
+    private bool isInitialized;
+
     public MainViewFixture()
     {
-        serviceManager = new SubverseIM.Services.Implementation.ServiceManager();
-
-        RegisterBootstrapperService();
-        RegisterDbService().Wait();
-        RegisterLauncherService();
-
-        mainViewModel = new(serviceManager);
-        mainView = new() { DataContext = mainViewModel };
+        serviceManagerTcs = new();
+        mainViewModelTcs = new();
+        mainViewTcs = new();
     }
 
-    private IBootstrapperService RegisterBootstrapperService()
+    private async Task InitializeAsync()
+    {
+        IServiceManager serviceManager = new SubverseIM.Services.Implementation.ServiceManager();
+        serviceManagerTcs.SetResult(serviceManager);
+
+        await RegisterBootstrapperService(serviceManager);
+        await RegisterDbService(serviceManager);
+        await RegisterLauncherService(serviceManager);
+
+        MainViewModel mainViewModel = new(serviceManager);
+        mainViewModelTcs.SetResult(mainViewModel);
+
+        MainView mainView = new() { DataContext = mainViewModel }; 
+        mainViewTcs.SetResult(mainView);
+
+        window = new Window() { Content = mainView };
+        window.Show();
+    }
+
+    private Task<IBootstrapperService> RegisterBootstrapperService(IServiceManager serviceManager)
     {
         BootstrapperService bootstrapperService = new WrappedBootstrapperService();
         serviceManager.GetOrRegister<IBootstrapperService>(bootstrapperService);
 
-        return bootstrapperService;
+        return Task.FromResult<IBootstrapperService>(bootstrapperService);
     }
 
-    private async Task<IDbService> RegisterDbService()
+    private async Task<IDbService> RegisterDbService(IServiceManager serviceManager)
     {
         IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>();
         IDbService dbService = serviceManager.GetOrRegister<DbService, IDbService>();
@@ -103,43 +119,31 @@ public class MainViewFixture : IDisposable
         return dbService;
     }
 
-    private ILauncherService RegisterLauncherService()
+    private Task<ILauncherService> RegisterLauncherService(IServiceManager serviceManager)
     {
-        return serviceManager.GetOrRegister<DefaultLauncherService, ILauncherService>();
+        ILauncherService launcherService = serviceManager.GetOrRegister<DefaultLauncherService, ILauncherService>();
+        return Task.FromResult(launcherService);
     }
 
-    public IServiceManager GetServiceManager() => serviceManager;
-
-    public MainViewModel GetViewModel() => mainViewModel;
-
-    public MainView GetView() => mainView;
-
-    public void EnsureWindowShown()
+    public Task InitializeOnceAsync()
     {
-        if (window is null)
+        lock (this)
         {
-            window = new() { Content = mainView };
-            window.Show();
-        }
-    }
-
-    private bool disposedValue;
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
+            if (isInitialized)
             {
-                serviceManager.Dispose();
+                return Task.CompletedTask;
             }
-            disposedValue = true;
+            else
+            {
+                isInitialized = true;
+                return InitializeAsync();
+            }
         }
     }
 
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
+    public Task<IServiceManager> GetServiceManagerAsync() => serviceManagerTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+    public Task<MainViewModel> GetViewModelAsync() => mainViewModelTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+    public Task<MainView> GetViewAsync() => mainViewTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
 }
