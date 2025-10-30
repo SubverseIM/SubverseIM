@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
 using LiteDB;
+using MonoTorrent;
 using ReactiveUI;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
@@ -343,6 +344,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public async Task NavigateLaunchedUriAsync(Uri? overrideUri = null)
     {
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
         Uri? launchedUri = overrideUri ?? launcherService.GetLaunchedUri();
@@ -354,8 +356,17 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 CurrentPage = createContactPage;
                 break;
             case "magnet":
-                await torrentService.AddTorrentAsync(launchedUri.OriginalString);
-                CurrentPage = torrentPage;
+                if (MagnetLink.TryParse(launchedUri.OriginalString, out MagnetLink? magnetLink))
+                {
+                    await dbService.InsertOrUpdateItemAsync(
+                        new SubverseTorrent(
+                            magnetLink.InfoHashes.V1OrV2,
+                            launchedUri.OriginalString
+                            )
+                        );
+                    await torrentService.AddTorrentAsync(magnetLink.InfoHashes.V1OrV2);
+                    CurrentPage = torrentPage;
+                }
                 break;
             case null:
                 break;

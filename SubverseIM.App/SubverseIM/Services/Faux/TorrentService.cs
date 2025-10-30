@@ -31,19 +31,12 @@ namespace SubverseIM.Services.Faux
             return Task.CompletedTask;
         }
 
-        public async Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes)
+        public async Task<bool> AddTorrentAsync(InfoHash infoHash, byte[]? torrentBytes)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            if (MagnetLink.TryParse(magnetUri, out MagnetLink? magnetLink))
-            {
-                return !await dbService.InsertOrUpdateItemAsync(
-                    new SubverseTorrent(magnetLink.InfoHashes.V1OrV2, magnetUri) { TorrentBytes = torrentBytes }
-                    );
-            }
-            else 
-            {
-                return false;
-            }
+            return !await dbService.InsertOrUpdateItemAsync(
+                new SubverseTorrent(infoHash, null!) { TorrentBytes = torrentBytes }
+                );
         }
 
         public Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
