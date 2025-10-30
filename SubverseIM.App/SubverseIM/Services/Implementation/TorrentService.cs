@@ -9,7 +9,6 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +18,7 @@ namespace SubverseIM.Services.Implementation
     {
         private const int MAX_ANNOUNCE_COUNT = 3;
 
-        private readonly Dictionary<string, TorrentManager> managerMap;
+        private readonly Dictionary<InfoHash, TorrentManager> managerMap;
 
         private readonly Dictionary<TorrentManager, Progress<TorrentStatus>> progressMap;
 
@@ -62,7 +61,7 @@ namespace SubverseIM.Services.Implementation
             IEnumerable<SubverseTorrent> files = await dbService.GetTorrentsAsync();
 
             // Add and start all outstanding torrents
-            bool[] addedFlags = await Task.WhenAll(files.Select(x => AddTorrentAsync(x.MagnetUri, x.TorrentBytes)));
+            bool[] addedFlags = await Task.WhenAll(files.Select(x => AddTorrentAsync(x.InfoHash, x.TorrentBytes)));
             SubverseTorrent[] addedTorrents = files.Zip(addedFlags)
                 .Where(x => x.Second)
                 .Select(x => x.First)
@@ -70,7 +69,7 @@ namespace SubverseIM.Services.Implementation
             await Task.WhenAll(addedTorrents.Select(StartAsync));
 
             return files.Zip(files
-                .Select(x => managerMap[x.MagnetUri])
+                .Select(x => managerMap[x.InfoHash])
                 .Select(x => progressMap[x]))
                 .ToFrozenDictionary(x => x.First, x => x.Second!);
         }
@@ -111,7 +110,7 @@ namespace SubverseIM.Services.Implementation
 
                     lock (managerMap)
                     {
-                        stillExists = managerMap.ContainsKey(torrent.MagnetUri);
+                        stillExists = managerMap.ContainsKey(torrent.InfoHash);
                     }
                 }
             });
@@ -119,39 +118,27 @@ namespace SubverseIM.Services.Implementation
             return progress;
         }
 
-        public async Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes)
+        public async Task<bool> AddTorrentAsync(InfoHash infoHash, byte[]? torrentBytes)
         {
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
             string destDirPath;
             MagnetLink? magnetLink;
-            SubverseTorrent? torrent;
-            if (MagnetLink.TryParse(magnetUri, out magnetLink))
-            {
-                torrent = await dbService.GetTorrentAsync(magnetLink.InfoHashes.V1OrV2) ??
-                   new SubverseTorrent(magnetLink.InfoHashes.V1OrV2, magnetUri)
-                   {
-                       DateLastUpdatedOn = DateTime.UtcNow
-                   };
-                torrent.TorrentBytes = torrentBytes ?? torrent.TorrentBytes;
-                await dbService.InsertOrUpdateItemAsync(torrent);
+            SubverseTorrent? torrent = await dbService.GetTorrentAsync(infoHash)
+                ?? throw new InvalidOperationException("Could not find specified torrent in database.");
+            torrent.TorrentBytes = torrentBytes ?? torrent.TorrentBytes;
+            await dbService.InsertOrUpdateItemAsync(torrent);
 
-                destDirPath = Path.Combine(
-                    launcherService.GetPersistentStoragePath(), "torrent", "files", 
-                    magnetLink.InfoHashes.V1OrV2.ToHex()
-                    );
-                Directory.CreateDirectory(destDirPath);
-            }
-            else
-            {
-                throw new ArgumentException("Invalid magnet URI", nameof(magnetUri));
-            }
+            destDirPath = Path.Combine(
+                launcherService.GetPersistentStoragePath(), "torrent", "files", infoHash.ToHex()
+                );
+            Directory.CreateDirectory(destDirPath);
 
             bool keyExists;
             lock (managerMap)
             {
-                keyExists = managerMap.ContainsKey(torrent.MagnetUri);
+                keyExists = managerMap.ContainsKey(torrent.InfoHash);
             }
 
             TorrentManager manager;
@@ -173,7 +160,7 @@ namespace SubverseIM.Services.Implementation
                         );
                 }
             }
-            else
+            else if (MagnetLink.TryParse(torrent.MagnetUri, out magnetLink))
             {
                 try
                 {
@@ -186,10 +173,14 @@ namespace SubverseIM.Services.Implementation
                         );
                 }
             }
+            else
+            {
+                throw new ArgumentException("Could not parse magnet link info for specified torrent.");
+            }
 
             lock (managerMap)
             {
-                managerMap.TryAdd(torrent.MagnetUri, manager);
+                managerMap.TryAdd(torrent.InfoHash, manager);
             }
 
             lock (progressMap)
@@ -244,11 +235,12 @@ namespace SubverseIM.Services.Implementation
             TorrentManager manager;
             try
             {
-                string destDirPath = Path.Combine(cacheDirPath, metadata.InfoHashes.V1OrV2.ToHex());
+                string destDirPath = Path.Combine(launcherService.GetPersistentStoragePath(), 
+                    "torrent", "files", metadata.InfoHashes.V1OrV2.ToHex());
                 Directory.CreateDirectory(destDirPath);
 
                 string destFilePath = Path.Combine(destDirPath, file.Name);
-                File.Move(cacheFilePath, destFilePath);
+                File.Move(cacheFilePath, destFilePath, true);
 
                 manager = await engine.AddAsync(metadata, destDirPath,
                     new TorrentSettingsBuilder { AllowInitialSeeding = true }
@@ -263,7 +255,7 @@ namespace SubverseIM.Services.Implementation
 
             lock (managerMap)
             {
-                managerMap.TryAdd(magnetUri, manager);
+                managerMap.TryAdd(torrent.InfoHash, manager);
             }
 
             lock (progressMap)
@@ -288,7 +280,7 @@ namespace SubverseIM.Services.Implementation
             TorrentManager? manager;
             lock (managerMap)
             {
-                managerMap.Remove(torrent.MagnetUri, out manager);
+                managerMap.Remove(torrent.InfoHash, out manager);
             }
 
             if (manager is not null)
@@ -313,7 +305,7 @@ namespace SubverseIM.Services.Implementation
 
             lock (managerMap)
             {
-                managerMap.TryGetValue(torrent.MagnetUri, out manager);
+                managerMap.TryGetValue(torrent.InfoHash, out manager);
             }
 
             if (manager is not null)
@@ -338,7 +330,7 @@ namespace SubverseIM.Services.Implementation
             TorrentManager? manager;
             lock (managerMap)
             {
-                managerMap.TryGetValue(torrent.MagnetUri, out manager);
+                managerMap.TryGetValue(torrent.InfoHash, out manager);
             }
 
             HashSet<TorrentState> invalidStates = [TorrentState.Stopping, TorrentState.Stopped];

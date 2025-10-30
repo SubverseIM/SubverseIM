@@ -1,4 +1,5 @@
 ﻿using Avalonia.Platform.Storage;
+using MonoTorrent;
 using SubverseIM.Models;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace SubverseIM.Services
 
         Task DestroyAsync();
 
-        Task<bool> AddTorrentAsync(string magnetUri, byte[]? torrentBytes = null);
+        Task<bool> AddTorrentAsync(InfoHash infoHash, byte[]? torrentBytes = null);
 
         Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default);
 

@@ -3,6 +3,7 @@ using Avalonia.Platform.Storage;
 using MonoTorrent;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Components;
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,7 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task ImportCommand()
         {
+            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
             ITorrentService torrentService = await ServiceManager.GetWithAwaitAsync<ITorrentService>();
             TopLevel topLevel = await ServiceManager.GetWithAwaitAsync<TopLevel>();
 
@@ -75,7 +77,13 @@ namespace SubverseIM.ViewModels.Pages
                 torrent.AnnounceUrls.FirstOrDefault(),
                 torrent.HttpSeeds.Select(x => x.OriginalString),
                 torrent.Size).ToV1String();
-            await torrentService.AddTorrentAsync(magnetUri, torrentBytes);
+
+            await dbService.InsertOrUpdateItemAsync(
+                new SubverseTorrent(torrent.InfoHashes.V1OrV2, magnetUri)
+                {
+                    TorrentBytes = torrentBytes
+                });
+            await torrentService.AddTorrentAsync(torrent.InfoHashes.V1OrV2, torrentBytes);
 
             await InitializeAsync();
         }

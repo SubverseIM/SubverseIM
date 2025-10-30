@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using Avalonia.Headless.XUnit;
 using MonoTorrent;
 using SubverseIM.Headless.Fixtures;
+using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.ViewModels;
 using SubverseIM.ViewModels.Components;
@@ -85,12 +86,13 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         await fixture.InitializeOnceAsync();
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
         
         InfoHash infoHash = new(RandomNumberGenerator.GetBytes(20));
         MagnetLink magnetLink = new(infoHash, name: "UnitTest");
-        string checkToken = magnetLink.ToV1String();
-        await torrentService.AddTorrentAsync(checkToken);
+        await dbService.InsertOrUpdateItemAsync(new SubverseTorrent(infoHash, magnetLink.ToV1String()));
+        await torrentService.AddTorrentAsync(infoHash);
         
         (TorrentPageView torrentPageView, TorrentPageViewModel torrentPageViewModel) =
             await EnsureIsOnTorrentPageView();
@@ -109,12 +111,13 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         await fixture.InitializeOnceAsync();
         
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
 
         InfoHash infoHash = new(RandomNumberGenerator.GetBytes(20));
         MagnetLink magnetLink = new(infoHash, name: "UnitTest");
-        string checkToken = magnetLink.ToV1String();
-        await torrentService.AddTorrentAsync(checkToken);
+        await dbService.InsertOrUpdateItemAsync(new SubverseTorrent(infoHash, magnetLink.ToV1String()));
+        await torrentService.AddTorrentAsync(infoHash);
 
         (TorrentPageView torrentPageView, TorrentPageViewModel torrentPageViewModel) =
             await EnsureIsOnTorrentPageView();
@@ -123,9 +126,7 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         Debug.Assert(torrentViewModel is not null); // should always be non-null, test should be rewritten otherwise.
 
         await torrentViewModel.DeleteCommand();
-        
-        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        Assert.DoesNotContain(checkToken, (await dbService.GetTorrentsAsync()).Select(x => x.MagnetUri));
+        Assert.DoesNotContain(infoHash, (await dbService.GetTorrentsAsync()).Select(x => x.InfoHash));
     }
 
     [AvaloniaFact]
