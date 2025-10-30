@@ -296,7 +296,7 @@ namespace SubverseIM.ViewModels.Pages
 
             await dbService.InsertOrUpdateItemAsync(message);
 
-            if (messageText == SendMessageText)
+            if (messageText == SendMessageText?.Trim())
             {
                 SendMessageText = null;
             }
