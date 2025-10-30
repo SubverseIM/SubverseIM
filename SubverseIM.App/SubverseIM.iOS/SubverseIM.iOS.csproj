@@ -30,12 +30,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\SubverseIM.iOS.NotificationServiceExtension\SubverseIM.iOS.NotificationServiceExtension.csproj">
+			<IsAppExtension>true</IsAppExtension>
+			<IsWatchExtension>false</IsWatchExtension>
+		</ProjectReference>
 		<ProjectReference Include="..\..\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
 		<ProjectReference Include="..\SubverseIM\SubverseIM.csproj" />
 		<ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
-		<ProjectReference Include="..\SubverseIM.iOS.NotificationService\SubverseIM.iOS.NotificationService.csproj">
-			<IsAppExtension>true</IsAppExtension>
-		</ProjectReference>
 	</ItemGroup>
 	
+	<ItemGroup>
+		<CustomEntitlements Include="aps-environment" Type="String" Value="development" Condition="'$(Configuration)' != 'Release'" />
+		<CustomEntitlements Include="aps-environment" Type="String" Value="production" Condition="'$(Configuration)' == 'Release'" />
+	</ItemGroup>
+
 </Project>

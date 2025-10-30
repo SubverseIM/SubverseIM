@@ -2,12 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleIdentifier</key>
-	<string>com.chosenfewsoftware.SubverseIM.NotificationService</string>
-	<key>CFBundleName</key>
-	<string>SubverseIM.iOS.NotificationService</string>
 	<key>CFBundleDisplayName</key>
-	<string>SubverseIM.iOS.NotificationService</string>
+	<string>SubverseIM.iOS.NotificationServiceExtension</string>
+	<key>CFBundleName</key>
+	<string>SubverseIM.iOS.NotificationServiceExtension</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.chosenfewsoftware.SubverseIM.NotificationServiceExtension</string>
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
@@ -19,7 +19,7 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.usernotifications.service</string>
 		<key>NSExtensionPrincipalClass</key>
-		<string>NotificationService</string>
+		<string>SubverseIM.iOS.NotificationServiceExtension</string>
 	</dict>
 	<key>MinimumOSVersion</key>
 	<string>14.0</string>
