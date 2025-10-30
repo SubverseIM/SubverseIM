@@ -90,7 +90,7 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         InfoHash infoHash = new(RandomNumberGenerator.GetBytes(20));
         MagnetLink magnetLink = new(infoHash, name: "UnitTest");
         string checkToken = magnetLink.ToV1String();
-        await torrentService.AddTorrentAsync(checkToken);
+        await torrentService.AddTorrentAsync(infoHash);
         
         (TorrentPageView torrentPageView, TorrentPageViewModel torrentPageViewModel) =
             await EnsureIsOnTorrentPageView();
@@ -114,7 +114,7 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
         InfoHash infoHash = new(RandomNumberGenerator.GetBytes(20));
         MagnetLink magnetLink = new(infoHash, name: "UnitTest");
         string checkToken = magnetLink.ToV1String();
-        await torrentService.AddTorrentAsync(checkToken);
+        await torrentService.AddTorrentAsync(infoHash);
 
         (TorrentPageView torrentPageView, TorrentPageViewModel torrentPageViewModel) =
             await EnsureIsOnTorrentPageView();
