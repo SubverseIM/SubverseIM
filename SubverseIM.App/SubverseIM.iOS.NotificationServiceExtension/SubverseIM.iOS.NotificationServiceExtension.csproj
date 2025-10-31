@@ -21,6 +21,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<TrimmerRootAssembly Include="SubverseIM.iOS.NotificationServiceExtension" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="PgpCore" Version="6.5.3" />
 	</ItemGroup>
 

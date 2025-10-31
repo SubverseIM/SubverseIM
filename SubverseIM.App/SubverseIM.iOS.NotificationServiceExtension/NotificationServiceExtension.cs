@@ -5,7 +5,7 @@ using UserNotifications;
 namespace SubverseIM.iOS
 {
     [Register("NotificationServiceExtension")]
-    public partial class NotificationServiceExtension : UNNotificationServiceExtension
+    public class NotificationServiceExtension : UNNotificationServiceExtension
     {
         public const string EXTRA_CONTENT_ID = "BODY_CONTENT";
 
