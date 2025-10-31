@@ -30,6 +30,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<CustomEntitlements Include="aps-environment" Type="String" Value="development" Condition="'$(Configuration)' != 'Release'" />
+		<CustomEntitlements Include="aps-environment" Type="String" Value="production" Condition="'$(Configuration)' == 'Release'" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\SubverseIM.iOS.NotificationServiceExtension\SubverseIM.iOS.NotificationServiceExtension.csproj">
 			<IsAppExtension>true</IsAppExtension>
 			<IsWatchExtension>false</IsWatchExtension>

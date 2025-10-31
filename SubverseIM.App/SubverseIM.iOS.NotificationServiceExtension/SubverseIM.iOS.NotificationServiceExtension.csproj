@@ -25,11 +25,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<CustomEntitlements Include="aps-environment" Type="String" Value="development" Condition="'$(Configuration)' != 'Release'" />
-		<CustomEntitlements Include="aps-environment" Type="String" Value="production" Condition="'$(Configuration)' == 'Release'" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="PgpCore" Version="6.5.3" />
 	</ItemGroup>
 
