@@ -20,6 +20,10 @@
 		<Registrar>static</Registrar>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<MtouchUseLlvm>False</MtouchUseLlvm>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="PgpCore" Version="6.5.3" />
 	</ItemGroup>
