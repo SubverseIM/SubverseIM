@@ -38,10 +38,5 @@
 		<ProjectReference Include="..\SubverseIM\SubverseIM.csproj" />
 		<ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>
-	
-	<ItemGroup>
-		<CustomEntitlements Include="aps-environment" Type="String" Value="development" Condition="'$(Configuration)' != 'Release'" />
-		<CustomEntitlements Include="aps-environment" Type="String" Value="production" Condition="'$(Configuration)' == 'Release'" />
-	</ItemGroup>
 
 </Project>

@@ -19,7 +19,7 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.usernotifications.service</string>
 		<key>NSExtensionPrincipalClass</key>
-		<string>SubverseIM.iOS.NotificationServiceExtension</string>
+		<string>NotificationServiceExtension</string>
 	</dict>
 	<key>MinimumOSVersion</key>
 	<string>14.0</string>
