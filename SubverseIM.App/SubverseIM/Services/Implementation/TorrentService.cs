@@ -146,20 +146,6 @@ namespace SubverseIM.Services.Implementation
             {
                 return false;
             }
-            else if (torrent.TorrentBytes is not null)
-            {
-                Torrent torrentMetaData = await Torrent.LoadAsync(torrent.TorrentBytes);
-                try
-                {
-                    manager = await engine.AddAsync(torrentMetaData, destDirPath);
-                }
-                catch (TorrentException)
-                {
-                    manager = engine.Torrents.Single(x =>
-                        x.InfoHashes == torrentMetaData.InfoHashes
-                        );
-                }
-            }
             else if (MagnetLink.TryParse(torrent.MagnetUri, out magnetLink))
             {
                 try
