@@ -132,7 +132,8 @@ namespace SubverseIM.ViewModels.Components
         {
             ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             string cacheDirPath = Path.Combine(
-                        launcherService.GetPersistentStoragePath(), "torrent", "files"
+                        launcherService.GetPersistentStoragePath(), "torrent", "files", 
+                        innerTorrent.InfoHash.ToHex()
                         );
             string cacheFilePath = Path.Combine(cacheDirPath,
                 DisplayName ?? throw new InvalidOperationException("No display name was provided for this file!")
