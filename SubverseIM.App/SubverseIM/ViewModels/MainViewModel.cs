@@ -147,7 +147,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
             }
         }
 
-        subTasks.Add(Task.Run(async Task? () => 
+        subTasks.Add(Task.Run(async Task? () =>
         {
             SubverseMessage joinMessage = new SubverseMessage()
             {
@@ -170,7 +170,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 DateSignedOn = DateTime.UtcNow,
             };
 
-            await messageService.SendMessageAsync(joinMessage, cancellationToken: cancellationToken); 
+            await messageService.SendMessageAsync(joinMessage, cancellationToken: cancellationToken);
         }));
 
         try
@@ -323,7 +323,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 "Are you sure you want to go back? Unsaved changes may be lost."
                 );
         }
-        else 
+        else
         {
             confirm = true;
         }
@@ -358,13 +358,15 @@ public class MainViewModel : ViewModelBase, IFrontendService
             case "magnet":
                 if (MagnetLink.TryParse(launchedUri.OriginalString, out MagnetLink? magnetLink))
                 {
-                    await dbService.InsertOrUpdateItemAsync(
-                        new SubverseTorrent(
-                            magnetLink.InfoHashes.V1OrV2,
-                            launchedUri.OriginalString
-                            )
+                    SubverseTorrent torrent = new SubverseTorrent(
+                        magnetLink.InfoHashes.V1OrV2,
+                        launchedUri.OriginalString
                         );
+                    await dbService.InsertOrUpdateItemAsync(torrent);
+
                     await torrentService.AddTorrentAsync(magnetLink.InfoHashes.V1OrV2);
+                    await torrentService.StartAsync(torrent);
+
                     CurrentPage = torrentPage;
                 }
                 break;
