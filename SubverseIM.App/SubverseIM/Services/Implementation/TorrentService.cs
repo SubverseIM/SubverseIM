@@ -123,14 +123,14 @@ namespace SubverseIM.Services.Implementation
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
 
-            string destDirPath;
-            MagnetLink? magnetLink;
             SubverseTorrent? torrent = await dbService.GetTorrentAsync(infoHash)
                 ?? throw new InvalidOperationException("Could not find specified torrent in database.");
             torrent.TorrentBytes = torrentBytes ?? torrent.TorrentBytes;
             await dbService.InsertOrUpdateItemAsync(torrent);
 
-            destDirPath = Path.Combine(
+            MagnetLink.TryParse(torrent.MagnetUri, out MagnetLink? magnetLink);
+
+            string destDirPath = Path.Combine(
                 launcherService.GetPersistentStoragePath(), "torrent", "files", infoHash.ToHex()
                 );
             Directory.CreateDirectory(destDirPath);
@@ -146,7 +146,26 @@ namespace SubverseIM.Services.Implementation
             {
                 return false;
             }
-            else if (MagnetLink.TryParse(torrent.MagnetUri, out magnetLink))
+            else if (torrent.TorrentBytes is not null)
+            {
+                Torrent torrentMetaData = await Torrent.LoadAsync(torrent.TorrentBytes);
+                foreach (Uri uri in magnetLink?.Webseeds.Select(x => new Uri(x)) ?? [])
+                {
+                    torrentMetaData.HttpSeeds.Add(uri);
+                }
+
+                try
+                {
+                    manager = await engine.AddAsync(torrentMetaData, destDirPath);
+                }
+                catch (TorrentException)
+                {
+                    manager = engine.Torrents.Single(x =>
+                        x.InfoHashes == torrentMetaData.InfoHashes
+                        );
+                }
+            }
+            else if (magnetLink is not null)
             {
                 try
                 {
@@ -161,7 +180,7 @@ namespace SubverseIM.Services.Implementation
             }
             else
             {
-                throw new ArgumentException("Could not parse magnet link info for specified torrent.");
+                throw new ArgumentException("Could not load metadata for specified torrent.");
             }
 
             lock (managerMap)
@@ -221,7 +240,7 @@ namespace SubverseIM.Services.Implementation
             TorrentManager manager;
             try
             {
-                string destDirPath = Path.Combine(launcherService.GetPersistentStoragePath(), 
+                string destDirPath = Path.Combine(launcherService.GetPersistentStoragePath(),
                     "torrent", "files", metadata.InfoHashes.V1OrV2.ToHex());
                 Directory.CreateDirectory(destDirPath);
 
@@ -301,11 +320,8 @@ namespace SubverseIM.Services.Implementation
                     progressMap.TryGetValue(manager, out progress);
                 }
 
-                if (manager.State == TorrentState.Stopped)
-                {
-                    await manager.StartAsync();
-                    await manager.DhtAnnounceAsync();
-                }
+                await manager.StartAsync();
+                await manager.DhtAnnounceAsync();
             }
 
             return progress;
