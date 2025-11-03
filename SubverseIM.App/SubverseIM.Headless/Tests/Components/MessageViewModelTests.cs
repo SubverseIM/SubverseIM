@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Security.Cryptography;
 using Avalonia.Headless.XUnit;
 using SubverseIM.Headless.Fixtures;
 using SubverseIM.Models;
@@ -9,6 +7,8 @@ using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using SubverseIM.Views;
 using SubverseIM.Views.Pages;
+using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace SubverseIM.Headless.Tests.Components;
 
@@ -64,12 +64,12 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
         messagePageViewModel.SendMessageText = checkToken;
         await messagePageViewModel.SendCommand();
 
-        MessageViewModel? messageViewModel = messagePageViewModel.MessageList.FirstOrDefault(x => x.ContentString == checkToken);
+        MessageViewModel? messageViewModel = messagePageViewModel.SortedMessageList.FirstOrDefault(x => x.ContentString == checkToken);
         Debug.Assert(messageViewModel is not null); // should always be non-null, test should be rewritten otherwise.
 
         await messageViewModel.DeleteCommand();
 
-        Assert.DoesNotContain(messageViewModel, messagePageViewModel.MessageList);
+        Assert.DoesNotContain(messageViewModel, messagePageViewModel.SortedMessageList);
     }
 
     [AvaloniaFact]
@@ -83,7 +83,7 @@ public class MessageViewModelTests : IClassFixture<MainViewFixture>
         messagePageViewModel.SendMessageText = checkToken;
         await messagePageViewModel.SendCommand();
 
-        MessageViewModel? messageViewModel = messagePageViewModel.MessageList.FirstOrDefault(x => x.ContentString == checkToken);
+        MessageViewModel? messageViewModel = messagePageViewModel.SortedMessageList.FirstOrDefault(x => x.ContentString == checkToken);
         Debug.Assert(messageViewModel is not null); // should always be non-null, test should be rewritten otherwise.
 
         await messageViewModel.DeleteCommand();

@@ -165,7 +165,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
         messagePageViewModel.SendMessageTopicName = MainViewFixture.EXPECTED_TOPIC_NAME;
         await messagePageViewModel.InitializeAsync();
 
-        Assert.NotEmpty(messagePageViewModel.MessageList);
+        Assert.NotEmpty(messagePageViewModel.SortedMessageList);
     }
 
     [AvaloniaFact]
@@ -191,7 +191,7 @@ public class MessagePageViewTests : IClassFixture<MainViewFixture>
         messagePageViewModel.SendMessageText = checkToken;
         await messagePageViewModel.SendCommand();
 
-        Assert.Contains(checkToken, messagePageViewModel.MessageList.Select(x => x.ContentString));
+        Assert.Contains(checkToken, messagePageViewModel.SortedMessageList.Select(x => x.ContentString));
     }
 
     [AvaloniaFact]
