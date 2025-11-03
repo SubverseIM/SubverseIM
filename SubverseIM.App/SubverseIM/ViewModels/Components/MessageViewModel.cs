@@ -193,7 +193,7 @@ namespace SubverseIM.ViewModels.Components
                 IDbService dbService = await messagePageView.ServiceManager
                     .GetWithAwaitAsync<IDbService>();
                 await dbService.DeleteItemByIdAsync<SubverseMessage>(innerMessage.Id);
-                messagePageView.MessageCache.RemoveKey(innerMessage.MessageId!);
+                messagePageView.MessageList.Remove(innerMessage);
             }
         }
     }
