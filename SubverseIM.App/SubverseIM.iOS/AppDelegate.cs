@@ -171,6 +171,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
 
         serviceManager.GetOrRegister<IBillingService>(new BillingService());
 
+        serviceManager.GetOrRegister<IEncryptionService>(new DefaultEncryptionService());
+
         string appDataPath = GetPersistentStoragePath();
         Directory.CreateDirectory(appDataPath);
 

@@ -290,28 +290,20 @@ namespace SubverseIM.Services.Implementation
 
         public async Task InjectAsync(IServiceManager serviceManager)
         {
-            IEncryptionService? encryptionService = serviceManager.Get<IEncryptionService>();
-
+            IEncryptionService encryptionService = await serviceManager.GetWithAwaitAsync<IEncryptionService>();
             string? dbPassword;
-            if (encryptionService is null)
+            try
+            {
+                dbPassword = await encryptionService.GetEncryptionKeyAsync();
+                if (dbPassword is null)
+                {
+                    dbTcs.SetException(new DbServiceException("Could not decrypt the application database, possibly because the user denied authentication."));
+                }
+            }
+            catch (Exception ex)
             {
                 dbPassword = null;
-            }
-            else
-            {
-                try
-                {
-                    dbPassword = await encryptionService.GetEncryptionKeyAsync();
-                    if (dbPassword is null)
-                    {
-                        dbTcs.SetException(new DbServiceException("Could not decrypt the application database, possibly because the user denied authentication."));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    dbPassword = null;
-                    dbTcs.SetException(ex);
-                }
+                dbTcs.SetException(ex);
             }
 
             dbTcs.TrySetResult(new LiteDatabase(new ConnectionString
