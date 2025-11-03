@@ -166,8 +166,9 @@ namespace SubverseIM.Android
 
             long timestamp = ((System.DateTimeOffset)message.DateSignedOn)
                 .ToUnixTimeMilliseconds();
+            string? content = System.Uri.IsWellFormedUriString(message.Content, System.UriKind.Absolute) ? "[embed]" : message.Content;
             messagingStyle.AddMessage(new(
-                message.Content, timestamp,
+                content, timestamp,
                 message.TopicName is null ? contact?.DisplayName ?? "Anonymous" :
                     $"{contact?.DisplayName ?? "Anonymous"} ({message.TopicName})"
                 ));

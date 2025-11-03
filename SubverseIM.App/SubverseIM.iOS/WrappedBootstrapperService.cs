@@ -42,11 +42,13 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
         SubverseContact? contact = await dbService.GetContactAsync(message.Sender);
 
+        string? messageContent = Uri.IsWellFormedUriString(message.Content, UriKind.Absolute) ? 
+            "[embed]" : message.Content;
         UNMutableNotificationContent content = new()
         {
             Title = message.TopicName ?? "Direct Message",
             Subtitle = contact?.DisplayName ?? "Anonymous",
-            Body = message.Content ?? string.Empty,
+            Body = messageContent ?? string.Empty,
         };
 
         if (message.TopicName != "#system")
