@@ -219,7 +219,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(vm.SendMessageTopicName))
                         )))
                     {
-                        vm.MessageCache.AddOrUpdate(message);
+                        vm.MessageList.Add(message);
 
                         if (!string.IsNullOrEmpty(message.TopicName) &&
                             !vm.TopicsList.Contains(message.TopicName))

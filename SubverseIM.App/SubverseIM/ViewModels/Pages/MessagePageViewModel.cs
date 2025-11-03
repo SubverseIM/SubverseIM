@@ -46,8 +46,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
-        private IDisposable? messageCacheHandle;
-        public SourceCache<SubverseMessage, MessageId> MessageCache { get; }
+        private IDisposable? messageListHandle;
+        public SourceList<SubverseMessage> MessageList { get; }
 
         private ReadOnlyObservableCollection<MessageViewModel> sortedMessageList;
         public ReadOnlyObservableCollection<MessageViewModel> SortedMessageList => sortedMessageList;
@@ -102,7 +102,7 @@ namespace SubverseIM.ViewModels.Pages
             permContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
 
-            MessageCache = new(x => x.MessageId!);
+            MessageList = new();
             sortedMessageList = new([]);
 
             TopicsList = [string.Empty];
@@ -202,14 +202,14 @@ namespace SubverseIM.ViewModels.Pages
                 (await dbService.GetContactsAsync(cancellationToken))
                 .ToDictionary(x => x.OtherPeer);
 
-            messageCacheHandle?.Dispose();
-            MessageCache.Clear();
+            messageListHandle?.Dispose();
+            MessageList.Clear();
 
-            messageCacheHandle = MessageCache.Connect()
+            messageListHandle = MessageList.Connect()
                 .Sort(config.MessageOrderFlag ?
                     SortExpressionComparer<SubverseMessage>.Ascending(x => x.DateSignedOn) :
                     SortExpressionComparer<SubverseMessage>.Descending(x => x.DateSignedOn))
-                .Select(message => new MessageViewModel(this, message.Sender == thisPeer ?
+                .Transform(message => new MessageViewModel(this, message.Sender == thisPeer ?
                     null : contacts.GetValueOrDefault(message.Sender) ?? new()
                     { OtherPeer = message.Sender, DisplayName = message.SenderName },
                     message))
@@ -286,7 +286,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 if (isCurrentTopic)
                 {
-                    MessageCache.AddOrUpdate(message);
+                    MessageList.Add(message);
                 }
             }
         }
@@ -334,7 +334,7 @@ namespace SubverseIM.ViewModels.Pages
 
             if (messageTopicName == SendMessageTopicName)
             {
-                MessageCache.AddOrUpdate(message);
+                MessageList.Add(message);
             }
 
             foreach (SubverseContact contact in permContactsList.Select(x => x.innerContact))
