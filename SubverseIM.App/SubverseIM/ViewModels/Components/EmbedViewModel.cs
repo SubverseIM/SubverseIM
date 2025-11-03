@@ -26,12 +26,14 @@ namespace SubverseIM.ViewModels.Components
             _ => null
         } ?? AbsoluteUri.ToString();
 
-        public Task<Bitmap?> FetchedBitmapAsync => GetBitmapAsync();
+        public Task<Bitmap?> FetchedBitmapAsync { get; }
 
         public EmbedViewModel(IServiceManager serviceManager, string uriString)
         {
             this.serviceManager = serviceManager;
             AbsoluteUri = new Uri(uriString);
+
+            FetchedBitmapAsync = GetBitmapAsync();
         }
 
         public async Task<Bitmap?> GetBitmapAsync()
