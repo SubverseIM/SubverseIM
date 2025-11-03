@@ -2,6 +2,7 @@
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using DynamicData;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -192,7 +193,7 @@ namespace SubverseIM.ViewModels.Components
                 IDbService dbService = await messagePageView.ServiceManager
                     .GetWithAwaitAsync<IDbService>();
                 await dbService.DeleteItemByIdAsync<SubverseMessage>(innerMessage.Id);
-                messagePageView.MessageList.Remove(this);
+                messagePageView.MessageCache.RemoveKey(innerMessage.MessageId!);
             }
         }
     }

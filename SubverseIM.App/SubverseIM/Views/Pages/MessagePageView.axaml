@@ -187,7 +187,7 @@
 				</TextBox>
 			</DockPanel>
 			<Panel Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
-				<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding MessageList}">
+				<ListBox x:Name="messages" SelectionMode="Single,Toggle" ItemsSource="{Binding SortedMessageList}">
 					<Classes.dockTop>
 						<MultiBinding Converter="{x:Static BoolConverters.And}">
 							<Binding Path="!DataContext.IsAccessibilityEnabledAsync^" ElementName="splitView" />
@@ -414,7 +414,7 @@
 					</ListBox.ItemTemplate>
 				</ListBox>
 				<TextBlock 
-					IsVisible="{Binding !MessageList.Count}"
+					IsVisible="{Binding !SortedMessageList.Count}"
 					HorizontalAlignment="Center"
 					VerticalAlignment="Center"
 					TextWrapping="Wrap"

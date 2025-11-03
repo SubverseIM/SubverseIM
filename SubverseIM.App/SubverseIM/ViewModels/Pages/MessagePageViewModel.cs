@@ -2,9 +2,13 @@
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using DynamicData;
+using DynamicData.Alias;
+using DynamicData.Binding;
 using ReactiveUI;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
+using SubverseIM.Core.Storage.Messages;
 using SubverseIM.Models;
 using SubverseIM.Serializers;
 using SubverseIM.Services;
@@ -13,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,7 +46,11 @@ namespace SubverseIM.ViewModels.Pages
 
         public ObservableCollection<ContactViewModel> ContactsList { get; }
 
-        public ObservableCollection<MessageViewModel> MessageList { get; }
+        private IDisposable? messageCacheHandle;
+        public SourceCache<SubverseMessage, MessageId> MessageCache { get; }
+
+        private ReadOnlyObservableCollection<MessageViewModel> sortedMessageList;
+        public ReadOnlyObservableCollection<MessageViewModel> SortedMessageList => sortedMessageList;
 
         public ObservableCollection<string> TopicsList { get; }
 
@@ -92,7 +101,10 @@ namespace SubverseIM.ViewModels.Pages
         {
             permContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
-            MessageList = [];
+
+            MessageCache = new(x => x.MessageId!);
+            sortedMessageList = new([]);
+
             TopicsList = [string.Empty];
         }
 
@@ -181,6 +193,30 @@ namespace SubverseIM.ViewModels.Pages
             IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>(cancellationToken);
 
             SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
+
+            SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
+            DefaultChatColor = config.DefaultChatColorCode is null ?
+                null : Color.FromUInt32(config.DefaultChatColorCode.Value);
+
+            IReadOnlyDictionary<SubversePeerId, SubverseContact> contacts =
+                (await dbService.GetContactsAsync(cancellationToken))
+                .ToDictionary(x => x.OtherPeer);
+
+            messageCacheHandle?.Dispose();
+            MessageCache.Clear();
+
+            messageCacheHandle = MessageCache.Connect()
+                .Sort(config.MessageOrderFlag ?
+                    SortExpressionComparer<SubverseMessage>.Ascending(x => x.DateSignedOn) :
+                    SortExpressionComparer<SubverseMessage>.Descending(x => x.DateSignedOn))
+                .Select(message => new MessageViewModel(this, message.Sender == thisPeer ?
+                    null : contacts.GetValueOrDefault(message.Sender) ?? new()
+                    { OtherPeer = message.Sender, DisplayName = message.SenderName },
+                    message))
+                .Bind(out sortedMessageList)
+                .Subscribe();
+            this.RaisePropertyChanged(nameof(SortedMessageList));
+
             HashSet<SubversePeerId> participantIds = permContactsList
                 .Select(x => x.innerContact.OtherPeer)
                 .ToHashSet();
@@ -200,10 +236,6 @@ namespace SubverseIM.ViewModels.Pages
                 TopicsList.Insert(0, string.Empty);
             }
 
-            SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
-            DefaultChatColor = config.DefaultChatColorCode is null ?
-                null : Color.FromUInt32(config.DefaultChatColorCode.Value);
-
             if (shouldRefreshContacts)
             {
                 ContactsList.Clear();
@@ -219,7 +251,6 @@ namespace SubverseIM.ViewModels.Pages
                 ShouldRefreshContacts = true;
             }
 
-            MessageList.Clear();
             foreach (SubverseMessage message in await dbService.GetMessagesWithPeersOnTopicAsync(participantIds, null, config.MessageOrderFlag, cancellationToken))
             {
                 if (message.TopicName == "#system") continue;
@@ -255,7 +286,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 if (isCurrentTopic)
                 {
-                    MessageList.Add(new(this, isSentByMe ? null : sender, message));
+                    MessageCache.AddOrUpdate(message);
                 }
             }
         }
@@ -301,13 +332,9 @@ namespace SubverseIM.ViewModels.Pages
                 SendMessageText = null;
             }
 
-            if (messageTopicName == SendMessageTopicName && config.MessageOrderFlag == false)
+            if (messageTopicName == SendMessageTopicName)
             {
-                MessageList.Insert(0, new(this, null, message));
-            }
-            else if (messageTopicName == SendMessageTopicName && config.MessageOrderFlag == true)
-            {
-                MessageList.Add(new(this, null, message));
+                MessageCache.AddOrUpdate(message);
             }
 
             foreach (SubverseContact contact in permContactsList.Select(x => x.innerContact))

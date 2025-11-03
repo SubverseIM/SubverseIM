@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
+using DynamicData;
 using LiteDB;
 using MonoTorrent;
 using ReactiveUI;
@@ -7,7 +8,6 @@ using SIPSorcery.SIP;
 using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services;
-using SubverseIM.ViewModels.Components;
 using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
@@ -219,33 +219,24 @@ public class MainViewModel : ViewModelBase, IFrontendService
                         (string.IsNullOrEmpty(message.TopicName) && string.IsNullOrEmpty(vm.SendMessageTopicName))
                         )))
                     {
+                        vm.MessageCache.AddOrUpdate(message);
+
                         if (!string.IsNullOrEmpty(message.TopicName) &&
                             !vm.TopicsList.Contains(message.TopicName))
                         {
                             vm.TopicsList.Insert(0, message.TopicName);
                         }
 
-                        SubverseContact sender = await dbService.GetContactAsync(message.Sender, cancellationToken) ?? new()
-                        {
-                            OtherPeer = message.Sender,
-                            DisplayName = message.SenderName
-                        };
-
-                        MessageViewModel messageViewModel = new(vm, sender, message);
-                        foreach (SubverseContact participant in messageViewModel.CcContacts)
+                        foreach (SubverseContact participant in message.Recipients
+                            .Zip(message.RecipientNames)
+                            .Select(x => new SubverseContact()
+                            {
+                                OtherPeer = x.First,
+                                DisplayName = x.Second,
+                            }))
                         {
                             if (participant.OtherPeer == thisPeer) continue;
                             vm.AddUniqueParticipant(participant, false);
-                        }
-
-                        SubverseConfig config = await configurationService.GetConfigAsync(cancellationToken);
-                        if (config.MessageMirrorFlag == false)
-                        {
-                            vm.MessageList.Insert(0, messageViewModel);
-                        }
-                        else
-                        {
-                            vm.MessageList.Add(messageViewModel);
                         }
                     }
 
