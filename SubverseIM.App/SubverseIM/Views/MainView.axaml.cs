@@ -29,6 +29,8 @@ public partial class MainView : UserControl
            throw new InvalidOperationException("Could not resolve TopLevel instance from control");
         ((MainViewModel)DataContext!).RegisterTopLevel(topLevel);
 
+        topLevel.SizeChanged += TopLevelSizeChanged;
+
         if (topLevel.InputPane is not null)
         {
             topLevel.InputPane.StateChanged += InputPaneStateChanged;
@@ -43,6 +45,13 @@ public partial class MainView : UserControl
         _ = ((MainViewModel)DataContext!).NavigateLaunchedUriAsync();
     }
 
+    private void TopLevelSizeChanged(object? sender, SizeChangedEventArgs e)
+    {
+        TopLevel? topLevel = sender as TopLevel;
+        Width = topLevel?.Width ?? Width;
+        Height = topLevel?.Height ?? Height;
+    }
+
     private void InputPaneStateChanged(object? sender, InputPaneStateEventArgs e)
     {
         VerticalAlignment = e.NewState switch
@@ -50,7 +59,7 @@ public partial class MainView : UserControl
             InputPaneState.Open => Avalonia.Layout.VerticalAlignment.Top,
             _ => Avalonia.Layout.VerticalAlignment.Stretch,
         };
-        Height = ((IInputPane?)sender)?.OccludedRect.Top ?? Height;
+        Height = Math.Max(((IInputPane?)sender)?.OccludedRect.Top ?? Height, 0);
     }
 
     public void ScreenOrientationChanged()

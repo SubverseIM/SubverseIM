@@ -7,7 +7,7 @@ namespace SubverseIM.Services.Implementation
     {
         public Task<string?> GetEncryptionKeyAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<string?>(IDbService.SECRET_PASSWORD);
+            return Task.FromResult<string?>(null);
         }
     }
 }

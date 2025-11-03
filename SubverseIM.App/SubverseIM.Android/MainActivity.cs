@@ -130,8 +130,6 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         serviceManager?.GetOrRegister<IBillingService>(new BillingService());
 
-        serviceManager?.GetOrRegister<IEncryptionService>(new AndroidEncryptionService(this));
-
         string appDataPath = GetPersistentStoragePath();
         Directory.CreateDirectory(appDataPath);
 
@@ -172,6 +170,11 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
     {
         base.OnStart();
         IsInForeground = true;
+
+        if (serviceManager?.Get<IEncryptionService>() is null)
+        {
+            serviceManager?.GetOrRegister<IEncryptionService>(new AndroidEncryptionService(this));
+        }
 
         IFrontendService? frontendService = serviceManager is null ? null :
             await serviceManager.GetWithAwaitAsync<IFrontendService>();
