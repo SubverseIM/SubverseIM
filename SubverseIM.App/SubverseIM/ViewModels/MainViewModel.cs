@@ -186,25 +186,21 @@ public class MainViewModel : ViewModelBase, IFrontendService
                 string? topicName = message.TopicName is null || message.TopicName == "#system" ?
                     null : message.TopicName;
 
-                SubverseContact contact = await dbService.GetContactAsync(topicId ?? message.Sender, cancellationToken) ??
-                    new SubverseContact()
-                    {
-                        OtherPeer = topicId ?? message.Sender,
-                        DisplayName = topicName ?? message.SenderName,
-                        TopicName = topicName,
-                    };
-
-                contact.DateLastChattedWith = message.DateSignedOn;
-                await dbService.InsertOrUpdateItemAsync(contact, cancellationToken);
-
-                lock (messageService.CachedPeers)
+                SubverseContact? contact = await dbService.GetContactAsync(topicId ?? message.Sender, cancellationToken);
+                if (contact is not null)
                 {
-                    messageService.CachedPeers.TryAdd(
-                        contact.OtherPeer,
-                        new SubversePeer
-                        {
-                            OtherPeer = contact.OtherPeer
-                        });
+                    contact.DateLastChattedWith = message.DateSignedOn;
+                    await dbService.InsertOrUpdateItemAsync(contact, cancellationToken);
+
+                    lock (messageService.CachedPeers)
+                    {
+                        messageService.CachedPeers.TryAdd(
+                            contact.OtherPeer,
+                            new SubversePeer
+                            {
+                                OtherPeer = contact.OtherPeer
+                            });
+                    }
                 }
 
                 try
