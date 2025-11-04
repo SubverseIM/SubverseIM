@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Net.Http.Headers;
 using PgpCore;
 using SubverseIM.Bootstrapper.Extensions;
+using SubverseIM.Bootstrapper.Filters;
 using SubverseIM.Core.Storage.Blobs;
 using System.IO.Pipelines;
 using System.Net;
@@ -49,6 +50,7 @@ namespace SubverseIM.Bootstrapper.Controllers
         }
 
         [HttpGet("expire-all")]
+        [HostFilteringActionFilter(["localhost"])]
         public async Task<IActionResult> DeleteExpiredBlobsAsync(CancellationToken cancellationToken)
         {
             if (_enableFeatureFlag == false)
@@ -56,16 +58,23 @@ namespace SubverseIM.Bootstrapper.Controllers
                 return StatusCode((int)HttpStatusCode.Gone, "The server administrator has disabled blob storage.");
             }
 
-            DateTime now = DateTime.UtcNow;
-            foreach (FileInfo fileInfo in Directory
-                .GetFiles(_blobDirPath)
-                .Select(x => new FileInfo(x))
-                .Where(x => (now - x.CreationTimeUtc).TotalHours >= _maxBlobAgeHours)) 
+            if (_maxBlobAgeHours.HasValue)
             {
-                fileInfo.Delete();
-            }
+                DateTime now = DateTime.UtcNow;
+                foreach (FileInfo fileInfo in Directory
+                    .GetFiles(_blobDirPath)
+                    .Select(x => new FileInfo(x))
+                    .Where(x => (now - x.CreationTimeUtc).TotalHours >= _maxBlobAgeHours))
+                {
+                    fileInfo.Delete();
+                }
 
-            return Ok($"Successfully deleted all blobs older than {_maxBlobAgeHours} hours.");
+                return Ok($"Successfully deleted all blobs older than {_maxBlobAgeHours} hours.");
+            }
+            else 
+            {
+                return Ok("Blobs are configured to never expire on this host.");
+            }
         }
 
         [HttpGet("details")]
