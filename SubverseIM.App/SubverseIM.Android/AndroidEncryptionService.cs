@@ -4,6 +4,7 @@ using Java.Lang;
 using Java.Security;
 using Javax.Crypto;
 using Javax.Crypto.Spec;
+using SubverseIM.Exceptions;
 using SubverseIM.Services;
 using System;
 using System.IO;
@@ -78,14 +79,20 @@ namespace SubverseIM.Android
                         null : Convert.FromBase64String(authenticationKeyData.CipherText);
                     byte[]? iv = authenticationKeyData?.IV is null ? 
                         null : Convert.FromBase64String(authenticationKeyData.IV);
-
                     cipher?.Init(Javax.Crypto.CipherMode.DecryptMode, secretKey,
                             new IvParameterSpec(iv)
                             );
-                    byte[]? decryptedKey = cipher?.DoFinal(encryptedKey);
 
-                    string? password = decryptedKey is null ? null : Convert.ToBase64String(decryptedKey);
-                    resultTcs.SetResult(password);
+                    byte[]? decryptedKey = cipher?.DoFinal(encryptedKey);
+                    if (decryptedKey is null)
+                    {
+                        resultTcs.SetException(new EncryptionServiceException("Failed to decrypt key data due to an authentication failure."));
+                    }
+                    else
+                    {
+                        string password = Convert.ToBase64String(decryptedKey);
+                        resultTcs.SetResult(password);
+                    }
                 }
                 else
                 {
