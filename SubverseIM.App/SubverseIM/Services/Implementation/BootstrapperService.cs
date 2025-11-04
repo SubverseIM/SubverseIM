@@ -171,7 +171,7 @@ namespace SubverseIM.Services.Implementation
                     return await response.Content.ReadFromJsonAsync<bool>(cancellationToken);
                 }
             }
-            catch
+            catch (HttpRequestException)
             {
                 return false;
             }
@@ -188,13 +188,13 @@ namespace SubverseIM.Services.Implementation
 
                 return true;
             }
-            catch
+            catch (HttpRequestException)
             {
                 return false;
             }
         }
 
-        private async Task<bool> SubmitDeviceTokenAsync(Uri bootstrapperUri, CancellationToken cancellationToken) 
+        private async Task<bool> SubmitDeviceTokenAsync(Uri bootstrapperUri, CancellationToken cancellationToken)
         {
             IServiceManager serviceManager = await serviceManagerTcs.Task;
 
@@ -230,7 +230,7 @@ namespace SubverseIM.Services.Implementation
                     return await response.Content.ReadFromJsonAsync<bool>(cancellationToken);
                 }
             }
-            catch
+            catch (HttpRequestException)
             {
                 return false;
             }
@@ -273,13 +273,20 @@ namespace SubverseIM.Services.Implementation
             Stream? pkStream = await dbService.GetReadStreamAsync(IDbService.PUBLIC_KEY_PATH);
             if (pkStream is not null)
             {
-                foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
+                using (pkStream)
                 {
-                    using (pkStream)
-                    using (StreamContent pkStreamContent = new(pkStream)
-                    { Headers = { ContentType = new("application/pgp-keys") } })
+                    foreach (Uri bootstrapperUri in config.BootstrapperUriList?.Select(x => new Uri(x)) ?? [])
                     {
-                        await httpClient.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent, cancellationToken);
+                        pkStream.Position = 0;
+                        using (StreamContent pkStreamContent = new(pkStream)
+                        { Headers = { ContentType = new("application/pgp-keys") } })
+                        {
+                            try
+                            {
+                                await httpClient.PostAsync(new Uri(bootstrapperUri, "pk"), pkStreamContent, cancellationToken);
+                            }
+                            catch (HttpRequestException) { }
+                        }
                     }
                 }
             }
@@ -465,15 +472,19 @@ namespace SubverseIM.Services.Implementation
                 }
                 else
                 {
-                    string? topicIdStr = await httpClient.GetFromJsonAsync<string>(new Uri(bootstrapperUri, "topic"));
-                    if (!string.IsNullOrEmpty(topicIdStr))
+                    try
                     {
-                        SubversePeerId newTopicId = SubversePeerId.FromString(topicIdStr);
-                        cachedTopicIds.AddOrUpdate(bootstrapperUri.OriginalString,
-                            (x, t) => new(t, newTopicId), (x, oldValue, t) => new(t, newTopicId),
-                            DateTime.UtcNow);
-                        topicIds.Add(newTopicId);
+                        string? topicIdStr = await httpClient.GetFromJsonAsync<string>(new Uri(bootstrapperUri, "topic"));
+                        if (!string.IsNullOrEmpty(topicIdStr))
+                        {
+                            SubversePeerId newTopicId = SubversePeerId.FromString(topicIdStr);
+                            cachedTopicIds.AddOrUpdate(bootstrapperUri.OriginalString,
+                                (x, t) => new(t, newTopicId), (x, oldValue, t) => new(t, newTopicId),
+                                DateTime.UtcNow);
+                            topicIds.Add(newTopicId);
+                        }
                     }
+                    catch (HttpRequestException) { }
                 }
             }
 
@@ -600,10 +611,10 @@ namespace SubverseIM.Services.Implementation
             string cacheDirPath = Path.Combine(launcherService.GetPersistentStoragePath(), "torrent");
             serviceManager.GetOrRegister<ITorrentService>(
                 new TorrentService(serviceManager, new EngineSettingsBuilder
-                { 
+                {
                     CacheDirectory = cacheDirPath,
-                    UsePartialFiles = true, 
-                    WebSeedDelay = TimeSpan.Zero, 
+                    UsePartialFiles = true,
+                    WebSeedDelay = TimeSpan.Zero,
                     WebSeedSpeedTrigger = 0
                 }.ToSettings(), factories));
         }
