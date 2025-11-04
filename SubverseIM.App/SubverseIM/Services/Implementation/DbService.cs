@@ -290,27 +290,24 @@ namespace SubverseIM.Services.Implementation
 
         public async Task InjectAsync(IServiceManager serviceManager)
         {
-            IEncryptionService encryptionService = await serviceManager.GetWithAwaitAsync<IEncryptionService>();
-            string? dbPassword;
             try
             {
-                dbPassword = await encryptionService.GetEncryptionKeyAsync();
-                if (dbPassword is null)
+                IEncryptionService encryptionService = await serviceManager.GetWithAwaitAsync<IEncryptionService>();
+                string? dbPassword = await encryptionService.GetEncryptionKeyAsync();
+                dbTcs.SetResult(new LiteDatabase(new ConnectionString
                 {
-                    dbTcs.SetException(new DbServiceException("Could not decrypt the application database, possibly because the user denied authentication."));
-                }
+                    Filename = dbFilePath,
+                    Password = dbPassword,
+                }, mapper));
+            }
+            catch (EncryptionServiceException) 
+            {
+                dbTcs.SetException(new DbServiceException("Could not decrypt the application database, possibly because the user denied authentication."));
             }
             catch (Exception ex)
             {
-                dbPassword = null;
                 dbTcs.SetException(ex);
             }
-
-            dbTcs.TrySetResult(new LiteDatabase(new ConnectionString
-            {
-                Filename = dbFilePath,
-                Password = dbPassword,
-            }, mapper));
         }
 
         protected virtual void Dispose(bool disposing)
