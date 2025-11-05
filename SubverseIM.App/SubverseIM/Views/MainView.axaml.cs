@@ -28,9 +28,6 @@ public partial class MainView : UserControl
 
         topLevel = TopLevel.GetTopLevel(this) ??
            throw new InvalidOperationException("Could not resolve TopLevel instance from control");
-        ((MainViewModel)DataContext!).RegisterTopLevel(topLevel);
-
-        topLevel.SizeChanged += TopLevelSizeChanged;
 
         if (topLevel.InputPane is not null)
         {
@@ -48,14 +45,11 @@ public partial class MainView : UserControl
         base.OnLoaded(e);
         loadTaskSource.SetResult(e);
 
-        ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
-        _ = ((MainViewModel)DataContext!).NavigateLaunchedUriAsync();
-    }
+        ((MainViewModel)DataContext!).RegisterTopLevel(topLevel!);
 
-    private void TopLevelSizeChanged(object? sender, SizeChangedEventArgs e)
-    {
-        Width = e.NewSize.Width;
-        Height = e.NewSize.Height;
+        ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
+
+        _ = ((MainViewModel)DataContext!).NavigateLaunchedUriAsync();
     }
 
     private void InputPaneStateChanged(object? sender, InputPaneStateEventArgs e)

@@ -1,4 +1,5 @@
-﻿using LiteDB;
+﻿using Avalonia.Controls;
+using LiteDB;
 using MonoTorrent;
 using SubverseIM.Core;
 using SubverseIM.Core.Storage.Messages;
@@ -290,6 +291,9 @@ namespace SubverseIM.Services.Implementation
 
         public async Task InjectAsync(IServiceManager serviceManager)
         {
+            // Ensure that UI is initialized first
+            _ = await serviceManager.GetWithAwaitAsync<TopLevel>();
+
             try
             {
                 IEncryptionService encryptionService = await serviceManager.GetWithAwaitAsync<IEncryptionService>();
