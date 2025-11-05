@@ -3,6 +3,7 @@ using ReactiveUI;
 using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Components;
 using System;
 using System.Collections.Generic;
@@ -71,6 +72,9 @@ namespace SubverseIM.ViewModels.Pages
                 await vm.LoadPhotoAsync();
                 ContactsList.Add(vm);
             }
+
+            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+            await frontendService.ResetSizeAsync();
         }
 
         public async Task InviteCommand(Visual? sender)

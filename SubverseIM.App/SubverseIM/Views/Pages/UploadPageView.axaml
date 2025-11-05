@@ -7,9 +7,6 @@
 			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 			 x:Class="SubverseIM.Views.Pages.UploadPageView"
 			 x:DataType="vm:UploadPageViewModel">
-	<UserControl.Resources>
-		<cv:FileSizeConverter x:Key="FileSizeConverter" />
-	</UserControl.Resources>
 	<Design.DataContext>
 		<vm:UploadPageViewModel />
 	</Design.DataContext>

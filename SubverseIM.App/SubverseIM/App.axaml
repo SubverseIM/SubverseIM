@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 			 xmlns:local="using:SubverseIM"
+			 xmlns:cv="using:SubverseIM.Converters"
              x:Class="SubverseIM.App">
 	<!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 	<Application.DataTemplates>
@@ -16,6 +17,8 @@
 		<StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
 	</Application.Styles>
 	<Application.Resources>
+		<cv:FileSizeConverter x:Key="FileSizeConverter" />
+		<cv:NullableSizeConverter x:Key="NullableSizeConverter" />
 		<FontFamily x:Key="SourceCodeProFont">avares://SubverseIM/Assets/Fonts#SourceCodePro</FontFamily>
 		<StreamGeometry x:Key="caret_left_regular">M12.9268 18.8389C13.7351 19.5461 15 18.9721 15 17.8982L15 6.10192C15 5.02797 13.7351 4.454 12.9268 5.1612L6.61617 10.683C5.81935 11.3802 5.81935 12.6198 6.61617 13.317L12.9268 18.8389ZM13.5 17.3472L7.60393 12.1882C7.4901 12.0886 7.4901 11.9115 7.60393 11.8119L13.5 6.65286L13.5 17.3472Z</StreamGeometry>
 		<StreamGeometry x:Key="line_horizontal_3_regular">M2 4.5C2 4.22386 2.22386 4 2.5 4H17.5C17.7761 4 18 4.22386 18 4.5C18 4.77614 17.7761 5 17.5 5H2.5C2.22386 5 2 4.77614 2 4.5Z M2 9.5C2 9.22386 2.22386 9 2.5 9H17.5C17.7761 9 18 9.22386 18 9.5C18 9.77614 17.7761 10 17.5 10H2.5C2.22386 10 2 9.77614 2 9.5Z M2.5 14C2.22386 14 2 14.2239 2 14.5C2 14.7761 2.22386 15 2.5 15H17.5C17.7761 15 18 14.7761 18 14.5C18 14.2239 17.7761 14 17.5 14H2.5Z</StreamGeometry>

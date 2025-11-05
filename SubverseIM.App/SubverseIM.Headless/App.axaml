@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 			 xmlns:local="using:SubverseIM"
+             xmlns:cv="using:SubverseIM.Converters"
              x:Class="SubverseIM.Headless.App">
     <Application.DataTemplates>
 		<local:ViewLocator />
@@ -8,4 +9,8 @@
   <Application.Styles>
     <FluentTheme />
   </Application.Styles>
+    <Application.Resources>
+        <cv:FileSizeConverter x:Key="FileSizeConverter" />
+		<cv:NullableSizeConverter x:Key="NullableSizeConverter" />
+    </Application.Resources>
 </Application>

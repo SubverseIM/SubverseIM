@@ -9,6 +9,8 @@ namespace SubverseIM.Services
 {
     public interface IFrontendService : IRunnable, IBackgroundRunnable
     {
+        Task ResetSizeAsync();
+
         Task RestorePurchasesAsync();
 
         Task PromptForPurchaseAsync();
