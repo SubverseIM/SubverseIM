@@ -12,6 +12,8 @@ public partial class MainView : UserControl
 {
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 
+    private TopLevel? topLevel;
+
     public Task LoadTask => loadTaskSource.Task;
 
     public MainView()
@@ -20,12 +22,11 @@ public partial class MainView : UserControl
         loadTaskSource = new();
     }
 
-    protected override void OnLoaded(RoutedEventArgs e)
+    protected override void OnInitialized()
     {
-        base.OnLoaded(e);
-        loadTaskSource.SetResult(e);
+        base.OnInitialized();
 
-        TopLevel topLevel = TopLevel.GetTopLevel(this) ??
+        topLevel = TopLevel.GetTopLevel(this) ??
            throw new InvalidOperationException("Could not resolve TopLevel instance from control");
         ((MainViewModel)DataContext!).RegisterTopLevel(topLevel);
 
@@ -40,16 +41,21 @@ public partial class MainView : UserControl
         {
             topLevel.Screens.Changed += (s, ev) => ScreenOrientationChanged();
         }
-        ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
+    }
 
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
+        loadTaskSource.SetResult(e);
+
+        ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
         _ = ((MainViewModel)DataContext!).NavigateLaunchedUriAsync();
     }
 
     private void TopLevelSizeChanged(object? sender, SizeChangedEventArgs e)
     {
-        TopLevel? topLevel = sender as TopLevel;
-        Width = topLevel?.Width ?? Width;
-        Height = topLevel?.Height ?? Height;
+        Width = e.NewSize.Width;
+        Height = e.NewSize.Height;
     }
 
     private void InputPaneStateChanged(object? sender, InputPaneStateEventArgs e)
@@ -59,17 +65,14 @@ public partial class MainView : UserControl
             InputPaneState.Open => Avalonia.Layout.VerticalAlignment.Top,
             _ => Avalonia.Layout.VerticalAlignment.Stretch,
         };
-        Height = Math.Max(((IInputPane?)sender)?.OccludedRect.Top ?? Height, 0);
+        Height = Math.Max(e.EndRect.Top, 0);
     }
 
     public void ScreenOrientationChanged()
     {
-        TopLevel? topLevel = TopLevel.GetTopLevel(this);
-        Width = topLevel?.Width ?? Width;
-        Height = topLevel?.Height ?? Height;
-
         ((MainViewModel)DataContext!).CurrentPage
             .OnOrientationChanged(topLevel);
+        _ = ((MainViewModel)DataContext!).ResetSizeAsync();
     }
 
     public T? GetContentAs<T>()

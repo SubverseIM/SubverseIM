@@ -1,4 +1,6 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using DynamicData;
 using LiteDB;
@@ -73,6 +75,13 @@ public class MainViewModel : ViewModelBase, IFrontendService
         {
             this.RaiseAndSetIfChanged(ref hasPreviousView, value);
         }
+    }
+
+    private Size? screenSize;
+    public Size? ScreenSize
+    {
+        get => screenSize;
+        set => this.RaiseAndSetIfChanged(ref screenSize, value);
     }
 
     public MainViewModel(IServiceManager serviceManager)
@@ -255,6 +264,17 @@ public class MainViewModel : ViewModelBase, IFrontendService
         {
             await torrentPage.DestroyAsync();
             await Task.WhenAll(subTasks);
+        }
+    }
+
+    public async Task ResetSizeAsync()
+    {
+        TopLevel topLevel = await serviceManager.GetWithAwaitAsync<TopLevel>();
+
+        Screen? primaryScreen = topLevel.Screens?.Primary;
+        if (primaryScreen is not null)
+        {
+            ScreenSize = primaryScreen.WorkingArea.Size.ToSize(primaryScreen.Scaling);
         }
     }
 
