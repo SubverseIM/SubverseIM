@@ -166,7 +166,7 @@ namespace SubverseIM.Services.Implementation
                 .ToEnumerable()
                 .GroupBy(x => x.TopicName!)
                 .ToFrozenDictionary(g => g.Key, g => g
-                    .SelectMany(x => x.Recipients)
+                    .SelectMany(x => x.Recipients.Append(x.Sender))
                     .Distinct());
         }
 
