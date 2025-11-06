@@ -1,15 +1,15 @@
 [submodule "monotorrent"]
-	path = monotorrent
+	path = external/monotorrent
 	url = https://github.com/SubverseIM/monotorrent.git
 [submodule "Avalonia"]
-	path = Avalonia
+	path = external/Avalonia
 	url = https://github.com/SubverseIM/Avalonia.git
 [submodule "CoreRPC"]
-	path = CoreRPC
+	path = external/CoreRPC
 	url = https://github.com/SubverseIM/CoreRPC.git
 [submodule "apns-dotnet"]
-	path = apns-dotnet
+	path = external/apns-dotnet
 	url = https://github.com/SubverseIM/apns-dotnet.git
 [submodule "Avalonia.Labs"]
-	path = Avalonia.Labs
+	path = external/Avalonia.Labs
 	url = https://github.com/SubverseIM/Avalonia.Labs.git

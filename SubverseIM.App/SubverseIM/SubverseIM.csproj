@@ -29,12 +29,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Avalonia.Labs\src\Avalonia.Labs.Gif\Avalonia.Labs.Gif.csproj" />
-	  <ProjectReference Include="..\..\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
-	  <ProjectReference Include="..\..\monotorrent\src\MonoTorrent.Factories\MonoTorrent.Factories.csproj" />
-	  <ProjectReference Include="..\..\monotorrent\src\MonoTorrent.Connections\MonoTorrent.Connections.csproj" />
-	  <ProjectReference Include="..\..\monotorrent\src\MonoTorrent.Dht\MonoTorrent.Dht.csproj" />
-	  <ProjectReference Include="..\..\monotorrent\src\MonoTorrent.PortForwarding\MonoTorrent.PortForwarding.csproj" />
+	  <ProjectReference Include="..\..\external\Avalonia.Labs\src\Avalonia.Labs.Gif\Avalonia.Labs.Gif.csproj" />
+	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
+	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Factories\MonoTorrent.Factories.csproj" />
+	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Connections\MonoTorrent.Connections.csproj" />
+	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Dht\MonoTorrent.Dht.csproj" />
+	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.PortForwarding\MonoTorrent.PortForwarding.csproj" />
 	  <ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>
 </Project>
