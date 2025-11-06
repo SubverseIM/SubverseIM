@@ -39,7 +39,7 @@
 			<IsAppExtension>true</IsAppExtension>
 			<IsWatchExtension>false</IsWatchExtension>
 		</ProjectReference>
-		<ProjectReference Include="..\..\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
+		<ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
 		<ProjectReference Include="..\SubverseIM\SubverseIM.csproj" />
 		<ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>

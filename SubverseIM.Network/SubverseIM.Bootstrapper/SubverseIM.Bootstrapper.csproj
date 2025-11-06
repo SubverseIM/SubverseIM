@@ -19,8 +19,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\apns-dotnet\Apns\Apns.csproj" />
-	  <ProjectReference Include="..\..\CoreRPC\CoreRPC\CoreRPC.csproj" />
+	  <ProjectReference Include="..\..\external\apns-dotnet\Apns\Apns.csproj" />
+	  <ProjectReference Include="..\..\external\CoreRPC\CoreRPC\CoreRPC.csproj" />
 	  <ProjectReference Include="..\..\SubverseIM.Core\SubverseIM.Core.csproj" />
 	</ItemGroup>
 
