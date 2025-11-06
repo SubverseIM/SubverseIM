@@ -29,10 +29,10 @@ jobs:
         node-version: 'latest'
     - name: Restore workloads
       run: |
-        cd Avalonia && dotnet workload restore dirs.proj && cd ..
+        cd external/Avalonia && dotnet workload restore dirs.proj && cd ../..
         dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
     - name: Build Avalonia (local)
-      run: cd Avalonia && ./build.sh BuildToNuGetCache
+      run: cd external/Avalonia && ./build.sh BuildToNuGetCache
     - name: Test SubverseIM.App
       run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
     - name: Restore Android signing keys
