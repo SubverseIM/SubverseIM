@@ -62,6 +62,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.iOS.Notification
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubverseIM.Bootstrapper.BlobClient", "SubverseIM.Network\SubverseIM.Bootstrapper.BlobClient\SubverseIM.Bootstrapper.BlobClient.csproj", "{77002DE0-6CD1-4440-952D-B85AFA429771}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Avalonia.Labs", "Avalonia.Labs", "{5B833F33-B018-43F9-84FF-CF04481DE1D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Labs.Gif", "Avalonia.Labs\src\Avalonia.Labs.Gif\Avalonia.Labs.Gif.csproj", "{3191180D-736F-6E3E-06DC-89A15EE6C3DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -166,6 +170,10 @@ Global
 		{77002DE0-6CD1-4440-952D-B85AFA429771}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77002DE0-6CD1-4440-952D-B85AFA429771}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77002DE0-6CD1-4440-952D-B85AFA429771}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3191180D-736F-6E3E-06DC-89A15EE6C3DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3191180D-736F-6E3E-06DC-89A15EE6C3DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3191180D-736F-6E3E-06DC-89A15EE6C3DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3191180D-736F-6E3E-06DC-89A15EE6C3DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -193,6 +201,7 @@ Global
 		{98EC190A-3900-2C9F-1135-BDBA55509E82} = {C9482CFD-04EC-4538-B686-B954175EEFE2}
 		{5BE46EF7-617A-B830-074A-88FD8CB32FDB} = {4343168E-E066-4F17-8C65-AD4A7F88F002}
 		{77002DE0-6CD1-4440-952D-B85AFA429771} = {E88628A0-A007-4C04-A0C3-769CB725B02F}
+		{3191180D-736F-6E3E-06DC-89A15EE6C3DA} = {5B833F33-B018-43F9-84FF-CF04481DE1D4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ED9AFDBC-58C4-4923-950B-DC7E362C8C9C}
