@@ -130,6 +130,16 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         serviceManager?.GetOrRegister<IBillingService>(new BillingService());
 
+        switch (Build.Product?.ToLowerInvariant())
+        {
+            case "gryphon": // BrailleNote is evil
+                serviceManager?.GetOrRegister<IEncryptionService>(new DefaultEncryptionService());
+                break;
+            default:
+                serviceManager?.GetOrRegister<IEncryptionService>(new AndroidEncryptionService(this));
+                break;
+        }
+
         string appDataPath = GetPersistentStoragePath();
         Directory.CreateDirectory(appDataPath);
 
@@ -170,11 +180,6 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
     {
         base.OnStart();
         IsInForeground = true;
-
-        if (serviceManager?.Get<IEncryptionService>() is null)
-        {
-            serviceManager?.GetOrRegister<IEncryptionService>(new AndroidEncryptionService(this));
-        }
 
         IFrontendService? frontendService = serviceManager is null ? null :
             await serviceManager.GetWithAwaitAsync<IFrontendService>();
@@ -249,8 +254,12 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
     public string GetPersistentStoragePath()
     {
-        return GetExternalFilesDir(null)?.AbsolutePath ?? System.Environment
-            .GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
+        return Build.Product?.ToLowerInvariant() switch
+        {
+            "gryphon" => null,
+            _ => GetExternalFilesDir(null)?.AbsolutePath
+        } ?? System.Environment.GetFolderPath(System.Environment
+        .SpecialFolder.ApplicationData);
     }
 
     public Task<bool> ShowConfirmationDialogAsync(string title, string message)
