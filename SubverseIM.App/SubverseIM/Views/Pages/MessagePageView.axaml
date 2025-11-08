@@ -310,7 +310,7 @@
 										<ItemsControl.ItemTemplate>
 											<DataTemplate>
 												<StackPanel Orientation="Vertical">
-													<gif:GifImage Source="{Binding FetchedStreamAsync^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
+													<gif:GifImage Source="{Binding FetchedGifSourceAsync^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
 													<Image Source="{Binding FetchedBitmapAsync^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
 													<HyperlinkButton Padding="0" IsEnabled="True" HorizontalAlignment="{Binding $parent[DockPanel].DataContext.ContentAlignmentAsync^}"	NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
 														<Classes.offscreen>

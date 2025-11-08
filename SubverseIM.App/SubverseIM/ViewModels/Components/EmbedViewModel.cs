@@ -1,4 +1,5 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Avalonia.Labs.Gif;
+using Avalonia.Media.Imaging;
 using MonoTorrent;
 using OpenGraphNet;
 using SubverseIM.Models;
@@ -28,7 +29,7 @@ namespace SubverseIM.ViewModels.Components
 
         public Task<Bitmap?> FetchedBitmapAsync { get; }
 
-        public Task<Stream?> FetchedStreamAsync { get; }
+        public Task<IGifSource?> FetchedGifSourceAsync { get; }
 
         public EmbedViewModel(IServiceManager serviceManager, string uriString)
         {
@@ -36,7 +37,7 @@ namespace SubverseIM.ViewModels.Components
             AbsoluteUri = new Uri(uriString);
 
             FetchedBitmapAsync = GetBitmapAsync();
-            FetchedStreamAsync = GetStreamAsync();
+            FetchedGifSourceAsync = GetGifSourceAsync();
         }
 
         public async Task<Bitmap?> GetBitmapAsync()
@@ -49,6 +50,20 @@ namespace SubverseIM.ViewModels.Components
                 return Bitmap.DecodeToWidth(stream, 512);
             }
             catch 
+            {
+                return null;
+            }
+        }
+
+        public async Task<IGifSource?> GetGifSourceAsync()
+        {
+            Stream? stream = await GetStreamAsync();
+            if (stream is null) return null;
+            try
+            {
+                return GifStreamSource.FromStream(stream);
+            }
+            catch
             {
                 return null;
             }
