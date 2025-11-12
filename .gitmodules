@@ -10,3 +10,6 @@
 [submodule "apns-dotnet"]
 	path = external/apns-dotnet
 	url = https://github.com/SubverseIM/apns-dotnet.git
+[submodule "external/CFS.Avalonia.Controls"]
+	path = external/CFS.Avalonia.Controls
+	url = https://github.com/SubverseIM/CFS.Avalonia.Controls.git

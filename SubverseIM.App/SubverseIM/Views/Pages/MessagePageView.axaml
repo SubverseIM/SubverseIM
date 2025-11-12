@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="using:SubverseIM.ViewModels.Pages"
 			 xmlns:vmx="using:SubverseIM.ViewModels.Components"
+			 xmlns:controls="using:CFS.Avalonia.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SubverseIM.Views.Pages.MessagePageView"
 			 x:DataType="vm:MessagePageViewModel">
@@ -309,7 +310,7 @@
 										<ItemsControl.ItemTemplate>
 											<DataTemplate>
 												<StackPanel Orientation="Vertical">
-													<Image Source="{Binding FetchedImageAsync^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
+													<controls:Image Source="{Binding FetchedImageAsync^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
 													<HyperlinkButton Padding="0" IsEnabled="True" HorizontalAlignment="{Binding $parent[DockPanel].DataContext.ContentAlignmentAsync^}"	NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
 														<Classes.offscreen>
 															<MultiBinding Converter="{x:Static BoolConverters.Or}">
