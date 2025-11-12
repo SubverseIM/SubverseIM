@@ -4,6 +4,7 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -26,10 +27,10 @@
 		<PackageReference Include="PgpCore" Version="6.5.3" />
 		<PackageReference Include="Plugin.InAppBilling" Version="9.1.0" />
 		<PackageReference Include="SIPSorcery" Version="8.0.23" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\external\Avalonia.Labs\src\Avalonia.Labs.Gif\Avalonia.Labs.Gif.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Factories\MonoTorrent.Factories.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Connections\MonoTorrent.Connections.csproj" />

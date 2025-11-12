@@ -10,6 +10,3 @@
 [submodule "apns-dotnet"]
 	path = external/apns-dotnet
 	url = https://github.com/SubverseIM/apns-dotnet.git
-[submodule "Avalonia.Labs"]
-	path = external/Avalonia.Labs
-	url = https://github.com/SubverseIM/Avalonia.Labs.git

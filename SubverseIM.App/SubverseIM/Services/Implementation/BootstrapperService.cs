@@ -560,6 +560,10 @@ namespace SubverseIM.Services.Implementation
                 new ConfigurationService(serviceManager)
                 );
 
+            // HTTP service init
+
+            serviceManager.GetOrRegister(httpClient);
+
             // Message service init
 
             SubversePeerId thisPeer = new(myKeys.PublicKey.GetFingerprint());
