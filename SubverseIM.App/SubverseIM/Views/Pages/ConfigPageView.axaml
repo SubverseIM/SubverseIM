@@ -66,9 +66,11 @@
 			</ComboBox>
 			<Button Command="{Binding SaveConfigurationCommand}">Save All Changes</Button>
 			<TextBlock TextWrapping="Wrap" FontStyle="Italic">
-				SubverseIM depends on Avalonia and the MonoTorrent project
+				SubverseIM depends on Avalonia, MonoTorrent, and SIPSorcery
 				<LineBreak/>
-				Copyright (C) AvaloniaUI OÜ; Copyright (C) 2006 Alan McGovern, Olivier Dufour
+				Copyright (C) AvaloniaUI OÜ; Copyright (C) 2006 Alan McGovern, Olivier Dufour; Copyright (C) 2006–2025 Aaron Clauson; Portions copyright (C) 2025 Chosen Few Software.
+				<LineBreak/>
+				All rights reserved.
 			</TextBlock>
 		</StackPanel>
 	</ScrollViewer>
