@@ -1,6 +1,7 @@
-﻿using Avalonia.Media.Imaging;
-using MonoTorrent;
+﻿using MonoTorrent;
 using OpenGraphNet;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using System;
@@ -26,19 +27,33 @@ namespace SubverseIM.ViewModels.Components
             _ => null
         } ?? AbsoluteUri.ToString();
 
-        public Task<Bitmap?> FetchedBitmapAsync { get; }
+        public Task<Image?> FetchedImageAsync { get; }
 
         public EmbedViewModel(IServiceManager serviceManager, string uriString)
         {
             this.serviceManager = serviceManager;
             AbsoluteUri = new Uri(uriString);
 
-            FetchedBitmapAsync = GetBitmapAsync();
+            FetchedImageAsync = GetImageAsync();
         }
 
-        public async Task<Bitmap?> GetBitmapAsync()
+        private async Task<Image?> GetImageAsync()
         {
-            OpenGraph og;
+            using Stream? stream = await GetStreamAsync();
+            if (stream is null) return null;
+
+            try
+            {
+                return await Image.LoadAsync<Bgra32>(stream);
+            }
+            catch 
+            {
+                return null;
+            }
+        }
+
+        private async Task<Stream?> GetStreamAsync()
+        {
             if (MagnetLink.TryParse(AbsoluteUri.OriginalString, out MagnetLink? magnetLink))
             {
                 ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
@@ -62,23 +77,56 @@ namespace SubverseIM.ViewModels.Components
                 string cacheFilePath = Path.Combine(cacheDirPath,
                     magnetLink.Name ?? throw new InvalidOperationException("No display name was provided for this file!")
                     );
-                using Stream stream = File.OpenRead(cacheFilePath);
-                return Bitmap.DecodeToWidth(stream, 256);
-            }
-            else if ((og = await OpenGraph.ParseUrlAsync(AbsoluteUri)).Image is not null)
-            {
-                using MemoryStream bufferStream = new();
-                using (HttpClient http = new())
-                using (Stream downloadStream = await http.GetStreamAsync($"{AbsoluteUri.GetLeftPart(UriPartial.Authority)}{og.Image.AbsolutePath}"))
-                {
-                    await downloadStream.CopyToAsync(bufferStream);
-                }
-                bufferStream.Position = 0;
-                return Bitmap.DecodeToWidth(bufferStream, 256);
+
+                return File.OpenRead(cacheFilePath);
             }
             else
             {
-                return null;
+                HttpClient http = await serviceManager.GetWithAwaitAsync<HttpClient>();
+
+                string? contentType;
+                try
+                {
+                    using (HttpRequestMessage headRequest = new(HttpMethod.Head, AbsoluteUri))
+                    using (HttpResponseMessage headResponse = await http.SendAsync(headRequest))
+                    {
+                        headResponse.EnsureSuccessStatusCode();
+                        contentType = headResponse.Content.Headers.ContentType?.MediaType;
+                    }
+                }
+                catch (HttpRequestException) 
+                {
+                    contentType = null;
+                }
+
+                Uri? imageUri;
+                switch (contentType?.ToLowerInvariant()) 
+                {
+                    case "text/html":
+                        OpenGraph og = await OpenGraph.ParseUrlAsync(AbsoluteUri);
+                        imageUri = og.Image is null ? null : new Uri(AbsoluteUri.GetLeftPart(UriPartial.Authority) + og.Image.AbsolutePath);
+                        break;
+
+                    case "image/png":
+                    case "image/jpeg":
+                    case "image/webp":
+                    case "image/gif":
+                        imageUri = AbsoluteUri;
+                        break;
+
+                    default:
+                        imageUri = null;
+                        break;
+                }
+
+                if (imageUri is null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return await http.GetStreamAsync(imageUri);
+                }
             }
         }
     }

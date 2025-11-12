@@ -34,7 +34,7 @@ namespace SubverseIM.ViewModels.Pages
 
         public override bool HasSidebar => true;
 
-        public Task<bool> IsFormattingAllowedAsync => GetIsFormattingAllowedAsync();
+        public Task<bool> IsFormattingAllowedAsync { get; }
         private async Task<bool> GetIsFormattingAllowedAsync()
         {
             IConfigurationService configurationService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>();
@@ -99,6 +99,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public MessagePageViewModel(IServiceManager serviceManager, IEnumerable<SubverseContact> contacts) : base(serviceManager)
         {
+            IsFormattingAllowedAsync = GetIsFormattingAllowedAsync();
+
             permContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
             ContactsList = [.. contacts.Select(x => new ContactViewModel(serviceManager, this, x))];
 

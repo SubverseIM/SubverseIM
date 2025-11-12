@@ -29,7 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\external\Avalonia.Labs\src\Avalonia.Labs.Gif\Avalonia.Labs.Gif.csproj" />
+	  <ProjectReference Include="..\..\external\CFS.Avalonia.Controls\CFS.Avalonia.Controls\CFS.Avalonia.Controls.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Factories\MonoTorrent.Factories.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Connections\MonoTorrent.Connections.csproj" />
