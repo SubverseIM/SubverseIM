@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using PgpCore;
 using SubverseIM.Bootstrapper.Extensions;
@@ -71,14 +72,14 @@ namespace SubverseIM.Bootstrapper.Controllers
 
                 return Ok($"Successfully deleted all blobs older than {_maxBlobAgeHours} hours.");
             }
-            else 
+            else
             {
                 return Ok("Blobs are configured to never expire on this host.");
             }
         }
 
         [HttpGet("details")]
-        public async Task<IActionResult> GetDetailsAsync(CancellationToken cancellationToken) 
+        public async Task<IActionResult> GetDetailsAsync(CancellationToken cancellationToken)
         {
             return Ok(new BlobStoreDetails(null, _enableFeatureFlag ? MAX_BLOB_SIZE_BYTES : null));
         }
@@ -89,7 +90,7 @@ namespace SubverseIM.Bootstrapper.Controllers
         [RequestSizeLimit(MAX_BLOB_SIZE_BYTES)]
         public async Task StoreBlobAsync([FromQuery(Name = "p")] string peerIdStr, CancellationToken cancellationToken)
         {
-            if (_enableFeatureFlag == false) 
+            if (_enableFeatureFlag == false)
             {
                 Response.StatusCode = (int)HttpStatusCode.Gone;
                 await Response.WriteAsync("The server administrator has disabled blob storage.");
@@ -115,7 +116,7 @@ namespace SubverseIM.Bootstrapper.Controllers
                     await Request.Body.CopyToAsync(cryptoStream);
                 }
             }
-            catch (BadHttpRequestException) 
+            catch (BadHttpRequestException)
             {
                 System.IO.File.Delete(tempFilePath);
                 throw;
@@ -163,20 +164,27 @@ namespace SubverseIM.Bootstrapper.Controllers
         }
 
         [HttpGet("{id}")]
+        [HttpHead("{id}")]
         [Produces("application/octet-stream")]
         public async Task FetchBlobAsync([FromRoute(Name = "id")] string blobHashStr, [FromQuery(Name = "psk")] string secretKeyStr, CancellationToken cancellationToken)
         {
             if (_enableFeatureFlag == false)
             {
                 Response.StatusCode = (int)HttpStatusCode.Gone;
-                await Response.WriteAsync("The server administrator has disabled blob storage.");
+                if (Request.Method == "GET")
+                {
+                    await Response.WriteAsync("The server administrator has disabled blob storage.");
+                }
                 return;
             }
 
-            if (!Regex.IsMatch(blobHashStr, @"[A-Fa-f0-9]{64}")) 
+            if (!Regex.IsMatch(blobHashStr, @"[A-Fa-f0-9]{64}"))
             {
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await Response.WriteAsync("Blob ID is not properly formatted.");
+                if (Request.Method == "GET")
+                {
+                    await Response.WriteAsync("Blob ID is not properly formatted.");
+                }
                 return;
             }
 
@@ -186,10 +194,13 @@ namespace SubverseIM.Bootstrapper.Controllers
                 secretKeyBytes = Convert.FromHexString(secretKeyStr);
             }
             catch (FormatException) { secretKeyBytes = null; }
-            if (secretKeyBytes?.Length != 32) 
+            if (secretKeyBytes?.Length != 32)
             {
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await Response.WriteAsync("Secret key is not properly formatted.");
+                if (Request.Method == "GET")
+                {
+                    await Response.WriteAsync("Secret key is not properly formatted.");
+                }
                 return;
             }
 
@@ -208,6 +219,13 @@ namespace SubverseIM.Bootstrapper.Controllers
             string blobFilePath = Path.Combine(_blobDirPath, blobHashStr);
             if (System.IO.File.Exists(blobFilePath))
             {
+                if (Request.Method == "HEAD")
+                {
+                    Response.Headers.AcceptRanges = new StringValues("bytes");
+                    Response.StatusCode = (int)HttpStatusCode.OK;
+                    return;
+                }
+
                 using Stream blobFileStream = System.IO.File.OpenRead(blobFilePath);
                 long fileSize = blobFileStream.Length - BLOCK_SIZE_BYTES;
 
@@ -267,7 +285,10 @@ namespace SubverseIM.Bootstrapper.Controllers
             else
             {
                 Response.StatusCode = (int)HttpStatusCode.NotFound;
-                await Response.WriteAsync($"Blob with ID: {blobHashStr} was not found.", cancellationToken);
+                if (Request.Method == "GET")
+                {
+                    await Response.WriteAsync($"Blob with ID: {blobHashStr} was not found.", cancellationToken);
+                }
             }
         }
     }
