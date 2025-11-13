@@ -18,7 +18,7 @@
 			<TextBlock FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center">Upload to selected</TextBlock>
 		</Button>
 		<Panel>
-			<ListBox x:Name="uploadListBox" ItemsSource="{Binding UploadTasks}" SelectionMode="Multiple">
+			<ListBox x:Name="uploadListBox" ItemsSource="{Binding UploadTasks}" SelectionMode="Multiple,Toggle">
 				<ListBox.Styles>
 					<Style Selector="ListBoxItem">
 						<Setter Property="Focusable" Value="False" />
