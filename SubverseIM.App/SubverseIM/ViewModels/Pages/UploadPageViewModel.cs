@@ -65,7 +65,7 @@ namespace SubverseIM.ViewModels.Pages
                 UploadTaskViewModel uploadTask = new UploadTaskViewModel(backingStore);
                 try
                 {
-                    using CancellationTokenSource cts = new(1500);
+                    using CancellationTokenSource cts = new(3000);
                     BlobStoreDetails storeDetails = await uploadTask.InitializeAsync(cts.Token);
                     if (storeDetails.FileSizeLimit >= sourceFileSize)
                     {
