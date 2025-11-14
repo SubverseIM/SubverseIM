@@ -587,7 +587,7 @@ namespace SubverseIM.Services.Implementation
 
             // Blob service init
 
-            IBlobService blobService = new BlobService(this, httpClient);
+            IBlobService blobService = new BlobService(serviceManager);
             serviceManager.GetOrRegister(blobService);
 
             // Torrent service init
