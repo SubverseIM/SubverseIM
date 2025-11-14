@@ -25,8 +25,8 @@ namespace SubverseIM.Services.Implementation
 
             private bool disposedValue;
 
-            public SequentialReadStream(Stream inner, IProgress<long>? progress = null, bool leaveOpen = false) 
-            { 
+            public SequentialReadStream(Stream inner, IProgress<long>? progress = null, bool leaveOpen = false)
+            {
                 this.inner = inner;
                 this.progress = progress;
                 this.leaveOpen = leaveOpen;
@@ -125,20 +125,20 @@ namespace SubverseIM.Services.Implementation
             public async Task<BlobStoreDetails> GetDetailsAsync(CancellationToken cancellationToken = default)
             {
                 return (await httpClient.GetFromJsonAsync<BlobStoreDetails>(
-                    new Uri(hostAddress, "blob/details"), cancellationToken) ?? 
+                    new Uri(hostAddress, "blob/details"), cancellationToken) ??
                     new(null!, null)) with { HostAddress = hostAddress.OriginalString };
             }
 
             public async Task<BlobStoreResponse> StoreBlobAsync(IBlobSource<FileInfo> source, IProgress<float>? progress = null, CancellationToken cancellationToken = default)
             {
                 FileInfo sourceFileInfo = await source.RetrieveAsync(cancellationToken);
-                IProgress<long>? sourceFileProgress = progress is null ? null : 
+                IProgress<long>? sourceFileProgress = progress is null ? null :
                     new Progress<long>(x => progress.Report(x * 100f / sourceFileInfo.Length));
 
                 using (FileStream sourceFileStream = sourceFileInfo.OpenRead())
                 using (SequentialReadStream sourceReadStream = new SequentialReadStream(
                     sourceFileStream, progress: sourceFileProgress, leaveOpen: true))
-                using (StreamContent sourceFileContent = new StreamContent(sourceReadStream) 
+                using (StreamContent sourceFileContent = new StreamContent(sourceReadStream)
                 { Headers = { ContentType = new("application/octet-stream") } })
                 {
                     SubversePeerId peerId = await bootstrapperService.GetPeerIdAsync(cancellationToken);
@@ -148,7 +148,7 @@ namespace SubverseIM.Services.Implementation
                     {
                         response.EnsureSuccessStatusCode();
 
-                        string decryptedResponseStr, encryptedResponseStr = 
+                        string decryptedResponseStr, encryptedResponseStr =
                             await response.Content.ReadAsStringAsync(cancellationToken);
                         using (PGP pgp = new PGP(keyContainer))
                         {
@@ -164,17 +164,14 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
+        private readonly IServiceManager serviceManager;
+
         private readonly ConcurrentDictionary<Uri, FileStore> fileStoreMap;
 
-        private readonly IBootstrapperService bootstrapperService;
-
-        private readonly HttpClient httpClient;
-
-        public BlobService(IBootstrapperService bootstrapperService, HttpClient httpClient)
+        public BlobService(IServiceManager serviceManager)
         {
+            this.serviceManager = serviceManager;
             fileStoreMap = new ConcurrentDictionary<Uri, FileStore>();
-            this.bootstrapperService = bootstrapperService;
-            this.httpClient = httpClient;
         }
 
         public Task<IBlobSource<FileInfo>> GetFileSourceAsync(string filePath, CancellationToken cancellationToken)
@@ -189,17 +186,15 @@ namespace SubverseIM.Services.Implementation
             }
         }
 
-        public Task<IBlobStore<FileInfo>> GetFileStoreAsync(Uri hostAddress, CancellationToken cancellationToken)
+        public async Task<IBlobStore<FileInfo>> GetFileStoreAsync(Uri hostAddress, CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return Task.FromCanceled<IBlobStore<FileInfo>>(cancellationToken);
-            }
-            else
-            {
-                FileStore result = fileStoreMap.GetOrAdd(hostAddress, x => new FileStore(bootstrapperService, httpClient, x));
-                return Task.FromResult<IBlobStore<FileInfo>>(result);
-            }
+            cancellationToken.ThrowIfCancellationRequested();
+
+            IBootstrapperService bootstrapperService = await serviceManager.GetWithAwaitAsync<IBootstrapperService>(cancellationToken);
+            HttpClient httpClient = await serviceManager.GetWithAwaitAsync<HttpClient>(cancellationToken);
+
+            FileStore result = fileStoreMap.GetOrAdd(hostAddress, x => new FileStore(bootstrapperService, httpClient, x));
+            return result;
         }
     }
 }
