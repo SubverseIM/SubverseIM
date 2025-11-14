@@ -1,7 +1,6 @@
 ﻿using MonoTorrent;
 using OpenGraphNet;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using System;
@@ -39,21 +38,6 @@ namespace SubverseIM.ViewModels.Components
 
         private async Task<Image?> GetImageAsync()
         {
-            using Stream? stream = await GetStreamAsync();
-            if (stream is null) return null;
-
-            try
-            {
-                return await Image.LoadAsync<Bgra32>(stream);
-            }
-            catch 
-            {
-                return null;
-            }
-        }
-
-        private async Task<Stream?> GetStreamAsync()
-        {
             if (MagnetLink.TryParse(AbsoluteUri.OriginalString, out MagnetLink? magnetLink))
             {
                 ITorrentService torrentService = await serviceManager.GetWithAwaitAsync<ITorrentService>();
@@ -78,7 +62,8 @@ namespace SubverseIM.ViewModels.Components
                     magnetLink.Name ?? throw new InvalidOperationException("No display name was provided for this file!")
                     );
 
-                return File.OpenRead(cacheFilePath);
+                IEmbedService embedService = await serviceManager.GetWithAwaitAsync<IEmbedService>();
+                return await embedService.GetCacheImageAsync(new FileInfo(cacheFilePath));
             }
             else
             {
@@ -94,13 +79,13 @@ namespace SubverseIM.ViewModels.Components
                         contentType = headResponse.Content.Headers.ContentType?.MediaType;
                     }
                 }
-                catch (HttpRequestException) 
+                catch (HttpRequestException)
                 {
                     contentType = null;
                 }
 
                 Uri? imageUri;
-                switch (contentType?.ToLowerInvariant()) 
+                switch (contentType?.ToLowerInvariant())
                 {
                     case "text/html":
                         OpenGraph og = await OpenGraph.ParseUrlAsync(AbsoluteUri);
@@ -125,7 +110,8 @@ namespace SubverseIM.ViewModels.Components
                 }
                 else
                 {
-                    return await http.GetStreamAsync(imageUri);
+                    IEmbedService embedService = await serviceManager.GetWithAwaitAsync<IEmbedService>();
+                    return await embedService.GetCacheImageAsync(imageUri);
                 }
             }
         }

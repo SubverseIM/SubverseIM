@@ -564,6 +564,10 @@ namespace SubverseIM.Services.Implementation
 
             serviceManager.GetOrRegister(httpClient);
 
+            // Embed service init
+
+            serviceManager.GetOrRegister<IEmbedService>(new EmbedService(serviceManager));
+
             // Message service init
 
             SubversePeerId thisPeer = new(myKeys.PublicKey.GetFingerprint());
