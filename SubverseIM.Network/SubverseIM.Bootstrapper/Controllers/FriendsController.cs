@@ -67,7 +67,7 @@ namespace SubverseIM.Bootstrapper.Controllers
                 .Where(x => x.Address is not null)
                 .Select(x => x.Address!)];
 
-            foreach (Uri announceEndPoint in announce.Select(x => new Uri(x, "/announce")))
+            foreach (Uri announceEndPoint in announce.Select(x => new Uri(x, "/friends/announce")))
             {
                 try
                 {
@@ -79,8 +79,51 @@ namespace SubverseIM.Bootstrapper.Controllers
             return Ok();
         }
 
+        [HttpGet("synchronize")]
+        [HostFilteringActionFilter(["localhost"])]
+        public async Task<IActionResult> ExecuteSynchronize(CancellationToken cancellationToken)
+        {
+            int? maxListCount = _configuration.GetValue<int?>("Friends:MaxListCount");
+
+            double? expireTimeMinutes = _configuration.GetValue<double?>("Friends:ExpireTimeMinutes");
+            TimeSpan? expireTime = expireTimeMinutes.HasValue ?
+                TimeSpan.FromMinutes(expireTimeMinutes.Value) :
+                null;
+
+            IEnumerable<Uri> announce = [.. _configuration
+                .GetValue<string[]>("Friends:Synchronize")?
+                .Select(x => new Uri(x)) ?? [], .. _dbService
+                .GetRecentFriends(maxListCount, expireTime)
+                .Where(x => x.Address is not null)
+                .Select(x => x.Address!)];
+
+            List<FriendDetails> fetchedList = new();
+            foreach (Uri fetchEndPoint in announce.Select(x => new Uri(x, "/friends")))
+            {
+                try
+                {
+                    fetchedList.AddRange(await _httpClient.GetFromJsonAsync
+                        <FriendDetails[]>(fetchEndPoint, cancellationToken) ?? 
+                        []);
+                }
+                catch (HttpRequestException) { }
+            }
+
+            foreach (FriendDetails friendDetails in fetchedList.DistinctBy(x => x.Address))
+            {
+                _dbService.InsertFriend(new SubverseFriend
+                {
+                    Address = friendDetails.Address,
+                    LastSeenOn = friendDetails.LastSeenOn
+                });
+            }
+
+            return Ok();
+        }
+
+
         [HttpGet]
-        public IActionResult GetFriends() 
+        public IActionResult GetFriendsList() 
         {
             int? maxListCount = _configuration.GetValue<int?>("Friends:MaxListCount");
 
