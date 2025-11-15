@@ -60,7 +60,15 @@ namespace SubverseIM.iOS
                 mutableContent.Subtitle = displayName ?? "Anonymous";
                 using (PGP pgp = new(myKeyContainer))
                 {
-                    mutableContent.Body = pgp.Decrypt((NSString)request.Content.UserInfo[EXTRA_CONTENT_ID]);
+                    string messageContent = pgp.Decrypt((NSString)request.Content.UserInfo[EXTRA_CONTENT_ID]);
+                    if (Uri.IsWellFormedUriString(messageContent, UriKind.Absolute))
+                    {
+                        mutableContent.Body = "[embed]";
+                    }
+                    else
+                    {
+                        mutableContent.Body = messageContent;
+                    }
                 }
             }
             catch (Exception ex)
