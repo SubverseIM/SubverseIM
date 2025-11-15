@@ -68,6 +68,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CFS.Avalonia.Controls", "CF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CFS.Avalonia.Controls", "external\CFS.Avalonia.Controls\CFS.Avalonia.Controls\CFS.Avalonia.Controls.csproj", "{99637F6B-0F3D-40B5-47DB-C3D98E389950}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apns.Test", "external\apns-dotnet\Apns.Test\Apns.Test.csproj", "{50BC75C5-B46F-30F4-E89A-63EBD525DDF4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -176,6 +178,10 @@ Global
 		{99637F6B-0F3D-40B5-47DB-C3D98E389950}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99637F6B-0F3D-40B5-47DB-C3D98E389950}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99637F6B-0F3D-40B5-47DB-C3D98E389950}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50BC75C5-B46F-30F4-E89A-63EBD525DDF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50BC75C5-B46F-30F4-E89A-63EBD525DDF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50BC75C5-B46F-30F4-E89A-63EBD525DDF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50BC75C5-B46F-30F4-E89A-63EBD525DDF4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -208,6 +214,7 @@ Global
 		{C762A261-32D0-40B7-A49F-FE492EA35949} = {A5AA121D-422D-4838-812B-56F1544A9DFD}
 		{3B1679A1-71D3-4611-AA9F-FBF4DD5BA4C5} = {A5AA121D-422D-4838-812B-56F1544A9DFD}
 		{99637F6B-0F3D-40B5-47DB-C3D98E389950} = {3B1679A1-71D3-4611-AA9F-FBF4DD5BA4C5}
+		{50BC75C5-B46F-30F4-E89A-63EBD525DDF4} = {C9482CFD-04EC-4538-B686-B954175EEFE2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ED9AFDBC-58C4-4923-950B-DC7E362C8C9C}
