@@ -36,7 +36,10 @@ namespace SubverseIM.Services.Implementation
                 try
                 {
                     using Stream imageFileStream = imageFileInfo.OpenRead();
-                    Image image = await Image.LoadAsync<Bgra32>(imageFileStream, cancellationToken);
+                    Image image = await Image.LoadAsync<Bgra32>(new DecoderOptions
+                    {
+                        Configuration = new Configuration(new SurgeConfigurationModule())
+                    }, imageFileStream, cancellationToken);
                     imageTcs.SetResult(image);
                 }
                 catch (OperationCanceledException)
