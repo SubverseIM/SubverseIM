@@ -1,4 +1,6 @@
-﻿using SixLabors.ImageSharp;
+﻿using CFS.Surge.ImageSharp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Concurrent;
@@ -64,7 +66,10 @@ namespace SubverseIM.Services.Implementation
                 {
                     HttpClient httpClient = await serviceManager.GetWithAwaitAsync<HttpClient>();
                     using Stream imageUriStream = await httpClient.GetStreamAsync(imageUri, cancellationToken);
-                    Image image = await Image.LoadAsync<Bgra32>(imageUriStream, cancellationToken);
+                    Image image = await Image.LoadAsync<Bgra32>(new DecoderOptions
+                    {
+                        Configuration = new Configuration(new SurgeConfigurationModule())
+                    }, imageUriStream, cancellationToken);
                     imageTcs.SetResult(image);
                 }
                 catch (OperationCanceledException)

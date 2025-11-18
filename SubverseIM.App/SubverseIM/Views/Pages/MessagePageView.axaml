@@ -310,7 +310,7 @@
 										<ItemsControl.ItemTemplate>
 											<DataTemplate>
 												<StackPanel Orientation="Vertical">
-													<controls:Image Source="{Binding FetchedImageAsync^, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
+													<controls:Image Source="{Binding FetchedImage, DataType={x:Type vmx:EmbedViewModel}}" Width="256" />
 													<HyperlinkButton Padding="0" IsEnabled="True" HorizontalAlignment="{Binding $parent[DockPanel].DataContext.ContentAlignmentAsync^}"	NavigateUri="{Binding AbsoluteUri, DataType={x:Type vmx:EmbedViewModel}}">
 														<Classes.offscreen>
 															<MultiBinding Converter="{x:Static BoolConverters.Or}">

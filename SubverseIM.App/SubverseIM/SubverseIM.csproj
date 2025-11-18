@@ -30,6 +30,8 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\external\CFS.Avalonia.Controls\CFS.Avalonia.Controls\CFS.Avalonia.Controls.csproj" />
+	  <ProjectReference Include="..\..\external\CFS.Surge\CFS.Surge.Core\CFS.Surge.Core.csproj" />
+	  <ProjectReference Include="..\..\external\CFS.Surge\CFS.Surge.ImageSharp\CFS.Surge.ImageSharp.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Factories\MonoTorrent.Factories.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Connections\MonoTorrent.Connections.csproj" />

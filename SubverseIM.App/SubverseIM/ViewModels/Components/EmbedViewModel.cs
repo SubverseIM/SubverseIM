@@ -1,6 +1,10 @@
-﻿using MonoTorrent;
+﻿using Avalonia.Threading;
+using CFS.Surge.Core;
+using MonoTorrent;
 using OpenGraphNet;
+using ReactiveUI;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using System;
@@ -26,17 +30,23 @@ namespace SubverseIM.ViewModels.Components
             _ => null
         } ?? AbsoluteUri.ToString();
 
-        public Task<Image?> FetchedImageAsync { get; }
+
+        private Image? fetchedImage;
+        public Image? FetchedImage
+        {
+            get => fetchedImage;
+            private set => this.RaiseAndSetIfChanged(ref fetchedImage, value);
+        }
 
         public EmbedViewModel(IServiceManager serviceManager, string uriString)
         {
             this.serviceManager = serviceManager;
             AbsoluteUri = new Uri(uriString);
 
-            FetchedImageAsync = GetImageAsync();
+            _ = Task.Run(LoadImageAsync);
         }
 
-        private async Task<Image?> GetImageAsync()
+        private async Task LoadImageAsync()
         {
             if (MagnetLink.TryParse(AbsoluteUri.OriginalString, out MagnetLink? magnetLink))
             {
@@ -44,7 +54,7 @@ namespace SubverseIM.ViewModels.Components
                 Progress<TorrentStatus>? progress = await torrentService.StartAsync(
                     new SubverseTorrent(magnetLink.InfoHashes.V1OrV2, AbsoluteUri.OriginalString)
                     );
-                if (progress is null) return null;
+                if (progress is null) return;
 
                 TaskCompletionSource tcs = new();
                 progress.ProgressChanged += (s, ev) =>
@@ -63,7 +73,10 @@ namespace SubverseIM.ViewModels.Components
                     );
 
                 IEmbedService embedService = await serviceManager.GetWithAwaitAsync<IEmbedService>();
-                return await embedService.GetCacheImageAsync(new FileInfo(cacheFilePath));
+                Image? fetchedImage = await embedService.GetCacheImageAsync(new FileInfo(cacheFilePath));
+                await Dispatcher.UIThread.InvokeAsync(
+                    () => FetchedImage = fetchedImage
+                    );
             }
             else
             {
@@ -85,11 +98,13 @@ namespace SubverseIM.ViewModels.Components
                 }
 
                 Uri? imageUri;
+                bool isProgressive;
                 switch (contentType?.ToLowerInvariant())
                 {
                     case "text/html":
                         OpenGraph og = await OpenGraph.ParseUrlAsync(AbsoluteUri);
                         imageUri = og.Image is null ? null : new Uri(AbsoluteUri.GetLeftPart(UriPartial.Authority) + og.Image.AbsolutePath);
+                        isProgressive = false;
                         break;
 
                     case "image/png":
@@ -97,21 +112,51 @@ namespace SubverseIM.ViewModels.Components
                     case "image/webp":
                     case "image/gif":
                         imageUri = AbsoluteUri;
+                        isProgressive = false;
+                        break;
+
+                    case "application/x-cfs-surge":
+                        imageUri = AbsoluteUri;
+                        isProgressive = true;
                         break;
 
                     default:
                         imageUri = null;
+                        isProgressive = false;
                         break;
                 }
 
                 if (imageUri is null)
                 {
-                    return null;
+                    return;
+                }
+                else if (isProgressive)
+                {
+                    HttpClient httpClient = await serviceManager.GetWithAwaitAsync<HttpClient>();
+                    using Stream imageUriStream = await httpClient.GetStreamAsync(imageUri);
+                    if (SurgeStreamDecoder.TryCreateDecoder(imageUriStream, null, true,
+                        out SurgeStreamDecoder? imageUriDecoder))
+                    {
+                        using (imageUriDecoder)
+                        {
+                            await foreach (Image<Bgra32> fetchedImage in imageUriDecoder.DecodeAsync<Bgra32>())
+                            {
+                                Image? previouslyFetchedImage = FetchedImage;
+                                await Dispatcher.UIThread.InvokeAsync(
+                                    () => FetchedImage = fetchedImage
+                                    );
+                                previouslyFetchedImage?.Dispose();
+                            }
+                        }
+                    }
                 }
                 else
                 {
                     IEmbedService embedService = await serviceManager.GetWithAwaitAsync<IEmbedService>();
-                    return await embedService.GetCacheImageAsync(imageUri);
+                    Image fetchedImage = await embedService.GetCacheImageAsync(imageUri);
+                    await Dispatcher.UIThread.InvokeAsync(
+                        () => FetchedImage = fetchedImage
+                        );
                 }
             }
         }
