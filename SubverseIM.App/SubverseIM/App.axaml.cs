@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using CFS.Surge.ImageSharp;
 using SubverseIM.Services;
 using SubverseIM.ViewModels;
 using SubverseIM.Views;
@@ -20,6 +21,7 @@ public partial class App : Application
 
     public override void Initialize()
     {
+        SurgePlugin.Initialize();
         AvaloniaXamlLoader.Load(this);
     }
 
