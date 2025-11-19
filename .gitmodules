@@ -13,3 +13,6 @@
 [submodule "external/CFS.Avalonia.Controls"]
 	path = external/CFS.Avalonia.Controls
 	url = https://github.com/SubverseIM/CFS.Avalonia.Controls.git
+[submodule "external/CFS.Surge"]
+	path = external/CFS.Surge
+	url = https://github.com/SubverseIM/CFS.Surge.git
