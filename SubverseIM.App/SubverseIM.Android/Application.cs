@@ -2,7 +2,7 @@
 using Android.Runtime;
 using Avalonia;
 using Avalonia.Android;
-using Avalonia.ReactiveUI;
+using ReactiveUI.Avalonia;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 
