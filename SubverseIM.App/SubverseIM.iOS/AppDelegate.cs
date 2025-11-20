@@ -2,10 +2,10 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.iOS;
-using Avalonia.ReactiveUI;
 using BackgroundTasks;
 using CoreGraphics;
 using Foundation;
+using ReactiveUI.Avalonia;
 using SubverseIM.Models;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
