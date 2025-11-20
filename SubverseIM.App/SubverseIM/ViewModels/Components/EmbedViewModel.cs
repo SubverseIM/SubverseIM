@@ -74,9 +74,12 @@ namespace SubverseIM.ViewModels.Components
 
                 IEmbedService embedService = await serviceManager.GetWithAwaitAsync<IEmbedService>();
                 Image? fetchedImage = await embedService.GetCacheImageAsync(new FileInfo(cacheFilePath));
-                await Dispatcher.UIThread.InvokeAsync(
-                    () => FetchedImage = fetchedImage
-                    );
+                await Dispatcher.UIThread.InvokeAsync(() => 
+                {
+                    Image? previouslyFetchedImage = FetchedImage;
+                    FetchedImage = fetchedImage; 
+                    previouslyFetchedImage?.Dispose();
+                });
             }
             else
             {
