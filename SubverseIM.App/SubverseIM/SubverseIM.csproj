@@ -14,7 +14,6 @@
 		<PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
-		<PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="$(AvaloniaVersion)" />
 		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
 		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
@@ -25,6 +24,7 @@
 		<PackageReference Include="OpenGraph-Net" Version="4.0.1" />
 		<PackageReference Include="PgpCore" Version="6.5.3" />
 		<PackageReference Include="Plugin.InAppBilling" Version="9.1.0" />
+		<PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8" />
 		<PackageReference Include="SIPSorcery" Version="8.0.23" />
 	</ItemGroup>
 
