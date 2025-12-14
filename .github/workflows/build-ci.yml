@@ -70,8 +70,8 @@ jobs:
           dotnet-version: 10.0.x
       - name: Restore workloads
         run: |
-          cd external/Avalonia && dotnet workload restore dirs.proj && cd ../..
-          dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
+          cd external/Avalonia && dotnet workload restore dirs.proj
+          cd ../.. && dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
       - name: Build Avalonia (local)
         run: cd external/Avalonia && ./build.sh BuildToNuGetCache
       - name: Test SubverseIM.App
