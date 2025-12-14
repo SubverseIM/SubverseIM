@@ -9,5 +9,6 @@ namespace SubverseIM.Headless;
 public class HeadlessAppBuilder
 {
     public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
-        .UseHeadless(new AvaloniaHeadlessPlatformOptions());
+        .UseHeadless(new AvaloniaHeadlessPlatformOptions())
+        .UseHarfBuzz();
 }
