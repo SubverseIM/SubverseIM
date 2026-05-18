@@ -107,7 +107,7 @@ public partial class MessagePageView : UserControl
             textBox.IsEnabled = false;
 
             string? messageText = await launcherService.ShowInputDialogAsync(
-                textBox.Watermark ?? "Enter Input Text", textBox.Text
+                textBox.PlaceholderText ?? "Enter Input Text", textBox.Text
                 );
             textBox.Text = messageText;
 

@@ -166,7 +166,7 @@
 				<TextBox x:Name="messageBox"
 						 HorizontalAlignment="Stretch"
 						 VerticalAlignment="Stretch"
-						 Watermark="Write a message..."
+						 PlaceholderText="Write a message..."
 						 Text="{Binding SendMessageText}"
 						 AcceptsReturn="{Binding !IsAccessibilityEnabledAsync^}"
 						 AutomationProperties.Name="Message edit box"
