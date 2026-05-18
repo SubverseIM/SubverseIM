@@ -72,7 +72,7 @@ jobs:
         run: |
           cd external/Avalonia && dotnet workload restore dirs.proj
           cd ../.. && dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
-      - name: Build Avalonia (local, debug)
+      - name: Build Avalonia (local)
         run: cd external/Avalonia && ./build.sh BuildToNuGetCache --configuration Release
       - name: Build & publish SubverseIM.Android
         run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1
