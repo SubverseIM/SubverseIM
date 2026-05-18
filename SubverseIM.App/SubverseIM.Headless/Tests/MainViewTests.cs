@@ -10,13 +10,13 @@ using System.Security.Cryptography;
 
 namespace SubverseIM.Headless.Tests;
 
-public class MainViewTests : IClassFixture<MainViewFixture>
+public class MainViewTests
 {
     private readonly MainViewFixture fixture;
 
-    public MainViewTests(MainViewFixture fixture)
+    public MainViewTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()

@@ -9,13 +9,13 @@ using SubverseIM.Views.Pages;
 
 namespace SubverseIM.Headless.Tests.Pages;
 
-public class CreateContactPageViewTests : IClassFixture<MainViewFixture>
+public class CreateContactPageViewTests
 {
     private readonly MainViewFixture fixture;
 
-    public CreateContactPageViewTests(MainViewFixture fixture)
+    public CreateContactPageViewTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()

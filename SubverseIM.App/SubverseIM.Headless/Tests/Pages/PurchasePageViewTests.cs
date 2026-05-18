@@ -8,13 +8,13 @@ using SubverseIM.Views.Pages;
 
 namespace SubverseIM.Headless.Tests.Pages;
 
-public class PurchasePageViewTests : IClassFixture<MainViewFixture>
+public class PurchasePageViewTests
 {
     private readonly MainViewFixture fixture;
 
-    public PurchasePageViewTests(MainViewFixture fixture)
+    public PurchasePageViewTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()

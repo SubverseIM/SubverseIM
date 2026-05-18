@@ -12,13 +12,13 @@ using System.Security.Cryptography;
 
 namespace SubverseIM.Headless.Tests.Components;
 
-public class ContactViewModelTests : IClassFixture<MainViewFixture>
+public class ContactViewModelTests
 {
     private readonly MainViewFixture fixture;
 
-    public ContactViewModelTests(MainViewFixture fixture)
+    public ContactViewModelTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()

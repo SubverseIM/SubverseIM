@@ -9,13 +9,13 @@ using SubverseIM.Views.Pages;
 
 namespace SubverseIM.Headless.Tests.Pages;
 
-public class ContactPageViewTests : IClassFixture<MainViewFixture>
+public class ContactPageViewTests
 {
     private readonly MainViewFixture fixture;
 
-    public ContactPageViewTests(MainViewFixture fixture)
+    public ContactPageViewTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()
@@ -67,6 +67,8 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldSetParentIfNotNull()
     {
+        await fixture.InitializeAsync();
+
         MessagePageViewModel messagePageViewModel = new(await fixture.GetServiceManagerAsync(), []);
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView(messagePageViewModel);
@@ -220,7 +222,9 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldAddParticipantsWithParent()
     {
+        await fixture.InitializeAsync();
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
+
         MessagePageViewModel messagePageViewModel = new(serviceManager, []);
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView(messagePageViewModel);
@@ -261,7 +265,9 @@ public class ContactPageViewTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldNavigateToPreviousViewWithParent()
     {
+        await fixture.InitializeAsync();
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
+
         MessagePageViewModel messagePageViewModel = new(serviceManager, []);
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView(messagePageViewModel);

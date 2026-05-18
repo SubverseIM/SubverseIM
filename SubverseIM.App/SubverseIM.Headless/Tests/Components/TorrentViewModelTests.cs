@@ -13,13 +13,13 @@ using SubverseIM.Views.Pages;
 
 namespace SubverseIM.Headless.Tests.Components;
 
-public class TorrentViewModelTests : IClassFixture<MainViewFixture>
+public class TorrentViewModelTests
 {
     private readonly MainViewFixture fixture;
 
-    public TorrentViewModelTests(MainViewFixture fixture)
+    public TorrentViewModelTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()
