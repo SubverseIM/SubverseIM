@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Platform;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using SubverseIM.Services;
 using SubverseIM.ViewModels.Pages;
@@ -17,7 +18,7 @@ public partial class CreateContactPageView : UserControl
         noteEditBox.GotFocus += TextBoxGotFocus;
     }
 
-    private async void TextBoxGotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
+    private async void TextBoxGotFocus(object? sender, FocusChangedEventArgs e)
     {
         ILauncherService launcherService = await (DataContext as CreateContactPageViewModel)!
             .ServiceManager.GetWithAwaitAsync<ILauncherService>();
@@ -27,7 +28,7 @@ public partial class CreateContactPageView : UserControl
             textBox.IsEnabled = false;
 
             string? messageText = await launcherService.ShowInputDialogAsync(
-                textBox.Watermark ?? "Enter Input Text", textBox.Text
+                textBox.PlaceholderText ?? "Enter Input Text", textBox.Text
                 );
             textBox.Text = messageText;
 
