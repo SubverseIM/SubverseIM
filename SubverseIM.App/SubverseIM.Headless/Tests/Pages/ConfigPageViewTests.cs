@@ -9,18 +9,18 @@ using System.Diagnostics;
 
 namespace SubverseIM.Headless.Tests.Pages;
 
-public class ConfigPageViewTests : IClassFixture<MainViewFixture>
+public class ConfigPageViewTests
 {
     private readonly MainViewFixture fixture;
 
-    public ConfigPageViewTests(MainViewFixture fixture)
+    public ConfigPageViewTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        await fixture.InitializeOnceAsync();
+        await fixture.InitializeAsync();
 
         MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;

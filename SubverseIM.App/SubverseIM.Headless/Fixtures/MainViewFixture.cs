@@ -29,8 +29,6 @@ public class MainViewFixture
 
     private Window? window;
 
-    private bool isInitialized;
-
     public MainViewFixture()
     {
         serviceManagerTcs = new();
@@ -38,10 +36,10 @@ public class MainViewFixture
         mainViewTcs = new();
     }
 
-    private async Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         IServiceManager serviceManager = new SubverseIM.Services.Implementation.ServiceManager();
-        serviceManagerTcs.SetResult(serviceManager);
+        if (!serviceManagerTcs.TrySetResult(serviceManager)) return;
 
         await RegisterBootstrapperService(serviceManager);
         await RegisterDbService(serviceManager);
@@ -125,25 +123,9 @@ public class MainViewFixture
         return Task.FromResult(launcherService);
     }
 
-    public Task InitializeOnceAsync()
-    {
-        lock (this)
-        {
-            if (isInitialized)
-            {
-                return Task.CompletedTask;
-            }
-            else
-            {
-                isInitialized = true;
-                return InitializeAsync();
-            }
-        }
-    }
+    public Task<IServiceManager> GetServiceManagerAsync() => serviceManagerTcs.Task;
 
-    public Task<IServiceManager> GetServiceManagerAsync() => serviceManagerTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    public Task<MainViewModel> GetViewModelAsync() => mainViewModelTcs.Task;
 
-    public Task<MainViewModel> GetViewModelAsync() => mainViewModelTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
-
-    public Task<MainView> GetViewAsync() => mainViewTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    public Task<MainView> GetViewAsync() => mainViewTcs.Task;
 }

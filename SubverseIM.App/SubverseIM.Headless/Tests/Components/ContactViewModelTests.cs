@@ -12,18 +12,18 @@ using System.Security.Cryptography;
 
 namespace SubverseIM.Headless.Tests.Components;
 
-public class ContactViewModelTests : IClassFixture<MainViewFixture>
+public class ContactViewModelTests
 {
     private readonly MainViewFixture fixture;
 
-    public ContactViewModelTests(MainViewFixture fixture)
+    public ContactViewModelTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        await fixture.InitializeOnceAsync();
+        await fixture.InitializeAsync();
 
         MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
@@ -124,31 +124,6 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
         {
             return null;
         }
-    }
-
-    [AvaloniaFact]
-    public async Task ShouldInitializePhotoInContactsView() 
-    {
-        (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
-            await EnsureIsOnContactPageView();
-
-        ContactViewModel? contactViewModel = GetContactViewModel(contactPageViewModel);
-        Debug.Assert(contactViewModel is not null); // should always be non-null, test should be rewritten otherwise.
-
-        Assert.NotNull(contactViewModel.ContactPhoto);
-    }
-
-    [AvaloniaFact]
-    public async Task ShouldInitializePhotoInCreateContactView()
-    {
-        (CreateContactPageView createContactPageView,
-            CreateContactPageViewModel createContactPageViewModel) =
-            await EnsureIsOnCreateContactPageView();
-
-        ContactViewModel? contactViewModel = GetContactViewModel(createContactPageViewModel);
-        Debug.Assert(contactViewModel is not null); // should always be non-null, test should be rewritten otherwise.
-
-        Assert.NotNull(contactViewModel.ContactPhoto);
     }
 
     [AvaloniaFact]

@@ -28,11 +28,11 @@
 				Bubble Color
 			</Label>
 			<TextBox x:Name="noteEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom"
-					 Watermark="Write contact note..." Text="{Binding Contact.UserNote}"
+					 PlaceholderText="Write contact note..." Text="{Binding Contact.UserNote}"
 					 AutomationProperties.LabeledBy="{Binding #noteEditLabel}" />
 			<Label x:Name="noteEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Notes</Label>
 			<TextBox x:Name="nameEditBox" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom"
-					 Watermark="Write contact name..." Text="{Binding Contact.DisplayName}"
+					 PlaceholderText="Write contact name..." Text="{Binding Contact.DisplayName}"
 					 AutomationProperties.LabeledBy="{Binding #nameEditLabel}"
 					 IsEnabled="{Binding Contact.TopicName, Converter={x:Static ObjectConverters.IsNull}}"/>
 			<Label x:Name="nameEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Contact Name</Label>

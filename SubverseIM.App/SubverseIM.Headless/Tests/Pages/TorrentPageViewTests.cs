@@ -8,18 +8,18 @@ using SubverseIM.Views.Pages;
 
 namespace SubverseIM.Headless.Tests.Pages;
 
-public class TorrentPageViewTests : IClassFixture<MainViewFixture>
+public class TorrentPageViewTests
 {
     private readonly MainViewFixture fixture;
 
-    public TorrentPageViewTests(MainViewFixture fixture)
+    public TorrentPageViewTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        await fixture.InitializeOnceAsync();
+        await fixture.InitializeAsync();
 
         MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;

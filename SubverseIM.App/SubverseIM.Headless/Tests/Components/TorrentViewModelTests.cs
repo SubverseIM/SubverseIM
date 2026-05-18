@@ -13,18 +13,18 @@ using SubverseIM.Views.Pages;
 
 namespace SubverseIM.Headless.Tests.Components;
 
-public class TorrentViewModelTests : IClassFixture<MainViewFixture>
+public class TorrentViewModelTests
 {
     private readonly MainViewFixture fixture;
 
-    public TorrentViewModelTests(MainViewFixture fixture)
+    public TorrentViewModelTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        await fixture.InitializeOnceAsync();
+        await fixture.InitializeAsync();
 
         MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
@@ -83,7 +83,7 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldRemoveTorrentFromViewOnDelete()
     {
-        await fixture.InitializeOnceAsync();
+        await fixture.InitializeAsync();
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
@@ -108,7 +108,7 @@ public class TorrentViewModelTests : IClassFixture<MainViewFixture>
     [AvaloniaFact]
     public async Task ShouldRemoveTorrentFromDatabaseOnDelete()
     {
-        await fixture.InitializeOnceAsync();
+        await fixture.InitializeAsync();
         
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();

@@ -11,18 +11,18 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace SubverseIM.Headless.Tests.Pages;
-public class MessagePageViewTests : IClassFixture<MainViewFixture>
+public class MessagePageViewTests
 {
     private readonly MainViewFixture fixture;
 
-    public MessagePageViewTests(MainViewFixture fixture)
+    public MessagePageViewTests()
     {
-        this.fixture = fixture;
+        fixture = new MainViewFixture();
     }
 
     private async Task<MainView> EnsureMainViewLoaded()
     {
-        await fixture.InitializeOnceAsync();
+        await fixture.InitializeAsync();
 
         MainView mainView = await fixture.GetViewAsync();
         await mainView.LoadTask;
