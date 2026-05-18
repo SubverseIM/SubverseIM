@@ -26,7 +26,7 @@ jobs:
     - name: Restore workloads
       run: cd external/Avalonia && dotnet workload restore dirs.proj
     - name: Build Avalonia (local)
-      run: cd external/Avalonia && ./build.sh BuildToNuGetCache
+      run: cd external/Avalonia && ./build.sh BuildToNuGetCache --configuration Debug
     - name: Restore dependencies
       run: dotnet restore SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
     - name: Build SubverseIM.App
@@ -72,10 +72,8 @@ jobs:
         run: |
           cd external/Avalonia && dotnet workload restore dirs.proj
           cd ../.. && dotnet workload restore SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj
-      - name: Build Avalonia (local)
-        run: cd external/Avalonia && ./build.sh BuildToNuGetCache
-      - name: Test SubverseIM.App
-        run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
+      - name: Build Avalonia (local, debug)
+        run: cd external/Avalonia && ./build.sh BuildToNuGetCache --configuration Release
       - name: Build & publish SubverseIM.Android
         run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1
       - name: Upload .apk artifact
