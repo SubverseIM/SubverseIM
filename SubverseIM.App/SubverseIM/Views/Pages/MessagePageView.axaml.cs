@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using SubverseIM.Models;
@@ -97,7 +98,7 @@ public partial class MessagePageView : UserControl
         }
     }
 
-    private async void TextBoxGotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
+    private async void TextBoxGotFocus(object? sender, FocusChangedEventArgs e)
     {
         IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
         ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();

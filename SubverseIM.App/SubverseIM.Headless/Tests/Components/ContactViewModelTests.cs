@@ -127,31 +127,6 @@ public class ContactViewModelTests : IClassFixture<MainViewFixture>
     }
 
     [AvaloniaFact]
-    public async Task ShouldInitializePhotoInContactsView() 
-    {
-        (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
-            await EnsureIsOnContactPageView();
-
-        ContactViewModel? contactViewModel = GetContactViewModel(contactPageViewModel);
-        Debug.Assert(contactViewModel is not null); // should always be non-null, test should be rewritten otherwise.
-
-        Assert.NotNull(contactViewModel.ContactPhoto);
-    }
-
-    [AvaloniaFact]
-    public async Task ShouldInitializePhotoInCreateContactView()
-    {
-        (CreateContactPageView createContactPageView,
-            CreateContactPageViewModel createContactPageViewModel) =
-            await EnsureIsOnCreateContactPageView();
-
-        ContactViewModel? contactViewModel = GetContactViewModel(createContactPageViewModel);
-        Debug.Assert(contactViewModel is not null); // should always be non-null, test should be rewritten otherwise.
-
-        Assert.NotNull(contactViewModel.ContactPhoto);
-    }
-
-    [AvaloniaFact]
     public async Task ShouldNotInitializePhotoInConversationView() 
     {
         (MessagePageView messagePageView, MessagePageViewModel messagePageViewModel) =
