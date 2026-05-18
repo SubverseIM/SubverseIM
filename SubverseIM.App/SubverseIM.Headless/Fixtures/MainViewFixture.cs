@@ -141,9 +141,9 @@ public class MainViewFixture
         }
     }
 
-    public Task<IServiceManager> GetServiceManagerAsync() => serviceManagerTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    public Task<IServiceManager> GetServiceManagerAsync() => serviceManagerTcs.Task;
 
-    public Task<MainViewModel> GetViewModelAsync() => mainViewModelTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    public Task<MainViewModel> GetViewModelAsync() => mainViewModelTcs.Task;
 
-    public Task<MainView> GetViewAsync() => mainViewTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    public Task<MainView> GetViewAsync() => mainViewTcs.Task;
 }
