@@ -1,0 +1,51 @@
+<Solution>
+  <Folder Name="/external/" />
+  <Folder Name="/external/apns-dotnet/">
+    <Project Path="external/apns-dotnet/Apns.Test/Apns.Test.csproj" />
+    <Project Path="external/apns-dotnet/Apns/Apns.csproj" />
+  </Folder>
+  <Folder Name="/external/CFS.Avalonia.Controls/">
+    <Project Path="external/CFS.Avalonia.Controls/CFS.Avalonia.Controls/CFS.Avalonia.Controls.csproj" />
+  </Folder>
+  <Folder Name="/external/CFS.Surge/">
+    <Project Path="external/CFS.Surge/CFS.Surge.Core/CFS.Surge.Core.csproj" />
+    <Project Path="external/CFS.Surge/CFS.Surge.ImageSharp/CFS.Surge.ImageSharp.csproj" />
+  </Folder>
+  <Folder Name="/external/CoreRPC/">
+    <Project Path="external/CoreRPC/CoreRPC/CoreRPC.csproj" />
+  </Folder>
+  <Folder Name="/external/monotorrent/">
+    <Project Path="external/monotorrent/src/MonoTorrent.BEncoding/MonoTorrent.BEncoding.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent.Client/MonoTorrent.Client.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent.Connections/MonoTorrent.Connections.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent.Dht/MonoTorrent.Dht.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent.Factories/MonoTorrent.Factories.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent.Messages/MonoTorrent.Messages.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent.PiecePicking/MonoTorrent.PiecePicking.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent.PieceWriter/MonoTorrent.PieceWriter.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent.PortForwarding/MonoTorrent.PortForwarding.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent.Trackers/MonoTorrent.Trackers.csproj" />
+    <Project Path="external/monotorrent/src/MonoTorrent/MonoTorrent.csproj" />
+  </Folder>
+  <Folder Name="/SubverseIM.App/">
+    <File Path="SubverseIM.App/Directory.Build.props" />
+    <Project Path="SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj">
+      <Deploy />
+    </Project>
+    <Project Path="SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj" />
+    <Project Path="SubverseIM.App/SubverseIM.iOS.NotificationServiceExtension/SubverseIM.iOS.NotificationServiceExtension.csproj">
+      <Deploy />
+    </Project>
+    <Project Path="SubverseIM.App/SubverseIM.iOS/SubverseIM.iOS.csproj">
+      <Deploy />
+    </Project>
+    <Project Path="SubverseIM.App/SubverseIM/SubverseIM.csproj" />
+  </Folder>
+  <Folder Name="/SubverseIM.Network/">
+    <Project Path="SubverseIM.Network/SubverseIM.Bootstrapper.BlobClient/SubverseIM.Bootstrapper.BlobClient.csproj" />
+    <Project Path="SubverseIM.Network/SubverseIM.Bootstrapper.Tests/SubverseIM.Bootstrapper.Tests.csproj" />
+    <Project Path="SubverseIM.Network/SubverseIM.Bootstrapper/SubverseIM.Bootstrapper.csproj" />
+    <Project Path="SubverseIM.Network/SubverseIM.Calculator/SubverseIM.Calculator.csproj" />
+  </Folder>
+  <Project Path="SubverseIM.Core/SubverseIM.Core.csproj" />
+</Solution>

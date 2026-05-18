@@ -26,6 +26,8 @@ namespace SubverseIM.ViewModels.Components
 
         private const double HEX_ANGLE = Math.Tau / 6.0;
 
+        private static readonly Bitmap defaultBitmap;
+
         private static readonly Geometry hexagonPath;
 
         private static readonly IList<Point> hexagonPoints;
@@ -45,6 +47,7 @@ namespace SubverseIM.ViewModels.Components
 
         static ContactViewModel()
         {
+            defaultBitmap = Bitmap.DecodeToHeight(AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")), 64);
             hexagonPoints = GenerateHexagon(32);
             hexagonPath = new PolylineGeometry(GenerateHexagon(31), true);
         }
@@ -138,6 +141,8 @@ namespace SubverseIM.ViewModels.Components
 
         public Geometry HexagonPath => hexagonPath;
 
+        public Bitmap DefaultBitmap => defaultBitmap;
+
         public ContactViewModel(IServiceManager serviceManager, IContactContainer? contactContainer, SubverseContact innerContact)
         {
             this.serviceManager = serviceManager;
@@ -155,9 +160,10 @@ namespace SubverseIM.ViewModels.Components
                 contactPhotoStream = await dbService.GetReadStreamAsync(innerContact.ImagePath, cancellationToken);
             }
 
-            ContactPhoto = Bitmap.DecodeToHeight(contactPhotoStream ??
-                AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")),
-                64);
+            if (contactPhotoStream is not null)
+            {
+                ContactPhoto = Bitmap.DecodeToHeight(contactPhotoStream, 64);
+            }
         }
 
         public async Task ChangePhotoCommand()
