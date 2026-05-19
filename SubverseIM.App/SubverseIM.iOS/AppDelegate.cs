@@ -233,9 +233,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         await (UIApplication.SharedApplication.ConnectedScenes.ToArray()
             .SelectMany(x => (x as UIWindowScene)?.Windows ?? [])
             .FirstOrDefault(x => x.IsKeyWindow)
-            ?.RootViewController?
-            .PresentViewControllerAsync(
-                alertController, true) ?? Task.CompletedTask);
+            ?.RootViewController
+            ?.PresentViewControllerAsync(
+                viewControllerToPresent: alertController,
+                animated: true) ?? Task.CompletedTask);
 
         return await tcs.Task;
     }
