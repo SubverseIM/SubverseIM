@@ -230,8 +230,13 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .Create("No", UIAlertActionStyle.Cancel, x => tcs.SetResult(false));
         alertController.AddAction(negativeAction);
 
-        await (Window?.RootViewController?.PresentViewControllerAsync(
-                alertController, true) ?? Task.CompletedTask);
+        await (UIApplication.SharedApplication.ConnectedScenes.ToArray()
+            .SelectMany(x => (x as UIWindowScene)?.Windows ?? [])
+            .FirstOrDefault(x => x.IsKeyWindow)
+            ?.RootViewController
+            ?.PresentViewControllerAsync(
+                viewControllerToPresent: alertController,
+                animated: true) ?? Task.CompletedTask);
 
         return await tcs.Task;
     }
