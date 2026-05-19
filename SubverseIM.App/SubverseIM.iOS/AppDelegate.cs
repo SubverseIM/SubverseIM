@@ -193,8 +193,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             HandleAppActivated(this, new AppRefreshActivatedEventArgs((BGAppRefreshTask)task));
         });
 
-        HandleAppActivated(this, new ActivatedEventArgs(ActivationKind.Background));
-
         return true;
     }
 
