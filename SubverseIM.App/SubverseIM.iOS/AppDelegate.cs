@@ -11,6 +11,7 @@ using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UIKit;
@@ -161,8 +162,6 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
         serviceManager?.Dispose();
         serviceManager = new();
 
-        base.FinishedLaunching(application, launchOptions);
-
         ((IAvaloniaAppDelegate)this).Deactivated += HandleAppDeactivated;
         ((IAvaloniaAppDelegate)this).Activated += HandleAppActivated;
 
@@ -193,7 +192,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             HandleAppActivated(this, new AppRefreshActivatedEventArgs((BGAppRefreshTask)task));
         });
 
-        return true;
+        return base.FinishedLaunching(application, launchOptions);
     }
 
     public void ExitApplication()
@@ -248,7 +247,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .Create("OK", UIAlertActionStyle.Default, x => tcs.SetResult());
         alertController.AddAction(defaultAction);
 
-        await (Window?.RootViewController
+        await (UIApplication.SharedApplication.ConnectedScenes.ToArray()
+            .SelectMany(x => (x as UIWindowScene)?.Windows ?? [])
+            .FirstOrDefault(x => x.IsKeyWindow)
+            ?.RootViewController
             ?.PresentViewControllerAsync(
                 viewControllerToPresent: alertController,
                 animated: true) ?? Task.CompletedTask);
@@ -279,7 +281,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .Create("Cancel", UIAlertActionStyle.Cancel, x => tcs.SetResult(null));
         alertController.AddAction(negativeAction);
 
-        await (Window?.RootViewController
+        await (UIApplication.SharedApplication.ConnectedScenes.ToArray()
+            .SelectMany(x => (x as UIWindowScene)?.Windows ?? [])
+            .FirstOrDefault(x => x.IsKeyWindow)
+            ?.RootViewController
             ?.PresentViewControllerAsync(
                 viewControllerToPresent: alertController,
                 animated: true) ?? Task.CompletedTask);
@@ -311,7 +316,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             .Create("Cancel", UIAlertActionStyle.Cancel, x => tcs.SetResult(null));
         alertController.AddAction(negativeAction);
 
-        await (Window?.RootViewController
+        await (UIApplication.SharedApplication.ConnectedScenes.ToArray()
+            .SelectMany(x => (x as UIWindowScene)?.Windows ?? [])
+            .FirstOrDefault(x => x.IsKeyWindow)
+            ?.RootViewController
             ?.PresentViewControllerAsync(
                 viewControllerToPresent: alertController,
                 animated: true) ?? Task.CompletedTask);
@@ -342,7 +350,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             activityViewController.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
         }
 
-        return Window?.RootViewController
+        return UIApplication.SharedApplication.ConnectedScenes.ToArray()
+            .SelectMany(x => (x as UIWindowScene)?.Windows ?? [])
+            .FirstOrDefault(x => x.IsKeyWindow)
+            ?.RootViewController
             ?.PresentViewControllerAsync(
                 viewControllerToPresent:
                 activityViewController,
