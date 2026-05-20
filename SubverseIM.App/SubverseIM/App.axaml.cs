@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using CFS.Surge.ImageSharp;
@@ -34,11 +35,24 @@ public partial class App : Application
                 DataContext = new MainViewModel(serviceManager!)
             };
         }
-        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
+        else if (ApplicationLifetime is IActivityApplicationLifetime singleViewFactory)
         {
-            singleViewPlatform.MainView = new MainView
+            singleViewFactory.MainViewFactory = () => new PageNavigationHost()
             {
-                DataContext = new MainViewModel(serviceManager!)
+                Page = new MainView
+                {
+                    DataContext = new MainViewModel(serviceManager!),
+                },
+            };
+        }
+        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView) 
+        {
+            singleView.MainView = new PageNavigationHost()
+            {
+                Page = new MainView
+                {
+                    DataContext = new MainViewModel(serviceManager!),
+                },
             };
         }
 
