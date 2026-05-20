@@ -1,4 +1,5 @@
 ﻿using Android;
+using Android.AccessibilityServices;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -90,7 +91,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         get
         {
             AccessibilityManager am = (AccessibilityManager)GetSystemService(AccessibilityService)!;
-            return am.IsTouchExplorationEnabled;
+            return am.GetEnabledAccessibilityServiceList(FeedbackFlags.Braille | FeedbackFlags.Spoken)?.Any() ?? false;
         }
     }
 
