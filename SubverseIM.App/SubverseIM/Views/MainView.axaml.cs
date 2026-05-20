@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Views;
 
-public partial class MainView : UserControl
+public partial class MainView : ContentPage
 {
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 
