@@ -36,7 +36,7 @@
 					 AutomationProperties.LabeledBy="{Binding #nameEditLabel}"
 					 IsEnabled="{Binding Contact.TopicName, Converter={x:Static ObjectConverters.IsNull}}"/>
 			<Label x:Name="nameEditLabel" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom">Contact Name</Label>
-			<Image Source="{Binding Contact.ContactPhoto, TargetNullValue={Binding Contact.DefaultBitmap}}"
+			<Image Source="{Binding Contact.ContactPhoto}"
 				   AutomationProperties.Name="Contact photo" MaxHeight="200" />
 		</DockPanel>
 	</ScrollViewer>
