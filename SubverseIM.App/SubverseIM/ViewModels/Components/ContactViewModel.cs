@@ -26,11 +26,11 @@ namespace SubverseIM.ViewModels.Components
 
         private const double HEX_ANGLE = Math.Tau / 6.0;
 
-        private static readonly Bitmap defaultBitmap;
-
         private static readonly Geometry hexagonPath;
 
         private static readonly IList<Point> hexagonPoints;
+
+        private static readonly Bitmap defaultBitmap;
 
         private static IList<Point> GenerateHexagon(double r)
         {
@@ -47,9 +47,11 @@ namespace SubverseIM.ViewModels.Components
 
         static ContactViewModel()
         {
-            defaultBitmap = Bitmap.DecodeToHeight(AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")), 64);
             hexagonPoints = GenerateHexagon(32);
             hexagonPath = new PolylineGeometry(GenerateHexagon(31), true);
+            defaultBitmap = Bitmap.DecodeToHeight(
+                AssetLoader.Open(new Uri("avares://SubverseIM/Assets/logo.png")), 
+                64);
         }
 
         internal readonly IServiceManager serviceManager;
@@ -81,9 +83,9 @@ namespace SubverseIM.ViewModels.Components
         }
 
         private Bitmap? contactPhoto;
-        public Bitmap? ContactPhoto
+        public Bitmap ContactPhoto
         {
-            get => contactPhoto;
+            get => contactPhoto ?? defaultBitmap;
             private set => this.RaiseAndSetIfChanged(ref contactPhoto, value);
         }
 
@@ -141,7 +143,7 @@ namespace SubverseIM.ViewModels.Components
 
         public Geometry HexagonPath => hexagonPath;
 
-        public Bitmap DefaultBitmap => defaultBitmap;
+        public bool HasContactPhoto => contactPhoto is not null;
 
         public ContactViewModel(IServiceManager serviceManager, IContactContainer? contactContainer, SubverseContact innerContact)
         {
@@ -179,7 +181,6 @@ namespace SubverseIM.ViewModels.Components
 
             if (files.Count == 0) return;
 
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             using (Stream imageFileStream = await files.Single().OpenReadAsync())
             {
                 ContactPhoto = Bitmap.DecodeToHeight(imageFileStream, 64);
@@ -189,12 +190,12 @@ namespace SubverseIM.ViewModels.Components
         public async Task SaveChangesCommand()
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            if (ContactPhoto is not null)
+            if (contactPhoto is not null)
             {
                 using Stream dbFileStream = await dbService.CreateWriteStreamAsync(
                     innerContact.ImagePath = $"$/img/{innerContact.OtherPeer}.jpg"
                     );
-                ContactPhoto.Save(dbFileStream);
+                contactPhoto.Save(dbFileStream);
             }
 
             innerContact.ChatColorCode = BubbleColor.ToUInt32();

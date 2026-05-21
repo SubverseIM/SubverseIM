@@ -135,7 +135,7 @@ public class ContactViewModelTests
         ContactViewModel? contactViewModel = GetContactViewModel(messagePageViewModel);
         Debug.Assert(contactViewModel is not null); // should always be non-null, test should be rewritten otherwise.
 
-        Assert.Null(contactViewModel.ContactPhoto);
+        Assert.False(contactViewModel.HasContactPhoto);
     }
 
     [AvaloniaFact]
