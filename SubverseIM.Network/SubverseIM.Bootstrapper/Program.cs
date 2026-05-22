@@ -3,7 +3,6 @@ using Fitomad.Apns;
 using Fitomad.Apns.Entities;
 using Fitomad.Apns.Extensions;
 using SubverseIM.Bootstrapper.Services;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,7 +39,8 @@ if (File.Exists(certFilePath))
 {
     // Get private key from key container if possible
     X509Certificate2 certificateWithKey = 
-        X509CertificateLoader.LoadPkcs12FromFile(certFilePath, certPassword);
+        X509CertificateLoader.LoadPkcs12FromFile(certFilePath, certPassword, X509KeyStorageFlags.MachineKeySet);
+    if (!certificateWithKey.HasPrivateKey) throw new ArgumentException("No private key!");
 
     // Set APNS connection settings
     var settings = new ApnsSettingsBuilder()
