@@ -3,7 +3,6 @@ using Fitomad.Apns;
 using Fitomad.Apns.Entities;
 using Fitomad.Apns.Extensions;
 using SubverseIM.Bootstrapper.Services;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,46 +31,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-string? certFilePath, certPassword, keyFilePath;
+string? certFilePath, certPassword;
 certFilePath = builder.Configuration.GetValue<string>("Apns:CertFilePath");
 certPassword = builder.Configuration.GetValue<string>("Apns:CertPassword");
-keyFilePath = builder.Configuration.GetValue<string>("Apns:KeyFilePath");
 
 if (File.Exists(certFilePath))
 {
     // Get private key from key container if possible
-    X509Certificate2 certificateWithKey;
-    if (builder.Environment.IsProduction() && OperatingSystem.IsWindows())
-    {
-        if (File.Exists(keyFilePath))
-        {
-            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048, new CspParameters
-            {
-                Flags = CspProviderFlags.UseMachineKeyStore,
-                KeyContainerName = "SubverseIM"
-            }))
-            {
-                rsa.FromXmlString(File.ReadAllText(keyFilePath));
-                rsa.PersistKeyInCsp = true;
-            }
-        }
-
-        using (X509Certificate2 certificate = X509CertificateLoader.LoadCertificateFromFile(certFilePath))
-        using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048, new CspParameters
-        {
-            Flags =
-            CspProviderFlags.UseMachineKeyStore |
-            CspProviderFlags.UseExistingKey,
-            KeyContainerName = "SubverseIM"
-        }))
-        {
-            certificateWithKey = certificate.CopyWithPrivateKey(rsa);
-        }
-    }
-    else
-    {
-        certificateWithKey = X509CertificateLoader.LoadPkcs12FromFile(certFilePath, certPassword);
-    }
+    X509Certificate2 certificateWithKey = 
+        X509CertificateLoader.LoadPkcs12FromFile(certFilePath, certPassword, X509KeyStorageFlags.MachineKeySet);
+    if (!certificateWithKey.HasPrivateKey) throw new ArgumentException("No private key!");
 
     // Set APNS connection settings
     var settings = new ApnsSettingsBuilder()
