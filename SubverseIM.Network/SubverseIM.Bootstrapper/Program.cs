@@ -40,7 +40,25 @@ if (File.Exists(certFilePath))
     // Get private key from key container if possible
     X509Certificate2 certificateWithKey = 
         X509CertificateLoader.LoadPkcs12FromFile(certFilePath, certPassword, X509KeyStorageFlags.MachineKeySet);
-    if (!certificateWithKey.HasPrivateKey) throw new ArgumentException("No private key!");
+    if (certificateWithKey.GetRSAPrivateKey() is null)
+    {
+        throw new PushServiceException("Could not initialize APNS service: RSA private key could not be found!");
+    }
+
+    using (X509Chain chain = new X509Chain())
+    {
+        chain.Build(certificateWithKey);
+
+        foreach (X509ChainElement element in chain.ChainElements)
+        {
+            Console.WriteLine(element.Certificate.Subject);
+        }
+
+        foreach (X509ChainStatus status in chain.ChainStatus)
+        {
+            Console.WriteLine($"{status.Status}: {status.StatusInformation}");
+        }
+    }
 
     // Set APNS connection settings
     var settings = new ApnsSettingsBuilder()
