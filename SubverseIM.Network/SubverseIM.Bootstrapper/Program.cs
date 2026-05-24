@@ -39,7 +39,8 @@ if (File.Exists(certFilePath))
 {
     // Get private key from key container if possible
     X509Certificate2 certificateWithKey = 
-        X509CertificateLoader.LoadPkcs12FromFile(certFilePath, certPassword, X509KeyStorageFlags.MachineKeySet);
+        X509CertificateLoader.LoadPkcs12FromFile(certFilePath, certPassword, 
+        X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
     if (certificateWithKey.GetRSAPrivateKey() is null)
     {
         throw new PushServiceException("Could not initialize APNS service: RSA private key could not be found!");
