@@ -81,7 +81,7 @@ namespace SubverseIM.Bootstrapper.Controllers
         [HttpGet("details")]
         public async Task<IActionResult> GetDetailsAsync(CancellationToken cancellationToken)
         {
-            return Ok(new BlobStoreDetails(null, _enableFeatureFlag ? MAX_BLOB_SIZE_BYTES : null));
+            return Ok(new BlobStoreDetails(null!, _enableFeatureFlag ? MAX_BLOB_SIZE_BYTES : null));
         }
 
         [HttpPost("store")]
