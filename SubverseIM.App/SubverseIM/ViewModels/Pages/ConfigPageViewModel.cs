@@ -131,10 +131,13 @@ namespace SubverseIM.ViewModels.Pages
             UseThemeOverride = config.UseThemeOverride ?? "Default";
         }
 
-        public async Task AddBootstrapperUriCommand(string? defaultText = null)
+        public async Task AddBootstrapperUriCommand(object? defaultText = null)
         {
+            if (defaultText is not null and not string) return;
+
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
-            string? newBootstrapperUri = await launcherService.ShowInputDialogAsync("New Bootstrapper URI", defaultText ?? "https://subverse.network/");
+            string? newBootstrapperUri = await launcherService.ShowInputDialogAsync("New Bootstrapper URI", 
+                defaultText as string ?? "https://subverse.network/");
             if (newBootstrapperUri is not null)
             {
                 BootstrapperUriList.Add(newBootstrapperUri);

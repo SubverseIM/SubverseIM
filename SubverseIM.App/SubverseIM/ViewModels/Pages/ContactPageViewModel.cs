@@ -77,10 +77,12 @@ namespace SubverseIM.ViewModels.Pages
             await frontendService.ResetSizeAsync();
         }
 
-        public async Task InviteCommand(Visual? sender)
+        public async Task InviteCommand(object? sender)
         {
+            if (sender is not null and not Visual) return;
+
             IBootstrapperService bootstrapperService = await ServiceManager.GetWithAwaitAsync<IBootstrapperService>();
-            await bootstrapperService.SendInviteAsync(sender);
+            await bootstrapperService.SendInviteAsync(sender as Visual);
         }
 
         public async Task MessageCommand()
