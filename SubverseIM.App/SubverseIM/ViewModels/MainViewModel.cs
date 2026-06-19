@@ -321,7 +321,7 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public Task<bool> NavigatePreviousViewAsync(bool shouldForceNavigation) 
     {
-        return NavigatePreviousViewAsync(shouldForceNavigation);
+        return NavigatePreviousViewAsync((object)shouldForceNavigation);
     }
 
     public async Task<bool> NavigatePreviousViewAsync(object? shouldForceNavigationObj)

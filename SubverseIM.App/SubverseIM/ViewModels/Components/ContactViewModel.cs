@@ -218,7 +218,7 @@ namespace SubverseIM.ViewModels.Components
 
         public Task DeleteCommand(bool deleteFromDb)
         {
-            return DeleteCommand(deleteFromDb);
+            return DeleteCommand((object)deleteFromDb);
         }
 
         public async Task DeleteCommand(object? deleteFromDbObj)
