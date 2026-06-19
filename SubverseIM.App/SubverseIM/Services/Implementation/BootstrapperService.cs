@@ -17,6 +17,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -44,7 +45,7 @@ namespace SubverseIM.Services.Implementation
 
         private readonly ConcurrentDictionary<string, CachedTopicId> cachedTopicIds;
 
-        private readonly ConcurrentBag<TaskCompletionSource<IList<PeerInfo>>> peerInfoBag;
+        private readonly Channel<IList<PeerInfo>> peerInfoQueue;
 
         private readonly TaskCompletionSource<IDhtEngine> dhtEngineTcs;
 
@@ -65,7 +66,7 @@ namespace SubverseIM.Services.Implementation
             httpClient = new();
 
             cachedTopicIds = new();
-            peerInfoBag = new();
+            peerInfoQueue = Channel.CreateUnbounded<IList<PeerInfo>>();
 
             dhtEngineTcs = new();
             dhtListenerTcs = new();
@@ -78,14 +79,9 @@ namespace SubverseIM.Services.Implementation
 
         #region IBootstrapperService API
 
-        private void DhtPeersFound(object? sender, PeersFoundEventArgs e)
+        private async void DhtPeersFound(object? sender, PeersFoundEventArgs e)
         {
-            TaskCompletionSource<IList<PeerInfo>>? tcs;
-            if (!peerInfoBag.TryTake(out tcs))
-            {
-                peerInfoBag.Add(tcs = new());
-            }
-            tcs.TrySetResult(e.Peers);
+            await peerInfoQueue.Writer.WriteAsync(e.Peers);
         }
 
         private async Task<(Stream, Stream)> GenerateKeysIfNoneAsync()
@@ -184,7 +180,7 @@ namespace SubverseIM.Services.Implementation
             {
                 HttpResponseMessage response = await httpClient.GetAsync(new Uri(bootstrapperUri, $"nodes?p={peerId}"), cancellationToken);
                 byte[] responseBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-                dhtEngine.Add([responseBytes]);
+                await dhtEngine.AddAsync([responseBytes]);
 
                 return true;
             }
@@ -331,7 +327,7 @@ namespace SubverseIM.Services.Implementation
                 foreach (SubversePeerId topicId in await GetTopicIdsAsync(cancellationToken))
                 {
                     await periodicTimer.WaitForNextTickAsync(cancellationToken);
-                    dhtEngine.Announce(new InfoHash(topicId.GetBytes()),
+                    await dhtEngine.AnnounceAsync(new InfoHash(topicId.GetBytes()),
                         mapping?.PublicPort ?? portNum);
                 }
 
@@ -387,13 +383,8 @@ namespace SubverseIM.Services.Implementation
         public async Task<IList<PeerInfo>> GetPeerInfoAsync(SubversePeerId topicId, CancellationToken cancellationToken)
         {
             IDhtEngine dhtEngine = await dhtEngineTcs.Task.WaitAsync(cancellationToken);
-            dhtEngine.GetPeers(new InfoHash(topicId.GetBytes()));
-
-            if (!peerInfoBag.TryPeek(out TaskCompletionSource<IList<PeerInfo>>? tcs))
-            {
-                peerInfoBag.Add(tcs = new());
-            }
-            return await tcs.Task.WaitAsync(cancellationToken);
+            await dhtEngine.GetPeersAsync(new InfoHash(topicId.GetBytes()));
+            return await peerInfoQueue.Reader.ReadAsync(cancellationToken);
         }
 
         public async Task<EncryptionKeys> GetPeerKeysAsync(SubversePeerId otherPeer, CancellationToken cancellationToken)
