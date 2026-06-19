@@ -123,11 +123,13 @@ namespace SubverseIM.ViewModels.Pages
             await frontendService.NavigateContactViewAsync(this);
         }
 
-        public async Task AddTopicCommand(string? defaultTopicName = null)
+        public async Task AddTopicCommand(object? defaultTopicName = null)
         {
+            if (defaultTopicName is not null and not string) return;
+
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
 
-            string filteredText = await launcherService.ShowInputDialogAsync("New topic", defaultTopicName) ?? string.Empty;
+            string filteredText = await launcherService.ShowInputDialogAsync("New topic", defaultTopicName as string) ?? string.Empty;
             filteredText = Regex.Replace(filteredText, @"\s+", "-");
             filteredText = Regex.Replace(filteredText, @"[^\w\-]", string.Empty);
             filteredText = Regex.Match(filteredText, @"\#?(\w[\w\-]*\w)").Value;

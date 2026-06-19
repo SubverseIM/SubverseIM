@@ -216,8 +216,15 @@ namespace SubverseIM.ViewModels.Components
             ShouldShowOptions = false;
         }
 
-        public async Task DeleteCommand(bool deleteFromDb)
+        public Task DeleteCommand(bool deleteFromDb)
         {
+            return DeleteCommand(deleteFromDb);
+        }
+
+        public async Task DeleteCommand(object? deleteFromDbObj)
+        {
+            if (deleteFromDbObj is not bool deleteFromDb) return;
+
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
             if (string.IsNullOrEmpty(TopicName) && await launcherService.ShowConfirmationDialogAsync("Remove this Contact?", deleteFromDb ?
                 "Are you sure you want to remove this contact?" :

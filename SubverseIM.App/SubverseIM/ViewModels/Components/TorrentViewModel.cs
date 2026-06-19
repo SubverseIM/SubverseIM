@@ -129,8 +129,10 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public async Task ShareCommand(Visual? sender)
+        public async Task ShareCommand(object? sender)
         {
+            if (sender is not null and not Visual) return;
+
             ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             string cacheDirPath = Path.Combine(
                         launcherService.GetPersistentStoragePath(), "torrent", "files", 
@@ -141,7 +143,7 @@ namespace SubverseIM.ViewModels.Components
                 );
             try
             {
-                await launcherService.ShareFileToAppAsync(sender, "Save File As", cacheFilePath);
+                await launcherService.ShareFileToAppAsync(sender as Visual, "Save File As", cacheFilePath);
             }
             catch (PlatformNotSupportedException)
             {
@@ -164,8 +166,10 @@ namespace SubverseIM.ViewModels.Components
             }
         }
 
-        public async Task ExportCommand(Visual? sender)
+        public async Task ExportCommand(object? sender)
         {
+            if (sender is not null and not Visual) return;
+
             ILauncherService launcherService = await parent.ServiceManager.GetWithAwaitAsync<ILauncherService>();
             IDbService dbService = await parent.ServiceManager.GetWithAwaitAsync<IDbService>();
 
@@ -189,7 +193,7 @@ namespace SubverseIM.ViewModels.Components
 
             try
             {
-                await launcherService.ShareFileToAppAsync(sender, "Export Torrent", exportFilePath);
+                await launcherService.ShareFileToAppAsync(sender as Visual, "Export Torrent", exportFilePath);
             }
             catch (PlatformNotSupportedException)
             {

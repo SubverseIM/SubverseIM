@@ -34,8 +34,10 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        public async Task PurchaseCommand(string productId) 
+        public async Task PurchaseCommand(object? productIdObj) 
         {
+            if (productIdObj is not string productId) return;
+
             IBillingService billingService = await ServiceManager.GetWithAwaitAsync<IBillingService>();
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();

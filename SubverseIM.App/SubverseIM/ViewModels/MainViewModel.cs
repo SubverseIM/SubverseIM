@@ -319,8 +319,15 @@ public class MainViewModel : ViewModelBase, IFrontendService
         }
     }
 
-    public async Task<bool> NavigatePreviousViewAsync(bool shouldForceNavigation)
+    public Task<bool> NavigatePreviousViewAsync(bool shouldForceNavigation) 
     {
+        return NavigatePreviousViewAsync(shouldForceNavigation);
+    }
+
+    public async Task<bool> NavigatePreviousViewAsync(object? shouldForceNavigationObj)
+    {
+        if (shouldForceNavigationObj is not bool shouldForceNavigation) return false;
+
         bool confirm;
         if (!shouldForceNavigation && currentPage.ShouldConfirmBackNavigation)
         {
