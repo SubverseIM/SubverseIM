@@ -13,24 +13,6 @@ namespace SubverseIM.Services
 
         Task RestorePurchasesAsync();
 
-        Task PromptForPurchaseAsync();
-
-        Task<bool> NavigatePreviousViewAsync(bool shouldForceNavigation);
-
         Task NavigateLaunchedUriAsync(Uri? overrideUri = null);
-
-        Task NavigateContactViewAsync(MessagePageViewModel? parentOrNull = null);
-
-        Task NavigateContactViewAsync(SubverseContact contact);
-
-        Task NavigateMessageViewAsync(IEnumerable<SubverseContact> contacts, string? topicName = null);
-
-        Task NavigateTorrentViewAsync();
-
-        Task NavigateConfigViewAsync();
-
-        Task NavigatePurchaseViewAsync();
-
-        Task<IReadOnlyList<Uri>> ShowUploadDialogAsync(string sourceFilePath);
     }
 }

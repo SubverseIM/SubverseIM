@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
-public partial class ConfigPageView : UserControl
+public partial class ConfigPageView : ContentPage
 {
     private TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 

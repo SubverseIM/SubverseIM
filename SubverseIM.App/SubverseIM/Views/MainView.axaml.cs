@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Views;
 
-public partial class MainView : ContentPage
+public partial class MainView : NavigationPage
 {
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 
@@ -33,11 +33,6 @@ public partial class MainView : ContentPage
         {
             topLevel.InputPane.StateChanged += InputPaneStateChanged;
         }
-
-        if (topLevel.Screens is not null)
-        {
-            topLevel.Screens.Changed += (s, ev) => ScreenOrientationChanged();
-        }
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
@@ -45,9 +40,7 @@ public partial class MainView : ContentPage
         base.OnLoaded(e);
         loadTaskSource.SetResult(e);
 
-        ((MainViewModel)DataContext!).RegisterTopLevel(topLevel!);
-
-        ((MainViewModel)DataContext!).ScreenOrientationChangedDelegate ??= ScreenOrientationChanged;
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel!);
 
         _ = ((MainViewModel)DataContext!).NavigateLaunchedUriAsync();
     }
@@ -62,16 +55,9 @@ public partial class MainView : ContentPage
         Height = Math.Max(e.EndRect.Top, 0);
     }
 
-    public void ScreenOrientationChanged()
-    {
-        ((MainViewModel)DataContext!).CurrentPage
-            .OnOrientationChanged(topLevel);
-        _ = ((MainViewModel)DataContext!).ResetSizeAsync();
-    }
-
     public T? GetContentAs<T>()
         where T : class
     {
-        return contentControl.FindDescendantOfType<T>();
+        return this.FindDescendantOfType<T>();
     }
 }

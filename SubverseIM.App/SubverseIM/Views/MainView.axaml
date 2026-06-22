@@ -1,36 +1,19 @@
-<ContentPage xmlns="https://github.com/avaloniaui"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-			 xmlns:vm="clr-namespace:SubverseIM.ViewModels"
-			 xmlns:cv="clr-namespace:SubverseIM.Converters"
-			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-			 x:Class="SubverseIM.Views.MainView"
-			 x:DataType="vm:MainViewModel"
-			 MaxWidth="{Binding ScreenSize, Converter={StaticResource NullableSizeConverter}, ConverterParameter='Width'}"
-			 MaxHeight="{Binding ScreenSize, Converter={StaticResource NullableSizeConverter}, ConverterParameter='Height'}">
+<NavigationPage xmlns="https://github.com/avaloniaui"
+				xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+				xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+				xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+				xmlns:local="using:SubverseIM"
+				xmlns:vm="using:SubverseIM.ViewModels"
+				xmlns:cv="using:SubverseIM.Converters"
+				xmlns:v="using:SubverseIM.Views.Pages"
+				mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+				x:Class="SubverseIM.Views.MainView"
+				x:DataType="vm:MainViewModel"
+				MaxWidth="{Binding ScreenSize, Converter={StaticResource NullableSizeConverter}, ConverterParameter='Width'}"
+				MaxHeight="{Binding ScreenSize, Converter={StaticResource NullableSizeConverter}, ConverterParameter='Height'}">
 	<Design.DataContext>
 		<!-- This only sets the DataContext for the previewer in an IDE,
 		to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:MainViewModel />
 	</Design.DataContext>
-	<ThemeVariantScope RequestedThemeVariant="{Binding CurrentPage.UseThemeOverride}">
-		<DockPanel Background="{DynamicResource SystemRegionBrush}">
-			<Panel DockPanel.Dock="Top">
-				<TextBlock Margin="10" Text="{Binding CurrentPage.Title}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" />
-				<DockPanel>
-					<Button DockPanel.Dock="Left" IsVisible="{Binding HasPreviousView}" Command="{Binding NavigatePreviousViewAsync}"
-							CommandParameter="{x:False}" AutomationProperties.Name="Previous View">
-						<PathIcon Data="{StaticResource caret_left_regular}" />
-					</Button>
-					<Button DockPanel.Dock="Right" IsVisible="{Binding CurrentPage.HasSidebar}" Command="{Binding CurrentPage.ToggleSidebarCommand}"
-							AutomationProperties.Name="Sidebar Menu">
-						<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
-					</Button>
-					<Panel />
-				</DockPanel>
-			</Panel>
-			<ContentControl x:Name="contentControl" Content="{Binding CurrentPage}" />
-		</DockPanel>
-	</ThemeVariantScope>
-</ContentPage>
+</NavigationPage>

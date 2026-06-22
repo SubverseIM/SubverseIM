@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
-public partial class PurchasePageView : UserControl
+public partial class PurchasePageView : ContentPage
 {
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 

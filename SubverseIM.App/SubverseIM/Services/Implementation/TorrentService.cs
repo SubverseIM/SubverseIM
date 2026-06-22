@@ -53,12 +53,12 @@ namespace SubverseIM.Services.Implementation
             engine = new(settings, factories);
         }
 
-        public async Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync()
+        public async Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync(CancellationToken cancellationToken)
         {
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
 
             // Get all torrents from database
-            IEnumerable<SubverseTorrent> files = await dbService.GetTorrentsAsync();
+            IEnumerable<SubverseTorrent> files = await dbService.GetTorrentsAsync(cancellationToken);
 
             // Add and start all outstanding torrents
             bool[] addedFlags = await Task.WhenAll(files.Select(x => AddTorrentAsync(x.InfoHash, x.TorrentBytes)));
@@ -74,11 +74,11 @@ namespace SubverseIM.Services.Implementation
                 .ToFrozenDictionary(x => x.First, x => x.Second!);
         }
 
-        public async Task DestroyAsync()
+        public async Task DestroyAsync(CancellationToken cancellationToken)
         {
             // Stop all outstanding torrents
-            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            await Task.WhenAll((await dbService.GetTorrentsAsync()).Select(StopAsync));
+            IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+            await Task.WhenAll((await dbService.GetTorrentsAsync(cancellationToken)).Select(StopAsync));
         }
 
         private Progress<TorrentStatus> CreateProgress(TorrentManager manager, SubverseTorrent torrent)

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
-public partial class UploadPageView : UserControl
+public partial class UploadPageView : ContentPage
 {
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 

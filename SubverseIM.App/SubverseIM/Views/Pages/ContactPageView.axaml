@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+<ContentPage xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,7 +9,7 @@
 	<Design.DataContext>
 		<vm:ContactPageViewModel />
 	</Design.DataContext>
-	<UserControl.Styles>
+	<ContentPage.Styles>
 		<Style Selector="ListBoxItem.offscreen,TextBlock.offscreen,Button.offscreen">
 			<Setter Property="AutomationProperties.IsOffscreenBehavior" Value="Offscreen"/>
 		</Style>
@@ -19,7 +19,7 @@
 		<Style Selector="SplitView.inline">
 			<Setter Property="DisplayMode" Value="Inline"/>
 		</Style>
-	</UserControl.Styles>
+	</ContentPage.Styles>
 	<SplitView x:Name="splitView"
 			   IsPaneOpen="{Binding IsSidebarOpen}"
 			   PanePlacement="Right"
@@ -138,4 +138,4 @@
 			</Panel>
 		</DockPanel>
 	</SplitView>
-</UserControl>
+</ContentPage>
