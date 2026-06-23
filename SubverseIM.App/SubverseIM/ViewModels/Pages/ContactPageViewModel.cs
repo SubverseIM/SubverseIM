@@ -1,6 +1,4 @@
 ﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.VisualTree;
 using ReactiveUI;
 using SubverseIM.Core;
 using SubverseIM.Models;

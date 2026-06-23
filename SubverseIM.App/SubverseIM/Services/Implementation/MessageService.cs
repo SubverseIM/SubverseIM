@@ -11,6 +11,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -49,6 +50,13 @@ public class MessageService : IMessageService, IDisposableService
         sipTransport.AddSIPChannel(sipChannel);
 
         CachedPeers = new Dictionary<SubversePeerId, SubversePeer>();
+    }
+
+    public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
+
+    protected void OnMessageReceived(MessageReceivedEventArgs ev)
+    {
+        MessageReceived?.Invoke(this, ev);
     }
 
     private async Task SIPTransportRequestReceived(SIPEndPoint localSIPEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
@@ -425,6 +433,63 @@ public class MessageService : IMessageService, IDisposableService
         }
 
         await Task.WhenAll(sendTasks);
+    }
+
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
+        ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>(cancellationToken);
+        INativeService nativeService = await serviceManager.GetWithAwaitAsync<INativeService>(cancellationToken);
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            SubverseMessage message = await ReceiveMessageAsync(cancellationToken);
+
+            SubversePeerId? topicId = message.TopicName is null || message.TopicName == "#system" ?
+                null : new(SHA1.HashData(Encoding.UTF8.GetBytes(message.TopicName)));
+            string? topicName = message.TopicName is null || message.TopicName == "#system" ?
+                null : message.TopicName;
+
+            SubverseContact? contact = await dbService.GetContactAsync(topicId ?? message.Sender, cancellationToken);
+            if (contact is not null)
+            {
+                contact.DateLastChattedWith = message.DateSignedOn;
+                await dbService.InsertOrUpdateItemAsync(contact, cancellationToken);
+
+                lock (CachedPeers)
+                {
+                    CachedPeers.TryAdd(
+                        contact.OtherPeer,
+                        new SubversePeer
+                        {
+                            OtherPeer = contact.OtherPeer
+                        });
+                }
+            }
+
+            try
+            {
+                await dbService.InsertOrUpdateItemAsync(message, cancellationToken);
+
+                MessageReceivedEventArgs ev = new(message);
+                OnMessageReceived(ev);
+
+                if (launcherService.NotificationsAllowed &&
+                    (!launcherService.IsInForeground ||
+                    launcherService.IsAccessibilityEnabled ||
+                    ev.ShouldSendPushNotif) && (message.WasDecrypted ?? true))
+                {
+                    await nativeService.SendPushNotificationAsync(serviceManager, message);
+                }
+                else if (launcherService.NotificationsAllowed)
+                {
+                    nativeService.ClearNotification(message);
+                }
+            }
+            catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
+        }
     }
 
     private bool disposedValue;

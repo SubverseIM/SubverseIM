@@ -10,8 +10,6 @@ using SubverseIM.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,17 +28,10 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public IServiceManager ServiceManager { get; }
 
-    public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
-
     public MainViewModel(IServiceManager serviceManager)
     {
         ServiceManager = serviceManager;
         ServiceManager.GetOrRegister<IFrontendService>(this);
-    }
-
-    protected void OnMessageReceived(MessageReceivedEventArgs ev)
-    {
-        MessageReceived?.Invoke(this, ev);
     }
 
     public async Task RunOnceBackgroundAsync()
@@ -129,59 +120,11 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
         try
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                SubverseMessage message = await messageService.ReceiveMessageAsync(cancellationToken);
-
-                SubversePeerId? topicId = message.TopicName is null || message.TopicName == "#system" ?
-                    null : new(SHA1.HashData(Encoding.UTF8.GetBytes(message.TopicName)));
-                string? topicName = message.TopicName is null || message.TopicName == "#system" ?
-                    null : message.TopicName;
-
-                SubverseContact? contact = await dbService.GetContactAsync(topicId ?? message.Sender, cancellationToken);
-                if (contact is not null)
-                {
-                    contact.DateLastChattedWith = message.DateSignedOn;
-                    await dbService.InsertOrUpdateItemAsync(contact, cancellationToken);
-
-                    lock (messageService.CachedPeers)
-                    {
-                        messageService.CachedPeers.TryAdd(
-                            contact.OtherPeer,
-                            new SubversePeer
-                            {
-                                OtherPeer = contact.OtherPeer
-                            });
-                    }
-                }
-
-                try
-                {
-                    await dbService.InsertOrUpdateItemAsync(message, cancellationToken);
-                    
-                    MessageReceivedEventArgs ev = new(message);
-                    OnMessageReceived(ev);
-
-                    if (launcherService.NotificationsAllowed &&
-                        (!launcherService.IsInForeground ||
-                        launcherService.IsAccessibilityEnabled ||
-                        ev.ShouldSendPushNotif) && (message.WasDecrypted ?? true))
-                    {
-                        await nativeService.SendPushNotificationAsync(ServiceManager, message);
-                    }
-                    else if (launcherService.NotificationsAllowed)
-                    {
-                        nativeService.ClearNotification(message);
-                    }
-                }
-                catch (LiteException ex) when (ex.ErrorCode == LiteException.INDEX_DUPLICATE_KEY) { }
-            }
+            await messageService.RunAsync(cancellationToken);
         }
         finally
         {
-            await torrentService.DestroyAsync();
+            await torrentService.DestroyAsync(cancellationToken);
             await Task.WhenAll(subTasks);
         }
     }

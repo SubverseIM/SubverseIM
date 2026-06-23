@@ -16,6 +16,8 @@ namespace SubverseIM.Services.Faux
 
         private readonly IServiceManager serviceManager;
 
+        public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
+
         public IPEndPoint LocalEndPoint { get; }
 
         public IDictionary<SubversePeerId, SubversePeer> CachedPeers { get; }
@@ -66,6 +68,11 @@ namespace SubverseIM.Services.Faux
                 WasDecrypted = true,
                 WasDelivered = true
             });
+        }
+
+        public Task RunAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
         }
     }
 }
