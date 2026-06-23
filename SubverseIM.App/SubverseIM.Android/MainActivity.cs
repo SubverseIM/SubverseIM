@@ -53,30 +53,11 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 {
     private const int REQUEST_NOTIFICATION_PERMISSION = 1000;
 
-    private class ActivityBackPressedCallback : OnBackPressedCallback
-    {
-        private readonly IServiceManager? serviceManager;
-
-        public ActivityBackPressedCallback(IServiceManager? serviceManager) : base(true)
-        {
-            this.serviceManager = serviceManager;
-        }
-
-        public override async void HandleOnBackPressed()
-        {
-            IFrontendService? frontendService = serviceManager is null ? null :
-                await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            _ = frontendService?.NavigatePreviousViewAsync(shouldForceNavigation: false);
-        }
-    }
-
     private readonly Dictionary<int, TaskCompletionSource> requestPermissionsTcsMap;
 
     private readonly ServiceConnection<IBootstrapperService> peerServiceConn;
 
     private readonly CancellationTokenSource cancellationTokenSource;
-
-    private ActivityBackPressedCallback? backPressedCallback;
 
     private IServiceManager? serviceManager;
 
@@ -109,9 +90,6 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         Application? app = Application as Application;
         serviceManager = app?.ServiceManager;
-
-        backPressedCallback = new(serviceManager);
-        OnBackPressedDispatcher.AddCallback(backPressedCallback);
 
         if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
             CheckSelfPermission(Manifest.Permission.PostNotifications) == Permission.Denied)
@@ -209,8 +187,8 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
         base.OnNewIntent(intent);
         Intent = intent;
 
-        IFrontendService? frontendService = serviceManager is null ? null :
-            await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        INavigationService? navService = serviceManager is null ? null :
+            await serviceManager.GetWithAwaitAsync<INavigationService>();
         IDbService? dbService = serviceManager is null ? null :
             await serviceManager.GetWithAwaitAsync<IDbService>();
 
@@ -225,15 +203,15 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
         if (Intent?.DataString is not null)
         {
-            _ = frontendService?.NavigateLaunchedUriAsync();
+            _ = navService?.NavigateLaunchedUriAsync();
         }
         else if (contacts.Any())
         {
-            _ = frontendService?.NavigateMessageViewAsync(contacts, topicName);
+            _ = navService?.NavigateMessageViewAsync(contacts, topicName);
         }
         else
         {
-            _ = frontendService?.NavigateContactViewAsync();
+            _ = navService?.NavigateContactViewAsync();
         }
     }
 
