@@ -32,15 +32,16 @@ public class PurchasePageViewTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        await mainViewModel.NavigatePurchaseViewAsync();
-
-        PurchasePageViewModel? purchasePageViewModel = mainViewModel.CurrentPage as PurchasePageViewModel;
-        Assert.NotNull(purchasePageViewModel);
+        await navService.NavigatePurchaseViewAsync();
 
         PurchasePageView? purchasePageView = mainView.GetContentAs<PurchasePageView>();
         Assert.NotNull(purchasePageView);
+
+        PurchasePageViewModel? purchasePageViewModel = purchasePageView.DataContext as PurchasePageViewModel;
+        Assert.NotNull(purchasePageViewModel);
 
         await purchasePageView.LoadTask;
 
@@ -54,10 +55,10 @@ public class PurchasePageViewTests
             await EnsureIsOnPurchasePageView();
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
+        INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
-        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        Assert.IsNotType<PurchasePageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsNotType<PurchasePageViewModel>(mainView.CurrentPage);
     }
 }

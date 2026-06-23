@@ -37,15 +37,16 @@ public class TorrentViewModelTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        await mainViewModel.NavigateTorrentViewAsync();
-
-        TorrentPageViewModel? torrentPageViewModel = mainViewModel.CurrentPage as TorrentPageViewModel;
-        Assert.NotNull(torrentPageViewModel);
+        await navService.NavigateTorrentViewAsync();
 
         TorrentPageView? torrentPageView = mainView.GetContentAs<TorrentPageView>();
         Assert.NotNull(torrentPageView);
+
+        TorrentPageViewModel? torrentPageViewModel = torrentPageView.DataContext as TorrentPageViewModel;
+        Assert.NotNull(torrentPageViewModel);
 
         await torrentPageViewModel.InitializeAsync();
 

@@ -5,6 +5,7 @@ using Avalonia.VisualTree;
 using SubverseIM.Services;
 using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels;
+using SubverseIM.Views.Pages;
 using System;
 using System.Threading.Tasks;
 
@@ -36,22 +37,22 @@ public partial class MainView : NavigationPage
         {
             topLevel.InputPane.StateChanged += InputPaneStateChanged;
         }
+
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel.StorageProvider!);
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel.Clipboard!);
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel.InputPane!);
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister<INavigation>(this);
+
+        INavigationService navService = new NavigationService(((MainViewModel)DataContext!).ServiceManager);
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(navService);
+
+        _ = navService.NavigateContactViewAsync();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
         loadTaskSource.SetResult(e);
-
-        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel.StorageProvider!);
-        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel.Clipboard!);
-        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel.InputPane!);
-        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(Navigation!);
-
-        INavigationService navService = new NavigationService(((MainViewModel)DataContext!).ServiceManager);
-        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(navService);
-
-        _ = navService.NavigateLaunchedUriAsync();
     }
 
     private void InputPaneStateChanged(object? sender, InputPaneStateEventArgs e)

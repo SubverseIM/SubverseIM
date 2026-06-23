@@ -32,15 +32,16 @@ public class TorrentPageViewTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        await mainViewModel.NavigateTorrentViewAsync();
-
-        TorrentPageViewModel? torrentPageViewModel = mainViewModel.CurrentPage as TorrentPageViewModel;
-        Assert.NotNull(torrentPageViewModel);
+        await navService.NavigateTorrentViewAsync();
 
         TorrentPageView? torrentPageView = mainView.GetContentAs<TorrentPageView>();
         Assert.NotNull(torrentPageView);
+
+        TorrentPageViewModel? torrentPageViewModel = torrentPageView.DataContext as TorrentPageViewModel;
+        Assert.NotNull(torrentPageViewModel);
 
         await torrentPageView.LoadTask;
 
@@ -66,10 +67,10 @@ public class TorrentPageViewTests
             await EnsureIsOnTorrentPageView();
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
+        INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
-        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        Assert.IsNotType<TorrentPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsNotType<TorrentPageView>(mainView.CurrentPage);
     }
 }

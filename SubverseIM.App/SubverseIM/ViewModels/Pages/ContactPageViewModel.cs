@@ -71,9 +71,6 @@ namespace SubverseIM.ViewModels.Pages
                 await vm.LoadPhotoAsync();
                 ContactsList.Add(vm);
             }
-
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.ResetSizeAsync();
         }
 
         public async Task InviteCommand(object? sender)

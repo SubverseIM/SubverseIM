@@ -1,4 +1,5 @@
-﻿using Avalonia.Headless.XUnit;
+﻿using Avalonia.Controls;
+using Avalonia.Headless.XUnit;
 using SubverseIM.Headless.Fixtures;
 using SubverseIM.Services;
 using SubverseIM.ViewModels;
@@ -33,15 +34,16 @@ public class ContactPageViewTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        await mainViewModel.NavigateContactViewAsync(parentOrNull);
-
-        ContactPageViewModel? contactPageViewModel = mainViewModel.CurrentPage as ContactPageViewModel;
-        Assert.NotNull(contactPageViewModel);
+        await navService.NavigateContactViewAsync(parentOrNull);
 
         ContactPageView? contactPageView = mainView.GetContentAs<ContactPageView>();
         Assert.NotNull(contactPageView);
+
+        ContactPageViewModel? contactPageViewModel = contactPageView.DataContext as ContactPageViewModel;
+        Assert.NotNull(contactPageViewModel);
 
         if (contactPageView.LoadTask.IsCompleted)
         {
@@ -84,8 +86,8 @@ public class ContactPageViewTests
 
         await contactPageViewModel.OpenSettingsCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<ConfigPageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<ConfigPageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -96,8 +98,8 @@ public class ContactPageViewTests
 
         await contactPageViewModel.OpenFilesCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<TorrentPageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<TorrentPageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -108,8 +110,8 @@ public class ContactPageViewTests
 
         await contactPageViewModel.OpenProductsCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<PurchasePageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<PurchasePageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -149,8 +151,8 @@ public class ContactPageViewTests
         }
         await contactPageViewModel.MessageCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<MessagePageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<MessagePageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -165,8 +167,8 @@ public class ContactPageViewTests
         }
         await contactPageViewModel.MessageCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<MessagePageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<MessagePageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -181,8 +183,8 @@ public class ContactPageViewTests
         }
         await contactPageViewModel.MessageCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<ContactPageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<ContactPageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -197,8 +199,8 @@ public class ContactPageViewTests
         }
         await contactPageViewModel.MessageCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<ContactPageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<ContactPageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -252,11 +254,11 @@ public class ContactPageViewTests
             await EnsureIsOnContactPageView();
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
         Exception? exception = null;
         try
         {
-            await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
+            await navService.NavigatePreviousViewAsync(shouldForceNavigation: true);
         }
         catch (Exception ex) { exception = ex; }
         Assert.Null(exception);
@@ -272,11 +274,11 @@ public class ContactPageViewTests
         (ContactPageView contactPageView, ContactPageViewModel contactPageViewModel) =
             await EnsureIsOnContactPageView(messagePageViewModel);
 
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
         Exception? exception = null;
         try
         {
-            await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
+            await navService.NavigatePreviousViewAsync(shouldForceNavigation: true);
         }
         catch (Exception ex) { exception = ex; }
         Assert.Null(exception);

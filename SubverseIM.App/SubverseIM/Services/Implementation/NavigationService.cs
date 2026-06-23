@@ -77,11 +77,12 @@ namespace SubverseIM.Services.Implementation
 
         public async Task NavigateContactViewAsync(MessagePageViewModel? parentOrNull = null)
         {
+            INavigation navigation = await serviceManager.GetWithAwaitAsync<INavigation>();
+            await navigation.PushAsync(new ContactPageView() { DataContext = contactPage });
+
             contactPage.Parent = parentOrNull;
             contactPage.IsSidebarOpen = false;
 
-            INavigation navigation = await serviceManager.GetWithAwaitAsync<INavigation>();
-            await navigation.PushAsync(new ContactPageView() { DataContext = contactPage });
             currentPage = contactPage;
         }
 
