@@ -1,16 +1,12 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform;
-using Avalonia.Threading;
-using DynamicData;
 using LiteDB;
-using MonoTorrent;
 using ReactiveUI;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services;
-using SubverseIM.ViewModels.Pages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,44 +14,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace SubverseIM.ViewModels;
 
-public class MessageReceivedEventArgs : EventArgs
-{
-    private bool shouldSendPushNotif;
-    public bool ShouldSendPushNotif
-    {
-        get => shouldSendPushNotif;
-        set => shouldSendPushNotif &= value;
-    }
-
-    public SubverseMessage Message { get; }
-
-    public MessageReceivedEventArgs(SubverseMessage message)
-    {
-        shouldSendPushNotif = true;
-        Message = message;
-    }
-}
-
-public class UriNavigationEventArgs : EventArgs
-{
-    public Uri? Uri { get; }
-
-    public UriNavigationEventArgs(Uri? uri)
-    {
-        Uri = uri;
-    }
-}
-
 public class MainViewModel : ViewModelBase, IFrontendService
 {
-    private const string DONATION_PROMPT_TITLE = "Support us?";
-
-    private const string DONATION_PROMPT_MESSAGE = "If you're enjoying using our app, please consider a one-time donation. Doing so would help support future development of this app and permanently disable these prompts on your devices. Would you like to donate now?";
-
     private Task? mainTask;
 
     private Size? screenSize;
@@ -69,8 +32,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
     public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
 
-    public event EventHandler<UriNavigationEventArgs>? UriNavigation;
-
     public MainViewModel(IServiceManager serviceManager)
     {
         ServiceManager = serviceManager;
@@ -80,11 +41,6 @@ public class MainViewModel : ViewModelBase, IFrontendService
     protected void OnMessageReceived(MessageReceivedEventArgs ev)
     {
         MessageReceived?.Invoke(this, ev);
-    }
-
-    protected void OnUriNavigation(UriNavigationEventArgs ev)
-    {
-        UriNavigation?.Invoke(this, ev);
     }
 
     public async Task RunOnceBackgroundAsync()
@@ -254,13 +210,5 @@ public class MainViewModel : ViewModelBase, IFrontendService
 
             await configurationService.PersistConfigAsync();
         }
-    }
-
-    public async Task NavigateLaunchedUriAsync(Uri? overrideUri = null)
-    {
-        ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
-        Uri? launchedUri = overrideUri ?? launcherService.GetLaunchedUri();
-
-        OnUriNavigation(new UriNavigationEventArgs(launchedUri));
     }
 }

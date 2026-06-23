@@ -1,9 +1,10 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.VisualTree;
 using ReactiveUI;
 using SubverseIM.Core;
 using SubverseIM.Models;
 using SubverseIM.Services;
-using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels.Components;
 using System;
 using System.Collections.Generic;
@@ -88,7 +89,7 @@ namespace SubverseIM.ViewModels.Pages
         public async Task MessageCommand()
         {
             IDbService dbService;
-            IFrontendService frontendService;
+            INavigationService navService;
             ILauncherService launcherService;
 
             IEnumerable<SubverseContact> contacts = ContactsList
@@ -97,8 +98,8 @@ namespace SubverseIM.ViewModels.Pages
 
             if (contacts.Any() && contacts.All(x => x.TopicName is null))
             {
-                frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-                await frontendService.NavigateMessageViewAsync(contacts);
+                navService = await ServiceManager.GetWithAwaitAsync<INavigationService>();
+                await navService.NavigateMessageViewAsync(contacts);
             }
             else
             {
@@ -106,7 +107,7 @@ namespace SubverseIM.ViewModels.Pages
                 {
                     case 1:
                         dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
-                        frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+                        navService = await ServiceManager.GetWithAwaitAsync<INavigationService>();
 
                         string topicName = contacts.Single().TopicName!;
                         IEnumerable<SubverseContact> participants = (await Task.WhenAll(
@@ -114,7 +115,7 @@ namespace SubverseIM.ViewModels.Pages
                             .Select(x => dbService.GetContactAsync(x))))
                             .Where(x => x is not null)
                             .Cast<SubverseContact>();
-                        await frontendService.NavigateMessageViewAsync(participants, topicName);
+                        await navService.NavigateMessageViewAsync(participants, topicName);
                         break;
                     case 0:
                         launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
@@ -130,20 +131,20 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task OpenFilesCommand()
         {
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.NavigateTorrentViewAsync();
+            INavigationService navService = await ServiceManager.GetWithAwaitAsync<INavigationService>();
+            await navService.NavigateTorrentViewAsync();
         }
 
         public async Task OpenSettingsCommand()
         {
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.NavigateConfigViewAsync();
+            INavigationService navService = await ServiceManager.GetWithAwaitAsync<INavigationService>();
+            await navService.NavigateConfigViewAsync();
         }
 
         public async Task OpenProductsCommand()
         {
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.NavigatePurchaseViewAsync();
+            INavigationService navService = await ServiceManager.GetWithAwaitAsync<INavigationService>();
+            await navService.NavigatePurchaseViewAsync();
         }
 
         public async Task AddParticipantsCommand()
@@ -157,8 +158,8 @@ namespace SubverseIM.ViewModels.Pages
                 Parent.AddUniqueParticipant(contact, true);
             }
 
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: false);
+            INavigationService navService = await ServiceManager.GetWithAwaitAsync<INavigationService>();
+            await navService.NavigatePreviousViewAsync(shouldForceNavigation: false);
         }
 
         public void RemoveContact(ContactViewModel contact)

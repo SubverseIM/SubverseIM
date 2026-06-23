@@ -119,8 +119,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task AddParticipantsCommand()
         {
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.NavigateContactViewAsync(this);
+            INavigationService navService = await ServiceManager.GetWithAwaitAsync<INavigationService>();
+            await navService.NavigateContactViewAsync(this);
         }
 
         public async Task AddTopicCommand(object? defaultTopicName = null)
@@ -195,6 +195,7 @@ namespace SubverseIM.ViewModels.Pages
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>(cancellationToken);
             IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>(cancellationToken);
+            INavigationService navService = await ServiceManager.GetWithAwaitAsync<INavigationService>(cancellationToken);
 
             SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
 
@@ -231,7 +232,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 if (string.IsNullOrEmpty(SendMessageTopicName)) 
                 {
-                    await Dispatcher.UIThread.InvokeAsync(() => frontendService.NavigatePreviousViewAsync(shouldForceNavigation: false));
+                    await Dispatcher.UIThread.InvokeAsync(() => navService.NavigatePreviousViewAsync(shouldForceNavigation: false));
                     return;
                 }
             }

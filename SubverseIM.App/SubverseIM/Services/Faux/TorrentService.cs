@@ -18,7 +18,7 @@ namespace SubverseIM.Services.Faux
             this.serviceManager = serviceManager;
         }
 
-        public async Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync()
+        public async Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync(CancellationToken cancellationToken)
         {
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
             return (await dbService.GetTorrentsAsync()).ToFrozenDictionary(
@@ -26,7 +26,7 @@ namespace SubverseIM.Services.Faux
                 );
         }
 
-        public Task DestroyAsync()
+        public Task DestroyAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
@@ -39,7 +39,7 @@ namespace SubverseIM.Services.Faux
                 );
         }
 
-        public Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default)
+        public Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, IReadOnlyList<Uri>? webSeedUrls, CancellationToken cancellationToken)
         {
             return Task.FromException<SubverseTorrent>(new PlatformNotSupportedException());
         }

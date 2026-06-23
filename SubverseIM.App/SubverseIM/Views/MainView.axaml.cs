@@ -2,6 +2,8 @@
 using Avalonia.Controls.Platform;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using SubverseIM.ViewModels;
 using System;
 using System.Threading.Tasks;
@@ -12,7 +14,7 @@ public partial class MainView : NavigationPage
 {
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 
-    private TopLevel? topLevel;
+    private TopLevel topLevel;
 
     public Task LoadTask => loadTaskSource.Task;
 
@@ -20,6 +22,7 @@ public partial class MainView : NavigationPage
     {
         InitializeComponent();
         loadTaskSource = new();
+        topLevel = null!;
     }
 
     protected override void OnInitialized()
@@ -40,9 +43,15 @@ public partial class MainView : NavigationPage
         base.OnLoaded(e);
         loadTaskSource.SetResult(e);
 
-        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel!);
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel.StorageProvider!);
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel.Clipboard!);
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(topLevel.InputPane!);
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(Navigation!);
 
-        _ = ((MainViewModel)DataContext!).NavigateLaunchedUriAsync();
+        INavigationService navService = new NavigationService(((MainViewModel)DataContext!).ServiceManager);
+        ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(navService);
+
+        _ = navService.NavigateLaunchedUriAsync();
     }
 
     private void InputPaneStateChanged(object? sender, InputPaneStateEventArgs e)

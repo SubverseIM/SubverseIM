@@ -16,7 +16,7 @@ namespace SubverseIM.Services
 
         Task<bool> AddTorrentAsync(InfoHash infoHash, byte[]? torrentBytes = null);
 
-        Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default);
+        Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, IReadOnlyList<Uri>? webSeedUrls = null, CancellationToken cancellationToken = default);
 
         Task<bool> RemoveTorrentAsync(SubverseTorrent torrent);
 
