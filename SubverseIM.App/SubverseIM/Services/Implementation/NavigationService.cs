@@ -129,7 +129,6 @@ namespace SubverseIM.Services.Implementation
                         currentPage = torrentPage;
                     }
                     break;
-                case "":
                 case null:
                     await navigation.PushAsync(new ContactPageView { DataContext = contactPage });
                     break;
