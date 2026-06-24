@@ -588,7 +588,7 @@ namespace SubverseIM.Services.Implementation
             // Torrent service init
 
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
-            Factories factories = Factories.Default
+            Factories factories = new Factories()
                 .WithDhtCreator(() =>
                 {
                     var engine = new DhtEngine();
@@ -608,18 +608,14 @@ namespace SubverseIM.Services.Implementation
                     return portForwarder;
                 });
             string cacheDirPath = Path.Combine(launcherService.GetPersistentStoragePath(), "torrent");
-            try
-            {
-                serviceManager.GetOrRegister<ITorrentService>(
-                    new TorrentService(serviceManager, new EngineSettingsBuilder
-                    {
-                        CacheDirectory = cacheDirPath,
-                        UsePartialFiles = true,
-                        WebSeedDelay = TimeSpan.Zero,
-                        WebSeedSpeedTrigger = 0
-                    }.ToSettings(), factories));
-            }
-            catch (Exception ex) { }
+            serviceManager.GetOrRegister<ITorrentService>(
+                new TorrentService(serviceManager, new EngineSettingsBuilder
+                {
+                    CacheDirectory = cacheDirPath,
+                    UsePartialFiles = true,
+                    WebSeedDelay = TimeSpan.Zero,
+                    WebSeedSpeedTrigger = 0
+                }.ToSettings(), factories));
         }
 
         #endregion
