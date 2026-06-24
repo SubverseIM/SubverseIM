@@ -33,7 +33,8 @@ public class CreateContactPageViewTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService? dbService = serviceManager.Get<IDbService>();
@@ -42,13 +43,13 @@ public class CreateContactPageViewTests
         SubverseContact? contact = (await dbService.GetContactsAsync()).FirstOrDefault();
         Assert.NotNull(contact);
 
-        await mainViewModel.NavigateContactViewAsync(contact);
-
-        CreateContactPageViewModel? createContactPageViewModel = mainViewModel.CurrentPage as CreateContactPageViewModel;
-        Assert.NotNull(createContactPageViewModel);
+        await navService.NavigateContactViewAsync(contact);
 
         CreateContactPageView? createContactPageView = mainView.GetContentAs<CreateContactPageView>();
         Assert.NotNull(createContactPageView);
+
+        CreateContactPageViewModel? createContactPageViewModel = createContactPageView.DataContext as CreateContactPageViewModel;
+        Assert.NotNull(createContactPageViewModel);
 
         return (createContactPageView, createContactPageViewModel);
     }
@@ -71,10 +72,10 @@ public class CreateContactPageViewTests
             await EnsureIsOnCreateContactPageView();
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
+        INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
-        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        Assert.IsNotType<CreateContactPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsNotType<CreateContactPageView>(mainView.CurrentPage);
     }
 }

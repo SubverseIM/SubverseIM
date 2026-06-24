@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+<ContentPage xmlns="https://github.com/avaloniaui"
 			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,7 +9,17 @@
 	<Design.DataContext>
 		<vm:ConfigPageViewModel />
 	</Design.DataContext>
-	<ScrollViewer>
+	<ContentPage.Header>
+		<DockPanel>
+			<ToggleButton DockPanel.Dock="Right" 
+				IsVisible="{Binding #scrollView.DataContext.HasSidebar}"
+				Command="{Binding #scrollView.DataContext.ToggleSidebarCommand}" >
+				<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
+			</ToggleButton>
+			<TextBlock Text="{Binding #scrollView.DataContext.Title}" />
+		</DockPanel>
+	</ContentPage.Header>
+	<ScrollViewer x:Name="scrollView">
 		<StackPanel Orientation="Vertical">
 			<Label FontWeight="Bold">Bootstrapper URIs</Label>
 			<TextBlock TextWrapping="Wrap">A list of addresses the app uses to synchronize networking activities amongst peers</TextBlock>
@@ -74,4 +84,4 @@
 			</TextBlock>
 		</StackPanel>
 	</ScrollViewer>
-</UserControl>
+</ContentPage>

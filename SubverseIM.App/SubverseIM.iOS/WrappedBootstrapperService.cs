@@ -122,7 +122,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
     public override async void DidReceiveNotificationResponse(UNUserNotificationCenter center, UNNotificationResponse response, Action completionHandler)
     {
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
+        INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
 
         UNNotificationContent content = response.Notification.Request.Content;
         HashSet<string> extraDataKeys = (from kv in content.UserInfo
@@ -133,7 +133,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
         if (extraDataKeys.Contains(EXTRA_URI_ID))
         {
             string uriString = (string)(NSString)content.UserInfo[EXTRA_URI_ID];
-            await frontendService.NavigateLaunchedUriAsync(new(uriString));
+            await navService.NavigateLaunchedUriAsync(new(uriString));
         }
         else if (extraDataKeys.Contains(EXTRA_PARTICIPANTS_ID))
         {
@@ -145,7 +145,7 @@ public class WrappedBootstrapperService : UNUserNotificationCenterDelegate, INat
                 .Where(x => x is not null)
                 .Cast<SubverseContact>();
             string? topicName = content.UserInfo[EXTRA_TOPIC_ID] as NSString;
-            await frontendService.NavigateMessageViewAsync(participants, topicName);
+            await navService.NavigateMessageViewAsync(participants, topicName);
         }
 
         completionHandler();

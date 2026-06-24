@@ -8,7 +8,6 @@ using DynamicData.Binding;
 using ReactiveUI;
 using SIPSorcery.SIP;
 using SubverseIM.Core;
-using SubverseIM.Core.Storage.Messages;
 using SubverseIM.Models;
 using SubverseIM.Serializers;
 using SubverseIM.Services;
@@ -18,6 +17,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -119,8 +120,8 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task AddParticipantsCommand()
         {
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.NavigateContactViewAsync(this);
+            INavigationService navService = await ServiceManager.GetWithAwaitAsync<INavigationService>();
+            await navService.NavigateContactViewAsync(this);
         }
 
         public async Task AddTopicCommand(object? defaultTopicName = null)
@@ -195,6 +196,9 @@ namespace SubverseIM.ViewModels.Pages
             IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>(cancellationToken);
             IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>(cancellationToken);
             IMessageService messageService = await ServiceManager.GetWithAwaitAsync<IMessageService>(cancellationToken);
+            INavigationService navService = await ServiceManager.GetWithAwaitAsync<INavigationService>(cancellationToken);
+
+            messageService.MessageReceived += MessageReceived;
 
             SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync(cancellationToken);
 
@@ -231,7 +235,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 if (string.IsNullOrEmpty(SendMessageTopicName)) 
                 {
-                    await Dispatcher.UIThread.InvokeAsync(() => frontendService.NavigatePreviousViewAsync(shouldForceNavigation: false));
+                    await Dispatcher.UIThread.InvokeAsync(() => navService.NavigatePreviousViewAsync(shouldForceNavigation: false));
                     return;
                 }
             }
@@ -291,6 +295,48 @@ namespace SubverseIM.ViewModels.Pages
                 if (isCurrentTopic)
                 {
                     MessageList.Add(message);
+                }
+            }
+        }
+
+        private async void MessageReceived(object? sender, MessageReceivedEventArgs e)
+        {
+            IBootstrapperService bootstrapperService = await ServiceManager.GetWithAwaitAsync<IBootstrapperService>();
+            IDbService dbService = await ServiceManager.GetWithAwaitAsync<IDbService>();
+
+            SubversePeerId thisPeer = await bootstrapperService.GetPeerIdAsync();
+
+            SubversePeerId? topicId = e.Message.TopicName is null || e.Message.TopicName == "#system" ?
+                    null : new(SHA1.HashData(Encoding.UTF8.GetBytes(e.Message.TopicName)));
+            string? topicName = e.Message.TopicName is null || e.Message.TopicName == "#system" ?
+                null : e.Message.TopicName;
+
+            SubverseContact? contact = await dbService.GetContactAsync(topicId ?? e.Message.Sender);
+
+            bool isCurrentPeer = false;
+            if (contact is not null && (isCurrentPeer = ContactsList.Any(x => x.innerContact.OtherPeer == e.Message.Sender) &&
+                e.Message.TopicName != "#system" && (e.Message.WasDecrypted ?? true) && (e.Message.TopicName == SendMessageTopicName ||
+                (string.IsNullOrEmpty(e.Message.TopicName) && string.IsNullOrEmpty(SendMessageTopicName))
+                )))
+            {
+                MessageList.Add(e.Message);
+
+                if (!string.IsNullOrEmpty(e.Message.TopicName) &&
+                    !TopicsList.Contains(e.Message.TopicName))
+                {
+                    TopicsList.Insert(0, e.Message.TopicName);
+                }
+
+                foreach (SubverseContact participant in e.Message.Recipients
+                    .Zip(e.Message.RecipientNames)
+                    .Select(x => new SubverseContact()
+                    {
+                        OtherPeer = x.First,
+                        DisplayName = x.Second,
+                    }))
+                {
+                    if (participant.OtherPeer == thisPeer) continue;
+                    AddUniqueParticipant(participant, false);
                 }
             }
         }

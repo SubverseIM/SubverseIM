@@ -36,17 +36,18 @@ public class MessageViewModelTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        await mainViewModel.NavigateMessageViewAsync(await dbService.GetContactsAsync(), null);
-
-        MessagePageViewModel? messagePageViewModel = mainViewModel.CurrentPage as MessagePageViewModel;
-        Assert.NotNull(messagePageViewModel);
+        await navService.NavigateMessageViewAsync(await dbService.GetContactsAsync(), null);
 
         MessagePageView? messagePageView = mainView.GetContentAs<MessagePageView>();
         Assert.NotNull(messagePageView);
+
+        MessagePageViewModel? messagePageViewModel = messagePageView.DataContext as MessagePageViewModel;
+        Assert.NotNull(messagePageViewModel);
 
         await messagePageView.LoadTask;
 

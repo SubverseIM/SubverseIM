@@ -588,7 +588,7 @@ namespace SubverseIM.Services.Implementation
             // Torrent service init
 
             ILauncherService launcherService = await serviceManager.GetWithAwaitAsync<ILauncherService>();
-            Factories factories = Factories.Default
+            Factories factories = new Factories()
                 .WithDhtCreator(() =>
                 {
                     var engine = new DhtEngine();

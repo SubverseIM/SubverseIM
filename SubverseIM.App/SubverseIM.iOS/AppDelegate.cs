@@ -103,13 +103,16 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>, ILauncherService
             }
         }
 
-        Task<IFrontendService>? resolveServiceTask = serviceManager?.GetWithAwaitAsync<IFrontendService>();
-        IFrontendService? frontendService = resolveServiceTask is null ? null : await resolveServiceTask;
+        Task<INavigationService>? resolveNavServiceTask = serviceManager?.GetWithAwaitAsync<INavigationService>();
+        INavigationService? navService = resolveNavServiceTask is null ? null : await resolveNavServiceTask;
         if ((launchedUri = (ev as ProtocolActivatedEventArgs)?.Uri) is not null)
         {
-            _ = frontendService?.NavigateLaunchedUriAsync();
+            _ = navService?.NavigateLaunchedUriAsync();
         }
 
+
+        Task<IFrontendService>? resolveFrontendServiceTask = serviceManager?.GetWithAwaitAsync<IFrontendService>();
+        IFrontendService? frontendService = resolveFrontendServiceTask is null ? null : await resolveFrontendServiceTask;
         if (IsInForeground && frontendService is not null)
         {
             await frontendService.RunOnceBackgroundAsync();

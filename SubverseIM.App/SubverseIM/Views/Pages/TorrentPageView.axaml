@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+<ContentPage xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,7 +9,17 @@
 	<Design.DataContext>
 		<vm:TorrentPageViewModel />
 	</Design.DataContext>
-	<DockPanel>
+	<ContentPage.Header>
+		<DockPanel>
+			<ToggleButton DockPanel.Dock="Right" 
+				IsVisible="{Binding #panelView.DataContext.HasSidebar}"
+				Command="{Binding #panelView.DataContext.ToggleSidebarCommand}" >
+				<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
+			</ToggleButton>
+			<TextBlock Text="{Binding #panelView.DataContext.Title}" />
+		</DockPanel>
+	</ContentPage.Header>
+	<DockPanel x:Name="panelView">
 		<DockPanel DockPanel.Dock="Top">
 			<Button DockPanel.Dock="Right" Command="{Binding ImportCommand}"
 					AutomationProperties.LabeledBy="{Binding #labelAddTorrent}">
@@ -75,4 +85,4 @@
 			</TextBlock>
 		</Panel>
 	</DockPanel>
-</UserControl>
+</ContentPage>

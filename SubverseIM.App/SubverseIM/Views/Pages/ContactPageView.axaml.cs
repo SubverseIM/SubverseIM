@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
-public partial class ContactPageView : UserControl
+public partial class ContactPageView : ContentPage
 {
     private class TimerState
     {

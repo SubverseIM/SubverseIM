@@ -8,6 +8,7 @@ using Avalonia.Platform.Storage;
 using ReactiveUI;
 using SubverseIM.Models;
 using SubverseIM.Services;
+using SubverseIM.Services.Implementation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -201,17 +202,17 @@ namespace SubverseIM.ViewModels.Components
             innerContact.ChatColorCode = BubbleColor.ToUInt32();
             await dbService.InsertOrUpdateItemAsync(innerContact);
 
-            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            if (!await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true))
+            INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
+            if (!await navService.NavigatePreviousViewAsync(shouldForceNavigation: true))
             {
-                await frontendService.NavigateContactViewAsync();
+                await navService.NavigateContactViewAsync();
             }
         }
 
         public async Task EditCommand()
         {
-            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            await frontendService.NavigateContactViewAsync(innerContact);
+            INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
+            await navService.NavigateContactViewAsync(innerContact);
 
             ShouldShowOptions = false;
         }
@@ -274,10 +275,10 @@ namespace SubverseIM.ViewModels.Components
 
         public async Task CancelCommand()
         {
-            IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-            if (!await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true))
+            INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
+            if (!await navService.NavigatePreviousViewAsync(shouldForceNavigation: true))
             {
-                await frontendService.NavigateContactViewAsync();
+                await navService.NavigateContactViewAsync();
             }
         }
     }

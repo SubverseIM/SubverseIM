@@ -10,13 +10,13 @@ namespace SubverseIM.Services
 {
     public interface ITorrentService
     {
-        Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync();
+        Task<IReadOnlyDictionary<SubverseTorrent, Progress<TorrentStatus>>> InitializeAsync(CancellationToken cancellationToken = default);
 
-        Task DestroyAsync();
+        Task DestroyAsync(CancellationToken cancellationToken = default);
 
         Task<bool> AddTorrentAsync(InfoHash infoHash, byte[]? torrentBytes = null);
 
-        Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, CancellationToken cancellationToken = default);
+        Task<SubverseTorrent> AddTorrentAsync(IStorageFile file, IReadOnlyList<Uri>? webSeedUrls = null, CancellationToken cancellationToken = default);
 
         Task<bool> RemoveTorrentAsync(SubverseTorrent torrent);
 

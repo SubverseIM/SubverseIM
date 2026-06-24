@@ -1,4 +1,5 @@
-﻿using Avalonia.Headless.XUnit;
+﻿using Avalonia.Controls;
+using Avalonia.Headless.XUnit;
 using SubverseIM.Headless.Fixtures;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -36,15 +37,16 @@ public class ContactViewModelTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        await mainViewModel.NavigateContactViewAsync(parentOrNull);
-
-        ContactPageViewModel? contactPageViewModel = mainViewModel.CurrentPage as ContactPageViewModel;
-        Assert.NotNull(contactPageViewModel);
+        await navService.NavigateContactViewAsync(parentOrNull);
 
         ContactPageView? contactPageView = mainView.GetContentAs<ContactPageView>();
         Assert.NotNull(contactPageView);
+
+        ContactPageViewModel? contactPageViewModel = contactPageView.DataContext as ContactPageViewModel;
+        Assert.NotNull(contactPageViewModel);
 
         if (contactPageView.LoadTask.IsCompleted)
         {
@@ -63,7 +65,8 @@ public class ContactViewModelTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService? dbService = serviceManager.Get<IDbService>();
@@ -72,13 +75,13 @@ public class ContactViewModelTests
         SubverseContact? contact = (await dbService.GetContactsAsync()).FirstOrDefault();
         Assert.NotNull(contact);
 
-        await mainViewModel.NavigateContactViewAsync(contact);
-
-        CreateContactPageViewModel? createContactPageViewModel = mainViewModel.CurrentPage as CreateContactPageViewModel;
-        Assert.NotNull(createContactPageViewModel);
+        await navService.NavigateContactViewAsync(contact);
 
         CreateContactPageView? createContactPageView = mainView.GetContentAs<CreateContactPageView>();
         Assert.NotNull(createContactPageView);
+
+        CreateContactPageViewModel? createContactPageViewModel = createContactPageView.DataContext as CreateContactPageViewModel;
+        Assert.NotNull(createContactPageViewModel);
 
         return (createContactPageView, createContactPageViewModel);
     }
@@ -88,17 +91,18 @@ public class ContactViewModelTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        await mainViewModel.NavigateMessageViewAsync(await dbService.GetContactsAsync(), null);
-
-        MessagePageViewModel? messagePageViewModel = mainViewModel.CurrentPage as MessagePageViewModel;
-        Assert.NotNull(messagePageViewModel);
+        await navService.NavigateMessageViewAsync(await dbService.GetContactsAsync(), null);
 
         MessagePageView? messagePageView = mainView.GetContentAs<MessagePageView>();
         Assert.NotNull(messagePageView);
+
+        MessagePageViewModel? messagePageViewModel = messagePageView.DataContext as MessagePageViewModel;
+        Assert.NotNull(messagePageViewModel);
 
         await messagePageView.LoadTask;
 
@@ -193,8 +197,8 @@ public class ContactViewModelTests
 
         await contactViewModel.CancelCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsNotType<CreateContactPageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsNotType<CreateContactPageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -209,8 +213,8 @@ public class ContactViewModelTests
 
         await contactViewModel.SaveChangesCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsNotType<CreateContactPageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsNotType<CreateContactPageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -245,8 +249,8 @@ public class ContactViewModelTests
 
         await contactViewModel.EditCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<CreateContactPageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<CreateContactPageView>(currentPageView);
     }
 
     [AvaloniaFact]
@@ -260,7 +264,7 @@ public class ContactViewModelTests
 
         await contactViewModel.EditCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<CreateContactPageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<CreateContactPageView>(currentPageView);
     }
 }

@@ -33,15 +33,16 @@ public class ConfigPageViewTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        await mainViewModel.NavigateConfigViewAsync();
-
-        ConfigPageViewModel? configPageViewModel = mainViewModel.CurrentPage as ConfigPageViewModel;
-        Assert.NotNull(configPageViewModel);
+        await navService.NavigateConfigViewAsync();
 
         ConfigPageView? configPageView = mainView.GetContentAs<ConfigPageView>();
         Assert.NotNull(configPageView);
+
+        ConfigPageViewModel? configPageViewModel = configPageView.DataContext as ConfigPageViewModel;
+        Assert.NotNull(configPageViewModel);
 
         await configPageView.LoadTask;
 
@@ -134,8 +135,8 @@ public class ConfigPageViewTests
         bool result = await configPageViewModel.SaveConfigurationCommand();
         Debug.Assert(result == true); // This should always be true. If not, the test needs to be rewritten.
 
-        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        Assert.IsNotType<ConfigPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsNotType<ConfigPageView>(mainView.CurrentPage);
     }
 
     [AvaloniaFact]
@@ -151,8 +152,8 @@ public class ConfigPageViewTests
 
         configPageViewModel.BootstrapperUriList.Remove("invalid state");
 
-        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        Assert.IsType<ConfigPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsType<ConfigPageView>(mainView.CurrentPage);
     }
 
     [AvaloniaFact]
@@ -162,10 +163,10 @@ public class ConfigPageViewTests
             await EnsureIsOnConfigPageView();
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
+        INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
-        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        Assert.IsNotType<ConfigPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsNotType<ConfigPageView>(mainView.CurrentPage);
     }
 }

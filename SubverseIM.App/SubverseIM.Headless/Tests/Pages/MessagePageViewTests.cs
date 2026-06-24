@@ -1,4 +1,5 @@
-﻿using Avalonia.Headless.XUnit;
+﻿using Avalonia.Controls;
+using Avalonia.Headless.XUnit;
 using SubverseIM.Headless.Fixtures;
 using SubverseIM.Models;
 using SubverseIM.Services;
@@ -35,17 +36,18 @@ public class MessagePageViewTests
         MainView mainView = await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
         IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-        await mainViewModel.NavigateMessageViewAsync((await dbService.GetContactsAsync()).Where(x => x.TopicName is null), null);
-
-        MessagePageViewModel? messagePageViewModel = mainViewModel.CurrentPage as MessagePageViewModel;
-        Assert.NotNull(messagePageViewModel);
+        await navService.NavigateMessageViewAsync(await dbService.GetContactsAsync(), null);
 
         MessagePageView? messagePageView = mainView.GetContentAs<MessagePageView>();
         Assert.NotNull(messagePageView);
+
+        MessagePageViewModel? messagePageViewModel = messagePageView.DataContext as MessagePageViewModel;
+        Assert.NotNull(messagePageViewModel);
 
         await messagePageView.LoadTask;
 
@@ -60,7 +62,7 @@ public class MessagePageViewTests
 
         Assert.Equal(
             MainViewFixture.EXPECTED_NUM_CONTACTS,
-            messagePageViewModel.ContactsList.Count
+            messagePageViewModel.ContactsList.Count(x => x.TopicName is null)
             );
     }
 
@@ -83,8 +85,8 @@ public class MessagePageViewTests
 
         await messagePageViewModel.AddParticipantsCommand();
 
-        PageViewModelBase currentPageViewModel = (await fixture.GetViewModelAsync()).CurrentPage;
-        Assert.IsType<ContactPageViewModel>(currentPageViewModel);
+        Page? currentPageView = (await fixture.GetViewAsync()).CurrentPage;
+        Assert.IsType<ContactPageView>(currentPageView);
     }
 
     [AvaloniaTheory]
@@ -201,10 +203,10 @@ public class MessagePageViewTests
             await EnsureIsOnMessagePageView();
 
         IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
-        IFrontendService frontendService = await serviceManager.GetWithAwaitAsync<IFrontendService>();
-        await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
+        INavigationService navService = await serviceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigatePreviousViewAsync(shouldForceNavigation: true);
 
-        MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        Assert.IsNotType<MessagePageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsNotType<MessagePageView>(mainView.CurrentPage);
     }
 }

@@ -154,7 +154,7 @@ namespace SubverseIM.ViewModels.Pages
 
         public async Task<bool> SaveConfigurationCommand()
         {
-            IFrontendService frontendService = await ServiceManager.GetWithAwaitAsync<IFrontendService>();
+            INavigationService navService = await ServiceManager.GetWithAwaitAsync<INavigationService>();
             ILauncherService launcherService = await ServiceManager.GetWithAwaitAsync<ILauncherService>();
 
             IConfigurationService peerService = await ServiceManager.GetWithAwaitAsync<IConfigurationService>();
@@ -191,7 +191,7 @@ namespace SubverseIM.ViewModels.Pages
 
                 config.UseThemeOverride = UseThemeOverride;
 
-                return await peerService.PersistConfigAsync() && await frontendService.NavigatePreviousViewAsync(shouldForceNavigation: true);
+                return await peerService.PersistConfigAsync() && await navService.NavigatePreviousViewAsync(shouldForceNavigation: true);
             }
             catch (SubverseConfig.ValidationException ex)
             {

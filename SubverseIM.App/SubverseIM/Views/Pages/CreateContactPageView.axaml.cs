@@ -8,7 +8,7 @@ using SubverseIM.ViewModels.Pages;
 
 namespace SubverseIM.Views.Pages;
 
-public partial class CreateContactPageView : UserControl
+public partial class CreateContactPageView : ContentPage
 {
     public CreateContactPageView()
     {

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
-public partial class MessagePageView : UserControl
+public partial class MessagePageView : ContentPage
 {
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 

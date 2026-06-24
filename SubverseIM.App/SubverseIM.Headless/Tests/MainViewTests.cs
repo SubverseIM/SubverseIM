@@ -6,6 +6,7 @@ using SubverseIM.Services;
 using SubverseIM.ViewModels;
 using SubverseIM.ViewModels.Pages;
 using SubverseIM.Views;
+using SubverseIM.Views.Pages;
 using System.Security.Cryptography;
 
 namespace SubverseIM.Headless.Tests;
@@ -28,17 +29,6 @@ public class MainViewTests
 
         return mainView;
     }
-    
-    [AvaloniaFact]
-    public async Task ShouldRegisterTopLevelService() 
-    {
-        await EnsureMainViewLoaded();
-
-        IServiceManager serviceManager = await fixture.GetServiceManagerAsync();
-        TopLevel? topLevel = serviceManager.Get<TopLevel>();
-
-        Assert.NotNull(topLevel);
-    }
 
     [AvaloniaFact]
     public async Task ShouldRegisterFrontendService()
@@ -57,9 +47,11 @@ public class MainViewTests
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        while (mainViewModel.HasPreviousView && await mainViewModel.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        while (await navService.NavigatePreviousViewAsync(shouldForceNavigation: true)) ;
 
-        Assert.IsType<ContactPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsType<ContactPageView>(mainView.CurrentPage);
     }
 
     [AvaloniaFact]
@@ -68,9 +60,11 @@ public class MainViewTests
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        await mainViewModel.NavigateConfigViewAsync();
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigateConfigViewAsync();
 
-        Assert.IsType<ConfigPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsType<ConfigPageView>(mainView.CurrentPage);
     }
 
     [AvaloniaFact]
@@ -79,9 +73,11 @@ public class MainViewTests
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        await mainViewModel.NavigateContactViewAsync(parentOrNull: null);
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigateContactViewAsync(parentOrNull: null);
 
-        Assert.IsType<ContactPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsType<ContactPageView>(mainView.CurrentPage);
     }
 
     [AvaloniaFact]
@@ -90,12 +86,14 @@ public class MainViewTests
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        await mainViewModel.NavigateContactViewAsync(new SubverseContact 
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigateContactViewAsync(new SubverseContact 
         { 
             OtherPeer = new(RandomNumberGenerator.GetBytes(20)) 
         });
 
-        Assert.IsType<CreateContactPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsType<CreateContactPageView>(mainView.CurrentPage);
     }
 
     [AvaloniaFact]
@@ -104,9 +102,11 @@ public class MainViewTests
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        await mainViewModel.NavigateMessageViewAsync([], null);
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigateMessageViewAsync([], null);
 
-        Assert.IsType<MessagePageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsType<MessagePageView>(mainView.CurrentPage);
     }
 
     [AvaloniaFact]
@@ -115,9 +115,11 @@ public class MainViewTests
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        await mainViewModel.NavigateTorrentViewAsync();
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigateTorrentViewAsync();
 
-        Assert.IsType<TorrentPageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsType<TorrentPageView>(mainView.CurrentPage);
     }
 
     [AvaloniaFact]
@@ -126,8 +128,10 @@ public class MainViewTests
         await EnsureMainViewLoaded();
 
         MainViewModel mainViewModel = await fixture.GetViewModelAsync();
-        await mainViewModel.NavigatePurchaseViewAsync();
+        INavigationService navService = await mainViewModel.ServiceManager.GetWithAwaitAsync<INavigationService>();
+        await navService.NavigatePurchaseViewAsync();
 
-        Assert.IsType<PurchasePageViewModel>(mainViewModel.CurrentPage);
+        MainView mainView = await fixture.GetViewAsync();
+        Assert.IsType<PurchasePageView>(mainView.CurrentPage);
     }
 }

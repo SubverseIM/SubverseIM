@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SubverseIM.Views.Pages;
 
-public partial class TorrentPageView : UserControl
+public partial class TorrentPageView : ContentPage
 {
     private readonly TaskCompletionSource<RoutedEventArgs> loadTaskSource;
 

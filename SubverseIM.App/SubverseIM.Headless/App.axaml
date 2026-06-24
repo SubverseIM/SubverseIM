@@ -3,9 +3,6 @@
 			 xmlns:local="using:SubverseIM"
              xmlns:cv="using:SubverseIM.Converters"
              x:Class="SubverseIM.Headless.App">
-    <Application.DataTemplates>
-		<local:ViewLocator />
-	</Application.DataTemplates>
   <Application.Styles>
     <FluentTheme />
   </Application.Styles>

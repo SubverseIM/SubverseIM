@@ -1,15 +1,15 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+<ContentPage xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="using:SubverseIM.ViewModels.Pages"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SubverseIM.Views.Pages.ContactPageView"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="SubverseIM.Views.Pages.ContactPageView"
 			 x:DataType="vm:ContactPageViewModel">
 	<Design.DataContext>
 		<vm:ContactPageViewModel />
 	</Design.DataContext>
-	<UserControl.Styles>
+	<ContentPage.Styles>
 		<Style Selector="ListBoxItem.offscreen,TextBlock.offscreen,Button.offscreen">
 			<Setter Property="AutomationProperties.IsOffscreenBehavior" Value="Offscreen"/>
 		</Style>
@@ -19,13 +19,23 @@
 		<Style Selector="SplitView.inline">
 			<Setter Property="DisplayMode" Value="Inline"/>
 		</Style>
-	</UserControl.Styles>
+	</ContentPage.Styles>
+	<ContentPage.Header>
+		<DockPanel>
+			<ToggleButton DockPanel.Dock="Right" 
+				IsVisible="{Binding #splitView.DataContext.HasSidebar}"
+				Command="{Binding #splitView.DataContext.ToggleSidebarCommand}" >
+				<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
+			</ToggleButton>
+			<TextBlock Text="{Binding #splitView.DataContext.Title}" />
+		</DockPanel>
+	</ContentPage.Header>
 	<SplitView x:Name="splitView"
 			   IsPaneOpen="{Binding IsSidebarOpen}"
 			   PanePlacement="Right"
 			   OpenPaneLength="300"
 			   Classes.overlay="{Binding IsSidebarOverlay}"
-		   	   Classes.inline="{Binding !IsSidebarOverlay}">
+			   Classes.inline="{Binding !IsSidebarOverlay}">
 		<DockPanel>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, *, *, *, *, *"
 				  DockPanel.Dock="Top" IsVisible="{Binding Parent, Converter={x:Static ObjectConverters.IsNull}}"
@@ -138,4 +148,4 @@
 			</Panel>
 		</DockPanel>
 	</SplitView>
-</UserControl>
+</ContentPage>
