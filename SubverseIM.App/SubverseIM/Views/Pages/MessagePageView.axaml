@@ -1,12 +1,12 @@
 <ContentPage xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="using:SubverseIM.ViewModels.Pages"
 			 xmlns:vmx="using:SubverseIM.ViewModels.Components"
 			 xmlns:controls="using:CFS.Avalonia.Controls"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="SubverseIM.Views.Pages.MessagePageView"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:Class="SubverseIM.Views.Pages.MessagePageView"
 			 x:DataType="vm:MessagePageViewModel">
 	<Design.DataContext>
 		<vm:MessagePageViewModel />
@@ -34,12 +34,22 @@
 			<Setter Property="ListBox.VerticalAlignment" Value="Bottom" />
 		</Style>
 	</ContentPage.Styles>
+	<ContentPage.Header>
+		<DockPanel>
+			<ToggleButton DockPanel.Dock="Right" 
+				IsVisible="{Binding #splitView.DataContext.HasSidebar}"
+				Command="{Binding #splitView.DataContext.ToggleSidebarCommand}" >
+				<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
+			</ToggleButton>
+			<TextBlock HorizontalAlignment="Center" Text="{Binding #splitView.DataContext.Title}" />
+		</DockPanel>
+	</ContentPage.Header>
 	<SplitView x:Name="splitView"
-		   IsPaneOpen="{Binding IsSidebarOpen}"
-		   PanePlacement="Right"
-           OpenPaneLength="300"
-		   Classes.overlay="{Binding IsSidebarOverlay}"
-		   Classes.inline="{Binding !IsSidebarOverlay}">
+			   IsPaneOpen="{Binding IsSidebarOpen}"
+			   PanePlacement="Right"
+			   OpenPaneLength="300"
+			   Classes.overlay="{Binding IsSidebarOverlay}"
+			   Classes.inline="{Binding !IsSidebarOverlay}">
 		<SplitView.Pane>
 			<Border BorderThickness="2" BorderBrush="Black" IsVisible="{Binding IsSidebarOpen}">
 				<DockPanel>
@@ -68,19 +78,19 @@
 							<DataTemplate>
 								<DockPanel>
 									<Button DockPanel.Dock="Right"
-										VerticalAlignment="Stretch"
-										IsVisible="{Binding ShouldShowOptions}"
-										Command="{Binding DeleteCommand}"
-										CommandParameter="False"
-										Background="DarkRed"
-										AutomationProperties.Name="Remove Participant">
+											VerticalAlignment="Stretch"
+											IsVisible="{Binding ShouldShowOptions}"
+											Command="{Binding DeleteCommand}"
+											CommandParameter="False"
+											Background="DarkRed"
+											AutomationProperties.Name="Remove Participant">
 										<PathIcon Data="{StaticResource delete_regular}" />
 									</Button>
 									<Button DockPanel.Dock="Right"
-										VerticalAlignment="Stretch"
-										IsVisible="{Binding ShouldShowOptions}"
-										Command="{Binding EditCommand}"
-										AutomationProperties.Name="Save/Edit Contact">
+											VerticalAlignment="Stretch"
+											IsVisible="{Binding ShouldShowOptions}"
+											Command="{Binding EditCommand}"
+											AutomationProperties.Name="Save/Edit Contact">
 										<PathIcon Data="{StaticResource edit_regular}" />
 									</Button>
 									<TextBlock Focusable="True" Text="{Binding DisplayName}" TextWrapping="Wrap" />
@@ -107,11 +117,11 @@
 					</Classes.offscreen>
 				</Button>
 				<ComboBox x:Name="topicBox" DockPanel.Dock="Top"
-						HorizontalAlignment="Stretch"
-						VerticalAlignment="Stretch"
-						ItemsSource="{Binding TopicsList}"
-						SelectedItem="{Binding SendMessageTopicName}"
-						AutomationProperties.HelpText="Choose conversation topic.">
+						  HorizontalAlignment="Stretch"
+						  VerticalAlignment="Stretch"
+						  ItemsSource="{Binding TopicsList}"
+						  SelectedItem="{Binding SendMessageTopicName}"
+						  AutomationProperties.HelpText="Choose conversation topic.">
 					<Classes.offscreen>
 						<MultiBinding Converter="{x:Static BoolConverters.And}">
 							<Binding Path="DataContext.IsSidebarOpen" ElementName="splitView" />
@@ -257,11 +267,11 @@
 								</Button>
 								<DockPanel>
 									<TextBlock
-											Focusable="True"
-											TextWrapping="Wrap" DockPanel.Dock="Top"
-											HorizontalAlignment="{Binding ContentAlignmentAsync^}"
-											Text="{Binding FromHeading}"
-											Margin="2">
+										Focusable="True"
+										TextWrapping="Wrap" DockPanel.Dock="Top"
+										HorizontalAlignment="{Binding ContentAlignmentAsync^}"
+										Text="{Binding FromHeading}"
+										Margin="2">
 										<Classes.offscreen>
 											<MultiBinding Converter="{x:Static BoolConverters.Or}">
 												<MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -290,7 +300,7 @@
 											</MultiBinding>
 										</Classes.offscreen>
 									</TextBlock>
-									<TextBlock 
+									<TextBlock
 										Focusable="True"
 										DockPanel.Dock="Bottom" TextWrapping="Wrap"
 										IsVisible="{Binding IsGroupMessage}"
@@ -322,7 +332,7 @@
 															</MultiBinding>
 														</Classes.offscreen>
 														<TextBlock Foreground="Aqua" TextWrapping="Wrap"
-																Text="{Binding DisplayName, DataType={x:Type vmx:EmbedViewModel}}">
+																   Text="{Binding DisplayName, DataType={x:Type vmx:EmbedViewModel}}">
 															<Classes.offscreen>
 																<MultiBinding Converter="{x:Static BoolConverters.Or}">
 																	<MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -370,12 +380,12 @@
 																<DataTemplate>
 																	<Panel VerticalAlignment="Center">
 																		<TextBlock Classes.emphasis="{Binding IsEmphasis, DataType={x:Type vmx:InlineContentViewModel}}}"
-																			 Classes.italic="{Binding IsItalics, DataType={x:Type vmx:InlineContentViewModel}}}"
-																			 Classes.underline="{Binding IsUnderline, DataType={x:Type vmx:InlineContentViewModel}}}"
-																			 Classes.strike="{Binding IsStrikeout, DataType={x:Type vmx:InlineContentViewModel}}}"
-																			 IsVisible="{Binding !IsCode, DataType={x:Type vmx:InlineContentViewModel}}}"
-																			 Text="{Binding Content, DataType={x:Type vmx:InlineContentViewModel}}" TextAlignment="Start"
-																			 Foreground="White" TextWrapping="Wrap"/>
+																				   Classes.italic="{Binding IsItalics, DataType={x:Type vmx:InlineContentViewModel}}}"
+																				   Classes.underline="{Binding IsUnderline, DataType={x:Type vmx:InlineContentViewModel}}}"
+																				   Classes.strike="{Binding IsStrikeout, DataType={x:Type vmx:InlineContentViewModel}}}"
+																				   IsVisible="{Binding !IsCode, DataType={x:Type vmx:InlineContentViewModel}}}"
+																				   Text="{Binding Content, DataType={x:Type vmx:InlineContentViewModel}}" TextAlignment="Start"
+																				   Foreground="White" TextWrapping="Wrap"/>
 																		<Border IsVisible="{Binding IsCode, DataType={x:Type vmx:InlineContentViewModel}}}"
 																				Background="Black" BorderBrush="DimGray" BorderThickness="1" CornerRadius="2"
 																				Padding="3">
@@ -414,7 +424,7 @@
 						</DataTemplate>
 					</ListBox.ItemTemplate>
 				</ListBox>
-				<TextBlock 
+				<TextBlock
 					IsVisible="{Binding !SortedMessageList.Count}"
 					HorizontalAlignment="Center"
 					VerticalAlignment="Center"
