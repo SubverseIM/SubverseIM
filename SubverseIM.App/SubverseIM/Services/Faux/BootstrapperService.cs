@@ -19,6 +19,8 @@ namespace SubverseIM.Services.Faux
 
         private readonly TaskCompletionSource<IServiceManager> serviceManagerTcs;
 
+        public bool UseSeparateThread => true;
+
         public BootstrapperService(INativeService nativeService)
         {
             this.nativeService = nativeService;

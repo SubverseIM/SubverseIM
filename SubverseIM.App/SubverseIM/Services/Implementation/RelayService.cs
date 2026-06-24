@@ -24,6 +24,8 @@ namespace SubverseIM.Services.Implementation
 
         private bool disposedValue;
 
+        public bool UseSeparateThread => true;
+
         public RelayService()
         {
             recvMessageQueue = Channel.CreateUnbounded<SIPMessageBase>();
