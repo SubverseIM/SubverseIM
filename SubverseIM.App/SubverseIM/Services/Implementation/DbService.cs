@@ -26,6 +26,8 @@ namespace SubverseIM.Services.Implementation
 
         private bool disposedValue;
 
+        public bool UseSeparateThread => false;
+
         public DbService(string dbFilePath)
         {
             this.dbFilePath = dbFilePath;

@@ -6,5 +6,7 @@ namespace SubverseIM.Services;
 
 public interface IInjectable
 {
+    bool UseSeparateThread { get; }
+
     Task InjectAsync(IServiceManager serviceManager);
 }

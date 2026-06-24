@@ -22,7 +22,7 @@ namespace SubverseIM.Services.Implementation
         public TService? Get<TService>()
             where TService : class
         {
-            lock (serviceMap) 
+            lock (serviceMap)
             {
                 serviceMap.TryGetValue(typeof(TService), out object? instance);
                 return instance as TService;
@@ -82,11 +82,19 @@ namespace SubverseIM.Services.Implementation
                 }
             }
 
-            _ = Task.Run(() => (newInstance as IInjectable)?.InjectAsync(this));
+            if (newInstance is IInjectable injectable && injectable.UseSeparateThread)
+            {
+                _ = Task.Run(() => injectable.InjectAsync(this));
+            }
+            else
+            {
+                _ = (newInstance as IInjectable)?.InjectAsync(this);
+            }
+
             return newInstance;
         }
 
-        public async Task<TService> GetWithAwaitAsync<TService>(CancellationToken cancellationToken = default) 
+        public async Task<TService> GetWithAwaitAsync<TService>(CancellationToken cancellationToken = default)
             where TService : class
         {
             lock (serviceMap)
