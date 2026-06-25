@@ -11,12 +11,7 @@
 	</Design.DataContext>
 	<ContentPage.Header>
 		<DockPanel>
-			<ToggleButton DockPanel.Dock="Right" 
-				IsVisible="{Binding #panelView.DataContext.HasSidebar}"
-				Command="{Binding #panelView.DataContext.ToggleSidebarCommand}" >
-				<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
-			</ToggleButton>
-			<TextBlock Text="{Binding #panelView.DataContext.Title}" />
+			<TextBlock Text="{Binding DataContext.Title, ElementName='panelView'}" />
 		</DockPanel>
 	</ContentPage.Header>
 	<DockPanel x:Name="panelView">

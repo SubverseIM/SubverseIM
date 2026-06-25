@@ -11,12 +11,7 @@
 	</Design.DataContext>
 	<ContentPage.Header>
 		<DockPanel>
-			<ToggleButton DockPanel.Dock="Right" 
-				IsVisible="{Binding #productListBox.DataContext.HasSidebar}"
-				Command="{Binding #productListBox.DataContext.ToggleSidebarCommand}" >
-				<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
-			</ToggleButton>
-			<TextBlock Text="{Binding #productListBox.DataContext.Title}" />
+			<TextBlock Text="{Binding DataContext.Title, ElementName='productListBox'}" />
 		</DockPanel>
 	</ContentPage.Header>
 	<Panel>
@@ -29,7 +24,7 @@
 						<StackPanel Orientation="Horizontal">
 							<Label>Purchase for:</Label>
 							<Button 
-								Command="{Binding #productListBox.DataContext.PurchaseCommand}"
+								Command="{Binding DataContext.PurchaseCommand, ElementName='productListBox'}"
 								CommandParameter="{Binding ProductId}">
 								<TextBlock Text="{Binding LocalizedPrice}" />
 							</Button>

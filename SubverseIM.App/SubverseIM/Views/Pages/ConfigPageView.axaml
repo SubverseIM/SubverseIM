@@ -11,12 +11,7 @@
 	</Design.DataContext>
 	<ContentPage.Header>
 		<DockPanel>
-			<ToggleButton DockPanel.Dock="Right" 
-				IsVisible="{Binding #scrollView.DataContext.HasSidebar}"
-				Command="{Binding #scrollView.DataContext.ToggleSidebarCommand}" >
-				<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
-			</ToggleButton>
-			<TextBlock Text="{Binding #scrollView.DataContext.Title}" />
+			<TextBlock Text="{Binding DataContext.Title, ElementName='scrollView'}" />
 		</DockPanel>
 	</ContentPage.Header>
 	<ScrollViewer x:Name="scrollView">
