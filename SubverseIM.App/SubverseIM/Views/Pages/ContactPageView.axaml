@@ -22,12 +22,7 @@
 	</ContentPage.Styles>
 	<ContentPage.Header>
 		<DockPanel>
-			<ToggleButton DockPanel.Dock="Right" 
-				IsVisible="{Binding #splitView.DataContext.HasSidebar}"
-				Command="{Binding #splitView.DataContext.ToggleSidebarCommand}" >
-				<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
-			</ToggleButton>
-			<TextBlock Text="{Binding #splitView.DataContext.Title}" />
+			<TextBlock Text="{Binding DataContext.Title, ElementName='splitView'}" />
 		</DockPanel>
 	</ContentPage.Header>
 	<SplitView x:Name="splitView"
