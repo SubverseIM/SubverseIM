@@ -421,5 +421,10 @@ namespace SubverseIM.ViewModels.Pages
                 await SendMessageAsync(torrent.MagnetUri);
             }
         }
+
+        public void ToggleSidebarCommand()
+        {
+            IsSidebarOpen = !IsSidebarOpen;
+        }
     }
 }

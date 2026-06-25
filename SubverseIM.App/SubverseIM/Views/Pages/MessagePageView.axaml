@@ -37,11 +37,11 @@
 	<ContentPage.Header>
 		<DockPanel>
 			<ToggleButton DockPanel.Dock="Right" 
-				IsVisible="{Binding #splitView.DataContext.HasSidebar}"
-				Command="{Binding #splitView.DataContext.ToggleSidebarCommand}" >
+				IsVisible="{Binding DataContext.HasSidebar, ElementName='splitView'}"
+				Command="{Binding DataContext.ToggleSidebarCommand, ElementName='splitView'}" >
 				<PathIcon Data="{StaticResource line_horizontal_3_regular}" />
 			</ToggleButton>
-			<TextBlock HorizontalAlignment="Center" Text="{Binding #splitView.DataContext.Title}" />
+			<TextBlock Text="{Binding DataContext.Title, ElementName='splitView'}" />
 		</DockPanel>
 	</ContentPage.Header>
 	<SplitView x:Name="splitView"

@@ -120,6 +120,13 @@ public partial class MessagePageView : ContentPage
         base.OnLoaded(e);
         loadTaskSource.TrySetResult(e);
 
+        TopLevel topLevel = await ((MessagePageViewModel)DataContext!).ServiceManager.GetWithAwaitAsync<TopLevel>();
+        ((MessagePageViewModel)DataContext!).OnOrientationChanged(topLevel);
+        if (topLevel.Screens is { } screens) 
+        {
+            screens.Changed += ScreensChanged;
+        }
+
         await ((MessagePageViewModel)DataContext!).ApplyThemeOverrideAsync();
 
         IServiceManager serviceManager = ((MessagePageViewModel)DataContext!).ServiceManager;
@@ -136,6 +143,12 @@ public partial class MessagePageView : ContentPage
 
         splitView.IsPaneOpen = true;
         splitView.IsPaneOpen = false;
+    }
+
+    private async void ScreensChanged(object? sender, System.EventArgs e)
+    {
+        TopLevel topLevel = await ((MessagePageViewModel)DataContext!).ServiceManager.GetWithAwaitAsync<TopLevel>();
+        ((MessagePageViewModel)DataContext!).OnOrientationChanged(topLevel);
     }
 
     protected override async void OnSizeChanged(SizeChangedEventArgs e)

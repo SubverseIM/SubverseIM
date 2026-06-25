@@ -33,8 +33,6 @@ namespace SubverseIM.ViewModels.Pages
 
         public abstract void OnOrientationChanged(TopLevel? topLevel);
 
-        public abstract void ToggleSidebarCommand();
-
         public abstract Task ApplyThemeOverrideAsync(CancellationToken cancellationToken = default);
     }
 
@@ -90,11 +88,6 @@ namespace SubverseIM.ViewModels.Pages
             {
                 IsSidebarOpen = HasSidebar;
             }
-        }
-
-        public override void ToggleSidebarCommand()
-        {
-            IsSidebarOpen = !IsSidebarOpen;
         }
 
         public override async Task ApplyThemeOverrideAsync(CancellationToken cancellationToken = default)
