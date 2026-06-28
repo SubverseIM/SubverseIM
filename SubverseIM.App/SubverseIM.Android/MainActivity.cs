@@ -233,12 +233,7 @@ public class MainActivity : AvaloniaMainActivity, ILauncherService
 
     public string GetPersistentStoragePath()
     {
-        return Build.Product?.ToLowerInvariant() switch
-        {
-            "gryphon" => null,
-            _ => GetExternalFilesDir(null)?.AbsolutePath
-        } ?? System.Environment.GetFolderPath(System.Environment
-        .SpecialFolder.ApplicationData);
+        return System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
     }
 
     public Task<bool> ShowConfirmationDialogAsync(string title, string message)
