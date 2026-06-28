@@ -39,7 +39,7 @@ public partial class MainView : NavigationPage
         }
     }
 
-    protected override void OnLoaded(RoutedEventArgs e)
+    protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
 
@@ -49,7 +49,7 @@ public partial class MainView : NavigationPage
         INavigationService navService = new NavigationService(((MainViewModel)DataContext!).ServiceManager);
         ((MainViewModel)DataContext!).ServiceManager.GetOrRegister(navService);
 
-        _ = navService.NavigateLaunchedUriAsync();
+        await navService.NavigateLaunchedUriAsync();
 
         loadTaskSource.SetResult(e);
     }

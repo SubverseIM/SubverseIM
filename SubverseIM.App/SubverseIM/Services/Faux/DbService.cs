@@ -26,8 +26,6 @@ namespace SubverseIM.Services.Faux
 
         private readonly Dictionary<string, Stream> fileStreams = new();
 
-        public bool UseSeparateThread => false;
-
         public Task<SubverseConfig?> GetConfigAsync(CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)

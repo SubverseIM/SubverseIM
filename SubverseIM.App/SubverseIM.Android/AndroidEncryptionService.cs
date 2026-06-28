@@ -124,17 +124,20 @@ namespace SubverseIM.Android
 
         private readonly BiometricPrompt biometricPrompt;
 
+        private readonly MainActivity mainActivity;
+
         private readonly string passwordFilePath;
 
         public AndroidEncryptionService(MainActivity mainActivity)
         {
-            string? appDataDirPath = mainActivity.GetExternalFilesDir(null)?.AbsolutePath ??
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string? appDataDirPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             passwordFilePath = Path.Combine(appDataDirPath, "SubverseIM-key.json");
 
             authenticationCallback = new(passwordFilePath);
 
             biometricPrompt = new BiometricPrompt(mainActivity, authenticationCallback);
+
+            this.mainActivity = mainActivity;
         }
 
         private static IKey? GenerateSecretKey()
@@ -195,7 +198,8 @@ namespace SubverseIM.Android
                     BiometricManager.Authenticators.BiometricWeak |
                     BiometricManager.Authenticators.DeviceCredential)
                 .Build();
-            biometricPrompt.Authenticate(promptInfo);
+
+            mainActivity.RunOnUiThread(() => biometricPrompt.Authenticate(promptInfo));
 
             try
             {

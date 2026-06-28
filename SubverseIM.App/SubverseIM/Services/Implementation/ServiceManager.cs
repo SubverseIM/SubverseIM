@@ -82,13 +82,9 @@ namespace SubverseIM.Services.Implementation
                 }
             }
 
-            if (newInstance is IInjectable injectable && injectable.UseSeparateThread)
+            if (newInstance is IInjectable injectable)
             {
                 _ = Task.Run(() => injectable.InjectAsync(this));
-            }
-            else
-            {
-                _ = (newInstance as IInjectable)?.InjectAsync(this);
             }
 
             return newInstance;

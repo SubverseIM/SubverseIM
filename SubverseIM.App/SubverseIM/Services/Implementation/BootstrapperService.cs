@@ -526,8 +526,6 @@ namespace SubverseIM.Services.Implementation
 
         #region IInjectable API
 
-        public bool UseSeparateThread => true;
-
         public async Task InjectAsync(IServiceManager serviceManager)
         {
             // DI container init
