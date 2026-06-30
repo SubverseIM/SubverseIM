@@ -5,5 +5,5 @@
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-	<application android:label="SubverseIM" android:icon="@drawable/Icon" />
+	<application android:label="SubverseIM" android:icon="@mipmap/ic_launcher" />
 </manifest>
