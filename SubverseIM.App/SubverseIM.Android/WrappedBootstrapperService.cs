@@ -73,7 +73,7 @@ namespace SubverseIM.Android
                 PendingIntentFlags.Immutable);
 
             Notification? notif = new NotificationCompat.Builder(this, SRV_CHANNEL_ID)?
-                .SetSmallIcon(Resource.Drawable.Icon)?
+                .SetSmallIcon(Resource.Drawable.ic_notification)?
                 .SetPriority(NotificationCompat.PriorityLow)?
                 .SetContentTitle("SubverseIM Peer Services")?
                 .SetContentText("Participating in ongoing network activities...")?
@@ -206,7 +206,7 @@ namespace SubverseIM.Android
                 .SetPriority(NotificationCompat.PriorityHigh)?
                 .SetAutoCancel(true)?
                 .SetContentIntent(pendingIntent)?
-                .SetSmallIcon(Resource.Drawable.Icon)?
+                .SetSmallIcon(Resource.Drawable.ic_notification)?
                 .SetLargeIcon(avatarBitmap)?
                 .SetSound(soundUri)?
                 .SetStyle(messagingStyle)?
@@ -237,7 +237,7 @@ namespace SubverseIM.Android
                 .SetPriority(NotificationCompat.PriorityHigh)?
                 .SetAutoCancel(true)?
                 .SetContentIntent(pendingIntent)?
-                .SetSmallIcon(Resource.Drawable.Icon)?
+                .SetSmallIcon(Resource.Drawable.ic_notification)?
                 .SetSound(soundUri)?
                 .Build();
 
