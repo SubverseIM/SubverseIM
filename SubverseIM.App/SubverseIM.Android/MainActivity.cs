@@ -31,7 +31,7 @@ namespace SubverseIM.Android;
 [Activity(
     Label = "SubverseIM",
     Theme = "@style/MyTheme.NoActionBar",
-    Icon = "@drawable/icon",
+    Icon = "@mipmap/ic_launcher",
     MainLauncher = true,
     ScreenOrientation = ScreenOrientation.FullUser,
     ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.Orientation,
