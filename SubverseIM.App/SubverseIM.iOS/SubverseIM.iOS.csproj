@@ -9,7 +9,6 @@
 	<PropertyGroup>
 		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
 		<UseInterpreter>true</UseInterpreter>
-		<TrimMode>copy</TrimMode>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -27,7 +26,6 @@
 	<ItemGroup>
 		<PackageReference Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Plugin.InAppBilling" Version="10.0.0" />
-		<PackageReference Include="Microsoft.Maui.Essentials" Version="10.0.90" />
 	</ItemGroup>
 
 	<ItemGroup>
