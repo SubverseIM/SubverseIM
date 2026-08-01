@@ -15,10 +15,7 @@ jobs:
 
     container: 
       image: garretech/android-sdk-image:36.0.0
-    
-    env:
-      SIXLABORS_LICENSE_KEY: ${{ vars.SIXLABORS_LICENSE_KEY }}
-
+      
     steps:
     - uses: actions/checkout@v4
       with: 
@@ -63,10 +60,7 @@ jobs:
     
     container: 
       image: garretech/android-sdk-image:36.0.0
-    
-    env:
-      SIXLABORS_LICENSE_KEY: ${{ vars.SIXLABORS_LICENSE_KEY }}
-
+      
     steps:
       - uses: actions/checkout@v4
         with: 
