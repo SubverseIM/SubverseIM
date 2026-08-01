@@ -29,11 +29,11 @@ jobs:
     - name: Build Avalonia (local)
       run: cd external/Avalonia && ./build.sh BuildToNuGetCache
     - name: Test SubverseIM.App
-      run: dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
+      run: SIXLABORS_LICENSE_KEY=${{ secrets.SIXLABORS_LICENSE_KEY }} dotnet test SubverseIM.App/SubverseIM.Headless/SubverseIM.Headless.csproj
     - name: Restore Android signing keys
       run: (echo ${{ secrets.KEYSTORE }} | base64 --decode) > SubverseIM.App/SubverseIM.Android/ChosenFewKey.keystore
     - name: Build & publish SubverseIM.Android
-      run: dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1 -p:AndroidPackageFormat=aab -p:AndroidKeyStore=true -p:AndroidSigningKeyStore=ChosenFewKey.keystore -p:AndroidSigningKeyAlias=ChosenFewKey -p:AndroidSigningStorePass=${{ secrets.KEYSTORE_PASSWORD }} -p:AndroidSigningKeyPass=${{ secrets.KEYSTORE_PASSWORD }}
+      run: SIXLABORS_LICENSE_KEY=${{ secrets.SIXLABORS_LICENSE_KEY }} dotnet publish SubverseIM.App/SubverseIM.Android/SubverseIM.Android.csproj --configuration Release --output /home/tc/publish/android -m:1 -p:AndroidPackageFormat=aab -p:AndroidKeyStore=true -p:AndroidSigningKeyStore=ChosenFewKey.keystore -p:AndroidSigningKeyAlias=ChosenFewKey -p:AndroidSigningStorePass=${{ secrets.KEYSTORE_PASSWORD }} -p:AndroidSigningKeyPass=${{ secrets.KEYSTORE_PASSWORD }}
     - name: Create new release
       id: gh_release
       uses: ncipollo/release-action@v1
