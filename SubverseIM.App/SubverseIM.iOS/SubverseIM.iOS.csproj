@@ -25,8 +25,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
-		<PackageReference Include="Plugin.InAppBilling" Version="9.1.0" />
-		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.120" />
+		<PackageReference Include="Plugin.InAppBilling" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Maui.Essentials" Version="10.0.90" />
 	</ItemGroup>
 
 	<ItemGroup>

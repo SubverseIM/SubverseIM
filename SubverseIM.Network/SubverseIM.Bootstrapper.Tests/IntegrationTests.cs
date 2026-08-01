@@ -80,7 +80,7 @@ public class IntegrationTests
             privateKeyStream.Position = 0;
 
             myKeys = new EncryptionKeys(publicKeyStream, privateKeyStream, "#FreeTheInternet");
-            myPeerId = new(myKeys.PublicKey.GetFingerprint());
+            myPeerId = new(myKeys.EncryptKeys.Single().GetFingerprint());
         }
 
         using (var pgp = new PGP(myKeys))
@@ -115,7 +115,7 @@ public class IntegrationTests
             privateKeyStream.Position = 0;
 
             myKeys = new EncryptionKeys(publicKeyStream, privateKeyStream, "#FreeTheInternet");
-            myPeerId = new(myKeys.PublicKey.GetFingerprint());
+            myPeerId = new(myKeys.EncryptKeys.Single().GetFingerprint());
         }
 
         using (var pgp = new PGP(myKeys))

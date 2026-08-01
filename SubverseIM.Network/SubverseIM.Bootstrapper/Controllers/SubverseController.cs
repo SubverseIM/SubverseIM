@@ -111,11 +111,11 @@ namespace SubverseIM.Bootstrapper.Controllers
                     keyContainer = new EncryptionKeys(await streamReader.ReadToEndAsync());
                 }
 
-                SubversePeerId peerId = new(keyContainer.PublicKey.GetFingerprint());
+                SubversePeerId peerId = new(keyContainer.EncryptKeys.Single().GetFingerprint());
                 _logger.LogInformation($"PKX Submitted: {peerId}");
 
                 await _cache.SetAsync(
-                    $"PKX-{peerId}", keyContainer.PublicKey.GetEncoded(),
+                    $"PKX-{peerId}", keyContainer.EncryptKeys.Single().GetEncoded(),
                     new DistributedCacheEntryOptions { AbsoluteExpiration = null },
                     cancellationToken);
 
@@ -168,7 +168,7 @@ namespace SubverseIM.Bootstrapper.Controllers
 
                     if (verifySuccess)
                     {
-                        SubversePeerId peerId = new(keyContainer.PublicKey.GetFingerprint());
+                        SubversePeerId peerId = new(keyContainer.EncryptKeys.Single().GetFingerprint());
                         await _cache.SetAsync($"DAT-{peerId}", nodesBytes,
                             new DistributedCacheEntryOptions { AbsoluteExpiration = null }
                             );
@@ -215,7 +215,7 @@ namespace SubverseIM.Bootstrapper.Controllers
 
                     if (verifySuccess)
                     {
-                        SubversePeerId peerId = new(keyContainer.PublicKey.GetFingerprint());
+                        SubversePeerId peerId = new(keyContainer.EncryptKeys.Single().GetFingerprint());
                         await _pushService.RegisterPeerAsync(peerId, deviceToken);
 
                         return true;
