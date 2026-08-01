@@ -131,6 +131,7 @@ namespace SubverseIM.Services.Implementation
                     break;
                 case null:
                     await navigation.PushAsync(new ContactPageView { DataContext = contactPage });
+                    currentPage = contactPage;
                     break;
             }
         }

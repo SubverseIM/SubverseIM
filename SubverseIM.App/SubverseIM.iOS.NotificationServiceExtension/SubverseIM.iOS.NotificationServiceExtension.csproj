@@ -25,7 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="PgpCore" Version="6.5.3" />
+		<PackageReference Include="PgpCore" Version="8.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

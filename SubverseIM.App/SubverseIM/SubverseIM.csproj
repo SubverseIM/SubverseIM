@@ -15,21 +15,21 @@
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="$(AvaloniaVersion)" />
+		<PackageReference Include="DynamicData" Version="9.4.33" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="LiteDB" Version="5.0.21" />
 		<PackageReference Include="OpenGraph-Net" Version="4.0.1" />
-		<PackageReference Include="PgpCore" Version="6.5.3" />
-		<PackageReference Include="Plugin.InAppBilling" Version="9.1.0" />
-		<PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8" />
-		<PackageReference Include="SIPSorcery" Version="8.0.23" />
+		<PackageReference Include="PgpCore" Version="8.0.0" />
+		<PackageReference Include="Plugin.InAppBilling" Version="10.0.0" />
+		<PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
+		<PackageReference Include="SIPSorcery" Version="10.0.13" />
+		<PackageReference Include="ChosenFewSoftware.Avalonia.Controls" Version="1.0.0" />
+		<PackageReference Include="ChosenFewSoftware.Surge.ImageSharp" Version="1.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\external\CFS.Avalonia.Controls\CFS.Avalonia.Controls\CFS.Avalonia.Controls.csproj" />
-	  <ProjectReference Include="..\..\external\CFS.Surge\CFS.Surge.Core\CFS.Surge.Core.csproj" />
-	  <ProjectReference Include="..\..\external\CFS.Surge\CFS.Surge.ImageSharp\CFS.Surge.ImageSharp.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Client\MonoTorrent.Client.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Factories\MonoTorrent.Factories.csproj" />
 	  <ProjectReference Include="..\..\external\monotorrent\src\MonoTorrent.Connections\MonoTorrent.Connections.csproj" />

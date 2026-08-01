@@ -435,7 +435,7 @@ namespace SubverseIM.Services.Implementation
                     throw new InvalidOperationException("Could not find private key file in application database!");
                 }
             }
-            else if (peer?.KeyContainer is not null && peer.KeyContainer.PublicKey is not null)
+            else if (peer?.KeyContainer is not null && peer.KeyContainer.EncryptKeys.Single() is not null)
             {
                 peerKeys = peer.KeyContainer;
             }
@@ -563,7 +563,7 @@ namespace SubverseIM.Services.Implementation
 
             // Message service init
 
-            SubversePeerId thisPeer = new(myKeys.PublicKey.GetFingerprint());
+            SubversePeerId thisPeer = new(myKeys.EncryptKeys.Single().GetFingerprint());
             thisPeerTcs.SetResult(thisPeer);
 
             IMessageService messageService = serviceManager.GetOrRegister
