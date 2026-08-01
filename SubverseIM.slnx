@@ -4,13 +4,6 @@
     <Project Path="external/apns-dotnet/Apns.Test/Apns.Test.csproj" />
     <Project Path="external/apns-dotnet/Apns/Apns.csproj" />
   </Folder>
-  <Folder Name="/external/CFS.Avalonia.Controls/">
-    <Project Path="external/CFS.Avalonia.Controls/CFS.Avalonia.Controls/CFS.Avalonia.Controls.csproj" />
-  </Folder>
-  <Folder Name="/external/CFS.Surge/">
-    <Project Path="external/CFS.Surge/CFS.Surge.Core/CFS.Surge.Core.csproj" />
-    <Project Path="external/CFS.Surge/CFS.Surge.ImageSharp/CFS.Surge.ImageSharp.csproj" />
-  </Folder>
   <Folder Name="/external/CoreRPC/">
     <Project Path="external/CoreRPC/CoreRPC/CoreRPC.csproj" />
   </Folder>
