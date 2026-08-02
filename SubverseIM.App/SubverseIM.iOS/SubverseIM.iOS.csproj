@@ -4,11 +4,7 @@
 		<TargetFramework>net10.0-ios</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ApplicationId>com.chosenfewsoftware.SubverseIM</ApplicationId>
-	</PropertyGroup>
-
-	<PropertyGroup>
 		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
-		<UseInterpreter>true</UseInterpreter>
 	</PropertyGroup>
 
 	<ItemGroup>
