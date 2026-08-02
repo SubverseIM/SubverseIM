@@ -78,8 +78,8 @@ namespace SubverseIM.ViewModels.Pages
             }
         }
 
-        private string? sendMessageTopicName;
-        public string? SendMessageTopicName
+        private string sendMessageTopicName;
+        public string SendMessageTopicName
         {
             get => sendMessageTopicName;
             set
@@ -109,6 +109,7 @@ namespace SubverseIM.ViewModels.Pages
             sortedMessageList = new([]);
 
             TopicsList = [string.Empty];
+            sendMessageTopicName = string.Empty;
         }
 
         private async Task<bool> GetMessageOrderFlagAsync()
@@ -259,7 +260,7 @@ namespace SubverseIM.ViewModels.Pages
                 ShouldRefreshContacts = true;
             }
 
-            foreach (SubverseMessage message in await dbService.GetMessagesWithPeersOnTopicAsync(participantIds, null, config.MessageOrderFlag, cancellationToken))
+            foreach (SubverseMessage message in await dbService.GetMessagesWithPeersOnTopicAsync(participantIds, string.Empty, config.MessageOrderFlag, cancellationToken))
             {
                 if (message.TopicName == "#system") continue;
 
@@ -344,7 +345,7 @@ namespace SubverseIM.ViewModels.Pages
         private async Task SendMessageAsync(string? messageText = null, string? messageTopicName = null)
         {
             messageText = (messageText ?? SendMessageText)?.Trim();
-            messageTopicName = (messageTopicName ?? SendMessageTopicName)?.Trim();
+            messageTopicName = (messageTopicName ?? SendMessageTopicName).Trim();
 
             if (string.IsNullOrEmpty(messageText)) return;
 

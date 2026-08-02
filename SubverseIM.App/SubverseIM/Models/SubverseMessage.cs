@@ -9,6 +9,7 @@ namespace SubverseIM.Models
     {
         public SubverseMessage()
         {
+            TopicName = string.Empty;
             Recipients = [];
             RecipientNames = [];
         }
@@ -17,7 +18,7 @@ namespace SubverseIM.Models
 
         public MessageId? MessageId { get; set; }
 
-        public string? TopicName { get; set; }
+        public string TopicName { get; set; }
 
         public SubversePeerId Sender { get; set; }
 
