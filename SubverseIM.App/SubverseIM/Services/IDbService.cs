@@ -33,7 +33,7 @@ namespace SubverseIM.Services
 
         Task<SubverseTorrent?> GetTorrentAsync(InfoHash infoHash, CancellationToken cancellationToken = default);
 
-        Task<IEnumerable<SubverseMessage>> GetMessagesWithPeersOnTopicAsync(HashSet<SubversePeerId> otherPeers, string? topicName = null, bool orderFlag = false, CancellationToken cancellationToken = default);
+        Task<IEnumerable<SubverseMessage>> GetMessagesWithPeersOnTopicAsync(HashSet<SubversePeerId> otherPeers, string topicName = "", bool orderFlag = false, CancellationToken cancellationToken = default);
 
         Task<IEnumerable<SubverseMessage>> GetAllUndeliveredMessagesAsync(CancellationToken cancellationToken = default);
 

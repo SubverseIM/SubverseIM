@@ -538,7 +538,7 @@ namespace SubverseIM.Services.Implementation
             // DB service init
 
             IDbService dbService = await serviceManager.GetWithAwaitAsync<IDbService>();
-            await dbService.GetMessagesWithPeersOnTopicAsync([], null);
+            await dbService.GetMessagesWithPeersOnTopicAsync([], string.Empty);
 
             (Stream publicKeyStream, Stream privateKeyStream) =
                 await GenerateKeysIfNoneAsync();
