@@ -7,7 +7,6 @@ using SubverseIM.Exceptions;
 using SubverseIM.Models;
 using SubverseIM.Serializers;
 using System;
-using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,6 +17,23 @@ namespace SubverseIM.Services.Implementation
 {
     public class DbService : IDbService
     {
+        private static readonly Dictionary<string, BsonExpression> _exprCache;
+
+        static DbService()
+        {
+            _exprCache = new Dictionary<string, BsonExpression>();
+        }
+
+        private static BsonExpression GetOrCreateExpression(string expression)
+        {
+            if (!_exprCache.TryGetValue(expression, out BsonExpression? expr))
+            {
+                expr = BsonExpression.Create(expression);
+                _exprCache.Add(expression, expr);
+            }
+            return expr;
+        }
+
         private readonly string dbFilePath;
 
         private readonly BsonMapper mapper;
@@ -69,9 +85,9 @@ namespace SubverseIM.Services.Implementation
             LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
 
             var contacts = db.GetCollection<SubverseContact>();
-            contacts.EnsureIndex(x => x.OtherPeer, unique: true);
+            contacts.EnsureIndex(GetOrCreateExpression($"$.OtherPeer"), unique: true);
             return contacts.Query()
-                .OrderByDescending(x => x.DateLastChattedWith)
+                .OrderByDescending(GetOrCreateExpression($"$.DateLastChattedWith"))
                 .ToEnumerable();
         }
 
@@ -81,8 +97,8 @@ namespace SubverseIM.Services.Implementation
             LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
 
             var contacts = db.GetCollection<SubverseContact>();
-            contacts.EnsureIndex(x => x.OtherPeer, unique: true);
-            return contacts.FindOne(x => x.OtherPeer == otherPeer);
+            contacts.EnsureIndex(GetOrCreateExpression($"$.OtherPeer"), unique: true);
+            return contacts.FindOne(GetOrCreateExpression($"$.OtherPeer = {otherPeer}"));
         }
 
         public async Task<IEnumerable<SubverseTorrent>> GetTorrentsAsync(CancellationToken cancellationToken)
@@ -91,10 +107,10 @@ namespace SubverseIM.Services.Implementation
             LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
 
             var torrents = db.GetCollection<SubverseTorrent>();
-            torrents.EnsureIndex(x => x.MagnetUri, unique: true);
+            torrents.EnsureIndex(GetOrCreateExpression($"$.MagnetUri"), unique: true);
 
             return torrents.Query()
-                .OrderByDescending(x => x.DateLastUpdatedOn)
+                .OrderByDescending(GetOrCreateExpression($"$.DateLastUpdatedOn"))
                 .ToEnumerable();
         }
 
@@ -104,9 +120,9 @@ namespace SubverseIM.Services.Implementation
             LiteDatabase db = await dbTcs.Task.WaitAsync(cancellationToken);
 
             var torrents = db.GetCollection<SubverseTorrent>();
-            torrents.EnsureIndex(x => x.InfoHash, unique: true);
+            torrents.EnsureIndex(GetOrCreateExpression($"$.InfoHash"), unique: true);
 
-            return torrents.FindOne(x => x.InfoHash == infoHash);
+            return torrents.FindOne(GetOrCreateExpression($"$.InfoHash = {infoHash}"));
         }
 
         public async Task<IEnumerable<SubverseMessage>> GetMessagesWithPeersOnTopicAsync(HashSet<SubversePeerId> otherPeers, string? topicName, bool orderFlag, CancellationToken cancellationToken)
@@ -116,16 +132,16 @@ namespace SubverseIM.Services.Implementation
 
             var messages = db.GetCollection<SubverseMessage>();
 
-            messages.EnsureIndex(x => x.Sender);
-            messages.EnsureIndex(x => x.Recipients);
+            messages.EnsureIndex(GetOrCreateExpression($"$.Sender"));
+            messages.EnsureIndex(GetOrCreateExpression($"$.Recipients"));
 
-            messages.EnsureIndex(x => x.MessageId, unique: true);
+            messages.EnsureIndex(GetOrCreateExpression($"$.MessageId"), unique: true);
 
             IEnumerable<SubverseMessage> topicMessages = otherPeers
                 .SelectMany(otherPeer => messages.Query()
-                .Where(x => x.WasDecrypted ?? true)
-                .Where(x => otherPeer == x.Sender || ((IEnumerable<SubversePeerId>)x.Recipients).Contains(otherPeer))
-                .Where(x => string.IsNullOrEmpty(topicName) || x.TopicName == topicName)
+                .Where(GetOrCreateExpression($"$.WasDecrypted = true"))
+                .Where(GetOrCreateExpression($"$.Sender = {otherPeer} || COUNT(FILTER($.Recipients, @ == {otherPeer})) > 0"))
+                .Where(GetOrCreateExpression($"$.TopicName = {topicName}"))
                 .ToEnumerable())
                 .DistinctBy(x => x.MessageId);
 
@@ -140,14 +156,14 @@ namespace SubverseIM.Services.Implementation
 
             var messages = db.GetCollection<SubverseMessage>();
 
-            messages.EnsureIndex(x => x.Sender);
-            messages.EnsureIndex(x => x.Recipients);
+            messages.EnsureIndex(GetOrCreateExpression($"$.Sender"));
+            messages.EnsureIndex(GetOrCreateExpression($"$.Recipients"));
 
-            messages.EnsureIndex(x => x.MessageId, unique: true);
+            messages.EnsureIndex(GetOrCreateExpression($"$.MessageId"), unique: true);
 
             return messages.Query()
-                .Where(x => !x.WasDelivered)
-                .OrderByDescending(x => x.DateSignedOn)
+                .Where(GetOrCreateExpression($"$.WasDelivered != true"))
+                .OrderByDescending(GetOrCreateExpression($"$.DateSignedOn"))
                 .ToEnumerable();
         }
 
@@ -158,17 +174,17 @@ namespace SubverseIM.Services.Implementation
 
             var messages = db.GetCollection<SubverseMessage>();
 
-            messages.EnsureIndex(x => x.Sender);
-            messages.EnsureIndex(x => x.Recipients);
+            messages.EnsureIndex(GetOrCreateExpression($"$.Sender"));
+            messages.EnsureIndex(GetOrCreateExpression($"$.Recipients"));
 
-            messages.EnsureIndex(x => x.MessageId, unique: true);
+            messages.EnsureIndex(GetOrCreateExpression($"$.MessageId"), unique: true);
 
             return messages.Query()
-                .OrderByDescending(x => x.DateSignedOn)
-                .Where(x => !string.IsNullOrEmpty(x.TopicName) && x.TopicName != "#system")
+                .OrderByDescending(GetOrCreateExpression($"$.DateSignedOn"))
+                .Where(GetOrCreateExpression($"$.TopicName != null && $.TopicName != '' && $.TopicName != '#system'"))
                 .ToEnumerable()
                 .GroupBy(x => x.TopicName!)
-                .ToFrozenDictionary(g => g.Key, g => g
+                .ToDictionary(g => g.Key, g => g
                     .SelectMany(x => x.Recipients.Append(x.Sender))
                     .Distinct());
         }
@@ -180,12 +196,12 @@ namespace SubverseIM.Services.Implementation
 
             var messages = db.GetCollection<SubverseMessage>();
 
-            messages.EnsureIndex(x => x.Sender);
-            messages.EnsureIndex(x => x.Recipients);
+            messages.EnsureIndex(GetOrCreateExpression($"$.Sender"));
+            messages.EnsureIndex(GetOrCreateExpression($"$.Recipients"));
 
-            messages.EnsureIndex(x => x.MessageId, unique: true);
+            messages.EnsureIndex(GetOrCreateExpression($"$.MessageId"), unique: true);
 
-            return messages.FindOne(x => x.MessageId == messageId);
+            return messages.FindOne(GetOrCreateExpression($"$.MessageId = {messageId}"));
         }
 
         public async Task<bool> InsertOrUpdateItemAsync(SubverseContact newItem, CancellationToken cancellationToken)
@@ -239,12 +255,12 @@ namespace SubverseIM.Services.Implementation
 
             var messages = db.GetCollection<SubverseMessage>();
 
-            messages.EnsureIndex(x => x.Sender);
-            messages.EnsureIndex(x => x.Recipients);
+            messages.EnsureIndex(GetOrCreateExpression($"$.Sender"));
+            messages.EnsureIndex(GetOrCreateExpression($"$.Recipients"));
 
-            messages.EnsureIndex(x => x.MessageId, unique: true);
+            messages.EnsureIndex(GetOrCreateExpression($"$.MessageId"), unique: true);
 
-            messages.DeleteMany(x => x.TopicName == topicName);
+            messages.DeleteMany(GetOrCreateExpression($"$.TopicName = {topicName}"));
         }
 
         public async Task WriteAllMessagesOfTopicAsync(ISerializer<SubverseMessage> serializer, string topicName, CancellationToken cancellationToken)
@@ -254,14 +270,14 @@ namespace SubverseIM.Services.Implementation
 
             var messages = db.GetCollection<SubverseMessage>();
 
-            messages.EnsureIndex(x => x.Sender);
-            messages.EnsureIndex(x => x.Recipients);
+            messages.EnsureIndex(GetOrCreateExpression($"$.Sender"));
+            messages.EnsureIndex(GetOrCreateExpression($"$.Recipients"));
 
-            messages.EnsureIndex(x => x.MessageId, unique: true);
+            messages.EnsureIndex(GetOrCreateExpression($"$.MessageId"), unique: true);
 
             foreach (SubverseMessage message in messages.Query()
-                .Where(x => x.TopicName == topicName)
-                .OrderByDescending(x => x.DateSignedOn)
+                .Where(GetOrCreateExpression($"$.TopicName = {topicName}"))
+                .OrderByDescending(GetOrCreateExpression($"$.DateSignedOn"))
                 .ToEnumerable())
             {
                 serializer.Serialize(message);
