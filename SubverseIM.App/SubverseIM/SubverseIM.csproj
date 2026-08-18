@@ -24,7 +24,7 @@
 		<PackageReference Include="PgpCore" Version="8.0.0" />
 		<PackageReference Include="Plugin.InAppBilling" Version="10.0.0" />
 		<PackageReference Include="ReactiveUI.Avalonia" Version="12.1.0" />
-		<PackageReference Include="SIPSorcery" Version="10.0.13" />
+		<PackageReference Include="SIPSorcery" Version="10.0.15" />
 		<PackageReference Include="ChosenFewSoftware.Avalonia.Controls" Version="1.0.0" />
 		<PackageReference Include="ChosenFewSoftware.Surge.ImageSharp" Version="1.0.2" />
 	</ItemGroup>
