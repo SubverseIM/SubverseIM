@@ -11,7 +11,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
 		<IsAppExtension>true</IsAppExtension>
 		<IsWatchExtension>false</IsWatchExtension>
 	</PropertyGroup>
